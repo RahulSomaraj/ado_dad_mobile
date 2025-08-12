@@ -1,0 +1,288 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.example.ado_dad_user"
+4    android:versionCode="1"
+5    android:versionName="1.0.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="21"
+9        android:targetSdkVersion="35" />
+10    <!--
+11         Required to query activities that can process text, see:
+12         https://developer.android.com/training/package-visibility and
+13         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+14
+15         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin.
+16    -->
+17    <queries>
+17-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:41:5-54:15
+18        <intent>
+18-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:42:9-45:18
+19            <action android:name="android.intent.action.PROCESS_TEXT" />
+19-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:43:13-72
+19-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:43:21-70
+20
+21            <data android:mimeType="text/plain" />
+21-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:44:13-50
+21-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:44:19-48
+22        </intent>
+23        <intent>
+23-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:46:9-49:14
+24            <action android:name="android.intent.action.VIEW" />
+24-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:47:9-60
+24-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:47:17-58
+25
+26            <data android:scheme="https" />
+26-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:44:13-50
+26-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:48:15-37
+27        </intent>
+28        <intent>
+28-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:50:5-53:14
+29            <action android:name="android.intent.action.VIEW" />
+29-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:47:9-60
+29-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:47:17-58
+30
+31            <data android:scheme="http" />
+31-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:44:13-50
+31-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:48:15-37
+32        </intent>
+33    </queries>
+34
+35    <uses-permission android:name="android.permission.INTERNET" />
+35-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:56:5-66
+35-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:56:22-64
+36    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+36-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:57:5-78
+36-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:57:22-76
+37    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+37-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:58:5-80
+37-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:58:22-78
+38
+39    <permission
+39-->[androidx.core:core:1.13.1] /Users/aryaarjun/.gradle/caches/transforms-3/889ae3adf7a24645889ee22f4dad2cac/transformed/core-1.13.1/AndroidManifest.xml:22:5-24:47
+40        android:name="com.example.ado_dad_user.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+40-->[androidx.core:core:1.13.1] /Users/aryaarjun/.gradle/caches/transforms-3/889ae3adf7a24645889ee22f4dad2cac/transformed/core-1.13.1/AndroidManifest.xml:23:9-81
+41        android:protectionLevel="signature" />
+41-->[androidx.core:core:1.13.1] /Users/aryaarjun/.gradle/caches/transforms-3/889ae3adf7a24645889ee22f4dad2cac/transformed/core-1.13.1/AndroidManifest.xml:24:9-44
+42
+43    <uses-permission android:name="com.example.ado_dad_user.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+43-->[androidx.core:core:1.13.1] /Users/aryaarjun/.gradle/caches/transforms-3/889ae3adf7a24645889ee22f4dad2cac/transformed/core-1.13.1/AndroidManifest.xml:26:5-97
+43-->[androidx.core:core:1.13.1] /Users/aryaarjun/.gradle/caches/transforms-3/889ae3adf7a24645889ee22f4dad2cac/transformed/core-1.13.1/AndroidManifest.xml:26:22-94
+44
+45    <application
+46        android:name="android.app.Application"
+46-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:4:9-42
+47        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+47-->[androidx.core:core:1.13.1] /Users/aryaarjun/.gradle/caches/transforms-3/889ae3adf7a24645889ee22f4dad2cac/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
+48        android:extractNativeLibs="true"
+49        android:icon="@mipmap/ic_launcher"
+49-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:5:9-43
+50        android:label="ado_dad_user" >
+50-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:3:9-37
+51        <activity
+51-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:6:9-29:20
+52            android:name="com.example.ado_dad_user.MainActivity"
+52-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:7:13-41
+53            android:allowBackup="false"
+53-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:9:13-40
+54            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+54-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:14:13-163
+55            android:exported="true"
+55-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:8:13-36
+56            android:fullBackupContent="false"
+56-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:10:13-46
+57            android:hardwareAccelerated="true"
+57-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:15:13-47
+58            android:launchMode="singleTop"
+58-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:11:13-43
+59            android:taskAffinity=""
+59-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:12:13-36
+60            android:theme="@style/LaunchTheme"
+60-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:13:13-47
+61            android:windowSoftInputMode="adjustResize" >
+61-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:16:13-55
+62
+63            <!--
+64                 Specifies an Android theme to apply to this Activity as soon as
+65                 the Android process has started. This theme is visible to the user
+66                 while the Flutter UI initializes. After that, this theme continues
+67                 to determine the Window background behind the Flutter UI.
+68            -->
+69            <meta-data
+69-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:21:13-24:17
+70                android:name="io.flutter.embedding.android.NormalTheme"
+70-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:22:15-70
+71                android:resource="@style/NormalTheme" />
+71-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:23:15-52
+72
+73            <intent-filter>
+73-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:25:13-28:29
+74                <action android:name="android.intent.action.MAIN" />
+74-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:26:17-68
+74-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:26:25-66
+75
+76                <category android:name="android.intent.category.LAUNCHER" />
+76-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:27:17-76
+76-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:27:27-74
+77            </intent-filter>
+78        </activity>
+79        <!--
+80             Don't delete the meta-data below.
+81             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java
+82        -->
+83        <meta-data
+83-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:32:9-34:33
+84            android:name="flutterEmbedding"
+84-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:33:13-44
+85            android:value="2" />
+85-->/Users/aryaarjun/Desktop/ado_dad_user/android/app/src/main/AndroidManifest.xml:34:13-30
+86
+87        <provider
+87-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:9:9-17:20
+88            android:name="io.flutter.plugins.imagepicker.ImagePickerFileProvider"
+88-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:10:13-82
+89            android:authorities="com.example.ado_dad_user.flutter.image_provider"
+89-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:11:13-74
+90            android:exported="false"
+90-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:12:13-37
+91            android:grantUriPermissions="true" >
+91-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:13:13-47
+92            <meta-data
+92-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:14:13-16:75
+93                android:name="android.support.FILE_PROVIDER_PATHS"
+93-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:15:17-67
+94                android:resource="@xml/flutter_image_picker_file_paths" />
+94-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:16:17-72
+95        </provider> <!-- Trigger Google Play services to install the backported photo picker module. -->
+96        <service
+96-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:19:9-31:19
+97            android:name="com.google.android.gms.metadata.ModuleDependencies"
+97-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:20:13-78
+98            android:enabled="false"
+98-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:21:13-36
+99            android:exported="false" >
+99-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:22:13-37
+100            <intent-filter>
+100-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:24:13-26:29
+101                <action android:name="com.google.android.gms.metadata.MODULE_DEPENDENCIES" />
+101-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:25:17-94
+101-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:25:25-91
+102            </intent-filter>
+103
+104            <meta-data
+104-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:28:13-30:36
+105                android:name="photopicker_activity:0:required"
+105-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:29:17-63
+106                android:value="" />
+106-->[:image_picker_android] /Users/aryaarjun/Desktop/ado_dad_user/build/image_picker_android/intermediates/merged_manifest/release/AndroidManifest.xml:30:17-33
+107        </service>
+108        <service
+108-->[:geolocator_android] /Users/aryaarjun/Desktop/ado_dad_user/build/geolocator_android/intermediates/merged_manifest/release/AndroidManifest.xml:8:9-12:56
+109            android:name="com.baseflow.geolocator.GeolocatorLocationService"
+109-->[:geolocator_android] /Users/aryaarjun/Desktop/ado_dad_user/build/geolocator_android/intermediates/merged_manifest/release/AndroidManifest.xml:9:13-77
+110            android:enabled="true"
+110-->[:geolocator_android] /Users/aryaarjun/Desktop/ado_dad_user/build/geolocator_android/intermediates/merged_manifest/release/AndroidManifest.xml:10:13-35
+111            android:exported="false"
+111-->[:geolocator_android] /Users/aryaarjun/Desktop/ado_dad_user/build/geolocator_android/intermediates/merged_manifest/release/AndroidManifest.xml:11:13-37
+112            android:foregroundServiceType="location" />
+112-->[:geolocator_android] /Users/aryaarjun/Desktop/ado_dad_user/build/geolocator_android/intermediates/merged_manifest/release/AndroidManifest.xml:12:13-53
+113
+114        <activity
+114-->[:url_launcher_android] /Users/aryaarjun/Desktop/ado_dad_user/build/url_launcher_android/intermediates/merged_manifest/release/AndroidManifest.xml:8:9-11:74
+115            android:name="io.flutter.plugins.urllauncher.WebViewActivity"
+115-->[:url_launcher_android] /Users/aryaarjun/Desktop/ado_dad_user/build/url_launcher_android/intermediates/merged_manifest/release/AndroidManifest.xml:9:13-74
+116            android:exported="false"
+116-->[:url_launcher_android] /Users/aryaarjun/Desktop/ado_dad_user/build/url_launcher_android/intermediates/merged_manifest/release/AndroidManifest.xml:10:13-37
+117            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
+117-->[:url_launcher_android] /Users/aryaarjun/Desktop/ado_dad_user/build/url_launcher_android/intermediates/merged_manifest/release/AndroidManifest.xml:11:13-71
+118        <activity
+118-->[com.google.android.gms:play-services-base:18.3.0] /Users/aryaarjun/.gradle/caches/transforms-3/4a0baae68aec8ddf35756692373b5e91/transformed/jetified-play-services-base-18.3.0/AndroidManifest.xml:20:9-22:45
+119            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+119-->[com.google.android.gms:play-services-base:18.3.0] /Users/aryaarjun/.gradle/caches/transforms-3/4a0baae68aec8ddf35756692373b5e91/transformed/jetified-play-services-base-18.3.0/AndroidManifest.xml:20:19-85
+120            android:exported="false"
+120-->[com.google.android.gms:play-services-base:18.3.0] /Users/aryaarjun/.gradle/caches/transforms-3/4a0baae68aec8ddf35756692373b5e91/transformed/jetified-play-services-base-18.3.0/AndroidManifest.xml:22:19-43
+121            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+121-->[com.google.android.gms:play-services-base:18.3.0] /Users/aryaarjun/.gradle/caches/transforms-3/4a0baae68aec8ddf35756692373b5e91/transformed/jetified-play-services-base-18.3.0/AndroidManifest.xml:21:19-78
+122
+123        <meta-data
+123-->[com.google.android.gms:play-services-basement:18.3.0] /Users/aryaarjun/.gradle/caches/transforms-3/aa568bf11239b6a9b2866fb2d7c8f9fe/transformed/jetified-play-services-basement-18.3.0/AndroidManifest.xml:21:9-23:69
+124            android:name="com.google.android.gms.version"
+124-->[com.google.android.gms:play-services-basement:18.3.0] /Users/aryaarjun/.gradle/caches/transforms-3/aa568bf11239b6a9b2866fb2d7c8f9fe/transformed/jetified-play-services-basement-18.3.0/AndroidManifest.xml:22:13-58
+125            android:value="@integer/google_play_services_version" />
+125-->[com.google.android.gms:play-services-basement:18.3.0] /Users/aryaarjun/.gradle/caches/transforms-3/aa568bf11239b6a9b2866fb2d7c8f9fe/transformed/jetified-play-services-basement-18.3.0/AndroidManifest.xml:23:13-66
+126
+127        <uses-library
+127-->[androidx.window:window:1.2.0] /Users/aryaarjun/.gradle/caches/transforms-3/8859fd2468ade3ef2655d1f63d6737f2/transformed/jetified-window-1.2.0/AndroidManifest.xml:23:9-25:40
+128            android:name="androidx.window.extensions"
+128-->[androidx.window:window:1.2.0] /Users/aryaarjun/.gradle/caches/transforms-3/8859fd2468ade3ef2655d1f63d6737f2/transformed/jetified-window-1.2.0/AndroidManifest.xml:24:13-54
+129            android:required="false" />
+129-->[androidx.window:window:1.2.0] /Users/aryaarjun/.gradle/caches/transforms-3/8859fd2468ade3ef2655d1f63d6737f2/transformed/jetified-window-1.2.0/AndroidManifest.xml:25:13-37
+130        <uses-library
+130-->[androidx.window:window:1.2.0] /Users/aryaarjun/.gradle/caches/transforms-3/8859fd2468ade3ef2655d1f63d6737f2/transformed/jetified-window-1.2.0/AndroidManifest.xml:26:9-28:40
+131            android:name="androidx.window.sidecar"
+131-->[androidx.window:window:1.2.0] /Users/aryaarjun/.gradle/caches/transforms-3/8859fd2468ade3ef2655d1f63d6737f2/transformed/jetified-window-1.2.0/AndroidManifest.xml:27:13-51
+132            android:required="false" />
+132-->[androidx.window:window:1.2.0] /Users/aryaarjun/.gradle/caches/transforms-3/8859fd2468ade3ef2655d1f63d6737f2/transformed/jetified-window-1.2.0/AndroidManifest.xml:28:13-37
+133
+134        <provider
+134-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/aryaarjun/.gradle/caches/transforms-3/40a1bd5ff2ce65cd1fad055cc690d356/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:24:9-32:20
+135            android:name="androidx.startup.InitializationProvider"
+135-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/aryaarjun/.gradle/caches/transforms-3/40a1bd5ff2ce65cd1fad055cc690d356/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:25:13-67
+136            android:authorities="com.example.ado_dad_user.androidx-startup"
+136-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/aryaarjun/.gradle/caches/transforms-3/40a1bd5ff2ce65cd1fad055cc690d356/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:26:13-68
+137            android:exported="false" >
+137-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/aryaarjun/.gradle/caches/transforms-3/40a1bd5ff2ce65cd1fad055cc690d356/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:27:13-37
+138            <meta-data
+138-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/aryaarjun/.gradle/caches/transforms-3/40a1bd5ff2ce65cd1fad055cc690d356/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:29:13-31:52
+139                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+139-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/aryaarjun/.gradle/caches/transforms-3/40a1bd5ff2ce65cd1fad055cc690d356/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:30:17-78
+140                android:value="androidx.startup" />
+140-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/aryaarjun/.gradle/caches/transforms-3/40a1bd5ff2ce65cd1fad055cc690d356/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:31:17-49
+141            <meta-data
+141-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
+142                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+142-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+143                android:value="androidx.startup" />
+143-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
+144        </provider>
+145
+146        <receiver
+146-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
+147            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+147-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
+148            android:directBootAware="false"
+148-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
+149            android:enabled="true"
+149-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
+150            android:exported="true"
+150-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
+151            android:permission="android.permission.DUMP" >
+151-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
+152            <intent-filter>
+152-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
+153                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+153-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
+153-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
+154            </intent-filter>
+155            <intent-filter>
+155-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
+156                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+156-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
+156-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
+157            </intent-filter>
+158            <intent-filter>
+158-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
+159                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+159-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
+159-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
+160            </intent-filter>
+161            <intent-filter>
+161-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
+162                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+162-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
+162-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aryaarjun/.gradle/caches/transforms-3/408a642162969e960684d9c16b2f116a/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+163            </intent-filter>
+164        </receiver>
+165    </application>
+166
+167</manifest>

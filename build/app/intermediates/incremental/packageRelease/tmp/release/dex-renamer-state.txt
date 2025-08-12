@@ -1,0 +1,4 @@
+#Thu Jul 31 18:07:44 IST 2025
+base.0=/Users/aryaarjun/Desktop/ado_dad_user/build/app/intermediates/dex/release/minifyReleaseWithR8/classes.dex
+path.0=classes.dex
+renamed.0=classes.dex
