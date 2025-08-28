@@ -6,7 +6,9 @@ import 'package:ado_dad_user/common/widgets/dropdown_widget.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/features/sell/bloc/bloc/add_post_bloc.dart';
+import 'package:ado_dad_user/models/advertisement_post_model/vehicle_fuel_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_manufacturer_model.dart';
+import 'package:ado_dad_user/models/advertisement_post_model/vehicle_transmission_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_variant_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehilce_model.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
@@ -18,8 +20,12 @@ import 'package:image_picker/image_picker.dart';
 class AddTwoWheelerForm extends StatefulWidget {
   final String categoryTitle;
   final String categoryId;
-  const AddTwoWheelerForm(
-      {super.key, required this.categoryTitle, required this.categoryId});
+
+  const AddTwoWheelerForm({
+    super.key,
+    required this.categoryTitle,
+    required this.categoryId,
+  });
 
   @override
   State<AddTwoWheelerForm> createState() => _AddTwoWheelerFormState();
@@ -41,8 +47,10 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
   VehicleVariant? _selectedVariant;
   int _year = 2023;
   int _mileage = 0;
-  final String _transmissionTypeId = '507f1f77bcf86cd799439063';
-  final String _fuelTypeId = '507f1f77bcf86cd799439071';
+  List<VehicleTransmissionType> _transmissionTypes = [];
+  VehicleTransmissionType? _selectedtransmissionType;
+  List<VehicleFuelType> _fuelTypes = [];
+  VehicleFuelType? _selectedfuelType;
   String _color = '';
   bool _isFirstOwner = true;
   bool _hasInsurance = true;
@@ -56,6 +64,8 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
   void initState() {
     super.initState();
     _loadManufacturers();
+    _loadTransmissionTypes();
+    _loadFuelTypes();
   }
 
   Future<void> _loadManufacturers() async {
@@ -63,6 +73,41 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
     setState(() {
       _manufacturers = manufacturers;
     });
+  }
+
+  Future<void> _loadTransmissionTypes() async {
+    try {
+      final transmissionTypes =
+          await AddRepository().fetchVehicleTransmissionTypes();
+      if (!mounted) return;
+      setState(() {
+        _transmissionTypes = transmissionTypes;
+      });
+    } catch (e) {
+      // Optional: surface the error
+      debugPrint('Failed to load transmission types: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to load transmission types')),
+      );
+    }
+  }
+
+  Future<void> _loadFuelTypes() async {
+    try {
+      final fuelTypes = await AddRepository().fetchVehicleFuelTypes();
+      if (!mounted) return;
+      setState(() {
+        _fuelTypes = fuelTypes;
+      });
+    } catch (e) {
+      // Optional: surface the error
+      debugPrint('Failed to load fuel types: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to load fuel types')),
+      );
+    }
   }
 
   Future<void> _pickImages() async {
@@ -115,8 +160,8 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
       "hasRcBook": _hasRcBook,
       "description": _description,
       "images": _uploadedUrls,
-      "fuelTypeId": _fuelTypeId,
-      "transmissionTypeId": _transmissionTypeId,
+      "fuelTypeId": _selectedfuelType!.id,
+      "transmissionTypeId": _selectedtransmissionType!.id,
       "additionalFeatures": _selectedFeatures,
     };
 
@@ -265,6 +310,30 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                               setState(() => _selectedVariant = val);
                             },
                             errorMsg: 'Please select a variant',
+                          ),
+                          SizedBox(height: 10),
+                          buildDropdown<VehicleTransmissionType>(
+                            labelText: 'Transmission Type',
+                            items: _transmissionTypes,
+                            selectedValue: _selectedtransmissionType,
+                            errorMsg: 'Please select a transmission type',
+                            onChanged: (transmissionType) async {
+                              setState(() {
+                                _selectedtransmissionType = transmissionType;
+                              });
+                            },
+                          ),
+                          SizedBox(height: 10),
+                          buildDropdown<VehicleFuelType>(
+                            labelText: 'Fuel Type',
+                            items: _fuelTypes,
+                            selectedValue: _selectedfuelType,
+                            errorMsg: 'Please select a fuel type',
+                            onChanged: (fuelType) async {
+                              setState(() {
+                                _selectedfuelType = fuelType;
+                              });
+                            },
                           ),
                           SizedBox(height: 10),
                           GetInput(

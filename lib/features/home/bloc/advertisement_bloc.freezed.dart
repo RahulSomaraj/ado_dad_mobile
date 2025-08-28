@@ -22,6 +22,17 @@ mixin _$AdvertisementEvent {
     required TResult Function() fetchAllListings,
     required TResult Function() fetchNextPage,
     required TResult Function(String categoryId) fetchByCategory,
+    required TResult Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)
+        applyFilters,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -30,6 +41,17 @@ mixin _$AdvertisementEvent {
     TResult? Function()? fetchAllListings,
     TResult? Function()? fetchNextPage,
     TResult? Function(String categoryId)? fetchByCategory,
+    TResult? Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)?
+        applyFilters,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -38,6 +60,17 @@ mixin _$AdvertisementEvent {
     TResult Function()? fetchAllListings,
     TResult Function()? fetchNextPage,
     TResult Function(String categoryId)? fetchByCategory,
+    TResult Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)?
+        applyFilters,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -47,6 +80,7 @@ mixin _$AdvertisementEvent {
     required TResult Function(FetchAllListingsEvent value) fetchAllListings,
     required TResult Function(FetchNextPageEvent value) fetchNextPage,
     required TResult Function(FetchByCategory value) fetchByCategory,
+    required TResult Function(ApplyFiltersEvent value) applyFilters,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -55,6 +89,7 @@ mixin _$AdvertisementEvent {
     TResult? Function(FetchAllListingsEvent value)? fetchAllListings,
     TResult? Function(FetchNextPageEvent value)? fetchNextPage,
     TResult? Function(FetchByCategory value)? fetchByCategory,
+    TResult? Function(ApplyFiltersEvent value)? applyFilters,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -63,6 +98,7 @@ mixin _$AdvertisementEvent {
     TResult Function(FetchAllListingsEvent value)? fetchAllListings,
     TResult Function(FetchNextPageEvent value)? fetchNextPage,
     TResult Function(FetchByCategory value)? fetchByCategory,
+    TResult Function(ApplyFiltersEvent value)? applyFilters,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -134,6 +170,17 @@ class _$StartedImpl implements Started {
     required TResult Function() fetchAllListings,
     required TResult Function() fetchNextPage,
     required TResult Function(String categoryId) fetchByCategory,
+    required TResult Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)
+        applyFilters,
   }) {
     return started();
   }
@@ -145,6 +192,17 @@ class _$StartedImpl implements Started {
     TResult? Function()? fetchAllListings,
     TResult? Function()? fetchNextPage,
     TResult? Function(String categoryId)? fetchByCategory,
+    TResult? Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)?
+        applyFilters,
   }) {
     return started?.call();
   }
@@ -156,6 +214,17 @@ class _$StartedImpl implements Started {
     TResult Function()? fetchAllListings,
     TResult Function()? fetchNextPage,
     TResult Function(String categoryId)? fetchByCategory,
+    TResult Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)?
+        applyFilters,
     required TResult orElse(),
   }) {
     if (started != null) {
@@ -171,6 +240,7 @@ class _$StartedImpl implements Started {
     required TResult Function(FetchAllListingsEvent value) fetchAllListings,
     required TResult Function(FetchNextPageEvent value) fetchNextPage,
     required TResult Function(FetchByCategory value) fetchByCategory,
+    required TResult Function(ApplyFiltersEvent value) applyFilters,
   }) {
     return started(this);
   }
@@ -182,6 +252,7 @@ class _$StartedImpl implements Started {
     TResult? Function(FetchAllListingsEvent value)? fetchAllListings,
     TResult? Function(FetchNextPageEvent value)? fetchNextPage,
     TResult? Function(FetchByCategory value)? fetchByCategory,
+    TResult? Function(ApplyFiltersEvent value)? applyFilters,
   }) {
     return started?.call(this);
   }
@@ -193,6 +264,7 @@ class _$StartedImpl implements Started {
     TResult Function(FetchAllListingsEvent value)? fetchAllListings,
     TResult Function(FetchNextPageEvent value)? fetchNextPage,
     TResult Function(FetchByCategory value)? fetchByCategory,
+    TResult Function(ApplyFiltersEvent value)? applyFilters,
     required TResult orElse(),
   }) {
     if (started != null) {
@@ -253,6 +325,17 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
     required TResult Function() fetchAllListings,
     required TResult Function() fetchNextPage,
     required TResult Function(String categoryId) fetchByCategory,
+    required TResult Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)
+        applyFilters,
   }) {
     return fetchAllListings();
   }
@@ -264,6 +347,17 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
     TResult? Function()? fetchAllListings,
     TResult? Function()? fetchNextPage,
     TResult? Function(String categoryId)? fetchByCategory,
+    TResult? Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)?
+        applyFilters,
   }) {
     return fetchAllListings?.call();
   }
@@ -275,6 +369,17 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
     TResult Function()? fetchAllListings,
     TResult Function()? fetchNextPage,
     TResult Function(String categoryId)? fetchByCategory,
+    TResult Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)?
+        applyFilters,
     required TResult orElse(),
   }) {
     if (fetchAllListings != null) {
@@ -290,6 +395,7 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
     required TResult Function(FetchAllListingsEvent value) fetchAllListings,
     required TResult Function(FetchNextPageEvent value) fetchNextPage,
     required TResult Function(FetchByCategory value) fetchByCategory,
+    required TResult Function(ApplyFiltersEvent value) applyFilters,
   }) {
     return fetchAllListings(this);
   }
@@ -301,6 +407,7 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
     TResult? Function(FetchAllListingsEvent value)? fetchAllListings,
     TResult? Function(FetchNextPageEvent value)? fetchNextPage,
     TResult? Function(FetchByCategory value)? fetchByCategory,
+    TResult? Function(ApplyFiltersEvent value)? applyFilters,
   }) {
     return fetchAllListings?.call(this);
   }
@@ -312,6 +419,7 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
     TResult Function(FetchAllListingsEvent value)? fetchAllListings,
     TResult Function(FetchNextPageEvent value)? fetchNextPage,
     TResult Function(FetchByCategory value)? fetchByCategory,
+    TResult Function(ApplyFiltersEvent value)? applyFilters,
     required TResult orElse(),
   }) {
     if (fetchAllListings != null) {
@@ -370,6 +478,17 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
     required TResult Function() fetchAllListings,
     required TResult Function() fetchNextPage,
     required TResult Function(String categoryId) fetchByCategory,
+    required TResult Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)
+        applyFilters,
   }) {
     return fetchNextPage();
   }
@@ -381,6 +500,17 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
     TResult? Function()? fetchAllListings,
     TResult? Function()? fetchNextPage,
     TResult? Function(String categoryId)? fetchByCategory,
+    TResult? Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)?
+        applyFilters,
   }) {
     return fetchNextPage?.call();
   }
@@ -392,6 +522,17 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
     TResult Function()? fetchAllListings,
     TResult Function()? fetchNextPage,
     TResult Function(String categoryId)? fetchByCategory,
+    TResult Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)?
+        applyFilters,
     required TResult orElse(),
   }) {
     if (fetchNextPage != null) {
@@ -407,6 +548,7 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
     required TResult Function(FetchAllListingsEvent value) fetchAllListings,
     required TResult Function(FetchNextPageEvent value) fetchNextPage,
     required TResult Function(FetchByCategory value) fetchByCategory,
+    required TResult Function(ApplyFiltersEvent value) applyFilters,
   }) {
     return fetchNextPage(this);
   }
@@ -418,6 +560,7 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
     TResult? Function(FetchAllListingsEvent value)? fetchAllListings,
     TResult? Function(FetchNextPageEvent value)? fetchNextPage,
     TResult? Function(FetchByCategory value)? fetchByCategory,
+    TResult? Function(ApplyFiltersEvent value)? applyFilters,
   }) {
     return fetchNextPage?.call(this);
   }
@@ -429,6 +572,7 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
     TResult Function(FetchAllListingsEvent value)? fetchAllListings,
     TResult Function(FetchNextPageEvent value)? fetchNextPage,
     TResult Function(FetchByCategory value)? fetchByCategory,
+    TResult Function(ApplyFiltersEvent value)? applyFilters,
     required TResult orElse(),
   }) {
     if (fetchNextPage != null) {
@@ -516,6 +660,17 @@ class _$FetchByCategoryImpl implements FetchByCategory {
     required TResult Function() fetchAllListings,
     required TResult Function() fetchNextPage,
     required TResult Function(String categoryId) fetchByCategory,
+    required TResult Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)
+        applyFilters,
   }) {
     return fetchByCategory(categoryId);
   }
@@ -527,6 +682,17 @@ class _$FetchByCategoryImpl implements FetchByCategory {
     TResult? Function()? fetchAllListings,
     TResult? Function()? fetchNextPage,
     TResult? Function(String categoryId)? fetchByCategory,
+    TResult? Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)?
+        applyFilters,
   }) {
     return fetchByCategory?.call(categoryId);
   }
@@ -538,6 +704,17 @@ class _$FetchByCategoryImpl implements FetchByCategory {
     TResult Function()? fetchAllListings,
     TResult Function()? fetchNextPage,
     TResult Function(String categoryId)? fetchByCategory,
+    TResult Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)?
+        applyFilters,
     required TResult orElse(),
   }) {
     if (fetchByCategory != null) {
@@ -553,6 +730,7 @@ class _$FetchByCategoryImpl implements FetchByCategory {
     required TResult Function(FetchAllListingsEvent value) fetchAllListings,
     required TResult Function(FetchNextPageEvent value) fetchNextPage,
     required TResult Function(FetchByCategory value) fetchByCategory,
+    required TResult Function(ApplyFiltersEvent value) applyFilters,
   }) {
     return fetchByCategory(this);
   }
@@ -564,6 +742,7 @@ class _$FetchByCategoryImpl implements FetchByCategory {
     TResult? Function(FetchAllListingsEvent value)? fetchAllListings,
     TResult? Function(FetchNextPageEvent value)? fetchNextPage,
     TResult? Function(FetchByCategory value)? fetchByCategory,
+    TResult? Function(ApplyFiltersEvent value)? applyFilters,
   }) {
     return fetchByCategory?.call(this);
   }
@@ -575,6 +754,7 @@ class _$FetchByCategoryImpl implements FetchByCategory {
     TResult Function(FetchAllListingsEvent value)? fetchAllListings,
     TResult Function(FetchNextPageEvent value)? fetchNextPage,
     TResult Function(FetchByCategory value)? fetchByCategory,
+    TResult Function(ApplyFiltersEvent value)? applyFilters,
     required TResult orElse(),
   }) {
     if (fetchByCategory != null) {
@@ -594,6 +774,350 @@ abstract class FetchByCategory implements AdvertisementEvent {
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$FetchByCategoryImplCopyWith<_$FetchByCategoryImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$ApplyFiltersEventImplCopyWith<$Res> {
+  factory _$$ApplyFiltersEventImplCopyWith(_$ApplyFiltersEventImpl value,
+          $Res Function(_$ApplyFiltersEventImpl) then) =
+      __$$ApplyFiltersEventImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call(
+      {String? categoryId,
+      int? minYear,
+      int? maxYear,
+      List<String>? manufacturerIds,
+      List<String>? modelIds,
+      List<String>? fuelTypeIds,
+      List<String>? transmissionTypeIds,
+      int? minPrice,
+      int? maxPrice});
+}
+
+/// @nodoc
+class __$$ApplyFiltersEventImplCopyWithImpl<$Res>
+    extends _$AdvertisementEventCopyWithImpl<$Res, _$ApplyFiltersEventImpl>
+    implements _$$ApplyFiltersEventImplCopyWith<$Res> {
+  __$$ApplyFiltersEventImplCopyWithImpl(_$ApplyFiltersEventImpl _value,
+      $Res Function(_$ApplyFiltersEventImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of AdvertisementEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? categoryId = freezed,
+    Object? minYear = freezed,
+    Object? maxYear = freezed,
+    Object? manufacturerIds = freezed,
+    Object? modelIds = freezed,
+    Object? fuelTypeIds = freezed,
+    Object? transmissionTypeIds = freezed,
+    Object? minPrice = freezed,
+    Object? maxPrice = freezed,
+  }) {
+    return _then(_$ApplyFiltersEventImpl(
+      categoryId: freezed == categoryId
+          ? _value.categoryId
+          : categoryId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      minYear: freezed == minYear
+          ? _value.minYear
+          : minYear // ignore: cast_nullable_to_non_nullable
+              as int?,
+      maxYear: freezed == maxYear
+          ? _value.maxYear
+          : maxYear // ignore: cast_nullable_to_non_nullable
+              as int?,
+      manufacturerIds: freezed == manufacturerIds
+          ? _value._manufacturerIds
+          : manufacturerIds // ignore: cast_nullable_to_non_nullable
+              as List<String>?,
+      modelIds: freezed == modelIds
+          ? _value._modelIds
+          : modelIds // ignore: cast_nullable_to_non_nullable
+              as List<String>?,
+      fuelTypeIds: freezed == fuelTypeIds
+          ? _value._fuelTypeIds
+          : fuelTypeIds // ignore: cast_nullable_to_non_nullable
+              as List<String>?,
+      transmissionTypeIds: freezed == transmissionTypeIds
+          ? _value._transmissionTypeIds
+          : transmissionTypeIds // ignore: cast_nullable_to_non_nullable
+              as List<String>?,
+      minPrice: freezed == minPrice
+          ? _value.minPrice
+          : minPrice // ignore: cast_nullable_to_non_nullable
+              as int?,
+      maxPrice: freezed == maxPrice
+          ? _value.maxPrice
+          : maxPrice // ignore: cast_nullable_to_non_nullable
+              as int?,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
+  const _$ApplyFiltersEventImpl(
+      {this.categoryId,
+      this.minYear,
+      this.maxYear,
+      final List<String>? manufacturerIds,
+      final List<String>? modelIds,
+      final List<String>? fuelTypeIds,
+      final List<String>? transmissionTypeIds,
+      this.minPrice,
+      this.maxPrice})
+      : _manufacturerIds = manufacturerIds,
+        _modelIds = modelIds,
+        _fuelTypeIds = fuelTypeIds,
+        _transmissionTypeIds = transmissionTypeIds;
+
+  @override
+  final String? categoryId;
+  @override
+  final int? minYear;
+  @override
+  final int? maxYear;
+  final List<String>? _manufacturerIds;
+  @override
+  List<String>? get manufacturerIds {
+    final value = _manufacturerIds;
+    if (value == null) return null;
+    if (_manufacturerIds is EqualUnmodifiableListView) return _manufacturerIds;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
+  final List<String>? _modelIds;
+  @override
+  List<String>? get modelIds {
+    final value = _modelIds;
+    if (value == null) return null;
+    if (_modelIds is EqualUnmodifiableListView) return _modelIds;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
+  final List<String>? _fuelTypeIds;
+  @override
+  List<String>? get fuelTypeIds {
+    final value = _fuelTypeIds;
+    if (value == null) return null;
+    if (_fuelTypeIds is EqualUnmodifiableListView) return _fuelTypeIds;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
+  final List<String>? _transmissionTypeIds;
+  @override
+  List<String>? get transmissionTypeIds {
+    final value = _transmissionTypeIds;
+    if (value == null) return null;
+    if (_transmissionTypeIds is EqualUnmodifiableListView)
+      return _transmissionTypeIds;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
+  @override
+  final int? minPrice;
+  @override
+  final int? maxPrice;
+
+  @override
+  String toString() {
+    return 'AdvertisementEvent.applyFilters(categoryId: $categoryId, minYear: $minYear, maxYear: $maxYear, manufacturerIds: $manufacturerIds, modelIds: $modelIds, fuelTypeIds: $fuelTypeIds, transmissionTypeIds: $transmissionTypeIds, minPrice: $minPrice, maxPrice: $maxPrice)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ApplyFiltersEventImpl &&
+            (identical(other.categoryId, categoryId) ||
+                other.categoryId == categoryId) &&
+            (identical(other.minYear, minYear) || other.minYear == minYear) &&
+            (identical(other.maxYear, maxYear) || other.maxYear == maxYear) &&
+            const DeepCollectionEquality()
+                .equals(other._manufacturerIds, _manufacturerIds) &&
+            const DeepCollectionEquality().equals(other._modelIds, _modelIds) &&
+            const DeepCollectionEquality()
+                .equals(other._fuelTypeIds, _fuelTypeIds) &&
+            const DeepCollectionEquality()
+                .equals(other._transmissionTypeIds, _transmissionTypeIds) &&
+            (identical(other.minPrice, minPrice) ||
+                other.minPrice == minPrice) &&
+            (identical(other.maxPrice, maxPrice) ||
+                other.maxPrice == maxPrice));
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      runtimeType,
+      categoryId,
+      minYear,
+      maxYear,
+      const DeepCollectionEquality().hash(_manufacturerIds),
+      const DeepCollectionEquality().hash(_modelIds),
+      const DeepCollectionEquality().hash(_fuelTypeIds),
+      const DeepCollectionEquality().hash(_transmissionTypeIds),
+      minPrice,
+      maxPrice);
+
+  /// Create a copy of AdvertisementEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ApplyFiltersEventImplCopyWith<_$ApplyFiltersEventImpl> get copyWith =>
+      __$$ApplyFiltersEventImplCopyWithImpl<_$ApplyFiltersEventImpl>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() started,
+    required TResult Function() fetchAllListings,
+    required TResult Function() fetchNextPage,
+    required TResult Function(String categoryId) fetchByCategory,
+    required TResult Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)
+        applyFilters,
+  }) {
+    return applyFilters(categoryId, minYear, maxYear, manufacturerIds, modelIds,
+        fuelTypeIds, transmissionTypeIds, minPrice, maxPrice);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? started,
+    TResult? Function()? fetchAllListings,
+    TResult? Function()? fetchNextPage,
+    TResult? Function(String categoryId)? fetchByCategory,
+    TResult? Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)?
+        applyFilters,
+  }) {
+    return applyFilters?.call(categoryId, minYear, maxYear, manufacturerIds,
+        modelIds, fuelTypeIds, transmissionTypeIds, minPrice, maxPrice);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? started,
+    TResult Function()? fetchAllListings,
+    TResult Function()? fetchNextPage,
+    TResult Function(String categoryId)? fetchByCategory,
+    TResult Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice)?
+        applyFilters,
+    required TResult orElse(),
+  }) {
+    if (applyFilters != null) {
+      return applyFilters(categoryId, minYear, maxYear, manufacturerIds,
+          modelIds, fuelTypeIds, transmissionTypeIds, minPrice, maxPrice);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(Started value) started,
+    required TResult Function(FetchAllListingsEvent value) fetchAllListings,
+    required TResult Function(FetchNextPageEvent value) fetchNextPage,
+    required TResult Function(FetchByCategory value) fetchByCategory,
+    required TResult Function(ApplyFiltersEvent value) applyFilters,
+  }) {
+    return applyFilters(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(Started value)? started,
+    TResult? Function(FetchAllListingsEvent value)? fetchAllListings,
+    TResult? Function(FetchNextPageEvent value)? fetchNextPage,
+    TResult? Function(FetchByCategory value)? fetchByCategory,
+    TResult? Function(ApplyFiltersEvent value)? applyFilters,
+  }) {
+    return applyFilters?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(Started value)? started,
+    TResult Function(FetchAllListingsEvent value)? fetchAllListings,
+    TResult Function(FetchNextPageEvent value)? fetchNextPage,
+    TResult Function(FetchByCategory value)? fetchByCategory,
+    TResult Function(ApplyFiltersEvent value)? applyFilters,
+    required TResult orElse(),
+  }) {
+    if (applyFilters != null) {
+      return applyFilters(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class ApplyFiltersEvent implements AdvertisementEvent {
+  const factory ApplyFiltersEvent(
+      {final String? categoryId,
+      final int? minYear,
+      final int? maxYear,
+      final List<String>? manufacturerIds,
+      final List<String>? modelIds,
+      final List<String>? fuelTypeIds,
+      final List<String>? transmissionTypeIds,
+      final int? minPrice,
+      final int? maxPrice}) = _$ApplyFiltersEventImpl;
+
+  String? get categoryId;
+  int? get minYear;
+  int? get maxYear;
+  List<String>? get manufacturerIds;
+  List<String>? get modelIds;
+  List<String>? get fuelTypeIds;
+  List<String>? get transmissionTypeIds;
+  int? get minPrice;
+  int? get maxPrice;
+
+  /// Create a copy of AdvertisementEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$ApplyFiltersEventImplCopyWith<_$ApplyFiltersEventImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 

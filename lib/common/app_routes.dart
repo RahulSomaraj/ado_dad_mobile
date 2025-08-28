@@ -1,8 +1,18 @@
 import 'package:ado_dad_user/features/chat/ui/chat.dart';
+import 'package:ado_dad_user/features/home/ad_detail/ad_detail_bloc.dart';
+import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
+import 'package:ado_dad_user/features/home/fuelType_filter_bloc/fuel_type_filter_bloc.dart';
+import 'package:ado_dad_user/features/home/manufacturer_bloc/manufacturer_bloc.dart';
+import 'package:ado_dad_user/features/home/model_filter_bloc/model_filter_bloc.dart';
+import 'package:ado_dad_user/features/home/transmissionType_filter_bloc/transmission_type_filter_bloc.dart';
 import 'package:ado_dad_user/features/home/ui/car_filters_page.dart';
 import 'package:ado_dad_user/features/home/ui/category_list_page.dart';
+import 'package:ado_dad_user/features/home/ui/edit_add_details/commercial_vehicle_form_edit.dart';
+import 'package:ado_dad_user/features/home/ui/edit_add_details/private_vehicle_form_edit.dart';
+import 'package:ado_dad_user/features/home/ui/edit_add_details/property_form_edit.dart';
+import 'package:ado_dad_user/features/home/ui/edit_add_details/two_wheeler_form_edit.dart';
 import 'package:ado_dad_user/features/home/ui/home.dart';
-import 'package:ado_dad_user/features/home/ui/vehicle_detail_page.dart';
+import 'package:ado_dad_user/features/home/ui/add_detail_page.dart';
 import 'package:ado_dad_user/features/login/ui/login.dart';
 import 'package:ado_dad_user/features/profile/ui/profile.dart';
 import 'package:ado_dad_user/features/search/ui/search.dart';
@@ -20,6 +30,9 @@ import 'package:ado_dad_user/features/seller/ui/vehicle_personal_detail_form.dar
 import 'package:ado_dad_user/features/signup/ui/signup.dart';
 import 'package:ado_dad_user/features/splash/splash.dart';
 import 'package:ado_dad_user/features/splash/splash_screen1.dart';
+import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+import 'package:ado_dad_user/repositories/add_repo.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRoutes {
@@ -109,15 +122,18 @@ class AppRoutes {
       ),
 
       GoRoute(
-          path: '/vehicle-detail-page',
-          builder: (context, state) => const VehicleDetailPage()),
-      // GoRoute(
-      //   path: '/vehicle-detail-page',
-      //   builder: (context, state) {
-      //     final vehicle = state.extra as Vehicle;
-      //     return VehicleDetailPage(vehicle: vehicle);
-      //   },
-      // ),
+        path: '/add-detail-page',
+        builder: (context, state) {
+          final ad = state.extra as AddModel;
+          // final adId = state.extra as String;
+          return BlocProvider(
+            create: (_) => AdDetailBloc(repository: AddRepository())
+              ..add(AdDetailEvent.fetch(ad.id)),
+            child: AdDetailPage(ad: ad),
+          );
+        },
+      ),
+
       GoRoute(
         path: '/add-two-wheeler-form',
         builder: (context, state) {
@@ -159,8 +175,61 @@ class AppRoutes {
         },
       ),
       GoRoute(
-          path: '/car-filter',
-          builder: (context, state) => const CarFiltersPage()),
+        path: '/edit-two-wheeler',
+        builder: (context, state) {
+          final ad = state.extra as AddModel;
+          return TwoWheelerFormEdit(ad: ad);
+        },
+      ),
+      GoRoute(
+        path: '/edit-private-vehicle',
+        builder: (context, state) {
+          final ad = state.extra as AddModel;
+          return PrivateVehicleFormEdit(ad: ad);
+        },
+      ),
+      GoRoute(
+        path: '/edit-commercial-vehicle',
+        builder: (context, state) {
+          final ad = state.extra as AddModel;
+          return CommercialVehicleFormEdit(ad: ad);
+        },
+      ),
+      GoRoute(
+        path: '/edit-property',
+        builder: (context, state) {
+          final ad = state.extra as AddModel;
+          return PropertyFormEdit(ad: ad);
+        },
+      ),
+      GoRoute(
+        path: '/car-filter',
+        builder: (context, state) {
+          final repo = context.read<AdvertisementBloc>().repository;
+
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (_) => ManufacturerBloc(repository: repo)
+                  ..add(const ManufacturerEvent.load()),
+              ),
+              BlocProvider(
+                create: (_) => FuelTypeFilterBloc(repository: repo)
+                  ..add(const FuelTypeFilterEvent.load()),
+              ),
+              BlocProvider(
+                create: (_) => TransmissionTypeFilterBloc(repository: repo)
+                  ..add(const TransmissionTypeFilterEvent.load()),
+              ),
+              BlocProvider(
+                create: (_) => ModelFilterBloc(repository: repo)
+                  ..add(const ModelFilterEvent.load()),
+              ),
+            ],
+            child: const CarFiltersPage(),
+          );
+        },
+      ),
     ],
   );
 }

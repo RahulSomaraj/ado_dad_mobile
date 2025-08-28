@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:ado_dad_user/models/signup_model.dart';
 import 'package:ado_dad_user/repositories/signup_repository.dart';
@@ -17,8 +18,19 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
   }
 
   Future<void> _onSignUp(SignUp event, Emitter<SignupState> emit) async {
+    emit(const SignupState.loading());
     try {
-      final responseMessage = await signupRepository.signup(event.data);
+      var model = event.data;
+
+      // If user selected an image, upload it first and attach the URL
+      if (event.profileBytes != null && event.profileBytes!.isNotEmpty) {
+        final url = await signupRepository.uploadImageToS3(event.profileBytes!);
+        if (url != null && url.isNotEmpty) {
+          model = model.copyWith(profilePic: url);
+        }
+      }
+
+      final responseMessage = await signupRepository.signup(model);
       print('Success!!!!!');
       print('responseMessage:.......$responseMessage');
       emit(SignupState.signupSuccess(responseMessage));

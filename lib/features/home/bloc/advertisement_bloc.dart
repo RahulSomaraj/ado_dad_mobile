@@ -14,15 +14,38 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     on<FetchAllListingsEvent>(_onFetchAllListings);
     on<FetchNextPageEvent>(_onFetchNextPage);
     on<FetchByCategory>(_onFetchByCategory);
+    on<ApplyFiltersEvent>(_onApplyFilters);
   }
 
   int _currentPage = 1;
   bool _isFetching = false;
 
+  // Active filters remembered by the bloc
+  String? _categoryId;
+  int? _minYear;
+  int? _maxYear;
+  List<String>? _manufacturerIds;
+  List<String>? _modelIds;
+  List<String>? _fuelTypeIds;
+  List<String>? _transmissionTypeIds;
+  int? _minPrice;
+  int? _maxPrice;
+
   Future<void> _onFetchAllListings(
       FetchAllListingsEvent event, Emitter<AdvertisementState> emit) async {
     emit(const AdvertisementState.loading());
     _currentPage = 1;
+
+    // clear filters
+    _categoryId = null;
+    _minYear = null;
+    _maxYear = null;
+    _manufacturerIds = null;
+    _modelIds = null;
+    _fuelTypeIds = null;
+    _transmissionTypeIds = null;
+    _minPrice = null;
+    _maxPrice = null;
 
     try {
       final result = await repository.fetchAllAds(page: _currentPage);
@@ -43,7 +66,17 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
       try {
         _currentPage += 1;
         print("📥 Fetching page $_currentPage");
-        final result = await repository.fetchAllAds(page: _currentPage);
+        final result = await repository.fetchAllAds(
+            page: _currentPage,
+            category: _categoryId,
+            minYear: _minYear,
+            maxYear: _maxYear,
+            manufacturerId: _manufacturerIds,
+            modelId: _modelIds,
+            fuelTypeIds: _fuelTypeIds,
+            transmissionTypeIds: _transmissionTypeIds,
+            minPrice: _minPrice,
+            maxPrice: _maxPrice);
         print(
             "📦 Received ${result.data.length} ads | hasNext: ${result.hasNext}");
         final updatedList = [...currentState.listings, ...result.data];
@@ -63,10 +96,21 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
   ) async {
     emit(const AdvertisementState.loading());
 
+    _categoryId = event.categoryId;
+    _minYear = null;
+    _maxYear = null;
+    _manufacturerIds = null;
+    _modelIds = null;
+    _fuelTypeIds = null;
+    _transmissionTypeIds = null;
+    _currentPage = 1;
+    _minPrice = null;
+    _maxPrice = null;
+
     try {
       final result = await repository.fetchAllAds(
-        page: 1,
-        categoryId: event.categoryId,
+        page: _currentPage,
+        category: _categoryId,
       );
       emit(AdvertisementState.listingsLoaded(
         listings: result.data,
@@ -74,6 +118,43 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
       ));
     } catch (e) {
       emit(AdvertisementState.error("Failed to fetch category ads: $e"));
+    }
+  }
+
+  Future<void> _onApplyFilters(
+      ApplyFiltersEvent event, Emitter<AdvertisementState> emit) async {
+    emit(const AdvertisementState.loading());
+
+    // set/replace filters (category can be re-applied from page)
+    _categoryId = event.categoryId ?? _categoryId;
+    _minYear = event.minYear;
+    _maxYear = event.maxYear;
+    _manufacturerIds = event.manufacturerIds;
+    _modelIds = event.modelIds;
+    _fuelTypeIds = event.fuelTypeIds;
+    _transmissionTypeIds = event.transmissionTypeIds;
+    _minPrice = event.minPrice;
+    _maxPrice = event.maxPrice;
+    _currentPage = 1;
+
+    try {
+      final result = await repository.fetchAllAds(
+          page: _currentPage,
+          category: _categoryId,
+          minYear: _minYear,
+          maxYear: _maxYear,
+          manufacturerId: _manufacturerIds,
+          modelId: _modelIds,
+          fuelTypeIds: _fuelTypeIds,
+          transmissionTypeIds: _transmissionTypeIds,
+          minPrice: _minPrice,
+          maxPrice: _maxPrice);
+      emit(AdvertisementState.listingsLoaded(
+        listings: result.data,
+        hasMore: result.hasNext,
+      ));
+    } catch (e) {
+      emit(AdvertisementState.error("Failed to apply filters: $e"));
     }
   }
 }

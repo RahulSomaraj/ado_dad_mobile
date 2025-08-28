@@ -18,6 +18,17 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _loginFormKey = GlobalKey<FormState>();
+
+  /// false = phone mode (default), true = email mode
+  bool _emailMode = false;
+
+  void _toggleMode() {
+    setState(() {
+      _emailMode = !_emailMode;
+      _usernameController.clear(); // avoid mixing old value
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,9 +70,10 @@ class _LoginPageState extends State<LoginPage> {
               )),
               Center(
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: _toggleMode,
                   child: Text(
-                    'Login with Email',
+                    // 'Login with Email',
+                    _emailMode ? 'Login with Phone' : 'Login with Email',
                     style: TextStyle(
                         decoration: TextDecoration.underline,
                         fontSize: 14,
@@ -111,11 +123,19 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildUsernameField() {
+    // return GetInput(
+    //   label: "Username",
+    //   controller: _usernameController,
+    //   isEmail: false,
+    //   isPhone: true,
+    //   onSaved: (value) {},
+    // );
+    // In email mode: label/email validation; In phone mode: label/phone validation
     return GetInput(
-      label: "Username",
+      label: _emailMode ? "Email" : "Phone",
       controller: _usernameController,
-      isEmail: false,
-      isPhone: true,
+      isEmail: _emailMode,
+      isPhone: !_emailMode,
       onSaved: (value) {},
     );
   }

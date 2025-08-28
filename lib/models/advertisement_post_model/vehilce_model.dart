@@ -1,16 +1,16 @@
 class VehicleModel {
   final String id;
-  final String name;
+  final String displayName;
 
-  VehicleModel({required this.id, required this.name});
+  VehicleModel({required this.id, required this.displayName});
 
   factory VehicleModel.fromJson(Map<String, dynamic> json) {
     return VehicleModel(
       id: json['_id'],
-      name: json['name'],
+      displayName: json['displayName'],
     );
   }
 
   @override
-  String toString() => name;
+  String toString() => displayName;
 }

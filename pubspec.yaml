@@ -29,7 +29,9 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   flutter:
+    
     sdk: flutter
+    
   google_fonts: ^6.2.1
   go_router: ^14.8.1 
   country_picker: ^2.0.20
@@ -50,11 +52,17 @@ dependencies:
   animations: ^2.0.7
   geolocator: ^11.0.0 
   geocoding: ^3.0.0 
+  flutter_launcher_icons: ^0.13.1
+  file_picker: ^8.0.0 
+  connectivity_plus: ^6.0.5
+  internet_connection_checker_plus: ^2.5.0
+
 
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  
 
 dev_dependencies:
   flutter_test:
@@ -72,6 +80,7 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -108,3 +117,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/logo.jpeg" # Path to your icon
+ 

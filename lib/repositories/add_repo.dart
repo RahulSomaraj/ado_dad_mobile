@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:ado_dad_user/common/api_service.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+import 'package:ado_dad_user/models/advertisement_post_model/vehicle_fuel_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_manufacturer_model.dart';
+import 'package:ado_dad_user/models/advertisement_post_model/vehicle_transmission_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_variant_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehilce_model.dart';
 import 'package:dio/dio.dart';
@@ -14,27 +17,50 @@ class AddRepository {
   Future<PaginatedAdsResponse> fetchAllAds({
     int page = 1,
     int limit = 20,
-    String? categoryId,
+    String? category,
     int? minYear,
     int? maxYear,
-    List<String>? brands,
+    List<String>? manufacturerId,
+    List<String>? modelId,
+    List<String>? fuelTypeIds,
+    List<String>? transmissionTypeIds,
+    int? minPrice,
+    int? maxPrice,
   }) async {
     try {
-      final response = await _dio.get('/ads', queryParameters: {
+      final body = <String, dynamic>{
         'page': page,
         'limit': limit,
-        if (categoryId != null) 'category': categoryId,
+        if (category != null) 'category': category,
         if (minYear != null) 'minYear': minYear,
         if (maxYear != null) 'maxYear': maxYear,
-        if (brands != null && brands.isNotEmpty) 'brands': brands, // array
-      });
-      print("📡 Full API response:............... ${response.data}");
-      // print("🔎 Raw listing items:");
-      // (response.data['data'] as List).forEach((e) {
-      //   print(
-      //       "  ▶️ ID: ${e['id']} | Title: ${e['description']} | Images: ${e['images']}");
-      // });
+        if (minPrice != null) 'minPrice': minPrice,
+        if (maxPrice != null) 'maxPrice': maxPrice,
+        if (manufacturerId != null && manufacturerId.isNotEmpty)
+          'manufacturerId': manufacturerId,
+        if (modelId != null && modelId.isNotEmpty) 'modelId': modelId,
+        if (fuelTypeIds != null && fuelTypeIds.isNotEmpty)
+          'fuelTypeIds': fuelTypeIds, // ✅ plural
+        if (transmissionTypeIds != null && transmissionTypeIds.isNotEmpty)
+          'transmissionTypeIds': transmissionTypeIds, // ✅ plural
+      };
 
+      // if (manufacturerIds != null && manufacturerIds.isNotEmpty) {
+      //   qp['manufacturerIds'] = manufacturerIds;
+      // }
+      // if (fuelTypeIds != null && fuelTypeIds.isNotEmpty) {
+      //   qp['fuelTypeId'] = fuelTypeIds;
+      // }
+      // if (transmissionTypeIds != null && transmissionTypeIds.isNotEmpty) {
+      //   qp['transmissionTypeId'] = transmissionTypeIds;
+      // }
+
+      final response = await _dio.post(
+        '/ads/list',
+        // queryParameters: qp,
+        data: body,
+      );
+      print("📡 Full API response qp:............... ${response.data}");
       final List<dynamic> rawData = response.data['data'];
       final total = response.data['total'] ?? 0;
       final currentCount = (page * limit);
@@ -84,6 +110,66 @@ class AddRepository {
 
     final List data = response.data['data'];
     return data.map((e) => VehicleVariant.fromJson(e)).toList();
+  }
+
+  Future<List<VehicleTransmissionType>> fetchVehicleTransmissionTypes() async {
+    final resp = await _dio.get(
+      '/vehicle-inventory/transmission-types',
+      options: Options(responseType: ResponseType.json),
+    );
+
+    dynamic raw = resp.data;
+
+    // If backend sent text/plain, decode it
+    if (raw is String) {
+      raw = jsonDecode(raw);
+    }
+
+    // Accept either top-level list or { data: [...] }
+    List list;
+    if (raw is List) {
+      list = raw;
+    } else if (raw is Map<String, dynamic> && raw['data'] is List) {
+      list = raw['data'] as List;
+    } else {
+      // Helpful debug to see what came back
+      throw StateError('Unexpected response: ${raw.runtimeType} -> $raw');
+    }
+
+    return list
+        .whereType<Map<String, dynamic>>()
+        .map((e) => VehicleTransmissionType.fromJson(e))
+        .toList();
+  }
+
+  Future<List<VehicleFuelType>> fetchVehicleFuelTypes() async {
+    final resp = await _dio.get(
+      '/vehicle-inventory/fuel-types',
+      options: Options(responseType: ResponseType.json),
+    );
+
+    dynamic raw = resp.data;
+
+    // If backend sent text/plain, decode it
+    if (raw is String) {
+      raw = jsonDecode(raw);
+    }
+
+    // Accept either top-level list or { data: [...] }
+    List list;
+    if (raw is List) {
+      list = raw;
+    } else if (raw is Map<String, dynamic> && raw['data'] is List) {
+      list = raw['data'] as List;
+    } else {
+      // Helpful debug to see what came back
+      throw StateError('Unexpected response: ${raw.runtimeType} -> $raw');
+    }
+
+    return list
+        .whereType<Map<String, dynamic>>()
+        .map((e) => VehicleFuelType.fromJson(e))
+        .toList();
   }
 
   Future<String?> uploadImageToS3(Uint8List fileBytes) async {
@@ -153,6 +239,54 @@ class AddRepository {
     } catch (e) {
       print('❌ Unexpected error: $e');
       throw Exception('Failed to post ad: $e');
+    }
+  }
+
+  Future<List<VehicleModel>> fetchModals() async {
+    final response = await _dio.get('/vehicle-inventory/models');
+    final List data = response.data['data'];
+    return data
+        .map((e) => VehicleModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<AddModel> fetchAdDetail(String adId) async {
+    try {
+      final response = await _dio.get('/ads/$adId');
+      print("Ad detail API raw response: ${response.data}");
+      final raw = response.data;
+
+      // Accept either {data: {...}} or plain {...}
+      final obj =
+          (raw is Map<String, dynamic> && raw['data'] is Map<String, dynamic>)
+              ? raw['data'] as Map<String, dynamic>
+              : (raw as Map<String, dynamic>);
+
+      return AddModel.fromJson(obj);
+    } on DioException catch (e) {
+      print('❌ Dio error : $e');
+      throw Exception(DioErrorHandler.handleError(e));
+    } catch (e) {
+      print('Error:>>>>>>>>>>>>>>>>>>>>>>>$e');
+      throw Exception('Failed to fetch ad detail: $e');
+    }
+  }
+
+  Future<void> updateAd(String adId,
+      {required String category, required Map<String, dynamic> data}) async {
+    try {
+      final resp = await _dio.put(
+        '/ads/$adId',
+        // data: data,
+        data: {
+          'category': category, // ✅ top-level
+          'data': data, // ✅ nested fields
+        },
+      );
+      if (resp.statusCode != 200) throw Exception('Update failed');
+    } on DioException catch (e) {
+      print('Dio Error: $e');
+      throw Exception(DioErrorHandler.handleError(e));
     }
   }
 }

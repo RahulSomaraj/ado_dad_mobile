@@ -1,5 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="83d32f08-606f-463e-9267-26ea90d95fc2" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ado_dad_user.iml" beforeDir="false" afterPath="$PROJECT_DIR$/ado_dad_user.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner.xcodeproj/project.pbxproj" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner.xcodeproj/project.pbxproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Info.plist" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Info.plist" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/common/app_routes.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/common/app_routes.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/home/bloc/advertisement_bloc.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/home/bloc/advertisement_bloc.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/home/bloc/advertisement_bloc.freezed.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/home/bloc/advertisement_bloc.freezed.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/home/bloc/advertisement_event.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/home/bloc/advertisement_event.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/home/ui/car_filters_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/home/ui/car_filters_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/home/ui/category_list_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/home/ui/category_list_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/home/ui/home_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/home/ui/home_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/login/ui/login_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/login/ui/login_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/profile/ui/profile_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/profile/ui/profile_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/sell/ui/form/add_commercial_vehicle_form.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/sell/ui/form/add_commercial_vehicle_form.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/sell/ui/form/add_private_vehicle_form.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/sell/ui/form/add_private_vehicle_form.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/sell/ui/form/add_two_wheeler_form.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/sell/ui/form/add_two_wheeler_form.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/signup/bloc/signup_bloc.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/signup/bloc/signup_bloc.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/signup/bloc/signup_bloc.freezed.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/signup/bloc/signup_bloc.freezed.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/signup/bloc/signup_event.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/signup/bloc/signup_event.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/signup/ui/signup_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/signup/ui/signup_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/splash/android_splash_mobile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/splash/android_splash_mobile.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/splash/android_splash_tablet.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/splash/android_splash_tablet.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/splash/splash_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/splash/splash_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/models/cayegory_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/models/cayegory_model.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/models/profile_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/models/profile_model.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/models/signup_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/models/signup_model.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/repositories/add_repo.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/repositories/add_repo.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/repositories/profile_repo.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/repositories/profile_repo.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/repositories/signup_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/repositories/signup_repository.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" afterPath="$PROJECT_DIR$/macos/Flutter/GeneratedPluginRegistrant.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
   <component name="FileEditorManager">
     <leaf>
       <file leaf-file-name="main.dart" pinned="false" current-in-tab="true">
@@ -13,24 +81,54 @@
       </file>
     </leaf>
   </component>
-  <component name="ToolWindowManager">
-    <editor active="true" />
-    <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-    </layout>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 8
+}]]></component>
+  <component name="ProjectId" id="31foE9oua3EHfeXr5PJfeYfNEul" />
   <component name="ProjectView">
-    <navigator currentView="ProjectPane" proportions="" version="1">
-    </navigator>
+    <navigator currentView="ProjectPane" proportions="" version="1" />
     <panes>
       <pane id="ProjectPane">
         <option name="show-excluded-files" value="false" />
       </pane>
     </panes>
   </component>
-  <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="dart.analysis.tool.window.force.activate" value="true" />
-    <property name="show.migrate.to.gradle.popup" value="false" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/aryaarjun/Desktop/ado_dad_user",
+    "show.migrate.to.gradle.popup": "false"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="83d32f08-606f-463e-9267-26ea90d95fc2" name="Changes" comment="" />
+      <created>1755924375281</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1755924375281</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="ToolWindowManager">
+    <editor active="true" />
+    <layout>
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+    </layout>
   </component>
 </project>

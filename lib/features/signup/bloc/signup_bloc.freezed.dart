@@ -19,19 +19,19 @@ mixin _$SignupEvent {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() started,
-    required TResult Function(SignupModel data) signup,
+    required TResult Function(SignupModel data, Uint8List? profileBytes) signup,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? started,
-    TResult? Function(SignupModel data)? signup,
+    TResult? Function(SignupModel data, Uint8List? profileBytes)? signup,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? started,
-    TResult Function(SignupModel data)? signup,
+    TResult Function(SignupModel data, Uint8List? profileBytes)? signup,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -119,7 +119,7 @@ class _$StartedImpl implements Started {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() started,
-    required TResult Function(SignupModel data) signup,
+    required TResult Function(SignupModel data, Uint8List? profileBytes) signup,
   }) {
     return started();
   }
@@ -128,7 +128,7 @@ class _$StartedImpl implements Started {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? started,
-    TResult? Function(SignupModel data)? signup,
+    TResult? Function(SignupModel data, Uint8List? profileBytes)? signup,
   }) {
     return started?.call();
   }
@@ -137,7 +137,7 @@ class _$StartedImpl implements Started {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? started,
-    TResult Function(SignupModel data)? signup,
+    TResult Function(SignupModel data, Uint8List? profileBytes)? signup,
     required TResult orElse(),
   }) {
     if (started != null) {
@@ -188,7 +188,7 @@ abstract class _$$SignUpImplCopyWith<$Res> {
           _$SignUpImpl value, $Res Function(_$SignUpImpl) then) =
       __$$SignUpImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({SignupModel data});
+  $Res call({SignupModel data, Uint8List? profileBytes});
 }
 
 /// @nodoc
@@ -205,12 +205,17 @@ class __$$SignUpImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? data = null,
+    Object? profileBytes = freezed,
   }) {
     return _then(_$SignUpImpl(
       data: null == data
           ? _value.data
           : data // ignore: cast_nullable_to_non_nullable
               as SignupModel,
+      profileBytes: freezed == profileBytes
+          ? _value.profileBytes
+          : profileBytes // ignore: cast_nullable_to_non_nullable
+              as Uint8List?,
     ));
   }
 }
@@ -218,14 +223,16 @@ class __$$SignUpImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$SignUpImpl implements SignUp {
-  const _$SignUpImpl({required this.data});
+  const _$SignUpImpl({required this.data, this.profileBytes});
 
   @override
   final SignupModel data;
+  @override
+  final Uint8List? profileBytes;
 
   @override
   String toString() {
-    return 'SignupEvent.signup(data: $data)';
+    return 'SignupEvent.signup(data: $data, profileBytes: $profileBytes)';
   }
 
   @override
@@ -233,11 +240,14 @@ class _$SignUpImpl implements SignUp {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$SignUpImpl &&
-            (identical(other.data, data) || other.data == data));
+            (identical(other.data, data) || other.data == data) &&
+            const DeepCollectionEquality()
+                .equals(other.profileBytes, profileBytes));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, data);
+  int get hashCode => Object.hash(
+      runtimeType, data, const DeepCollectionEquality().hash(profileBytes));
 
   /// Create a copy of SignupEvent
   /// with the given fields replaced by the non-null parameter values.
@@ -251,29 +261,29 @@ class _$SignUpImpl implements SignUp {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() started,
-    required TResult Function(SignupModel data) signup,
+    required TResult Function(SignupModel data, Uint8List? profileBytes) signup,
   }) {
-    return signup(data);
+    return signup(data, profileBytes);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? started,
-    TResult? Function(SignupModel data)? signup,
+    TResult? Function(SignupModel data, Uint8List? profileBytes)? signup,
   }) {
-    return signup?.call(data);
+    return signup?.call(data, profileBytes);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? started,
-    TResult Function(SignupModel data)? signup,
+    TResult Function(SignupModel data, Uint8List? profileBytes)? signup,
     required TResult orElse(),
   }) {
     if (signup != null) {
-      return signup(data);
+      return signup(data, profileBytes);
     }
     return orElse();
   }
@@ -311,9 +321,12 @@ class _$SignUpImpl implements SignUp {
 }
 
 abstract class SignUp implements SignupEvent {
-  const factory SignUp({required final SignupModel data}) = _$SignUpImpl;
+  const factory SignUp(
+      {required final SignupModel data,
+      final Uint8List? profileBytes}) = _$SignUpImpl;
 
   SignupModel get data;
+  Uint8List? get profileBytes;
 
   /// Create a copy of SignupEvent
   /// with the given fields replaced by the non-null parameter values.

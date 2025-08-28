@@ -71,16 +71,35 @@ class SignupModel {
   //   return data;
   // }
 
+  // Map<String, dynamic> toJson() {
+  //   return {
+  //     "id": id,
+  //     "name": name,
+  //     "email": email,
+  //     "phoneNumber": phoneNumber,
+  //     "password": password,
+  //     "type": type ?? "NU",
+  //     // "type": type,
+  //   };
+  // }
+
   Map<String, dynamic> toJson() {
-    return {
-      "id": id,
+    final map = <String, dynamic>{
+      // Do NOT send "id" on create
       "name": name,
       "email": email,
       "phoneNumber": phoneNumber,
-      "password": password,
-      "type": type ?? "NU",
-      // "type": type,
+      if (password != null && password!.isNotEmpty) "password": password,
+      if (type != null && type!.isNotEmpty)
+        "type": type, // remove if backend doesn’t expect it
+      if (username != null && username!.isNotEmpty) "username": username,
+      if (profilePic != null && profilePic!.isNotEmpty)
+        "profilePic": profilePic,
     };
+
+    // Remove any nulls just in case
+    map.removeWhere((k, v) => v == null);
+    return map;
   }
 
   SignupModel copyWith({

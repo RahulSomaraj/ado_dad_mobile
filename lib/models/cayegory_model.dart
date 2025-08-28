@@ -33,7 +33,7 @@ final List<CategoryModel> categories = [
   ),
   CategoryModel(
     id: 4,
-    name: 'Showrooms',
+    name: 'Commercial Vehicles',
     image: 'assets/images/showroom.png',
     categoryId: 'commercial_vehicle',
   ),

@@ -385,15 +385,24 @@ class _HomePageState extends State<HomePage> {
               return Padding(
                 padding: const EdgeInsets.only(right: 15),
                 child: GestureDetector(
-                  onTap: () {
+                  onTap: () async {
+                    // context.read<AdvertisementBloc>().add(
+                    //       AdvertisementEvent.fetchByCategory(
+                    //           categoryId: category.categoryId),
+                    //     );
                     // context.push(
                     //     '/category-list-page?categoryId=${category.categoryId}&title=${category.name}');
-                    context.read<AdvertisementBloc>().add(
-                          AdvertisementEvent.fetchByCategory(
-                              categoryId: category.categoryId),
-                        );
-                    context.go(
-                        '/category-list-page?categoryId=${category.categoryId}&title=${category.name}');
+
+                    final result = await context.push(
+                      '/category-list-page?categoryId=${category.categoryId}&title=${category.name}',
+                    );
+
+                    // ✅ If coming back with "true", refresh Home list
+                    if (context.mounted && result == true) {
+                      context
+                          .read<AdvertisementBloc>()
+                          .add(const AdvertisementEvent.fetchAllListings());
+                    }
                   },
                   child: Column(
                     children: [
@@ -430,197 +439,89 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // 1) Helpers: decide columns and compute a responsive card height
+  int _columnsForWidth(double w) {
+    if (w >= 1200) return 5;
+    if (w >= 900) return 4;
+    if (w >= 600) return 3;
+    return 2;
+  }
+
+  double _cardMainAxisExtent(BuildContext context, int columns) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final textScale = MediaQuery.of(context).textScaleFactor.clamp(1.0, 1.3);
+    const horizontalPagePadding = 15.0; // matches your padding
+    const spacing = 15.0;
+
+    // available width for grid content
+    final available =
+        screenWidth - (horizontalPagePadding * 2) - (spacing * (columns - 1));
+
+    final cardWidth = available / columns;
+
+    // make image height proportional to width for a stable look
+    final imageHeight = cardWidth * 0.60; // tweak: 0.55..0.70
+
+    // estimate text height (3 lines: price, 2-line desc, location)
+    const baseLine = 16.0; // base font size used in your Texts
+    // 1 line price + 2 lines desc + 1 line location = 4 lines
+    final textBlockHeight = (baseLine * 4) * textScale;
+
+    // paddings + image + text + extra breathing space
+    const outerPadding = 8.0 /* card inner */ + 8.0 /* bottom padding */;
+    final extra = 10.0; // small buffer for badges, rounding, etc.
+
+    return imageHeight + textBlockHeight + outerPadding + extra;
+  }
+
   // Widget buildGridView() {
   //   return BlocBuilder<AdvertisementBloc, AdvertisementState>(
   //     builder: (context, state) {
   //       if (state is AdvertisementLoading) {
   //         return const Center(child: CircularProgressIndicator());
   //       } else if (state is ListingsLoaded) {
-  //         List<dynamic> listings =
-  //             List.from(state.listings); // for shuffling the cards
-  //         listings.shuffle(Random());
-  //         return GridView.builder(
-  //           shrinkWrap: true,
-  //           physics: NeverScrollableScrollPhysics(),
-  //           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+  //         final listings = state.listings;
+  //         final hasMore = state.hasMore;
+
+  //         return RefreshIndicator(
+  //           onRefresh: () async {
+  //             context
+  //                 .read<AdvertisementBloc>()
+  //                 .add(const AdvertisementEvent.fetchAllListings());
+  //           },
+  //           child: GridView.builder(
+  //             controller: _scrollController,
+  //             physics: const AlwaysScrollableScrollPhysics(),
+  //             padding: const EdgeInsets.symmetric(horizontal: 15),
+  //             shrinkWrap: true,
+  //             itemCount: listings.length + (hasMore ? 1 : 0),
+  //             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
   //               crossAxisCount: 2,
   //               crossAxisSpacing: 15,
   //               mainAxisSpacing: 15,
-  //               childAspectRatio: 20 / 24),
-  //           itemCount: listings.length,
-  //           itemBuilder: (context, index) {
-  //             final item = listings[index];
-  //             if (item is Vehicle) {
-  //               return buildVehicleCard(item);
-  //             } else if (item is Property) {
-  //               return buildPropertyCard(item);
-  //             } else {
-  //               return const SizedBox();
-  //             }
-  //           },
+  //               childAspectRatio: 20 / 28,
+  //             ),
+  //             itemBuilder: (context, index) {
+  //               if (index < listings.length) {
+  //                 final ad = listings[index];
+  //                 return buildAdCard(ad);
+  //               } else {
+  //                 return hasMore
+  //                     ? const Padding(
+  //                         padding: EdgeInsets.all(16.0),
+  //                         child: Center(child: CircularProgressIndicator()),
+  //                       )
+  //                     : const SizedBox(); // no loader if no more
+  //               }
+  //             },
+  //           ),
   //         );
   //       } else if (state is AdvertisementError) {
   //         return Center(child: Text("Error: ${state.message}"));
+  //       } else {
+  //         return const Center(child: Text("No data available"));
   //       }
-  //       return const Center(child: Text("No data available"));
   //     },
-  //   );
-  // }
-
-  // Widget buildVehicleCard(Vehicle vehicle) {
-  //   return GestureDetector(
-  //     // onTap: () {
-  //     //   context.push('/vehicle-detail-page');
-  //     // },
-  //     onTap: () {
-  //       context.push('/vehicle-detail-page', extra: vehicle);
-  //     },
-
-  //     child: Container(
-  //       decoration: BoxDecoration(
-  //         color: Colors.white,
-  //         borderRadius: BorderRadius.circular(10),
-  //         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2)],
-  //       ),
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           Stack(
-  //             children: [
-  //               SizedBox(
-  //                 height: 120,
-  //                 child: ClipRRect(
-  //                   borderRadius: BorderRadius.vertical(
-  //                       top: Radius.circular(10), bottom: Radius.circular(10)),
-  //                   child: vehicle.imageUrls.isNotEmpty
-  //                       ? Image.asset(
-  //                           vehicle.imageUrls[0],
-  //                           fit: BoxFit.cover,
-  //                           width: double.infinity,
-  //                         )
-  //                       : Image.asset(
-  //                           "",
-  //                           fit: BoxFit.cover,
-  //                           width: double.infinity,
-  //                         ),
-  //                 ),
-  //               ),
-  //               if (vehicle.isPremium)
-  //                 Positioned(
-  //                   top: 8,
-  //                   right: 10,
-  //                   child: Image.asset(
-  //                     "assets/images/premium-icon.png",
-  //                     height: 24,
-  //                     width: 24,
-  //                   ),
-  //                 ),
-  //               if (vehicle.isShowroom)
-  //                 Positioned(
-  //                   bottom: 10,
-  //                   right: 10,
-  //                   child: Image.asset(
-  //                     "assets/images/showroom-icon.png",
-  //                     // height: 24,
-  //                     // width: 24,
-  //                   ),
-  //                 ),
-  //             ],
-  //           ),
-  //           SizedBox(height: 5),
-  //           Padding(
-  //             padding: const EdgeInsets.symmetric(horizontal: 8),
-  //             child: Column(
-  //               crossAxisAlignment: CrossAxisAlignment.start,
-  //               children: [
-  //                 Row(
-  //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                   children: [
-  //                     Row(
-  //                       children: [
-  //                         Image.asset('assets/images/rupees.png'),
-  //                         Text("${vehicle.price}",
-  //                             style: TextStyle(
-  //                                 color: AppColors.blackColor,
-  //                                 fontWeight: FontWeight.bold)),
-  //                       ],
-  //                     ),
-  //                     Row(
-  //                       children: [
-  //                         Icon(
-  //                           vehicle.isFavorite
-  //                               ? Icons.favorite
-  //                               : Icons.favorite_border,
-  //                           color: vehicle.isFavorite
-  //                               ? AppColors.primaryColor
-  //                               : AppColors.primaryColor,
-  //                           size: 24,
-  //                         ),
-  //                       ],
-  //                     )
-  //                   ],
-  //                 ),
-  //                 Text(
-  //                     '${vehicle.vehicleDetails.name} ${vehicle.vehicleDetails.modelName}',
-  //                     style:
-  //                         TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-  //                 Text(
-  //                     '${vehicle.vehicleDetails.vehicleModel.mileage} / ${vehicle.vehicleDetails.vehicleModel.fuelType}'),
-  //                 Text('${vehicle.city} , ${vehicle.district}')
-  //               ],
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  // Widget buildPropertyCard(Property property) {
-  //   return Container(
-  //     decoration: BoxDecoration(
-  //       color: Colors.white,
-  //       borderRadius: BorderRadius.circular(10),
-  //       boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2)],
-  //     ),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         SizedBox(
-  //           height: 120,
-  //           child: ClipRRect(
-  //             borderRadius: BorderRadius.vertical(
-  //                 top: Radius.circular(10), bottom: Radius.circular(10)),
-  //             child: property.imageUrls.isNotEmpty
-  //                 ? Image.asset(
-  //                     property.imageUrls[0],
-  //                     fit: BoxFit.cover,
-  //                     width: double.infinity,
-  //                   )
-  //                 : Image.asset(
-  //                     "",
-  //                     fit: BoxFit.cover,
-  //                     width: double.infinity,
-  //                   ),
-  //           ),
-  //         ),
-  //         SizedBox(height: 5),
-  //         Padding(
-  //           padding: const EdgeInsets.symmetric(horizontal: 8),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               Text('${property.bhk}BHK ${property.propertyType}',
-  //                   style:
-  //                       TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-  //               Text("${property.furnished} (${property.sqft})"),
-  //               Text(property.adType),
-  //               Text("${property.city},${property.district}"),
-  //             ],
-  //           ),
-  //         ),
-  //       ],
-  //     ),
   //   );
   // }
 
@@ -639,30 +540,35 @@ class _HomePageState extends State<HomePage> {
                   .read<AdvertisementBloc>()
                   .add(const AdvertisementEvent.fetchAllListings());
             },
-            child: GridView.builder(
-              controller: _scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              shrinkWrap: true,
-              itemCount: listings.length + (hasMore ? 1 : 0),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
-                childAspectRatio: 20 / 28,
-              ),
-              itemBuilder: (context, index) {
-                if (index < listings.length) {
-                  final ad = listings[index];
-                  return buildAdCard(ad);
-                } else {
-                  return hasMore
-                      ? const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Center(child: CircularProgressIndicator()),
-                        )
-                      : const SizedBox(); // no loader if no more
-                }
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final cols = _columnsForWidth(constraints.maxWidth);
+                final mainExtent = _cardMainAxisExtent(context, cols);
+
+                return GridView.builder(
+                  controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  itemCount: listings.length + (hasMore ? 1 : 0),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: cols,
+                    crossAxisSpacing: 15,
+                    mainAxisSpacing: 15,
+                    mainAxisExtent: mainExtent, // ✅ explicit, responsive height
+                  ),
+                  itemBuilder: (context, index) {
+                    if (index < listings.length) {
+                      final ad = listings[index];
+                      return buildAdCard(ad);
+                    }
+                    return hasMore
+                        ? const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                        : const SizedBox.shrink();
+                  },
+                );
               },
             ),
           );
@@ -675,47 +581,116 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Widget buildAdCard(AddModel ad) {
+  //   return GestureDetector(
+  //     onTap: () {
+  //       // Push to detail page if needed
+  //       // context.push('/ad-detail', extra: ad);
+  //     },
+  //     child: Container(
+  //       decoration: BoxDecoration(
+  //         color: Colors.white,
+  //         borderRadius: BorderRadius.circular(10),
+  //         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2)],
+  //       ),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           if (ad.images.isNotEmpty)
+  //             ClipRRect(
+  //               borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+  //               child: Image.network(
+  //                 ad.images.first,
+  //                 height: 120,
+  //                 width: double.infinity,
+  //                 fit: BoxFit.cover,
+  //               ),
+  //             ),
+  //           Padding(
+  //             padding: const EdgeInsets.all(8.0),
+  //             child: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 Text("₹${ad.price}",
+  //                     style: const TextStyle(
+  //                         fontWeight: FontWeight.bold, fontSize: 16)),
+  //                 Text(ad.description,
+  //                     maxLines: 2,
+  //                     overflow: TextOverflow.ellipsis,
+  //                     style: const TextStyle(fontSize: 13)),
+  //                 Text(ad.location,
+  //                     style: const TextStyle(
+  //                         fontWeight: FontWeight.bold, fontSize: 12)),
+  //               ],
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+
   Widget buildAdCard(AddModel ad) {
     return GestureDetector(
       onTap: () {
-        // Push to detail page if needed
-        // context.push('/ad-detail', extra: ad);
+        // context.push('/add-detail-page', extra: ad.id);
+        context.push('/add-detail-page', extra: ad);
       },
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2)],
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2)],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (ad.images.isNotEmpty)
               ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                child: Image.network(
-                  ad.images.first,
-                  height: 120,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
+                borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20), bottom: Radius.circular(20)),
+                child: AspectRatio(
+                  // ✅ keeps image area stable
+                  aspectRatio:
+                      16 / 10, // ~0.625 height/width — matches 0.60 above
+                  child: Image.network(
+                    ad.images.first,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) =>
+                        const ColoredBox(color: Colors.black12),
+                  ),
                 ),
               ),
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("₹${ad.price}",
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text(ad.description,
+              child: DefaultTextStyle(
+                style: const TextStyle(fontSize: 13, color: Colors.black),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("₹${ad.price}",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 2),
+                    Text(
+                      ad.description,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13)),
-                  Text(ad.location,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      ad.location,
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 12)),
-                ],
+                          fontWeight: FontWeight.bold, fontSize: 12),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -779,24 +754,27 @@ class _BuildIndicatorState extends State<BuildIndicator> {
 
 class BottomNavBar extends StatelessWidget {
   const BottomNavBar({super.key});
+  static const double _barHeight = 60; // a bit taller to fit big icon
+  static const double _vPad = 10;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 60,
+      height: _barHeight,
       width: 300,
       decoration: BoxDecoration(
         color: AppColors.primaryColor,
         borderRadius: BorderRadius.circular(50),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: _vPad),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _navItem(context, 'assets/images/home-icon.png', '/home'),
             _navItem(context, 'assets/images/search-icon.png', '/search'),
-            _navItem(context, 'assets/images/add-icon.png', '/seller'),
+            _navItem(context, 'assets/images/add-icon.png', '/seller',
+                iconSize: 36),
             _navItem(context, 'assets/images/chat-icon.png', '/chat'),
             _navItem(context, 'assets/images/profile-icon.png', '/profile'),
           ],
@@ -808,11 +786,21 @@ class BottomNavBar extends StatelessWidget {
   Widget _navItem(
     BuildContext context,
     String image,
-    String? route,
-  ) {
+    String? route, {
+    double iconSize = 20,
+  }) {
     return GestureDetector(
       onTap: () => context.push(route!),
-      child: Image.asset(image),
+      child: Center(
+        // Fix the rendered size exactly
+        child: SizedBox.square(
+          dimension: iconSize,
+          child: Image.asset(
+            image,
+            fit: BoxFit.contain,
+          ),
+        ),
+      ),
     );
   }
 }

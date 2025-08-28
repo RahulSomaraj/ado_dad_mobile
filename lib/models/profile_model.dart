@@ -4,7 +4,7 @@ class UserProfile {
   final String email;
   final String phoneNumber;
   final String type;
-  final String profilePic;
+  final String? profilePic;
 
   UserProfile({
     required this.id,
@@ -12,7 +12,7 @@ class UserProfile {
     required this.email,
     required this.phoneNumber,
     required this.type,
-    required this.profilePic,
+    this.profilePic,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -22,7 +22,7 @@ class UserProfile {
       email: json["email"] ?? "",
       phoneNumber: json["phoneNumber"] ?? "",
       type: json["type"] ?? "",
-      profilePic: json["profilePic"] ?? "default-profile-pic-url",
+      profilePic: json["profilePic"],
     );
   }
 
@@ -33,7 +33,26 @@ class UserProfile {
       "email": email,
       "phoneNumber": phoneNumber,
       "type": type,
-      "profilePic": profilePic,
+      // "profilePic": profilePic,
+      if (profilePic != null) "profilePic": profilePic,
     };
+  }
+
+  UserProfile copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? phoneNumber,
+    String? type,
+    String? profilePic,
+  }) {
+    return UserProfile(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      type: type ?? this.type,
+      profilePic: profilePic ?? this.profilePic,
+    );
   }
 }
