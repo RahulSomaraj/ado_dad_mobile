@@ -1,4 +1,5 @@
-import 'package:ado_dad_user/features/chat/ui/chat.dart';
+import 'package:ado_dad_user/features/chat/ui/chat_list_page.dart';
+import 'package:ado_dad_user/features/chat/ui/chat_room_page.dart';
 import 'package:ado_dad_user/features/home/ad_detail/ad_detail_bloc.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/features/home/fuelType_filter_bloc/fuel_type_filter_bloc.dart';
@@ -14,6 +15,7 @@ import 'package:ado_dad_user/features/home/ui/edit_add_details/two_wheeler_form_
 import 'package:ado_dad_user/features/home/ui/home.dart';
 import 'package:ado_dad_user/features/home/ui/add_detail_page.dart';
 import 'package:ado_dad_user/features/login/ui/login.dart';
+import 'package:ado_dad_user/features/profile/MyAds/ui/my_ads_page.dart';
 import 'package:ado_dad_user/features/profile/ui/profile.dart';
 import 'package:ado_dad_user/features/search/ui/search.dart';
 import 'package:ado_dad_user/features/sell/ui/form/add_commercial_vehicle_form.dart';
@@ -48,7 +50,20 @@ class AppRoutes {
       GoRoute(path: '/home', builder: (context, state) => const Home()),
       GoRoute(path: '/logout', builder: (context, state) => const Login()),
       GoRoute(path: '/signup', builder: (context, state) => const Signup()),
-      GoRoute(path: '/chat', builder: (context, state) => const Chat()),
+      // Chat routes
+      GoRoute(
+        path: '/chats',
+        builder: (context, state) => const ChatListPage(),
+      ),
+      GoRoute(
+        path: '/chats/:chatId',
+        builder: (context, state) {
+          final chatId = state.pathParameters['chatId']!;
+          return ChatRoomPage(chatId: chatId);
+        },
+      ),
+      // Legacy chat route for backward compatibility
+      GoRoute(path: '/chat', builder: (context, state) => const ChatListPage()),
       GoRoute(path: '/profile', builder: (context, state) => const Profile()),
       GoRoute(path: '/search', builder: (context, state) => const Search()),
       GoRoute(path: '/seller', builder: (context, state) => const Seller()),
@@ -230,6 +245,7 @@ class AppRoutes {
           );
         },
       ),
+      GoRoute(path: '/my-ads', builder: (context, state) => const MyAdsPage()),
     ],
   );
 }

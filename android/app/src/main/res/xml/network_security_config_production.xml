@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Production configuration - only HTTPS allowed -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">ado-dad.com</domain>
+        <domain includeSubdomains="true">www.ado-dad.com</domain>
+        <domain includeSubdomains="true">api.ado-dad.com</domain>
+    </domain-config>
+    
+    <!-- Default configuration - only HTTPS allowed -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+</network-security-config>

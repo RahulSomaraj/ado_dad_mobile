@@ -48,18 +48,19 @@ class _AdDetailPageState extends State<AdDetailPage> {
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: _secondaryBtn('Chat', onTap: () {}),
-        //  Row(
-        //   children: [
-        //     Expanded(
-        //       child: _primaryBtn('Make an offer', onTap: () {}),
-        //     ),
-        //     const SizedBox(width: 12),
-        //     Expanded(
-        //       child: _secondaryBtn('Chat', onTap: () {}),
-        //     ),
-        //   ],
-        // ),
+        child:
+            // _secondaryBtn('Chat', onTap: () {}),
+            Row(
+          children: [
+            Expanded(
+              child: _primaryBtn('Make an offer', onTap: () {}),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _secondaryBtn('Chat', onTap: () {}),
+            ),
+          ],
+        ),
       ),
     );
   }

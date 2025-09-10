@@ -14,6 +14,8 @@ import 'package:ado_dad_user/models/advertisement_post_model/vehilce_model.dart'
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
 class CommercialVehicleFormEdit extends StatefulWidget {
@@ -329,7 +331,10 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('✅ Saved')),
                 );
-                Navigator.of(context).pop(true); // ask detail page to refresh
+                context
+                    .read<AdvertisementBloc>()
+                    .add(const AdvertisementEvent.fetchAllListings());
+                context.go('/home');
               },
               failure: (msg) {
                 ScaffoldMessenger.of(context).showSnackBar(

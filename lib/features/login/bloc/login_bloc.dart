@@ -42,20 +42,12 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       CheckLoginStatus event, Emitter<LoginState> emit) async {
     emit(const LoginState.loading());
 
-    final sharedPrefs = SharedPrefs();
-    final isExpired = await sharedPrefs.isLoginExpired(); // 👈 New line
-
-    if (isExpired) {
-      await clearUserData(); // 👈 Clear all old login data
-      emit(const LoginState.initial()); // 👈 Not logged in
-      print("🔐 Session expired. Redirecting to login...");
-      return;
-    }
+    // Persist login until explicit logout: check for stored token
+    final String? token = await getToken();
     final String? username = await getUserName();
-    // final String? userType = await getUserType();
 
-    if (username != null) {
-      emit(LoginState.success(username: username));
+    if (token != null && token.isNotEmpty) {
+      emit(LoginState.success(username: username ?? ''));
     } else {
       emit(const LoginState.initial());
     }

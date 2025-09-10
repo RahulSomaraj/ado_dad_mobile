@@ -247,11 +247,22 @@ class _ProfilePageState extends State<ProfilePage> {
                                       setState(() => isEditing = true);
                                     }
                                   },
-                                  child: Image.asset(
-                                    isEditing
-                                        ? 'assets/images/filter.png'
-                                        : 'assets/images/profile-edit-icon.png',
-                                  ),
+                                  child: isEditing
+                                      ? Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.primaryColor,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.check,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                        )
+                                      : Image.asset(
+                                          'assets/images/profile-edit-icon.png',
+                                        ),
                                 ),
                               ),
                               buildLabel("Full Name"),
@@ -333,7 +344,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                 'assets/images/wishlist-profile-icon.png',
                                 "Wishlist"),
                             buildMenuItem(
-                                'assets/images/add-profile-icon.png', "My Ads"),
+                                'assets/images/add-profile-icon.png', "My Ads",
+                                onTap: () => context.push('/my-ads')),
                             buildMenuItem(
                                 'assets/images/help-profile-icon.png', "Help"),
                             buildMenuItem(
@@ -394,246 +406,6 @@ class _ProfilePageState extends State<ProfilePage> {
       floatingActionButton: const BottomNavBar(),
     );
   }
-
-  // @override
-  // Widget build(BuildContext context) {
-  //   return Scaffold(
-  //     backgroundColor: Colors.grey[200], // Light background color
-  //     body: SingleChildScrollView(
-  //       child: BlocBuilder<ProfileBloc, ProfileState>(
-  //         builder: (context, state) {
-  //           if (state is profile_bloc.Loading) {
-  //             return Center(child: CircularProgressIndicator());
-  //           }
-  //           if (state is Loaded || state is Saving) {
-  //             // Update controllers with API data
-  //             if (state is Loaded) {
-  //               nameController.text = state.profile.name;
-  //               emailController.text = state.profile.email;
-  //               phoneController.text = state.profile.phoneNumber;
-  //               _currentProfilePicUrl = state.profile.profilePic;
-  //             }
-
-  //             return Stack(
-  //               children: [
-  //                 Container(height: 900),
-  //                 Container(
-  //                   height: 250,
-  //                   decoration: BoxDecoration(
-  //                     color: AppColors.primaryColor,
-  //                     borderRadius: BorderRadius.only(
-  //                       bottomLeft: Radius.circular(40),
-  //                       bottomRight: Radius.circular(40),
-  //                     ),
-  //                   ),
-  //                 ),
-
-  //                 Positioned(
-  //                   top: 50,
-  //                   left: 16,
-  //                   child: Row(
-  //                     children: [
-  //                       IconButton(
-  //                         onPressed: () {
-  //                           Navigator.pop(context);
-  //                         },
-  //                         icon: Icon(Icons.arrow_back, color: Colors.white),
-  //                         iconSize: 28,
-  //                       ),
-  //                       SizedBox(width: 10),
-  //                       Text(
-  //                         "Profile",
-  //                         style: TextStyle(
-  //                           color: Colors.white,
-  //                           fontSize: 20,
-  //                           fontWeight: FontWeight.bold,
-  //                         ),
-  //                       ),
-  //                     ],
-  //                   ),
-  //                 ),
-
-  //                 // Profile details card
-  //                 Positioned(
-  //                   top: 120,
-  //                   left: 20,
-  //                   right: 20,
-  //                   child: Container(
-  //                     padding: EdgeInsets.all(16),
-  //                     decoration: BoxDecoration(
-  //                       color: Colors.white,
-  //                       borderRadius: BorderRadius.circular(20),
-  //                       boxShadow: [
-  //                         BoxShadow(
-  //                           color: Colors.black12,
-  //                           blurRadius: 10,
-  //                           spreadRadius: 2,
-  //                         ),
-  //                       ],
-  //                     ),
-  //                     child: Column(
-  //                       crossAxisAlignment: CrossAxisAlignment.start,
-  //                       children: [
-  //                         Align(
-  //                             alignment: Alignment.topRight,
-  //                             child: GestureDetector(
-  //                               onTap: () {
-  //                                 if (isEditing) {
-  //                                   saveProfile();
-  //                                 } else {
-  //                                   setState(() {
-  //                                     isEditing = true;
-  //                                   });
-  //                                 }
-  //                               },
-  //                               child: Image.asset(
-  //                                 isEditing
-  //                                     ? 'assets/images/filter.png'
-  //                                     : 'assets/images/profile-edit-icon.png',
-  //                               ),
-  //                             )),
-  //                         buildLabel("Full Name"),
-  //                         buildTextField(nameController, isEditing),
-  //                         // Divider(),
-  //                         buildLabel("Email"),
-  //                         buildTextField(emailController, isEditing),
-  //                         // Divider(),
-  //                         buildLabel("Phone Number"),
-  //                         buildTextField(phoneController, isEditing),
-  //                         const SizedBox(height: 8),
-  //                         if (isEditing)
-  //                           Row(
-  //                             children: [
-  //                               ElevatedButton.icon(
-  //                                 onPressed: _pickImage,
-  //                                 icon: const Icon(Icons.photo_camera),
-  //                                 label: const Text('Change Photo'),
-  //                               ),
-  //                               const SizedBox(width: 12),
-  //                               if (_pickedImageBytes != null)
-  //                                 const Text('New photo selected'),
-  //                             ],
-  //                           ),
-  //                       ],
-  //                     ),
-  //                   ),
-  //                 ),
-
-  //                 // Positioned(
-  //                 //   top: 75,
-  //                 //   left: MediaQuery.of(context).size.width / 2 - 50,
-  //                 //   child: CircleAvatar(
-  //                 //     radius: 50,
-  //                 //     // backgroundImage: AssetImage(
-  //                 //     //     "assets/profile.jpg"),
-  //                 //     backgroundColor: AppColors.greyColor,
-  //                 //   ),
-  //                 // ),
-
-  //                 // Avatar (supports: existing URL, just-picked bytes, or empty)
-  //                 Positioned(
-  //                   top: 75,
-  //                   left: MediaQuery.of(context).size.width / 2 - 50,
-  //                   child: Stack(
-  //                     children: [
-  //                       CircleAvatar(
-  //                         radius: 50,
-  //                         backgroundColor: AppColors.greyColor,
-  //                         backgroundImage: _pickedImageBytes != null
-  //                             ? MemoryImage(_pickedImageBytes!)
-  //                             : (_currentProfilePicUrl != null &&
-  //                                     _currentProfilePicUrl!.isNotEmpty)
-  //                                 ? NetworkImage(_currentProfilePicUrl!)
-  //                                     as ImageProvider
-  //                                 : null,
-  //                         child: (_pickedImageBytes == null &&
-  //                                 (_currentProfilePicUrl == null ||
-  //                                     _currentProfilePicUrl!.isEmpty))
-  //                             ? const Icon(Icons.person,
-  //                                 size: 50, color: Colors.white)
-  //                             : null,
-  //                       ),
-  //                       if (isEditing)
-  //                         Positioned(
-  //                           right: 0,
-  //                           bottom: 0,
-  //                           child: InkWell(
-  //                             onTap: _pickImage,
-  //                             child: Container(
-  //                               padding: const EdgeInsets.all(6),
-  //                               decoration: const BoxDecoration(
-  //                                 shape: BoxShape.circle,
-  //                                 color: Colors.white,
-  //                               ),
-  //                               child: const Icon(Icons.edit, size: 18),
-  //                             ),
-  //                           ),
-  //                         )
-  //                     ],
-  //                   ),
-  //                 ),
-
-  //                 Positioned(
-  //                   top: 430,
-  //                   left: 20,
-  //                   right: 20,
-  //                   child: Column(
-  //                     children: [
-  //                       buildMenuItem('assets/images/wishlist-profile-icon.png',
-  //                           "Wishlist"),
-  //                       buildMenuItem(
-  //                           'assets/images/add-profile-icon.png', "My Ads"),
-  //                       buildMenuItem(
-  //                           'assets/images/help-profile-icon.png', "Help"),
-  //                       buildMenuItem(
-  //                         'assets/images/logout-profile-icon.png',
-  //                         "Logout",
-  //                         isLogout: true,
-  //                         onTap: () async {
-  //                           final confirm = await showDialog<bool>(
-  //                             context: context,
-  //                             builder: (_) => AlertDialog(
-  //                               title: const Text("Logout"),
-  //                               content: const Text(
-  //                                   "Are you sure you want to logout?"),
-  //                               actions: [
-  //                                 TextButton(
-  //                                     onPressed: () =>
-  //                                         Navigator.pop(context, false),
-  //                                     child: const Text("Cancel")),
-  //                                 TextButton(
-  //                                     onPressed: () =>
-  //                                         Navigator.pop(context, true),
-  //                                     child: const Text("Logout")),
-  //                               ],
-  //                             ),
-  //                           );
-
-  //                           if (confirm == true) {
-  //                             context
-  //                                 .read<LoginBloc>()
-  //                                 .add(const LoginEvent.logout());
-  //                             context.go('/'); // or your login route
-  //                           }
-  //                         },
-  //                       ),
-  //                     ],
-  //                   ),
-  //                 ),
-  //               ],
-  //             );
-  //           } else if (state is Error) {
-  //             return Center(child: Text("Error: ${state.message}"));
-  //           }
-  //           return Container();
-  //         },
-  //       ),
-  //     ),
-
-  //     floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-  //     floatingActionButton: BottomNavBar(),
-  //   );
-  // }
 
   Widget buildLabel(String text) {
     return Padding(

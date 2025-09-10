@@ -194,96 +194,97 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          // 🔷 HEADER PART
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // 🔹 Blue curved header with content
-              Container(
-                height: 150,
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryColor,
-                  borderRadius: BorderRadius.vertical(
-                    bottom: Radius.circular(30),
+      body: SingleChildScrollView(
+        controller: _scrollController,
+        child: Column(
+          children: [
+            // 🔷 HEADER PART
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // 🔹 Blue curved header with content
+                Container(
+                  height: 150,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primaryColor,
+                    borderRadius: BorderRadius.vertical(
+                      bottom: Radius.circular(30),
+                    ),
+                  ),
+                  padding: const EdgeInsets.only(top: 8, bottom: 70),
+                  child: buildTopBar(), // 🔹 AdoDad logo + location
+                ),
+
+                // 🔹 Positioned Banner (slightly below blue container)
+                Positioned(
+                  bottom: -85, // Controls how much overlaps
+                  left: 0,
+                  right: 0,
+                  child: BlocBuilder<BannerBloc, BannerState>(
+                    builder: (context, state) {
+                      return state.when(
+                        initial: () => const SizedBox(),
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (message) => Text("Error: $message"),
+                        loaded: (banners) => Column(
+                          children: [
+                            CarouselSlider(
+                              carouselController: _carouselController,
+                              options: CarouselOptions(
+                                height: 140,
+                                autoPlay: true,
+                                enlargeCenterPage: true,
+                                viewportFraction: 0.9,
+                                onPageChanged: (index, _) {
+                                  setState(() {
+                                    BuildIndicator.currentIndex = index;
+                                  });
+                                },
+                              ),
+                              items: banners.map((banner) {
+                                return buildPromoCard(
+                                    banner.phoneImage, banner.link);
+                              }).toList(),
+                            ),
+                            const SizedBox(height: 10),
+                            BuildIndicator(
+                              controller: _carouselController,
+                              itemCount: banners.length,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
-                padding: const EdgeInsets.only(bottom: 70),
-                child: buildTopBar(), // 🔹 AdoDad logo + location
-              ),
-
-              // 🔹 Positioned Banner (slightly below blue container)
-              Positioned(
-                bottom: -75, // Controls how much overlaps
-                left: 0,
-                right: 0,
-                child: BlocBuilder<BannerBloc, BannerState>(
-                  builder: (context, state) {
-                    return state.when(
-                      initial: () => const SizedBox(),
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (message) => Text("Error: $message"),
-                      loaded: (banners) => Column(
-                        children: [
-                          CarouselSlider(
-                            carouselController: _carouselController,
-                            options: CarouselOptions(
-                              height: 140,
-                              autoPlay: true,
-                              enlargeCenterPage: true,
-                              viewportFraction: 0.9,
-                              onPageChanged: (index, _) {
-                                setState(() {
-                                  BuildIndicator.currentIndex = index;
-                                });
-                              },
-                            ),
-                            items: banners.map((banner) {
-                              return buildPromoCard(
-                                  banner.phoneImage, banner.link);
-                            }).toList(),
-                          ),
-                          const SizedBox(height: 10),
-                          BuildIndicator(
-                            controller: _carouselController,
-                            itemCount: banners.length,
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 90),
-
-          // 🔷 CATEGORIES
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: buildSectionTitle("Categories"),
-          ),
-          const SizedBox(height: 5),
-          buildCategories(context),
-
-          // 🔷 RECOMMENDATIONS TITLE
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: buildSectionTitle("Recommendations"),
-          ),
-          const SizedBox(height: 10),
-
-          // 🔷 MAIN GRIDVIEW - Expanded gives it full scrollable height
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: buildGridView(), // 👈 This now scrolls perfectly
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 100),
+
+            // 🔷 CATEGORIES
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: buildSectionTitle("Categories"),
+            ),
+            const SizedBox(height: 5),
+            buildCategories(context),
+
+            // 🔷 RECOMMENDATIONS TITLE
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: buildSectionTitle("Recommendations"),
+            ),
+            const SizedBox(height: 10),
+
+            // 🔷 MAIN GRIDVIEW - now participates in page scroll
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: buildGridView(),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: const BottomNavBar(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -292,7 +293,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget buildTopBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -334,13 +335,20 @@ class _HomePageState extends State<HomePage> {
         print('$link clickkedddd..........');
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            image: DecorationImage(
-              image: NetworkImage(imagePath),
-              fit: BoxFit.cover,
+        // padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: EdgeInsets.zero,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            height: 150,
+            width: double.infinity,
+            // color: Colors.red,
+            // alignment: Alignment.center,
+            child: Image.network(
+              imagePath,
+              fit: BoxFit.fill,
+              errorBuilder: (_, __, ___) =>
+                  const ColoredBox(color: Colors.black12),
             ),
           ),
         ),
@@ -375,7 +383,7 @@ class _HomePageState extends State<HomePage> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10),
       child: SizedBox(
         height: 120,
         child: SingleChildScrollView(
@@ -546,9 +554,9 @@ class _HomePageState extends State<HomePage> {
                 final mainExtent = _cardMainAxisExtent(context, cols);
 
                 return GridView.builder(
-                  controller: _scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: EdgeInsets.zero,
                   itemCount: listings.length + (hasMore ? 1 : 0),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: cols,
