@@ -1,6 +1,8 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/features/home/ad_detail/ad_detail_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+import 'package:ado_dad_user/features/chat/services/offer_service.dart';
+import 'package:ado_dad_user/common/shared_pref.dart';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
@@ -19,49 +21,253 @@ class AdDetailPage extends StatefulWidget {
 class _AdDetailPageState extends State<AdDetailPage> {
   int _currentIndex = 0;
 
+  // Check if current user is the owner of the ad
+  Future<bool> _isCurrentUserOwner(AddModel ad) async {
+    final currentUserId = await SharedPrefs().getUserId();
+    return currentUserId != null &&
+        ad.user?.id != null &&
+        currentUserId == ad.user!.id;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: BlocBuilder<AdDetailBloc, AdDetailState>(
-        builder: (context, state) {
-          return state.when(
-            initial: () => const Center(child: Text('Waiting for details...')),
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e) => Center(child: Text('Error: $e')),
-            loaded: (ad) => CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(child: _headerCarousel(ad)),
-                SliverToBoxAdapter(child: _dots(ad.images.length)),
-                SliverToBoxAdapter(child: _titlePriceMeta(ad)),
-                SliverToBoxAdapter(child: Divider()),
-
-                SliverToBoxAdapter(child: _pillTabs(ad)),
-                SliverToBoxAdapter(child: _description(ad)),
-                // SliverToBoxAdapter(child: _sellerTile(ad)),
-                // SliverToBoxAdapter(child: _recommendationsSection()),
-                // const SliverPadding(padding: EdgeInsets.only(bottom: 90)),
-              ],
-            ),
+      body: BlocListener<AdDetailBloc, AdDetailState>(
+        listener: (context, state) {
+          state.when(
+            initial: () {},
+            loading: () {},
+            error: (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            },
+            loaded: (ad) {},
+            markingAsSold: () {},
+            markedAsSold: (ad) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Ad marked as sold successfully!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
           );
         },
+        child: BlocBuilder<AdDetailBloc, AdDetailState>(
+          builder: (context, state) {
+            return state.when(
+              initial: () =>
+                  const Center(child: Text('Waiting for details...')),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e) => Center(child: Text('Error: $e')),
+              loaded: (ad) => CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(child: _headerCarousel(ad)),
+                  SliverToBoxAdapter(child: _dots(ad.images.length)),
+                  SliverToBoxAdapter(child: _titlePriceMeta(ad)),
+                  SliverToBoxAdapter(child: Divider()),
+
+                  SliverToBoxAdapter(child: _pillTabs(ad)),
+                  SliverToBoxAdapter(child: _description(ad)),
+                  SliverToBoxAdapter(child: _sellerTile(ad)),
+                  // SliverToBoxAdapter(child: _recommendationsSection()),
+                  // const SliverPadding(padding: EdgeInsets.only(bottom: 90)),
+                ],
+              ),
+              markingAsSold: () => CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(child: _headerCarousel(widget.ad)),
+                  SliverToBoxAdapter(child: _dots(widget.ad.images.length)),
+                  SliverToBoxAdapter(child: _titlePriceMeta(widget.ad)),
+                  SliverToBoxAdapter(child: Divider()),
+                  SliverToBoxAdapter(child: _pillTabs(widget.ad)),
+                  SliverToBoxAdapter(child: _description(widget.ad)),
+                  SliverToBoxAdapter(child: _sellerTile(widget.ad)),
+                ],
+              ),
+              markedAsSold: (ad) => CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(child: _headerCarousel(ad)),
+                  SliverToBoxAdapter(child: _dots(ad.images.length)),
+                  SliverToBoxAdapter(child: _titlePriceMeta(ad)),
+                  SliverToBoxAdapter(child: Divider()),
+                  SliverToBoxAdapter(child: _pillTabs(ad)),
+                  SliverToBoxAdapter(child: _description(ad)),
+                  SliverToBoxAdapter(child: _sellerTile(ad)),
+                ],
+              ),
+            );
+          },
+        ),
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child:
-            // _secondaryBtn('Chat', onTap: () {}),
-            Row(
-          children: [
-            Expanded(
-              child: _primaryBtn('Make an offer', onTap: () {}),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _secondaryBtn('Chat', onTap: () {}),
-            ),
-          ],
+        child: BlocBuilder<AdDetailBloc, AdDetailState>(
+          builder: (context, state) {
+            return state.when(
+              initial: () => const SizedBox.shrink(),
+              loading: () => const SizedBox.shrink(),
+              error: (e) => const SizedBox.shrink(),
+              loaded: (ad) => _buildBottomButtons(ad),
+              markingAsSold: () => _buildBottomButtons(widget.ad),
+              markedAsSold: (ad) => _buildBottomButtons(ad),
+            );
+          },
         ),
       ),
+    );
+  }
+
+  // Build bottom buttons based on user ownership
+  Widget _buildBottomButtons(AddModel ad) {
+    // Show "Make Offer" and "Chat" buttons for all users
+    return Row(
+      children: [
+        Expanded(
+          child: _makeOfferBtn('Make an offer',
+              onTap: () => _handleMakeOffer(context)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _chatBtn('Chat', onTap: () {}
+              // onTap: () => _handleChat(context),
+              ),
+        ),
+      ],
+    );
+  }
+
+  // Mark as Sold button for Other Details section
+  Widget _markAsSoldButtonInDetails(AddModel ad) {
+    return BlocBuilder<AdDetailBloc, AdDetailState>(
+      builder: (context, state) {
+        final isLoading = state.when(
+          initial: () => false,
+          loading: () => false,
+          error: (e) => false,
+          loaded: (ad) => false,
+          markingAsSold: () => true,
+          markedAsSold: (ad) => false,
+        );
+        final isSold = ad.soldOut == true;
+
+        if (isSold) {
+          return Container(
+            width: double.infinity,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.green,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'SOLD',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppColors.primaryColor),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: isLoading ? null : () => _handleMarkAsSold(context, ad),
+            child: isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.sell, color: AppColors.primaryColor, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Mark as Sold',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Handle mark as sold action
+  void _handleMarkAsSold(BuildContext context, AddModel ad) {
+    // Store the bloc reference before showing the dialog
+    final adDetailBloc = context.read<AdDetailBloc>();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Mark as Sold'),
+          content: const Text(
+            'Are you sure you want to mark this ad as sold? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                adDetailBloc.add(
+                  AdDetailEvent.markAsSold(ad.id),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Mark as Sold',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -75,17 +281,31 @@ class _AdDetailPageState extends State<AdDetailPage> {
             options: CarouselOptions(
               viewportFraction: 1,
               height: double.infinity,
-              autoPlay: true,
+              autoPlay: false,
               onPageChanged: (i, _) => setState(() => _currentIndex = i),
             ),
             items: ad.images.map((img) {
               return Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(img, fit: BoxFit.cover),
+                  Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(24),
+                            bottomRight: Radius.circular(24)),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(24),
+                            bottomRight: Radius.circular(24)),
+                        child: Image.network(img, fit: BoxFit.cover),
+                      )),
                   // dark gradient overlay (top+bottom)
                   Container(
                     decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(24),
+                          bottomRight: Radius.circular(24)),
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -276,8 +496,9 @@ class _AdDetailPageState extends State<AdDetailPage> {
                 color: const Color(0xFFF2F3F6),
                 borderRadius: BorderRadius.circular(28),
               ),
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(6),
               child: TabBar(
+                indicatorSize: TabBarIndicatorSize.tab,
                 indicator: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
@@ -290,7 +511,7 @@ class _AdDetailPageState extends State<AdDetailPage> {
                 ),
                 indicatorColor: Colors.transparent, // removes default underline
                 dividerColor: Colors.transparent,
-                labelColor: Colors.black,
+                labelColor: AppColors.primaryColor,
                 unselectedLabelColor: Colors.grey.shade600,
                 tabs: const [
                   Tab(text: 'Specifications'),
@@ -304,7 +525,7 @@ class _AdDetailPageState extends State<AdDetailPage> {
               child: TabBarView(
                 children: [
                   _specsCard(ad),
-                  _showroomCard(),
+                  _otherDetailsCard(ad),
                 ],
               ),
             ),
@@ -378,21 +599,46 @@ class _AdDetailPageState extends State<AdDetailPage> {
     );
   }
 
-  Widget _showroomCard() {
-    // placeholder structure like the second tab
+  Widget _otherDetailsCard(AddModel ad) {
+    final sellerName = (ad.user?.name ?? '').trim();
+    final sellerEmail = (ad.user?.email ?? '').trim();
     return _cardShell(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            _KeyValRow(label: 'Dealer', value: 'Hyundai MotorHub'),
-            SizedBox(height: 8),
-            _KeyValRow(label: 'Address', value: 'Kakkanad, Ernakulam'),
-            SizedBox(height: 8),
-            _KeyValRow(label: 'Open Hours', value: 'Mon–Sat, 9:30 AM – 7 PM'),
-            SizedBox(height: 8),
-            _KeyValRow(label: 'Contact', value: '+91 98xx‑xxx‑xxx'),
+          children: [
+            if (sellerName.isNotEmpty) ...[
+              const Text('Seller Information',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 10),
+              _KeyValRow(label: 'Name', value: sellerName),
+              if (sellerEmail.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                _KeyValRow(label: 'Email', value: sellerEmail),
+              ],
+              const SizedBox(height: 16),
+            ],
+            const Text('Ad Details',
+                style: TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 10),
+            _KeyValRow(label: 'Location', value: ad.location),
+            const SizedBox(height: 8),
+            _KeyValRow(label: 'Category', value: toTitleCase(ad.category)),
+            const SizedBox(height: 8),
+            _KeyValRow(label: 'Posted On', value: _niceDate(ad.updatedAt)),
+            const SizedBox(height: 16),
+            // Mark as Sold button for ad owners
+            FutureBuilder<bool>(
+              future: _isCurrentUserOwner(ad),
+              builder: (context, snapshot) {
+                final isOwner = snapshot.data ?? false;
+                if (isOwner) {
+                  return _markAsSoldButtonInDetails(ad);
+                }
+                return const SizedBox.shrink();
+              },
+            ),
           ],
         ),
       ),
@@ -405,10 +651,20 @@ class _AdDetailPageState extends State<AdDetailPage> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: _cardShell(
         child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(
-            ad.description,
-            style: TextStyle(color: Colors.grey.shade800, height: 1.35),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Description',
+                style: TextStyle(color: Color(0xFF6B7280)),
+              ),
+              SizedBox(height: 10),
+              Text(
+                ad.description,
+                style: TextStyle(color: Colors.black, height: 1.35),
+              ),
+            ],
           ),
         ),
       ),
@@ -425,93 +681,29 @@ class _AdDetailPageState extends State<AdDetailPage> {
             radius: 24,
             backgroundImage: AssetImage('assets/images/dealer.jpg'),
           ),
-          title: const Text(
-            'Hyundai MotorHub',
-            style: TextStyle(fontWeight: FontWeight.w600),
+          title: Text(
+            ad.user?.name?.trim().isNotEmpty == true
+                ? ad.user!.name!
+                : 'Seller',
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
-          subtitle: Text(ad.location),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (ad.user?.email?.trim().isNotEmpty == true)
+                Text(ad.user!.email!),
+              Text(ad.location),
+            ],
+          ),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () {},
+          onTap: () {
+            final sellerId = ad.user?.id;
+            if (sellerId != null && sellerId.isNotEmpty && ad.user != null) {
+              context.push('/seller-profile/$sellerId', extra: ad.user);
+            }
+          },
         ),
-      ),
-    );
-  }
-
-  // ======= Recommendations =======
-  Widget _recommendationsSection() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 0, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Recommendations',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 170,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.only(right: 16),
-              itemCount: 4,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (_, i) => _recommendationCard(i),
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
-  }
-
-  Widget _recommendationCard(int i) {
-    return Container(
-      width: 220,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 4))
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          Expanded(
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Image.network(
-                    'https://picsum.photos/seed/rec$i/400/240',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: _glassIcon(Icons.favorite_border),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text('₹ 7,50,000  •  Ertiga LXi (2018)',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontWeight: FontWeight.w700)),
-                SizedBox(height: 4),
-                Text('12700 KM  /  Petrol',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -532,18 +724,7 @@ class _AdDetailPageState extends State<AdDetailPage> {
     );
   }
 
-  Widget _glassIcon(IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.85),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Icon(icon, size: 16),
-    );
-  }
-
-  Widget _primaryBtn(String label, {required VoidCallback onTap}) {
+  Widget _chatBtn(String label, {required VoidCallback onTap}) {
     return SizedBox(
       height: 48,
       child: ElevatedButton(
@@ -561,7 +742,36 @@ class _AdDetailPageState extends State<AdDetailPage> {
     );
   }
 
-  Widget _secondaryBtn(String label, {required VoidCallback onTap}) {
+  void _handleMakeOffer(BuildContext context) {
+    // Get the ad from the current state
+    final state = context.read<AdDetailBloc>().state;
+    state.when(
+      initial: () {},
+      loading: () {},
+      error: (message) {},
+      loaded: (ad) {
+        // Show the offer popup
+        OfferService.showOfferPopup(
+          context: context,
+          adId: ad.id,
+          adTitle: ad.description.isNotEmpty ? ad.description : 'Untitled Ad',
+          adPosterName: ad.user?.name ?? 'Unknown Seller',
+        );
+      },
+      markingAsSold: () {},
+      markedAsSold: (ad) {
+        // Show the offer popup
+        OfferService.showOfferPopup(
+          context: context,
+          adId: ad.id,
+          adTitle: ad.description.isNotEmpty ? ad.description : 'Untitled Ad',
+          adPosterName: ad.user?.name ?? 'Unknown Seller',
+        );
+      },
+    );
+  }
+
+  Widget _makeOfferBtn(String label, {required VoidCallback onTap}) {
     return SizedBox(
       height: 48,
       child: OutlinedButton(
@@ -632,8 +842,8 @@ class _AdDetailPageState extends State<AdDetailPage> {
   }
 
   double _contentHeightForSpecs(AddModel ad) {
-    // enough room for grid + showroom; adjust if you add more rows
-    return 260;
+    // enough room for grid + showroom + mark as sold button; adjust if you add more rows
+    return 320; // Increased from 260 to accommodate the Mark as Sold button
   }
 
   // String _vehicleTitle(AddModel ad) {

@@ -15,6 +15,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     on<FetchNextPageEvent>(_onFetchNextPage);
     on<FetchByCategory>(_onFetchByCategory);
     on<ApplyFiltersEvent>(_onApplyFilters);
+    on<UpdateAdFavoriteStatusEvent>(_onUpdateAdFavoriteStatus);
   }
 
   int _currentPage = 1;
@@ -30,6 +31,14 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
   List<String>? _transmissionTypeIds;
   int? _minPrice;
   int? _maxPrice;
+  // Property-specific filters
+  List<String>? _propertyTypes;
+  int? _minBedrooms;
+  int? _maxBedrooms;
+  int? _minArea;
+  int? _maxArea;
+  bool? _isFurnished;
+  bool? _hasParking;
 
   Future<void> _onFetchAllListings(
       FetchAllListingsEvent event, Emitter<AdvertisementState> emit) async {
@@ -46,6 +55,13 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _transmissionTypeIds = null;
     _minPrice = null;
     _maxPrice = null;
+    _propertyTypes = null;
+    _minBedrooms = null;
+    _maxBedrooms = null;
+    _minArea = null;
+    _maxArea = null;
+    _isFurnished = null;
+    _hasParking = null;
 
     try {
       final result = await repository.fetchAllAds(page: _currentPage);
@@ -76,7 +92,12 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
             fuelTypeIds: _fuelTypeIds,
             transmissionTypeIds: _transmissionTypeIds,
             minPrice: _minPrice,
-            maxPrice: _maxPrice);
+            maxPrice: _maxPrice,
+            propertyTypes: _propertyTypes,
+            minBedrooms: _minBedrooms,
+            maxBedrooms: _maxBedrooms,
+            minArea: _minArea,
+            maxArea: _maxArea);
         print(
             "📦 Received ${result.data.length} ads | hasNext: ${result.hasNext}");
         final updatedList = [...currentState.listings, ...result.data];
@@ -106,6 +127,13 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _currentPage = 1;
     _minPrice = null;
     _maxPrice = null;
+    _propertyTypes = null;
+    _minBedrooms = null;
+    _maxBedrooms = null;
+    _minArea = null;
+    _maxArea = null;
+    _isFurnished = null;
+    _hasParking = null;
 
     try {
       final result = await repository.fetchAllAds(
@@ -135,6 +163,13 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _transmissionTypeIds = event.transmissionTypeIds;
     _minPrice = event.minPrice;
     _maxPrice = event.maxPrice;
+    _propertyTypes = event.propertyTypes;
+    _minBedrooms = event.minBedrooms;
+    _maxBedrooms = event.maxBedrooms;
+    _minArea = event.minArea;
+    _maxArea = event.maxArea;
+    _isFurnished = event.isFurnished;
+    _hasParking = event.hasParking;
     _currentPage = 1;
 
     try {
@@ -148,13 +183,44 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
           fuelTypeIds: _fuelTypeIds,
           transmissionTypeIds: _transmissionTypeIds,
           minPrice: _minPrice,
-          maxPrice: _maxPrice);
+          maxPrice: _maxPrice,
+          propertyTypes: _propertyTypes,
+          minBedrooms: _minBedrooms,
+          maxBedrooms: _maxBedrooms,
+          minArea: _minArea,
+          maxArea: _maxArea,
+          isFurnished: _isFurnished,
+          hasParking: _hasParking);
       emit(AdvertisementState.listingsLoaded(
         listings: result.data,
         hasMore: result.hasNext,
       ));
     } catch (e) {
       emit(AdvertisementState.error("Failed to apply filters: $e"));
+    }
+  }
+
+  Future<void> _onUpdateAdFavoriteStatus(UpdateAdFavoriteStatusEvent event,
+      Emitter<AdvertisementState> emit) async {
+    final currentState = state;
+
+    if (currentState is ListingsLoaded) {
+      final updatedListings = currentState.listings.map((ad) {
+        if (ad.id == event.adId) {
+          return ad.copyWith(
+            isFavorited: event.isFavorited,
+            favoriteId: event.favoriteId,
+            favoritedAt:
+                event.isFavorited ? DateTime.now().toIso8601String() : null,
+          );
+        }
+        return ad;
+      }).toList();
+
+      emit(AdvertisementState.listingsLoaded(
+        listings: updatedListings,
+        hasMore: currentState.hasMore,
+      ));
     }
   }
 }

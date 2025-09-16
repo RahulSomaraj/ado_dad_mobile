@@ -1,5 +1,8 @@
-import 'package:ado_dad_user/features/chat/ui/chat_list_page.dart';
-import 'package:ado_dad_user/features/chat/ui/chat_room_page.dart';
+import 'package:ado_dad_user/features/chat/ui/chat_thread_page.dart';
+import 'package:ado_dad_user/features/chat/ui/messages_page.dart';
+import 'package:ado_dad_user/features/chat/ui/chat_connection_test.dart';
+import 'package:ado_dad_user/features/chat/ui/socket_debug_page.dart';
+import 'package:ado_dad_user/features/chat/models/chat_models.dart';
 import 'package:ado_dad_user/features/home/ad_detail/ad_detail_bloc.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/features/home/fuelType_filter_bloc/fuel_type_filter_bloc.dart';
@@ -7,6 +10,7 @@ import 'package:ado_dad_user/features/home/manufacturer_bloc/manufacturer_bloc.d
 import 'package:ado_dad_user/features/home/model_filter_bloc/model_filter_bloc.dart';
 import 'package:ado_dad_user/features/home/transmissionType_filter_bloc/transmission_type_filter_bloc.dart';
 import 'package:ado_dad_user/features/home/ui/car_filters_page.dart';
+import 'package:ado_dad_user/features/home/ui/property_filter_page.dart';
 import 'package:ado_dad_user/features/home/ui/category_list_page.dart';
 import 'package:ado_dad_user/features/home/ui/edit_add_details/commercial_vehicle_form_edit.dart';
 import 'package:ado_dad_user/features/home/ui/edit_add_details/private_vehicle_form_edit.dart';
@@ -14,9 +18,11 @@ import 'package:ado_dad_user/features/home/ui/edit_add_details/property_form_edi
 import 'package:ado_dad_user/features/home/ui/edit_add_details/two_wheeler_form_edit.dart';
 import 'package:ado_dad_user/features/home/ui/home.dart';
 import 'package:ado_dad_user/features/home/ui/add_detail_page.dart';
+import 'package:ado_dad_user/features/home/ui/sellerprofile/seller_profile_page.dart';
 import 'package:ado_dad_user/features/login/ui/login.dart';
 import 'package:ado_dad_user/features/profile/MyAds/ui/my_ads_page.dart';
 import 'package:ado_dad_user/features/profile/ui/profile.dart';
+import 'package:ado_dad_user/features/profile/wishlist/wishlist_page.dart';
 import 'package:ado_dad_user/features/search/ui/search.dart';
 import 'package:ado_dad_user/features/sell/ui/form/add_commercial_vehicle_form.dart';
 import 'package:ado_dad_user/features/sell/ui/form/add_private_vehicle_form.dart';
@@ -52,20 +58,48 @@ class AppRoutes {
       GoRoute(path: '/signup', builder: (context, state) => const Signup()),
       // Chat routes
       GoRoute(
-        path: '/chats',
-        builder: (context, state) => const ChatListPage(),
-      ),
-      GoRoute(
-        path: '/chats/:chatId',
-        builder: (context, state) {
-          final chatId = state.pathParameters['chatId']!;
-          return ChatRoomPage(chatId: chatId);
+        path: '/messages',
+        builder: (c, s) {
+          final previousRoute = s.uri.queryParameters['from'];
+          return MessagesPage(previousRoute: previousRoute);
         },
       ),
+      GoRoute(
+        path: '/chat/:id',
+        builder: (c, s) {
+          final data = s.extra as ChatThread?;
+          return ChatThreadPage(
+            peerName: data?.name ?? 'Chat',
+            avatarUrl: data?.avatarUrl ?? '',
+            threadId: s.pathParameters['id']!,
+          );
+        },
+      ),
+
+      // Chat socket test route
+      GoRoute(
+        path: '/chat-test',
+        builder: (context, state) => const ChatConnectionTest(),
+      ),
+
+      // Socket debug route
+      GoRoute(
+        path: '/socket-debug',
+        builder: (context, state) => const SocketDebugPage(),
+      ),
+
       // Legacy chat route for backward compatibility
-      GoRoute(path: '/chat', builder: (context, state) => const ChatListPage()),
+      // GoRoute(path: '/chat', builder: (context, state) => const MessagesPage()),
       GoRoute(path: '/profile', builder: (context, state) => const Profile()),
-      GoRoute(path: '/search', builder: (context, state) => const Search()),
+      GoRoute(
+          path: '/wishlist', builder: (context, state) => const WishlistPage()),
+      GoRoute(
+        path: '/search',
+        builder: (context, state) {
+          final previousRoute = state.uri.queryParameters['from'];
+          return Search(previousRoute: previousRoute);
+        },
+      ),
       GoRoute(path: '/seller', builder: (context, state) => const Seller()),
       GoRoute(
         path: '/vehicle-form',
@@ -145,6 +179,33 @@ class AppRoutes {
             create: (_) => AdDetailBloc(repository: AddRepository())
               ..add(AdDetailEvent.fetch(ad.id)),
             child: AdDetailPage(ad: ad),
+          );
+        },
+      ),
+
+      GoRoute(
+        path: '/seller-profile/:id',
+        builder: (context, state) {
+          final sellerId = state.pathParameters['id']!;
+
+          // Get user data passed from the seller tile navigation
+          final userData = state.extra as AdUser?;
+
+          // Use passed user data or fallback to basic data
+          final seller = userData ??
+              AdUser(
+                id: sellerId,
+                name: 'Seller',
+                email: null,
+              );
+
+          // TODO: Replace with actual API call to fetch seller's ads
+          // For now, using empty list
+          final sellerAds = <AddModel>[];
+
+          return SellerProfilePage(
+            seller: seller,
+            ads: sellerAds,
           );
         },
       ),
@@ -244,6 +305,10 @@ class AppRoutes {
             child: const CarFiltersPage(),
           );
         },
+      ),
+      GoRoute(
+        path: '/property-filter',
+        builder: (context, state) => const PropertyFiltersPage(),
       ),
       GoRoute(path: '/my-ads', builder: (context, state) => const MyAdsPage()),
     ],

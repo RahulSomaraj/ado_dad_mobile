@@ -52,6 +52,45 @@ class AdDetailBloc extends Bloc<AdDetailEvent, AdDetailState> {
             emit(AdDetailState.error(e.toString()));
           }
         },
+        markAsSold: (adId) async {
+          emit(const AdDetailState.markingAsSold());
+          try {
+            await repository.markAdAsSold(adId);
+            // Re-fetch the updated ad detail
+            final detail = await repository.fetchAdDetail(adId);
+
+            // Map IDs → names
+            final transmissions =
+                await repository.fetchVehicleTransmissionTypes();
+            final fuels = await repository.fetchVehicleFuelTypes();
+
+            final tName = transmissions
+                .firstWhere(
+                  (t) => t.id == detail.transmissionId,
+                  orElse: () => VehicleTransmissionType(
+                    id: '',
+                    displayName: '-',
+                  ),
+                )
+                .displayName;
+
+            final fName = fuels
+                .firstWhere(
+                  (f) => f.id == detail.fuelTypeId,
+                  orElse: () => VehicleFuelType(
+                    id: '',
+                    displayName: '-',
+                  ),
+                )
+                .displayName;
+
+            emit(AdDetailState.markedAsSold(
+              detail.copyWith(transmission: tName, fuelType: fName),
+            ));
+          } catch (e) {
+            emit(AdDetailState.error(e.toString()));
+          }
+        },
         started: () {},
       );
     });

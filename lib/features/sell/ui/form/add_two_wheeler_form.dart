@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/widgets/common_decoration.dart';
 import 'package:ado_dad_user/common/widgets/dropdown_widget.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
@@ -302,15 +303,7 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                             errorMsg: 'Please select a model',
                           ),
                           SizedBox(height: 10),
-                          buildDropdown<VehicleVariant>(
-                            labelText: 'Variant *',
-                            items: _variants,
-                            selectedValue: _selectedVariant,
-                            onChanged: (val) {
-                              setState(() => _selectedVariant = val);
-                            },
-                            errorMsg: 'Please select a variant',
-                          ),
+                          _buildVariantDropdown(),
                           SizedBox(height: 10),
                           buildDropdown<VehicleTransmissionType>(
                             labelText: 'Transmission Type',
@@ -587,6 +580,36 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
           ],
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildVariantDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DropdownButtonFormField<VehicleVariant>(
+          decoration:
+              CommonDecoration.textFieldDecoration(labelText: 'Variant *'),
+          value: _selectedVariant,
+          dropdownColor: Colors.white,
+          isExpanded: true,
+          items: _variants.map((VehicleVariant variant) {
+            return DropdownMenuItem<VehicleVariant>(
+              value: variant,
+              child: Text(
+                variant.name,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            );
+          }).toList(),
+          onChanged: (val) {
+            setState(() => _selectedVariant = val);
+          },
+          validator: (value) =>
+              value == null ? 'Please select a variant' : null,
+        ),
+      ],
     );
   }
 }

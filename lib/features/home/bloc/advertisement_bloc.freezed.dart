@@ -31,8 +31,17 @@ mixin _$AdvertisementEvent {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)
         applyFilters,
+    required TResult Function(String adId, bool isFavorited, String? favoriteId)
+        updateAdFavoriteStatus,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -50,8 +59,17 @@ mixin _$AdvertisementEvent {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)?
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)?
         applyFilters,
+    TResult? Function(String adId, bool isFavorited, String? favoriteId)?
+        updateAdFavoriteStatus,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -69,8 +87,17 @@ mixin _$AdvertisementEvent {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)?
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)?
         applyFilters,
+    TResult Function(String adId, bool isFavorited, String? favoriteId)?
+        updateAdFavoriteStatus,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -81,6 +108,8 @@ mixin _$AdvertisementEvent {
     required TResult Function(FetchNextPageEvent value) fetchNextPage,
     required TResult Function(FetchByCategory value) fetchByCategory,
     required TResult Function(ApplyFiltersEvent value) applyFilters,
+    required TResult Function(UpdateAdFavoriteStatusEvent value)
+        updateAdFavoriteStatus,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -90,6 +119,8 @@ mixin _$AdvertisementEvent {
     TResult? Function(FetchNextPageEvent value)? fetchNextPage,
     TResult? Function(FetchByCategory value)? fetchByCategory,
     TResult? Function(ApplyFiltersEvent value)? applyFilters,
+    TResult? Function(UpdateAdFavoriteStatusEvent value)?
+        updateAdFavoriteStatus,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -99,6 +130,7 @@ mixin _$AdvertisementEvent {
     TResult Function(FetchNextPageEvent value)? fetchNextPage,
     TResult Function(FetchByCategory value)? fetchByCategory,
     TResult Function(ApplyFiltersEvent value)? applyFilters,
+    TResult Function(UpdateAdFavoriteStatusEvent value)? updateAdFavoriteStatus,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -179,8 +211,17 @@ class _$StartedImpl implements Started {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)
         applyFilters,
+    required TResult Function(String adId, bool isFavorited, String? favoriteId)
+        updateAdFavoriteStatus,
   }) {
     return started();
   }
@@ -201,8 +242,17 @@ class _$StartedImpl implements Started {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)?
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)?
         applyFilters,
+    TResult? Function(String adId, bool isFavorited, String? favoriteId)?
+        updateAdFavoriteStatus,
   }) {
     return started?.call();
   }
@@ -223,8 +273,17 @@ class _$StartedImpl implements Started {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)?
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)?
         applyFilters,
+    TResult Function(String adId, bool isFavorited, String? favoriteId)?
+        updateAdFavoriteStatus,
     required TResult orElse(),
   }) {
     if (started != null) {
@@ -241,6 +300,8 @@ class _$StartedImpl implements Started {
     required TResult Function(FetchNextPageEvent value) fetchNextPage,
     required TResult Function(FetchByCategory value) fetchByCategory,
     required TResult Function(ApplyFiltersEvent value) applyFilters,
+    required TResult Function(UpdateAdFavoriteStatusEvent value)
+        updateAdFavoriteStatus,
   }) {
     return started(this);
   }
@@ -253,6 +314,8 @@ class _$StartedImpl implements Started {
     TResult? Function(FetchNextPageEvent value)? fetchNextPage,
     TResult? Function(FetchByCategory value)? fetchByCategory,
     TResult? Function(ApplyFiltersEvent value)? applyFilters,
+    TResult? Function(UpdateAdFavoriteStatusEvent value)?
+        updateAdFavoriteStatus,
   }) {
     return started?.call(this);
   }
@@ -265,6 +328,7 @@ class _$StartedImpl implements Started {
     TResult Function(FetchNextPageEvent value)? fetchNextPage,
     TResult Function(FetchByCategory value)? fetchByCategory,
     TResult Function(ApplyFiltersEvent value)? applyFilters,
+    TResult Function(UpdateAdFavoriteStatusEvent value)? updateAdFavoriteStatus,
     required TResult orElse(),
   }) {
     if (started != null) {
@@ -334,8 +398,17 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)
         applyFilters,
+    required TResult Function(String adId, bool isFavorited, String? favoriteId)
+        updateAdFavoriteStatus,
   }) {
     return fetchAllListings();
   }
@@ -356,8 +429,17 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)?
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)?
         applyFilters,
+    TResult? Function(String adId, bool isFavorited, String? favoriteId)?
+        updateAdFavoriteStatus,
   }) {
     return fetchAllListings?.call();
   }
@@ -378,8 +460,17 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)?
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)?
         applyFilters,
+    TResult Function(String adId, bool isFavorited, String? favoriteId)?
+        updateAdFavoriteStatus,
     required TResult orElse(),
   }) {
     if (fetchAllListings != null) {
@@ -396,6 +487,8 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
     required TResult Function(FetchNextPageEvent value) fetchNextPage,
     required TResult Function(FetchByCategory value) fetchByCategory,
     required TResult Function(ApplyFiltersEvent value) applyFilters,
+    required TResult Function(UpdateAdFavoriteStatusEvent value)
+        updateAdFavoriteStatus,
   }) {
     return fetchAllListings(this);
   }
@@ -408,6 +501,8 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
     TResult? Function(FetchNextPageEvent value)? fetchNextPage,
     TResult? Function(FetchByCategory value)? fetchByCategory,
     TResult? Function(ApplyFiltersEvent value)? applyFilters,
+    TResult? Function(UpdateAdFavoriteStatusEvent value)?
+        updateAdFavoriteStatus,
   }) {
     return fetchAllListings?.call(this);
   }
@@ -420,6 +515,7 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
     TResult Function(FetchNextPageEvent value)? fetchNextPage,
     TResult Function(FetchByCategory value)? fetchByCategory,
     TResult Function(ApplyFiltersEvent value)? applyFilters,
+    TResult Function(UpdateAdFavoriteStatusEvent value)? updateAdFavoriteStatus,
     required TResult orElse(),
   }) {
     if (fetchAllListings != null) {
@@ -487,8 +583,17 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)
         applyFilters,
+    required TResult Function(String adId, bool isFavorited, String? favoriteId)
+        updateAdFavoriteStatus,
   }) {
     return fetchNextPage();
   }
@@ -509,8 +614,17 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)?
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)?
         applyFilters,
+    TResult? Function(String adId, bool isFavorited, String? favoriteId)?
+        updateAdFavoriteStatus,
   }) {
     return fetchNextPage?.call();
   }
@@ -531,8 +645,17 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)?
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)?
         applyFilters,
+    TResult Function(String adId, bool isFavorited, String? favoriteId)?
+        updateAdFavoriteStatus,
     required TResult orElse(),
   }) {
     if (fetchNextPage != null) {
@@ -549,6 +672,8 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
     required TResult Function(FetchNextPageEvent value) fetchNextPage,
     required TResult Function(FetchByCategory value) fetchByCategory,
     required TResult Function(ApplyFiltersEvent value) applyFilters,
+    required TResult Function(UpdateAdFavoriteStatusEvent value)
+        updateAdFavoriteStatus,
   }) {
     return fetchNextPage(this);
   }
@@ -561,6 +686,8 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
     TResult? Function(FetchNextPageEvent value)? fetchNextPage,
     TResult? Function(FetchByCategory value)? fetchByCategory,
     TResult? Function(ApplyFiltersEvent value)? applyFilters,
+    TResult? Function(UpdateAdFavoriteStatusEvent value)?
+        updateAdFavoriteStatus,
   }) {
     return fetchNextPage?.call(this);
   }
@@ -573,6 +700,7 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
     TResult Function(FetchNextPageEvent value)? fetchNextPage,
     TResult Function(FetchByCategory value)? fetchByCategory,
     TResult Function(ApplyFiltersEvent value)? applyFilters,
+    TResult Function(UpdateAdFavoriteStatusEvent value)? updateAdFavoriteStatus,
     required TResult orElse(),
   }) {
     if (fetchNextPage != null) {
@@ -669,8 +797,17 @@ class _$FetchByCategoryImpl implements FetchByCategory {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)
         applyFilters,
+    required TResult Function(String adId, bool isFavorited, String? favoriteId)
+        updateAdFavoriteStatus,
   }) {
     return fetchByCategory(categoryId);
   }
@@ -691,8 +828,17 @@ class _$FetchByCategoryImpl implements FetchByCategory {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)?
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)?
         applyFilters,
+    TResult? Function(String adId, bool isFavorited, String? favoriteId)?
+        updateAdFavoriteStatus,
   }) {
     return fetchByCategory?.call(categoryId);
   }
@@ -713,8 +859,17 @@ class _$FetchByCategoryImpl implements FetchByCategory {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)?
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)?
         applyFilters,
+    TResult Function(String adId, bool isFavorited, String? favoriteId)?
+        updateAdFavoriteStatus,
     required TResult orElse(),
   }) {
     if (fetchByCategory != null) {
@@ -731,6 +886,8 @@ class _$FetchByCategoryImpl implements FetchByCategory {
     required TResult Function(FetchNextPageEvent value) fetchNextPage,
     required TResult Function(FetchByCategory value) fetchByCategory,
     required TResult Function(ApplyFiltersEvent value) applyFilters,
+    required TResult Function(UpdateAdFavoriteStatusEvent value)
+        updateAdFavoriteStatus,
   }) {
     return fetchByCategory(this);
   }
@@ -743,6 +900,8 @@ class _$FetchByCategoryImpl implements FetchByCategory {
     TResult? Function(FetchNextPageEvent value)? fetchNextPage,
     TResult? Function(FetchByCategory value)? fetchByCategory,
     TResult? Function(ApplyFiltersEvent value)? applyFilters,
+    TResult? Function(UpdateAdFavoriteStatusEvent value)?
+        updateAdFavoriteStatus,
   }) {
     return fetchByCategory?.call(this);
   }
@@ -755,6 +914,7 @@ class _$FetchByCategoryImpl implements FetchByCategory {
     TResult Function(FetchNextPageEvent value)? fetchNextPage,
     TResult Function(FetchByCategory value)? fetchByCategory,
     TResult Function(ApplyFiltersEvent value)? applyFilters,
+    TResult Function(UpdateAdFavoriteStatusEvent value)? updateAdFavoriteStatus,
     required TResult orElse(),
   }) {
     if (fetchByCategory != null) {
@@ -792,7 +952,14 @@ abstract class _$$ApplyFiltersEventImplCopyWith<$Res> {
       List<String>? fuelTypeIds,
       List<String>? transmissionTypeIds,
       int? minPrice,
-      int? maxPrice});
+      int? maxPrice,
+      List<String>? propertyTypes,
+      int? minBedrooms,
+      int? maxBedrooms,
+      int? minArea,
+      int? maxArea,
+      bool? isFurnished,
+      bool? hasParking});
 }
 
 /// @nodoc
@@ -817,6 +984,13 @@ class __$$ApplyFiltersEventImplCopyWithImpl<$Res>
     Object? transmissionTypeIds = freezed,
     Object? minPrice = freezed,
     Object? maxPrice = freezed,
+    Object? propertyTypes = freezed,
+    Object? minBedrooms = freezed,
+    Object? maxBedrooms = freezed,
+    Object? minArea = freezed,
+    Object? maxArea = freezed,
+    Object? isFurnished = freezed,
+    Object? hasParking = freezed,
   }) {
     return _then(_$ApplyFiltersEventImpl(
       categoryId: freezed == categoryId
@@ -855,6 +1029,34 @@ class __$$ApplyFiltersEventImplCopyWithImpl<$Res>
           ? _value.maxPrice
           : maxPrice // ignore: cast_nullable_to_non_nullable
               as int?,
+      propertyTypes: freezed == propertyTypes
+          ? _value._propertyTypes
+          : propertyTypes // ignore: cast_nullable_to_non_nullable
+              as List<String>?,
+      minBedrooms: freezed == minBedrooms
+          ? _value.minBedrooms
+          : minBedrooms // ignore: cast_nullable_to_non_nullable
+              as int?,
+      maxBedrooms: freezed == maxBedrooms
+          ? _value.maxBedrooms
+          : maxBedrooms // ignore: cast_nullable_to_non_nullable
+              as int?,
+      minArea: freezed == minArea
+          ? _value.minArea
+          : minArea // ignore: cast_nullable_to_non_nullable
+              as int?,
+      maxArea: freezed == maxArea
+          ? _value.maxArea
+          : maxArea // ignore: cast_nullable_to_non_nullable
+              as int?,
+      isFurnished: freezed == isFurnished
+          ? _value.isFurnished
+          : isFurnished // ignore: cast_nullable_to_non_nullable
+              as bool?,
+      hasParking: freezed == hasParking
+          ? _value.hasParking
+          : hasParking // ignore: cast_nullable_to_non_nullable
+              as bool?,
     ));
   }
 }
@@ -871,11 +1073,19 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
       final List<String>? fuelTypeIds,
       final List<String>? transmissionTypeIds,
       this.minPrice,
-      this.maxPrice})
+      this.maxPrice,
+      final List<String>? propertyTypes,
+      this.minBedrooms,
+      this.maxBedrooms,
+      this.minArea,
+      this.maxArea,
+      this.isFurnished,
+      this.hasParking})
       : _manufacturerIds = manufacturerIds,
         _modelIds = modelIds,
         _fuelTypeIds = fuelTypeIds,
-        _transmissionTypeIds = transmissionTypeIds;
+        _transmissionTypeIds = transmissionTypeIds,
+        _propertyTypes = propertyTypes;
 
   @override
   final String? categoryId;
@@ -928,10 +1138,34 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
   final int? minPrice;
   @override
   final int? maxPrice;
+// Property-specific filters
+  final List<String>? _propertyTypes;
+// Property-specific filters
+  @override
+  List<String>? get propertyTypes {
+    final value = _propertyTypes;
+    if (value == null) return null;
+    if (_propertyTypes is EqualUnmodifiableListView) return _propertyTypes;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
+  @override
+  final int? minBedrooms;
+  @override
+  final int? maxBedrooms;
+  @override
+  final int? minArea;
+  @override
+  final int? maxArea;
+  @override
+  final bool? isFurnished;
+  @override
+  final bool? hasParking;
 
   @override
   String toString() {
-    return 'AdvertisementEvent.applyFilters(categoryId: $categoryId, minYear: $minYear, maxYear: $maxYear, manufacturerIds: $manufacturerIds, modelIds: $modelIds, fuelTypeIds: $fuelTypeIds, transmissionTypeIds: $transmissionTypeIds, minPrice: $minPrice, maxPrice: $maxPrice)';
+    return 'AdvertisementEvent.applyFilters(categoryId: $categoryId, minYear: $minYear, maxYear: $maxYear, manufacturerIds: $manufacturerIds, modelIds: $modelIds, fuelTypeIds: $fuelTypeIds, transmissionTypeIds: $transmissionTypeIds, minPrice: $minPrice, maxPrice: $maxPrice, propertyTypes: $propertyTypes, minBedrooms: $minBedrooms, maxBedrooms: $maxBedrooms, minArea: $minArea, maxArea: $maxArea, isFurnished: $isFurnished, hasParking: $hasParking)';
   }
 
   @override
@@ -953,7 +1187,19 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
             (identical(other.minPrice, minPrice) ||
                 other.minPrice == minPrice) &&
             (identical(other.maxPrice, maxPrice) ||
-                other.maxPrice == maxPrice));
+                other.maxPrice == maxPrice) &&
+            const DeepCollectionEquality()
+                .equals(other._propertyTypes, _propertyTypes) &&
+            (identical(other.minBedrooms, minBedrooms) ||
+                other.minBedrooms == minBedrooms) &&
+            (identical(other.maxBedrooms, maxBedrooms) ||
+                other.maxBedrooms == maxBedrooms) &&
+            (identical(other.minArea, minArea) || other.minArea == minArea) &&
+            (identical(other.maxArea, maxArea) || other.maxArea == maxArea) &&
+            (identical(other.isFurnished, isFurnished) ||
+                other.isFurnished == isFurnished) &&
+            (identical(other.hasParking, hasParking) ||
+                other.hasParking == hasParking));
   }
 
   @override
@@ -967,7 +1213,14 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
       const DeepCollectionEquality().hash(_fuelTypeIds),
       const DeepCollectionEquality().hash(_transmissionTypeIds),
       minPrice,
-      maxPrice);
+      maxPrice,
+      const DeepCollectionEquality().hash(_propertyTypes),
+      minBedrooms,
+      maxBedrooms,
+      minArea,
+      maxArea,
+      isFurnished,
+      hasParking);
 
   /// Create a copy of AdvertisementEvent
   /// with the given fields replaced by the non-null parameter values.
@@ -994,11 +1247,35 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)
         applyFilters,
+    required TResult Function(String adId, bool isFavorited, String? favoriteId)
+        updateAdFavoriteStatus,
   }) {
-    return applyFilters(categoryId, minYear, maxYear, manufacturerIds, modelIds,
-        fuelTypeIds, transmissionTypeIds, minPrice, maxPrice);
+    return applyFilters(
+        categoryId,
+        minYear,
+        maxYear,
+        manufacturerIds,
+        modelIds,
+        fuelTypeIds,
+        transmissionTypeIds,
+        minPrice,
+        maxPrice,
+        propertyTypes,
+        minBedrooms,
+        maxBedrooms,
+        minArea,
+        maxArea,
+        isFurnished,
+        hasParking);
   }
 
   @override
@@ -1017,11 +1294,35 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)?
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)?
         applyFilters,
+    TResult? Function(String adId, bool isFavorited, String? favoriteId)?
+        updateAdFavoriteStatus,
   }) {
-    return applyFilters?.call(categoryId, minYear, maxYear, manufacturerIds,
-        modelIds, fuelTypeIds, transmissionTypeIds, minPrice, maxPrice);
+    return applyFilters?.call(
+        categoryId,
+        minYear,
+        maxYear,
+        manufacturerIds,
+        modelIds,
+        fuelTypeIds,
+        transmissionTypeIds,
+        minPrice,
+        maxPrice,
+        propertyTypes,
+        minBedrooms,
+        maxBedrooms,
+        minArea,
+        maxArea,
+        isFurnished,
+        hasParking);
   }
 
   @override
@@ -1040,13 +1341,37 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
             List<String>? fuelTypeIds,
             List<String>? transmissionTypeIds,
             int? minPrice,
-            int? maxPrice)?
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)?
         applyFilters,
+    TResult Function(String adId, bool isFavorited, String? favoriteId)?
+        updateAdFavoriteStatus,
     required TResult orElse(),
   }) {
     if (applyFilters != null) {
-      return applyFilters(categoryId, minYear, maxYear, manufacturerIds,
-          modelIds, fuelTypeIds, transmissionTypeIds, minPrice, maxPrice);
+      return applyFilters(
+          categoryId,
+          minYear,
+          maxYear,
+          manufacturerIds,
+          modelIds,
+          fuelTypeIds,
+          transmissionTypeIds,
+          minPrice,
+          maxPrice,
+          propertyTypes,
+          minBedrooms,
+          maxBedrooms,
+          minArea,
+          maxArea,
+          isFurnished,
+          hasParking);
     }
     return orElse();
   }
@@ -1059,6 +1384,8 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
     required TResult Function(FetchNextPageEvent value) fetchNextPage,
     required TResult Function(FetchByCategory value) fetchByCategory,
     required TResult Function(ApplyFiltersEvent value) applyFilters,
+    required TResult Function(UpdateAdFavoriteStatusEvent value)
+        updateAdFavoriteStatus,
   }) {
     return applyFilters(this);
   }
@@ -1071,6 +1398,8 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
     TResult? Function(FetchNextPageEvent value)? fetchNextPage,
     TResult? Function(FetchByCategory value)? fetchByCategory,
     TResult? Function(ApplyFiltersEvent value)? applyFilters,
+    TResult? Function(UpdateAdFavoriteStatusEvent value)?
+        updateAdFavoriteStatus,
   }) {
     return applyFilters?.call(this);
   }
@@ -1083,6 +1412,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
     TResult Function(FetchNextPageEvent value)? fetchNextPage,
     TResult Function(FetchByCategory value)? fetchByCategory,
     TResult Function(ApplyFiltersEvent value)? applyFilters,
+    TResult Function(UpdateAdFavoriteStatusEvent value)? updateAdFavoriteStatus,
     required TResult orElse(),
   }) {
     if (applyFilters != null) {
@@ -1102,7 +1432,14 @@ abstract class ApplyFiltersEvent implements AdvertisementEvent {
       final List<String>? fuelTypeIds,
       final List<String>? transmissionTypeIds,
       final int? minPrice,
-      final int? maxPrice}) = _$ApplyFiltersEventImpl;
+      final int? maxPrice,
+      final List<String>? propertyTypes,
+      final int? minBedrooms,
+      final int? maxBedrooms,
+      final int? minArea,
+      final int? maxArea,
+      final bool? isFurnished,
+      final bool? hasParking}) = _$ApplyFiltersEventImpl;
 
   String? get categoryId;
   int? get minYear;
@@ -1112,13 +1449,268 @@ abstract class ApplyFiltersEvent implements AdvertisementEvent {
   List<String>? get fuelTypeIds;
   List<String>? get transmissionTypeIds;
   int? get minPrice;
-  int? get maxPrice;
+  int? get maxPrice; // Property-specific filters
+  List<String>? get propertyTypes;
+  int? get minBedrooms;
+  int? get maxBedrooms;
+  int? get minArea;
+  int? get maxArea;
+  bool? get isFurnished;
+  bool? get hasParking;
 
   /// Create a copy of AdvertisementEvent
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$ApplyFiltersEventImplCopyWith<_$ApplyFiltersEventImpl> get copyWith =>
       throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$UpdateAdFavoriteStatusEventImplCopyWith<$Res> {
+  factory _$$UpdateAdFavoriteStatusEventImplCopyWith(
+          _$UpdateAdFavoriteStatusEventImpl value,
+          $Res Function(_$UpdateAdFavoriteStatusEventImpl) then) =
+      __$$UpdateAdFavoriteStatusEventImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String adId, bool isFavorited, String? favoriteId});
+}
+
+/// @nodoc
+class __$$UpdateAdFavoriteStatusEventImplCopyWithImpl<$Res>
+    extends _$AdvertisementEventCopyWithImpl<$Res,
+        _$UpdateAdFavoriteStatusEventImpl>
+    implements _$$UpdateAdFavoriteStatusEventImplCopyWith<$Res> {
+  __$$UpdateAdFavoriteStatusEventImplCopyWithImpl(
+      _$UpdateAdFavoriteStatusEventImpl _value,
+      $Res Function(_$UpdateAdFavoriteStatusEventImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of AdvertisementEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? adId = null,
+    Object? isFavorited = null,
+    Object? favoriteId = freezed,
+  }) {
+    return _then(_$UpdateAdFavoriteStatusEventImpl(
+      adId: null == adId
+          ? _value.adId
+          : adId // ignore: cast_nullable_to_non_nullable
+              as String,
+      isFavorited: null == isFavorited
+          ? _value.isFavorited
+          : isFavorited // ignore: cast_nullable_to_non_nullable
+              as bool,
+      favoriteId: freezed == favoriteId
+          ? _value.favoriteId
+          : favoriteId // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$UpdateAdFavoriteStatusEventImpl implements UpdateAdFavoriteStatusEvent {
+  const _$UpdateAdFavoriteStatusEventImpl(
+      {required this.adId, required this.isFavorited, this.favoriteId});
+
+  @override
+  final String adId;
+  @override
+  final bool isFavorited;
+  @override
+  final String? favoriteId;
+
+  @override
+  String toString() {
+    return 'AdvertisementEvent.updateAdFavoriteStatus(adId: $adId, isFavorited: $isFavorited, favoriteId: $favoriteId)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$UpdateAdFavoriteStatusEventImpl &&
+            (identical(other.adId, adId) || other.adId == adId) &&
+            (identical(other.isFavorited, isFavorited) ||
+                other.isFavorited == isFavorited) &&
+            (identical(other.favoriteId, favoriteId) ||
+                other.favoriteId == favoriteId));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, adId, isFavorited, favoriteId);
+
+  /// Create a copy of AdvertisementEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$UpdateAdFavoriteStatusEventImplCopyWith<_$UpdateAdFavoriteStatusEventImpl>
+      get copyWith => __$$UpdateAdFavoriteStatusEventImplCopyWithImpl<
+          _$UpdateAdFavoriteStatusEventImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() started,
+    required TResult Function() fetchAllListings,
+    required TResult Function() fetchNextPage,
+    required TResult Function(String categoryId) fetchByCategory,
+    required TResult Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)
+        applyFilters,
+    required TResult Function(String adId, bool isFavorited, String? favoriteId)
+        updateAdFavoriteStatus,
+  }) {
+    return updateAdFavoriteStatus(adId, isFavorited, favoriteId);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? started,
+    TResult? Function()? fetchAllListings,
+    TResult? Function()? fetchNextPage,
+    TResult? Function(String categoryId)? fetchByCategory,
+    TResult? Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)?
+        applyFilters,
+    TResult? Function(String adId, bool isFavorited, String? favoriteId)?
+        updateAdFavoriteStatus,
+  }) {
+    return updateAdFavoriteStatus?.call(adId, isFavorited, favoriteId);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? started,
+    TResult Function()? fetchAllListings,
+    TResult Function()? fetchNextPage,
+    TResult Function(String categoryId)? fetchByCategory,
+    TResult Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)?
+        applyFilters,
+    TResult Function(String adId, bool isFavorited, String? favoriteId)?
+        updateAdFavoriteStatus,
+    required TResult orElse(),
+  }) {
+    if (updateAdFavoriteStatus != null) {
+      return updateAdFavoriteStatus(adId, isFavorited, favoriteId);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(Started value) started,
+    required TResult Function(FetchAllListingsEvent value) fetchAllListings,
+    required TResult Function(FetchNextPageEvent value) fetchNextPage,
+    required TResult Function(FetchByCategory value) fetchByCategory,
+    required TResult Function(ApplyFiltersEvent value) applyFilters,
+    required TResult Function(UpdateAdFavoriteStatusEvent value)
+        updateAdFavoriteStatus,
+  }) {
+    return updateAdFavoriteStatus(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(Started value)? started,
+    TResult? Function(FetchAllListingsEvent value)? fetchAllListings,
+    TResult? Function(FetchNextPageEvent value)? fetchNextPage,
+    TResult? Function(FetchByCategory value)? fetchByCategory,
+    TResult? Function(ApplyFiltersEvent value)? applyFilters,
+    TResult? Function(UpdateAdFavoriteStatusEvent value)?
+        updateAdFavoriteStatus,
+  }) {
+    return updateAdFavoriteStatus?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(Started value)? started,
+    TResult Function(FetchAllListingsEvent value)? fetchAllListings,
+    TResult Function(FetchNextPageEvent value)? fetchNextPage,
+    TResult Function(FetchByCategory value)? fetchByCategory,
+    TResult Function(ApplyFiltersEvent value)? applyFilters,
+    TResult Function(UpdateAdFavoriteStatusEvent value)? updateAdFavoriteStatus,
+    required TResult orElse(),
+  }) {
+    if (updateAdFavoriteStatus != null) {
+      return updateAdFavoriteStatus(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class UpdateAdFavoriteStatusEvent implements AdvertisementEvent {
+  const factory UpdateAdFavoriteStatusEvent(
+      {required final String adId,
+      required final bool isFavorited,
+      final String? favoriteId}) = _$UpdateAdFavoriteStatusEventImpl;
+
+  String get adId;
+  bool get isFavorited;
+  String? get favoriteId;
+
+  /// Create a copy of AdvertisementEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$UpdateAdFavoriteStatusEventImplCopyWith<_$UpdateAdFavoriteStatusEventImpl>
+      get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc

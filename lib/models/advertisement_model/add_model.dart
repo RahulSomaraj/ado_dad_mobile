@@ -9,6 +9,9 @@ class AddModel {
   final bool isActive;
   final String updatedAt;
 
+  // Seller info
+  final AdUser? user;
+
   // ===== Additional fields for detail page =====
   // Vehicle-related
   final String? vehicleType;
@@ -51,6 +54,14 @@ class AddModel {
   final bool? hasFitness; // ✅ new
   final bool? hasPermit;
 
+  // Favorite fields
+  final bool? isFavorited;
+  final String? favoriteId;
+  final String? favoritedAt;
+
+  // Status fields
+  final bool? soldOut;
+
   AddModel({
     // basic
     required this.id,
@@ -61,6 +72,7 @@ class AddModel {
     required this.category,
     required this.isActive,
     required this.updatedAt,
+    this.user,
     // detail
     this.vehicleType,
     this.manufacturer,
@@ -94,6 +106,12 @@ class AddModel {
     this.commercialVehicleType,
     this.hasFitness,
     this.hasPermit,
+    // Favorite fields
+    this.isFavorited,
+    this.favoriteId,
+    this.favoritedAt,
+    // Status fields
+    this.soldOut,
   });
 
   AddModel copyWith({
@@ -105,6 +123,7 @@ class AddModel {
     String? category,
     bool? isActive,
     String? updatedAt,
+    AdUser? user,
     String? vehicleType,
     Manufacturer? manufacturer,
     Model? model,
@@ -137,6 +156,12 @@ class AddModel {
     String? commercialVehicleType, // ✅ new
     bool? hasFitness, // ✅ new
     bool? hasPermit,
+    // Favorite fields
+    bool? isFavorited,
+    String? favoriteId,
+    String? favoritedAt,
+    // Status fields
+    bool? soldOut,
   }) {
     return AddModel(
       id: id ?? this.id,
@@ -147,6 +172,7 @@ class AddModel {
       category: category ?? this.category,
       isActive: isActive ?? this.isActive,
       updatedAt: updatedAt ?? this.updatedAt,
+      user: user ?? this.user,
       vehicleType: vehicleType ?? this.vehicleType,
       manufacturer: manufacturer ?? this.manufacturer,
       model: model ?? this.model,
@@ -180,6 +206,12 @@ class AddModel {
           commercialVehicleType ?? this.commercialVehicleType, // ✅
       hasFitness: hasFitness ?? this.hasFitness, // ✅
       hasPermit: hasPermit ?? this.hasPermit,
+      // Favorite fields
+      isFavorited: isFavorited ?? this.isFavorited,
+      favoriteId: favoriteId ?? this.favoriteId,
+      favoritedAt: favoritedAt ?? this.favoritedAt,
+      // Status fields
+      soldOut: soldOut ?? this.soldOut,
     );
   }
 
@@ -225,6 +257,9 @@ class AddModel {
       category: (json['category'] ?? '').toString(),
       isActive: (json['isActive'] as bool?) ?? false,
       updatedAt: (json['updatedAt'] ?? json['postedAt'] ?? '').toString(),
+      user: _asMap(json['user']) != null
+          ? AdUser.fromJson(_asMap(json['user'])!)
+          : null,
 
       // detail
       vehicleType: (json['vehicleType'] ?? vd?['vehicleType']) as String?,
@@ -290,6 +325,12 @@ class AddModel {
       commercialVehicleType: json['commercialVehicleType'] as String?,
       hasFitness: json['hasFitness'] as bool?,
       hasPermit: json['hasPermit'] as bool?,
+      // Favorite fields
+      isFavorited: json['isFavorited'] as bool?,
+      favoriteId: json['favoriteId'] as String?,
+      favoritedAt: json['favoritedAt'] as String?,
+      // Status fields
+      soldOut: json['soldOut'] as bool?,
     );
   }
 
@@ -304,6 +345,7 @@ class AddModel {
       'category': category,
       'isActive': isActive,
       'updatedAt': updatedAt,
+      'user': user?.toJson(),
 
       // detail
       'vehicleType': vehicleType,
@@ -347,6 +389,12 @@ class AddModel {
       'commercialVehicleType': commercialVehicleType,
       'hasFitness': hasFitness,
       'hasPermit': hasPermit,
+      // Favorite fields
+      'isFavorited': isFavorited,
+      'favoriteId': favoriteId,
+      'favoritedAt': favoritedAt,
+      // Status fields
+      'soldOut': soldOut,
     };
   }
 }
@@ -412,4 +460,24 @@ class Model {
       );
 
   Map<String, dynamic> toJson() => {'id': id, 'name': name};
+}
+
+class AdUser {
+  final String id;
+  final String? name;
+  final String? email;
+
+  const AdUser({required this.id, this.name, this.email});
+
+  factory AdUser.fromJson(Map<String, dynamic> json) => AdUser(
+        id: (json['id'] ?? json['_id'] ?? '').toString(),
+        name: (json['name'] ?? '').toString(),
+        email: (json['email'] ?? '').toString(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        if (name != null) 'name': name,
+        if (email != null) 'email': email,
+      };
 }

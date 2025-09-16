@@ -4,15 +4,16 @@ import 'package:ado_dad_user/features/search/ui/ios_search_mobile.dart';
 import 'package:flutter/material.dart';
 
 class Search extends StatelessWidget {
-  const Search({super.key});
+  final String? previousRoute;
+  const Search({super.key, this.previousRoute});
 
   @override
   Widget build(BuildContext context) {
     return DeviceChecker(
       androidTabletView: Scaffold(),
-      androidMobileView: AndroidSearchMobile(),
+      androidMobileView: AndroidSearchMobile(previousRoute: previousRoute),
       iosTabletView: Scaffold(),
-      iosMobileView: IosSearchMobile(),
+      iosMobileView: IosSearchMobile(previousRoute: previousRoute),
     );
   }
 }

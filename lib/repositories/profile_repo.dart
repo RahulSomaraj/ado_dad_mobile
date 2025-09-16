@@ -126,12 +126,17 @@ class ProfileRepo {
         }),
       );
 
+      print("✅ Profile update response: ${response.statusCode}");
+      print("📄 Response data: ${response.data}");
+
       if (response.statusCode != 200) {
         throw Exception("Failed to update profile.");
       }
     } on DioException catch (e) {
+      print("❌ DioException in updateUserProfile: ${e.response?.data}");
       throw Exception(DioErrorHandler.handleError(e));
     } catch (e) {
+      print("❌ General error in updateUserProfile: $e");
       throw Exception("Error updating profile: $e");
     }
   }

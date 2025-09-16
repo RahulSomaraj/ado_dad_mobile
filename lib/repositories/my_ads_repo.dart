@@ -1,4 +1,5 @@
 import 'package:ado_dad_user/common/api_service.dart';
+import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:dio/dio.dart';
 import 'package:ado_dad_user/models/my_ads_model.dart';
 
@@ -12,6 +13,14 @@ class MyAdsRepo {
     String sortOrder = 'ASC',
   }) async {
     try {
+      // Debug: Check if user is authenticated
+      final token = await getToken();
+      if (token == null) {
+        throw Exception('User not authenticated. Please login again.');
+      }
+
+      print('🔐 Fetching My Ads with token: ${token.substring(0, 20)}...');
+
       final requestBody = <String, dynamic>{
         'page': page,
         'limit': limit,
@@ -19,11 +28,16 @@ class MyAdsRepo {
         'sortOrder': sortOrder,
       };
 
+      print('📤 My Ads Request: POST /ads/my-ads with body: $requestBody');
+
       final response = await _dio.post(
         '/ads/my-ads',
         data: requestBody,
         options: Options(responseType: ResponseType.json),
       );
+
+      print('📥 My Ads Response Status: ${response.statusCode}');
+      print('📥 My Ads Response Data: ${response.data}');
 
       dynamic raw = response.data;
 

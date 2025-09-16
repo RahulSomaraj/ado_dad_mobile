@@ -26,6 +26,14 @@ class AddRepository {
     List<String>? transmissionTypeIds,
     int? minPrice,
     int? maxPrice,
+    // Property-specific filters
+    List<String>? propertyTypes,
+    int? minBedrooms,
+    int? maxBedrooms,
+    int? minArea,
+    int? maxArea,
+    bool? isFurnished,
+    bool? hasParking,
   }) async {
     try {
       final body = <String, dynamic>{
@@ -43,6 +51,15 @@ class AddRepository {
           'fuelTypeIds': fuelTypeIds, // ✅ plural
         if (transmissionTypeIds != null && transmissionTypeIds.isNotEmpty)
           'transmissionTypeIds': transmissionTypeIds, // ✅ plural
+        // Property-specific filters
+        if (propertyTypes != null && propertyTypes.isNotEmpty)
+          'propertyTypes': propertyTypes,
+        if (minBedrooms != null) 'minBedrooms': minBedrooms,
+        if (maxBedrooms != null) 'maxBedrooms': maxBedrooms,
+        if (minArea != null) 'minArea': minArea,
+        if (maxArea != null) 'maxArea': maxArea,
+        if (isFurnished != null) 'isFurnished': isFurnished,
+        if (hasParking != null) 'hasParking': hasParking,
       };
 
       // if (manufacturerIds != null && manufacturerIds.isNotEmpty) {
@@ -284,6 +301,21 @@ class AddRepository {
         },
       );
       if (resp.statusCode != 200) throw Exception('Update failed');
+    } on DioException catch (e) {
+      print('Dio Error: $e');
+      throw Exception(DioErrorHandler.handleError(e));
+    }
+  }
+
+  Future<void> markAdAsSold(String adId) async {
+    try {
+      final resp = await _dio.patch(
+        '/ads/$adId/sold',
+        data: {
+          'soldOut': true,
+        },
+      );
+      if (resp.statusCode != 200) throw Exception('Failed to mark ad as sold');
     } on DioException catch (e) {
       print('Dio Error: $e');
       throw Exception(DioErrorHandler.handleError(e));

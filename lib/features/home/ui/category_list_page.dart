@@ -86,35 +86,52 @@ class _CategoryListPageState extends State<CategoryListPage> {
               child: GestureDetector(
                 // AppBar actions -> onTap:
                 onTap: () async {
-                  final result = await context.push('/car-filter');
-                  if (result is Map<String, dynamic>) {
-                    // setState(() {
-                    //   _filters = result; // save selected filters
-                    //   _page = 1;
-                    //   _hasMore = true;
-                    //   _categoryAds.clear();
-                    // });
-                    // await _fetchCategoryAds(); // reload with filters
-                    _filters = result;
-                    context.read<AdvertisementBloc>().add(
-                          AdvertisementEvent.applyFilters(
-                            categoryId: widget.categoryId,
-                            minYear: result['minYear'] as int?,
-                            maxYear: result['maxYear'] as int?,
-                            manufacturerIds:
-                                (result['manufacturerIds'] as List?)
-                                    ?.cast<String>(),
-                            modelIds:
-                                (result['modelIds'] as List?)?.cast<String>(),
-                            fuelTypeIds: (_filters['fuelTypeIds'] as List?)
-                                ?.cast<String>(),
-                            transmissionTypeIds:
-                                (_filters['transmissionTypeIds'] as List?)
-                                    ?.cast<String>(),
-                            minPrice: result['minPrice'] as int?,
-                            maxPrice: result['maxPrice'] as int?,
-                          ),
-                        );
+                  // Check if this is a property category
+                  if (widget.categoryId == 'property') {
+                    final result = await context.push('/property-filter');
+                    if (result is Map<String, dynamic>) {
+                      _filters = result;
+                      context.read<AdvertisementBloc>().add(
+                            AdvertisementEvent.applyFilters(
+                              categoryId: widget.categoryId,
+                              propertyTypes: (result['propertyTypes'] as List?)
+                                  ?.cast<String>(),
+                              minBedrooms: result['minBedrooms'] as int?,
+                              maxBedrooms: result['maxBedrooms'] as int?,
+                              minPrice: result['minPrice'] as int?,
+                              maxPrice: result['maxPrice'] as int?,
+                              minArea: result['minArea'] as int?,
+                              maxArea: result['maxArea'] as int?,
+                              isFurnished: result['isFurnished'] as bool?,
+                              hasParking: result['hasParking'] as bool?,
+                            ),
+                          );
+                    }
+                  } else {
+                    // For vehicle categories, use car filter
+                    final result = await context.push('/car-filter');
+                    if (result is Map<String, dynamic>) {
+                      _filters = result;
+                      context.read<AdvertisementBloc>().add(
+                            AdvertisementEvent.applyFilters(
+                              categoryId: widget.categoryId,
+                              minYear: result['minYear'] as int?,
+                              maxYear: result['maxYear'] as int?,
+                              manufacturerIds:
+                                  (result['manufacturerIds'] as List?)
+                                      ?.cast<String>(),
+                              modelIds:
+                                  (result['modelIds'] as List?)?.cast<String>(),
+                              fuelTypeIds: (result['fuelTypeIds'] as List?)
+                                  ?.cast<String>(),
+                              transmissionTypeIds:
+                                  (result['transmissionTypeIds'] as List?)
+                                      ?.cast<String>(),
+                              minPrice: result['minPrice'] as int?,
+                              maxPrice: result['maxPrice'] as int?,
+                            ),
+                          );
+                    }
                   }
                 },
 
@@ -141,25 +158,45 @@ class _CategoryListPageState extends State<CategoryListPage> {
 
               return RefreshIndicator(
                 onRefresh: () async {
-                  context.read<AdvertisementBloc>().add(
-                        AdvertisementEvent.applyFilters(
-                          categoryId: widget.categoryId,
-                          minYear: _filters['minYear'] as int?,
-                          maxYear: _filters['maxYear'] as int?,
-                          manufacturerIds:
-                              (_filters['manufacturerIds'] as List?)
-                                  ?.cast<String>(),
-                          modelIds:
-                              (_filters['modelIds'] as List?)?.cast<String>(),
-                          fuelTypeIds: (_filters['fuelTypeIds'] as List?)
-                              ?.cast<String>(),
-                          transmissionTypeIds:
-                              (_filters['transmissionTypeIds'] as List?)
-                                  ?.cast<String>(),
-                          minPrice: _filters['minPrice'] as int?,
-                          maxPrice: _filters['maxPrice'] as int?,
-                        ),
-                      );
+                  if (widget.categoryId == 'property') {
+                    // Property filters
+                    context.read<AdvertisementBloc>().add(
+                          AdvertisementEvent.applyFilters(
+                            categoryId: widget.categoryId,
+                            propertyTypes: (_filters['propertyTypes'] as List?)
+                                ?.cast<String>(),
+                            minBedrooms: _filters['minBedrooms'] as int?,
+                            maxBedrooms: _filters['maxBedrooms'] as int?,
+                            minPrice: _filters['minPrice'] as int?,
+                            maxPrice: _filters['maxPrice'] as int?,
+                            minArea: _filters['minArea'] as int?,
+                            maxArea: _filters['maxArea'] as int?,
+                            isFurnished: _filters['isFurnished'] as bool?,
+                            hasParking: _filters['hasParking'] as bool?,
+                          ),
+                        );
+                  } else {
+                    // Vehicle filters
+                    context.read<AdvertisementBloc>().add(
+                          AdvertisementEvent.applyFilters(
+                            categoryId: widget.categoryId,
+                            minYear: _filters['minYear'] as int?,
+                            maxYear: _filters['maxYear'] as int?,
+                            manufacturerIds:
+                                (_filters['manufacturerIds'] as List?)
+                                    ?.cast<String>(),
+                            modelIds:
+                                (_filters['modelIds'] as List?)?.cast<String>(),
+                            fuelTypeIds: (_filters['fuelTypeIds'] as List?)
+                                ?.cast<String>(),
+                            transmissionTypeIds:
+                                (_filters['transmissionTypeIds'] as List?)
+                                    ?.cast<String>(),
+                            minPrice: _filters['minPrice'] as int?,
+                            maxPrice: _filters['maxPrice'] as int?,
+                          ),
+                        );
+                  }
                 },
                 child: ListView.builder(
                   controller: _scrollController,
@@ -177,6 +214,9 @@ class _CategoryListPageState extends State<CategoryListPage> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: ListTile(
+                            onTap: () {
+                              context.push('/add-detail-page', extra: ad);
+                            },
                             leading: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: ad.images.isNotEmpty

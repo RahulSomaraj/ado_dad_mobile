@@ -44,65 +44,6 @@ class AdvertisementRepository {
     // }
   }
 
-  // Future<String> getPresignedUrl(
-  //     {required String fileName, required String fileType}) async {
-  //   try {
-  //     print('filetype1:........$fileType');
-  //     print('fileName:..........$fileName');
-  //     final response = await _dio.get(
-  //       '/upload/presigned-url',
-  //       queryParameters: {
-  //         'fileName': fileName,
-  //         'fileType': fileType,
-  //       },
-  //     );
-  //     if (response.statusCode == 200 && response.data['url'] != null) {
-  //       return response.data['url'];
-  //     } else {
-  //       throw Exception('Failed to fetch presigned URL');
-  //     }
-  //   } on DioException catch (e) {
-  //     throw Exception(DioErrorHandler.handleError(e));
-  //   } catch (e) {
-  //     throw Exception("Unexpected error: ${e.toString()}");
-  //   }
-  // }
-
-  // Future<String> uploadToS3(
-  //     String url, String fileType, Uint8List imageFile) async {
-  //   //  final contentType = lookupMimeType(file.path) ?? 'application/octet-stream';
-
-  //   print('Uploading to S3 using presigned URL: $url');
-  //   print('filetype:........$fileType');
-
-  //   final response = await _dio.put(
-  //     url,
-  //     data: imageFile,
-  //     options: Options(
-  //       headers: {
-  //         "Content-Type": fileType,
-  //         "Content-Length": imageFile.length.toString(),
-  //       },
-  //     ),
-  //   );
-  //   print('Uploadtos3 status code:...............${response.statusCode}');
-  //   // if (response.statusCode != 200) {
-  //   //   throw Exception('Upload failed with status ${response.statusCode}');
-  //   // }
-  //   if (response.statusCode != null && response.statusCode! >= 200) {
-  //     print('url????????????????????');
-  //     print(url.split('?').first);
-  //     print('url????????????????????');
-  //     return url.split('?').first;
-  //   } else {
-  //     throw Exception("Upload failed with status code ${response.statusCode}");
-  //   }
-  //   // } catch (e) {
-  //   //   print("Upload error: $e");
-  //   //   // return null;
-  //   // }
-  // }
-
   Future<String?> uploadImageToS3(Uint8List fileBytes) async {
     try {
       final mimeType = lookupMimeType('image.jpg', headerBytes: fileBytes);

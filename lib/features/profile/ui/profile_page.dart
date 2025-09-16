@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/features/login/bloc/login_bloc.dart' as login_bloc;
-import 'package:ado_dad_user/features/login/bloc/login_bloc.dart';
 import 'package:ado_dad_user/features/profile/bloc/profile_bloc.dart'
     as profile_bloc;
 import 'package:ado_dad_user/features/profile/bloc/profile_bloc.dart';
@@ -11,6 +11,7 @@ import 'package:ado_dad_user/models/profile_model.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -103,6 +104,21 @@ class _ProfilePageState extends State<ProfilePage> {
         throw 'User ID is missing';
       }
 
+      // Validate phone number format before sending request
+      final phoneNumber = phoneController.text.trim();
+      if (phoneNumber.isNotEmpty &&
+          !RegExp(r"^[0-9]{10}$").hasMatch(phoneNumber)) {
+        throw 'Please enter a valid 10-digit phone number';
+      }
+
+      // Validate email format
+      final email = emailController.text.trim();
+      if (email.isNotEmpty &&
+          !RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+              .hasMatch(email)) {
+        throw 'Please enter a valid email address';
+      }
+
       // 1) If user selected a new image, upload it first
       String? profilePicUrl = _currentProfilePicUrl;
       if (_pickedImageBytes != null) {
@@ -114,8 +130,8 @@ class _ProfilePageState extends State<ProfilePage> {
       final updatedProfile = UserProfile(
         id: userId,
         name: nameController.text.trim(),
-        email: emailController.text.trim(),
-        phoneNumber: phoneController.text.trim(),
+        email: email,
+        phoneNumber: phoneNumber,
         type: "NU",
         profilePic: profilePicUrl, // can be null if user never set one
       );
@@ -342,7 +358,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           children: [
                             buildMenuItem(
                                 'assets/images/wishlist-profile-icon.png',
-                                "Wishlist"),
+                                "Wishlist",
+                                onTap: () => context.push('/wishlist')),
                             buildMenuItem(
                                 'assets/images/add-profile-icon.png', "My Ads",
                                 onTap: () => context.push('/my-ads')),
@@ -356,25 +373,85 @@ class _ProfilePageState extends State<ProfilePage> {
                                 final confirm = await showDialog<bool>(
                                   context: context,
                                   builder: (_) => AlertDialog(
-                                    title: const Text("Logout"),
-                                    content: const Text(
-                                        "Are you sure you want to logout?"),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(20)),
+                                    backgroundColor: AppColors.whiteColor,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 30, vertical: 10),
+                                    title: Text(
+                                      "Logout",
+                                      textAlign: TextAlign.center,
+                                      style: AppTextstyle.title1,
+                                    ),
+                                    content: Text(
+                                      "Are you sure you want to logout?",
+                                      textAlign: TextAlign.center,
+                                      style: AppTextstyle.sectionTitleTextStyle,
+                                    ),
+                                    actionsAlignment: MainAxisAlignment.center,
                                     actions: [
-                                      TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, false),
-                                          child: const Text("Cancel")),
-                                      TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, true),
-                                          child: const Text("Logout")),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Expanded(
+                                            child: TextButton(
+                                                style: ButtonStyle(
+                                                    backgroundColor:
+                                                        WidgetStatePropertyAll(
+                                                            AppColors
+                                                                .whiteColor),
+                                                    side:
+                                                        WidgetStatePropertyAll(
+                                                            BorderSide(
+                                                                color:
+                                                                    Colors.red,
+                                                                width: 1.0)),
+                                                    shape: WidgetStatePropertyAll(
+                                                        RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10)))),
+                                                onPressed: () => Navigator.pop(
+                                                    context, false),
+                                                child: const Text(
+                                                  "Cancel",
+                                                  style: TextStyle(
+                                                      color: Colors.red),
+                                                )),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: TextButton(
+                                                style: ButtonStyle(
+                                                    backgroundColor:
+                                                        WidgetStatePropertyAll(
+                                                            AppColors.redColor),
+                                                    shape: WidgetStatePropertyAll(
+                                                        RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10)))),
+                                                onPressed: () => Navigator.pop(
+                                                    context, true),
+                                                child: const Text(
+                                                  "Logout",
+                                                  style: TextStyle(
+                                                      color:
+                                                          AppColors.whiteColor),
+                                                )),
+                                          ),
+                                        ],
+                                      ),
                                     ],
                                   ),
                                 );
                                 if (confirm == true) {
-                                  context
-                                      .read<LoginBloc>()
-                                      .add(const LoginEvent.logout());
+                                  context.read<login_bloc.LoginBloc>().add(
+                                      const login_bloc.LoginEvent.logout());
                                   context.go('/');
                                 }
                               },
@@ -421,10 +498,20 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget buildTextField(TextEditingController controller, bool isEditable) {
+    // Check if this is the phone number field
+    final isPhoneField = controller == phoneController;
+
     return TextFormField(
       controller: controller,
       enabled: isEditable,
       style: TextStyle(fontWeight: FontWeight.bold),
+      keyboardType: isPhoneField ? TextInputType.phone : TextInputType.text,
+      inputFormatters: isPhoneField
+          ? [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(10),
+            ]
+          : null,
       decoration: InputDecoration(
         border: InputBorder.none,
       ),
@@ -502,10 +589,12 @@ class BottomNavBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _navItem(context, 'assets/images/home-icon.png', '/home'),
-            _navItem(context, 'assets/images/search-icon.png', '/search'),
+            _navItem(context, 'assets/images/search-icon.png',
+                '/search?from=/profile'),
             _navItem(context, 'assets/images/seller-icon.png', '/seller',
                 iconSize: 36),
-            _navItem(context, 'assets/images/chat-icon.png', '/chat'),
+            _navItem(context, 'assets/images/chat-icon.png',
+                '/messages?from=/profile'),
             _navItem(context, 'assets/images/profile-icon.png', '/profile'),
           ],
         ),

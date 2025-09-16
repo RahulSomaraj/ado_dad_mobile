@@ -2,9 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ado_dad_user/features/profile/MyAds/bloc/my_ads_bloc.dart';
 import 'package:ado_dad_user/models/my_ads_model.dart';
+import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+import 'package:ado_dad_user/common/shared_pref.dart';
+import 'package:go_router/go_router.dart';
 
-class MyAdsPage extends StatelessWidget {
+class MyAdsPage extends StatefulWidget {
   const MyAdsPage({super.key});
+
+  @override
+  State<MyAdsPage> createState() => _MyAdsPageState();
+}
+
+class _MyAdsPageState extends State<MyAdsPage> {
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthentication();
+  }
+
+  Future<void> _checkAuthentication() async {
+    final token = await getToken();
+    if (token == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please login to view your ads'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        context.go('/login');
+      }
+      return;
+    }
+
+    // Load ads if authenticated
+    if (mounted) {
+      context.read<MyAdsBloc>().add(const MyAdsEvent.load());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +75,45 @@ class MyAdsPage extends StatelessWidget {
           return state.maybeMap(
             loading: (_) => const Center(child: CircularProgressIndicator()),
             initial: (_) => const Center(child: CircularProgressIndicator()),
-            error: (e) => Center(child: Text('Error: ${e.message}')),
+            error: (e) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red.shade300,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading your ads',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      e.message,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        context.read<MyAdsBloc>().add(const MyAdsEvent.load());
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             loaded: (loaded) {
               if (loaded.ads.isEmpty) {
                 return const Center(child: Text('No ads yet'));
@@ -69,13 +142,14 @@ class _AdTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(18);
+    final isSold = ad.soldOut == true;
 
     return InkWell(
-      onTap: () {}, // TODO: navigate to ad detail/edit
+      onTap: isSold ? null : () => _navigateToDetail(context),
       borderRadius: radius,
       child: Ink(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isSold ? Colors.grey.shade300 : Colors.white,
           borderRadius: radius,
           boxShadow: [
             BoxShadow(
@@ -90,7 +164,10 @@ class _AdTile extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _Thumb(url: ad.images.isNotEmpty ? ad.images.first : ''),
+              _Thumb(
+                url: ad.images.isNotEmpty ? ad.images.first : '',
+                isSold: isSold,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: SizedBox(
@@ -105,10 +182,12 @@ class _AdTile extends StatelessWidget {
                             // Price
                             Text(
                               _formatINR(ad.price),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF1C1F23),
+                                color: isSold
+                                    ? Colors.grey.shade500
+                                    : const Color(0xFF1C1F23),
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -121,27 +200,27 @@ class _AdTile extends StatelessWidget {
                                     _titleFor(ad),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
-                                      color: Color(0xFF1C1F23),
+                                      color: isSold
+                                          ? Colors.grey.shade500
+                                          : const Color(0xFF1C1F23),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                            if (false) ...[
-                              const SizedBox(height: 6),
-                              const _InfoPill(text: 'Showroom'),
-                            ] else
-                              const SizedBox(height: 6),
+                            const SizedBox(height: 6),
 
                             // KM / Fuel
                             Text(
                               _metaLine(ad),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
-                                color: Color(0xFF6B7280),
+                                color: isSold
+                                    ? Colors.grey.shade400
+                                    : const Color(0xFF6B7280),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -151,9 +230,11 @@ class _AdTile extends StatelessWidget {
                               ad.location,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: Color(0xFFA0A4AB),
+                                color: isSold
+                                    ? Colors.grey.shade400
+                                    : const Color(0xFFA0A4AB),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -161,10 +242,14 @@ class _AdTile extends StatelessWidget {
                         ),
                       ),
                       // Status chip (right side)
-                      // Align(
-                      //   alignment: Alignment.topRight,
-                      //   child: _StatusChip(status: AdStatus.listed),
-                      // ),
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: _StatusChip(
+                          status: ad.soldOut == true
+                              ? AdStatus.soldOut
+                              : AdStatus.listed,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -175,13 +260,84 @@ class _AdTile extends StatelessWidget {
       ),
     );
   }
+
+  void _navigateToDetail(BuildContext context) {
+    // Convert MyAd to AddModel for navigation
+    final addModel = _convertMyAdToAddModel(ad);
+    context.push('/add-detail-page', extra: addModel);
+  }
+
+  AddModel _convertMyAdToAddModel(MyAd myAd) {
+    // Convert MyAdUser to AdUser
+    AdUser? adUser;
+    if (myAd.user != null) {
+      adUser = AdUser(
+        id: myAd.user!.id,
+        name: myAd.user!.name,
+        email: myAd.user!.email,
+      );
+    }
+
+    // Convert vehicle details if available
+    Manufacturer? manufacturer;
+    Model? model;
+    if (myAd.vehicleDetails != null) {
+      // Note: These would need to be populated from your manufacturer/model repositories
+      // For now, using placeholder values
+      manufacturer = Manufacturer(
+        id: myAd.vehicleDetails!.manufacturerId,
+        name: 'Manufacturer', // This should be fetched from your data
+      );
+      model = Model(
+        id: myAd.vehicleDetails!.modelId,
+        name: 'Model', // This should be fetched from your data
+      );
+    }
+
+    return AddModel(
+      id: myAd.id,
+      description: myAd.description,
+      price: myAd.price,
+      images: myAd.images,
+      location: myAd.location,
+      category: myAd.category,
+      isActive: myAd.isActive,
+      updatedAt: myAd.updatedAt,
+      user: adUser,
+      year: myAd.year ?? myAd.vehicleDetails?.year,
+      soldOut: myAd.soldOut,
+      // Vehicle details
+      vehicleType: myAd.vehicleDetails?.vehicleType,
+      manufacturer: manufacturer,
+      model: model,
+      mileage: myAd.vehicleDetails?.mileage,
+      transmissionId: myAd.vehicleDetails?.transmissionTypeId,
+      fuelTypeId: myAd.vehicleDetails?.fuelTypeId,
+      color: myAd.vehicleDetails?.color,
+      isFirstOwner: myAd.vehicleDetails?.isFirstOwner,
+      hasInsurance: myAd.vehicleDetails?.hasInsurance,
+      hasRcBook: myAd.vehicleDetails?.hasRcBook,
+      additionalFeatures: myAd.vehicleDetails?.additionalFeatures,
+      // Property details
+      propertyType: myAd.propertyDetails?.propertyType,
+      bedrooms: myAd.propertyDetails?.bedrooms,
+      bathrooms: myAd.propertyDetails?.bathrooms,
+      areaSqft: myAd.propertyDetails?.areaSqft,
+      floor: myAd.propertyDetails?.floor,
+      isFurnished: myAd.propertyDetails?.isFurnished,
+      hasParking: myAd.propertyDetails?.hasParking,
+      hasGarden: myAd.propertyDetails?.hasGarden,
+      amenities: myAd.propertyDetails?.amenities,
+    );
+  }
 }
 
 /* ------------------------------ Sub-widgets ----------------------------- */
 
 class _Thumb extends StatelessWidget {
-  const _Thumb({required this.url});
+  const _Thumb({required this.url, this.isSold = false});
   final String url;
+  final bool isSold;
 
   @override
   Widget build(BuildContext context) {
@@ -190,12 +346,27 @@ class _Thumb extends StatelessWidget {
       child: SizedBox(
         width: 98,
         height: 98,
-        child: Image.network(
-          url,
-          fit: BoxFit.cover,
-          loadingBuilder: (c, child, progress) =>
-              progress == null ? child : const _ShimmerBox(),
-          errorBuilder: (_, __, ___) => const _BrokenImage(),
+        child: Stack(
+          children: [
+            Image.network(
+              url,
+              fit: BoxFit.cover,
+              loadingBuilder: (c, child, progress) =>
+                  progress == null ? child : const _ShimmerBox(),
+              errorBuilder: (_, __, ___) => const _BrokenImage(),
+            ),
+            if (isSold)
+              Container(
+                color: Colors.black.withOpacity(0.4),
+                child: const Center(
+                  child: Icon(
+                    Icons.sell,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -229,31 +400,6 @@ class _BrokenImage extends StatelessWidget {
   }
 }
 
-class _InfoPill extends StatelessWidget {
-  const _InfoPill({required this.text});
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEDEBFF),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Color(0xFF5A55F5),
-          fontWeight: FontWeight.w700,
-          fontSize: 11.5,
-          height: 1,
-        ),
-      ),
-    );
-  }
-}
-
 enum AdStatus { listed, soldOut }
 
 class _StatusChip extends StatelessWidget {
@@ -263,12 +409,8 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg, text) = switch (status) {
-      AdStatus.listed => (const Color(0xFFFF6F6F), Colors.white, 'Listed'),
-      AdStatus.soldOut => (
-          const Color(0xFFE9EAED),
-          const Color(0xFF111827),
-          'Sold out'
-        ),
+      AdStatus.listed => (const Color(0xFF10B981), Colors.white, 'Listed'),
+      AdStatus.soldOut => (const Color(0xFF6B7280), Colors.white, 'Sold Out'),
     };
 
     return Container(

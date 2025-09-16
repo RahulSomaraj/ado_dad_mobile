@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/widgets/common_decoration.dart';
 import 'package:ado_dad_user/common/widgets/dropdown_widget.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/features/home/ad_edit/bloc/ad_edit_bloc.dart';
@@ -389,13 +390,7 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
                     },
                   ),
                   const SizedBox(height: 10),
-                  buildDropdown<VehicleVariant>(
-                    labelText: 'Variant *',
-                    items: _variants,
-                    selectedValue: _selectedVariant,
-                    errorMsg: 'Please select a variant',
-                    onChanged: (v) => setState(() => _selectedVariant = v),
-                  ),
+                  _buildVariantDropdown(),
                   const SizedBox(height: 10),
 
                   // Transmission / Fuel
@@ -568,6 +563,36 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildVariantDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DropdownButtonFormField<VehicleVariant>(
+          decoration:
+              CommonDecoration.textFieldDecoration(labelText: 'Variant *'),
+          value: _selectedVariant,
+          dropdownColor: Colors.white,
+          isExpanded: true,
+          items: _variants.map((VehicleVariant variant) {
+            return DropdownMenuItem<VehicleVariant>(
+              value: variant,
+              child: Text(
+                variant.name,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            );
+          }).toList(),
+          onChanged: (val) {
+            setState(() => _selectedVariant = val);
+          },
+          validator: (value) =>
+              value == null ? 'Please select a variant' : null,
+        ),
+      ],
     );
   }
 }

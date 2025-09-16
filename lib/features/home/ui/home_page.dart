@@ -2,6 +2,7 @@ import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/features/home/banner_bloc/banner_bloc.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
+import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/models/cayegory_model.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -193,101 +194,132 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        controller: _scrollController,
-        child: Column(
-          children: [
-            // 🔷 HEADER PART
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // 🔹 Blue curved header with content
-                Container(
-                  height: 150,
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primaryColor,
-                    borderRadius: BorderRadius.vertical(
-                      bottom: Radius.circular(30),
+    return BlocListener<FavoriteBloc, FavoriteState>(
+      listener: (context, state) {
+        if (state is FavoriteToggleSuccess) {
+          // Update the advertisement in the list
+          context.read<AdvertisementBloc>().add(
+                AdvertisementEvent.updateAdFavoriteStatus(
+                  adId: state.adId,
+                  isFavorited: state.isFavorited,
+                  favoriteId: state.favoriteId,
+                ),
+              );
+
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        } else if (state is FavoriteToggleError) {
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              duration: const Duration(seconds: 2),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        body: SingleChildScrollView(
+          controller: _scrollController,
+          child: Column(
+            children: [
+              // 🔷 HEADER PART
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // 🔹 Blue curved header with content
+                  Container(
+                    height: 150,
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primaryColor,
+                      borderRadius: BorderRadius.vertical(
+                        bottom: Radius.circular(30),
+                      ),
+                    ),
+                    padding: const EdgeInsets.only(top: 8, bottom: 70),
+                    child: buildTopBar(), // 🔹 AdoDad logo + location
+                  ),
+
+                  // 🔹 Positioned Banner (slightly below blue container)
+                  Positioned(
+                    bottom: -85, // Controls how much overlaps
+                    left: 0,
+                    right: 0,
+                    child: BlocBuilder<BannerBloc, BannerState>(
+                      builder: (context, state) {
+                        return state.when(
+                          initial: () => const SizedBox(),
+                          loading: () =>
+                              const Center(child: CircularProgressIndicator()),
+                          error: (message) => Text("Error: $message"),
+                          loaded: (banners) => Column(
+                            children: [
+                              CarouselSlider(
+                                carouselController: _carouselController,
+                                options: CarouselOptions(
+                                  height: 140,
+                                  autoPlay: false,
+                                  enlargeCenterPage: true,
+                                  viewportFraction: 0.9,
+                                  onPageChanged: (index, _) {
+                                    setState(() {
+                                      BuildIndicator.currentIndex = index;
+                                    });
+                                  },
+                                ),
+                                items: banners.map((banner) {
+                                  return buildPromoCard(
+                                      banner.phoneImage, banner.link);
+                                }).toList(),
+                              ),
+                              const SizedBox(height: 10),
+                              BuildIndicator(
+                                controller: _carouselController,
+                                itemCount: banners.length,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  padding: const EdgeInsets.only(top: 8, bottom: 70),
-                  child: buildTopBar(), // 🔹 AdoDad logo + location
-                ),
+                ],
+              ),
+              const SizedBox(height: 100),
 
-                // 🔹 Positioned Banner (slightly below blue container)
-                Positioned(
-                  bottom: -85, // Controls how much overlaps
-                  left: 0,
-                  right: 0,
-                  child: BlocBuilder<BannerBloc, BannerState>(
-                    builder: (context, state) {
-                      return state.when(
-                        initial: () => const SizedBox(),
-                        loading: () =>
-                            const Center(child: CircularProgressIndicator()),
-                        error: (message) => Text("Error: $message"),
-                        loaded: (banners) => Column(
-                          children: [
-                            CarouselSlider(
-                              carouselController: _carouselController,
-                              options: CarouselOptions(
-                                height: 140,
-                                autoPlay: true,
-                                enlargeCenterPage: true,
-                                viewportFraction: 0.9,
-                                onPageChanged: (index, _) {
-                                  setState(() {
-                                    BuildIndicator.currentIndex = index;
-                                  });
-                                },
-                              ),
-                              items: banners.map((banner) {
-                                return buildPromoCard(
-                                    banner.phoneImage, banner.link);
-                              }).toList(),
-                            ),
-                            const SizedBox(height: 10),
-                            BuildIndicator(
-                              controller: _carouselController,
-                              itemCount: banners.length,
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 100),
+              // 🔷 CATEGORIES
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: buildSectionTitle("Categories"),
+              ),
+              const SizedBox(height: 5),
+              buildCategories(context),
 
-            // 🔷 CATEGORIES
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: buildSectionTitle("Categories"),
-            ),
-            const SizedBox(height: 5),
-            buildCategories(context),
+              // 🔷 RECOMMENDATIONS TITLE
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: buildSectionTitle("Recommendations"),
+              ),
+              const SizedBox(height: 10),
 
-            // 🔷 RECOMMENDATIONS TITLE
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: buildSectionTitle("Recommendations"),
-            ),
-            const SizedBox(height: 10),
-
-            // 🔷 MAIN GRIDVIEW - now participates in page scroll
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: buildGridView(),
-            ),
-          ],
+              // 🔷 MAIN GRIDVIEW - now participates in page scroll
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: buildGridView(),
+              ),
+            ],
+          ),
         ),
+        floatingActionButton: const BottomNavBar(),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       ),
-      floatingActionButton: const BottomNavBar(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
@@ -676,17 +708,65 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("₹${ad.price}",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("₹${ad.price}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis),
+                        BlocBuilder<FavoriteBloc, FavoriteState>(
+                          builder: (context, state) {
+                            bool isFavorited = ad.isFavorited ?? false;
+
+                            // Check if this ad is currently being toggled
+                            if (state is FavoriteToggleLoading &&
+                                state.adId == ad.id) {
+                              return const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.grey),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+
+                            return GestureDetector(
+                              onTap: () {
+                                context.read<FavoriteBloc>().add(
+                                      FavoriteEvent.toggleFavorite(
+                                        adId: ad.id,
+                                        isCurrentlyFavorited: isFavorited,
+                                      ),
+                                    );
+                              },
+                              child: Image.asset(
+                                isFavorited
+                                    ? 'assets/images/favorite_icon_filled.png'
+                                    : 'assets/images/favorite_icon_unfilled.png',
+                                width: 24,
+                                height: 24,
+                              ),
+                            );
+                          },
+                        )
+                      ],
+                    ),
                     const SizedBox(height: 2),
                     Text(
                       ad.description,
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
@@ -780,10 +860,12 @@ class BottomNavBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _navItem(context, 'assets/images/home-icon.png', '/home'),
-            _navItem(context, 'assets/images/search-icon.png', '/search'),
+            _navItem(
+                context, 'assets/images/search-icon.png', '/search?from=/home'),
             _navItem(context, 'assets/images/add-icon.png', '/seller',
                 iconSize: 36),
-            _navItem(context, 'assets/images/chat-icon.png', '/chat'),
+            _navItem(
+                context, 'assets/images/chat-icon.png', '/messages?from=/home'),
             _navItem(context, 'assets/images/profile-icon.png', '/profile'),
           ],
         ),

@@ -17,5 +17,18 @@ class AdvertisementEvent with _$AdvertisementEvent {
     List<String>? transmissionTypeIds,
     int? minPrice,
     int? maxPrice,
+    // Property-specific filters
+    List<String>? propertyTypes,
+    int? minBedrooms,
+    int? maxBedrooms,
+    int? minArea,
+    int? maxArea,
+    bool? isFurnished,
+    bool? hasParking,
   }) = ApplyFiltersEvent;
+  const factory AdvertisementEvent.updateAdFavoriteStatus({
+    required String adId,
+    required bool isFavorited,
+    String? favoriteId,
+  }) = UpdateAdFavoriteStatusEvent;
 }

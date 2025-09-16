@@ -9,6 +9,7 @@ class MyAd {
   final String postedAt; // ISO string
   final String updatedAt; // ISO string
   final String postedBy;
+  final bool? soldOut;
 
   final MyAdUser? user;
   final int? year;
@@ -29,6 +30,7 @@ class MyAd {
     required this.postedAt,
     required this.updatedAt,
     required this.postedBy,
+    this.soldOut,
     this.user,
     this.year,
     this.vehicleDetails,
@@ -47,6 +49,7 @@ class MyAd {
     String? postedAt,
     String? updatedAt,
     String? postedBy,
+    bool? soldOut,
     MyAdUser? user,
     int? year,
     MyAdVehicleDetails? vehicleDetails,
@@ -64,6 +67,7 @@ class MyAd {
       postedAt: postedAt ?? this.postedAt,
       updatedAt: updatedAt ?? this.updatedAt,
       postedBy: postedBy ?? this.postedBy,
+      soldOut: soldOut ?? this.soldOut,
       user: user ?? this.user,
       year: year ?? this.year,
       vehicleDetails: vehicleDetails ?? this.vehicleDetails,
@@ -118,6 +122,7 @@ class MyAd {
       postedAt: (json['postedAt'] ?? '').toString(),
       updatedAt: (json['updatedAt'] ?? '').toString(),
       postedBy: (json['postedBy'] ?? '').toString(),
+      soldOut: json['soldOut'] as bool?,
       user: userJson != null ? MyAdUser.fromJson(userJson) : null,
       year: _asInt(json['year']) ?? vehicleDetails?.year,
       vehicleDetails: vehicleDetails,
@@ -139,6 +144,7 @@ class MyAd {
       'postedAt': postedAt,
       'updatedAt': updatedAt,
       'postedBy': postedBy,
+      'soldOut': soldOut,
       'user': user?.toJson(),
       'year': year,
       'vehicleDetails': vehicleDetails?.toJson(),

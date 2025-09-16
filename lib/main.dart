@@ -1,10 +1,6 @@
 import 'package:ado_dad_user/common/app_routes.dart';
 import 'package:ado_dad_user/common/connectivity_checker.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
-import 'package:ado_dad_user/features/chat/auth/auth_provider.dart';
-import 'package:ado_dad_user/features/chat/bloc/chat_bloc.dart';
-import 'package:ado_dad_user/features/chat/data/chat_repository.dart';
-import 'package:ado_dad_user/features/chat/data/chat_socket_service.dart';
 import 'package:ado_dad_user/features/home/ad_edit/bloc/ad_edit_bloc.dart';
 import 'package:ado_dad_user/features/home/banner_bloc/banner_bloc.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
@@ -12,7 +8,11 @@ import 'package:ado_dad_user/features/login/bloc/login_bloc.dart';
 import 'package:ado_dad_user/features/profile/bloc/profile_bloc.dart';
 import 'package:ado_dad_user/features/sell/bloc/bloc/add_post_bloc.dart';
 import 'package:ado_dad_user/features/signup/bloc/signup_bloc.dart';
+import 'package:ado_dad_user/features/chat/bloc/chat_bloc.dart';
+import 'package:ado_dad_user/features/chat/bloc/chat_event.dart';
+import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
+import 'package:ado_dad_user/repositories/favorite_repo.dart';
 import 'package:ado_dad_user/repositories/banner_repo.dart';
 import 'package:ado_dad_user/repositories/login_repository.dart';
 import 'package:ado_dad_user/repositories/profile_repo.dart';
@@ -49,26 +49,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<AdvertisementBloc>(
             create: (context) =>
                 AdvertisementBloc(repository: AddRepository())),
-        BlocProvider(
-          create: (context) {
-            // Create chat dependencies
-            final authProvider = ChatAuthProviderInstance.instance;
-            final chatConfig = ChatConfig();
-            final chatSocketService = ChatSocketService(
-              config: chatConfig,
-              authProvider: authProvider,
-            );
-            final chatRepository = ChatRepository(
-              socketService: chatSocketService,
-              authProvider: authProvider,
-            );
 
-            return ChatBloc(
-              chatRepository: chatRepository,
-              authProvider: authProvider,
-            );
-          },
-        ),
         BlocProvider<ProfileBloc>(
             create: (context) => ProfileBloc(repository: ProfileRepo())),
         BlocProvider(
@@ -84,8 +65,14 @@ class MyApp extends StatelessWidget {
           create: (context) => AdEditBloc(repo: AddRepository()),
         ),
         BlocProvider<MyAdsBloc>(
+          create: (context) => MyAdsBloc(repository: MyAdsRepo()),
+        ),
+        BlocProvider<ChatBloc>(
+          create: (context) => ChatBloc()..add(const ChatEvent.connect()),
+        ),
+        BlocProvider<FavoriteBloc>(
           create: (context) =>
-              MyAdsBloc(repository: MyAdsRepo())..add(const MyAdsEvent.load()),
+              FavoriteBloc(favoriteRepository: FavoriteRepository()),
         ),
       ],
       child: MaterialApp.router(

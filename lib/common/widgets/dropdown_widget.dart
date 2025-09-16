@@ -27,11 +27,14 @@ class DropdownWidget<T> extends StatelessWidget {
               CommonDecoration.textFieldDecoration(labelText: labelText),
           value: selectedValue,
           dropdownColor: Colors.white,
+          isExpanded: true,
           items: items.map((T value) {
             return DropdownMenuItem<T>(
               value: value,
               child: Text(
                 value.toString(),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
                 // style: AppTextStyle.labelText
               ),
             );
