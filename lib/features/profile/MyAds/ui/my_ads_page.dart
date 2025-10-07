@@ -348,13 +348,18 @@ class _Thumb extends StatelessWidget {
         height: 98,
         child: Stack(
           children: [
-            Image.network(
-              url,
-              fit: BoxFit.cover,
-              loadingBuilder: (c, child, progress) =>
-                  progress == null ? child : const _ShimmerBox(),
-              errorBuilder: (_, __, ___) => const _BrokenImage(),
-            ),
+            if (url.isNotEmpty)
+              Image.network(
+                url,
+                width: 98,
+                height: 98,
+                fit: BoxFit.cover,
+                loadingBuilder: (c, child, progress) =>
+                    progress == null ? child : const _ShimmerBox(),
+                errorBuilder: (_, __, ___) => const _BrokenImage(),
+              )
+            else
+              const _BrokenImage(),
             if (isSold)
               Container(
                 color: Colors.black.withOpacity(0.4),
@@ -379,6 +384,8 @@ class _ShimmerBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 98,
+      height: 98,
       color: const Color(0xFFF0F2F6),
       alignment: Alignment.center,
       child: const Icon(Icons.image, size: 22, color: Color(0xFFB9C0CC)),
@@ -392,6 +399,8 @@ class _BrokenImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 98,
+      height: 98,
       color: const Color(0xFFF0F2F6),
       alignment: Alignment.center,
       child: const Icon(Icons.broken_image_outlined,
@@ -437,12 +446,57 @@ class _StatusChip extends StatelessWidget {
 String _titleFor(MyAd ad) {
   if (ad.category == 'property') {
     final type = ad.propertyDetails?.propertyType ?? '';
+    final capitalizedType = type.isNotEmpty
+        ? '${type[0].toUpperCase()}${type.substring(1).toLowerCase()}'
+        : '';
     final bhk = ad.propertyDetails?.bedrooms ?? 0;
     final area = ad.propertyDetails?.areaSqft ?? 0;
-    return '$type • ${bhk}BHK • ${area}sqft';
+    return '$capitalizedType • ${bhk}BHK • ${area}sqft';
   }
+
+  // For vehicles, show manufacturer and model names with year
   final year = ad.year ?? ad.vehicleDetails?.year ?? 0;
-  return '${ad.description} (${year == 0 ? '' : year})';
+
+  // Use manufacturer and model information if available
+  if (ad.manufacturer != null && ad.model != null) {
+    final manufacturerName =
+        ad.manufacturer!.displayName ?? ad.manufacturer!.name ?? '';
+    final modelName = ad.model!.displayName ?? ad.model!.name;
+
+    if (manufacturerName.isNotEmpty && modelName.isNotEmpty) {
+      return year > 0
+          ? '$manufacturerName $modelName ($year)'
+          : '$manufacturerName $modelName';
+    } else if (manufacturerName.isNotEmpty) {
+      return year > 0 ? '$manufacturerName ($year)' : manufacturerName;
+    } else if (modelName.isNotEmpty) {
+      return year > 0 ? '$modelName ($year)' : modelName;
+    }
+  }
+
+  // If we have manufacturer but no model, or vice versa
+  if (ad.manufacturer != null) {
+    final manufacturerName =
+        ad.manufacturer!.displayName ?? ad.manufacturer!.name ?? '';
+    if (manufacturerName.isNotEmpty) {
+      return year > 0 ? '$manufacturerName ($year)' : manufacturerName;
+    }
+  }
+
+  if (ad.model != null) {
+    final modelName = ad.model!.displayName ?? ad.model!.name;
+    if (modelName.isNotEmpty) {
+      return year > 0 ? '$modelName ($year)' : modelName;
+    }
+  }
+
+  // Fallback to description if manufacturer/model not available
+  if (ad.description.isNotEmpty) {
+    return year > 0 ? '${ad.description} ($year)' : ad.description;
+  }
+
+  // Ultimate fallback
+  return year > 0 ? 'Vehicle ($year)' : 'Vehicle';
 }
 
 String _metaLine(MyAd ad) {

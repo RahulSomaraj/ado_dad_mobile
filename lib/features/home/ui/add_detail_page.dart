@@ -3,6 +3,7 @@ import 'package:ado_dad_user/features/home/ad_detail/ad_detail_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/features/chat/services/offer_service.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
+import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
@@ -125,20 +126,32 @@ class _AdDetailPageState extends State<AdDetailPage> {
 
   // Build bottom buttons based on user ownership
   Widget _buildBottomButtons(AddModel ad) {
-    // Show "Make Offer" and "Chat" buttons for all users
-    return Row(
-      children: [
-        Expanded(
-          child: _makeOfferBtn('Make an offer',
-              onTap: () => _handleMakeOffer(context)),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _chatBtn('Chat', onTap: () {}
-              // onTap: () => _handleChat(context),
-              ),
-        ),
-      ],
+    return FutureBuilder<bool>(
+      future: _isCurrentUserOwner(ad),
+      builder: (context, snapshot) {
+        final isOwner = snapshot.data ?? false;
+
+        // Hide buttons if current user is the owner of the ad
+        if (isOwner) {
+          return const SizedBox.shrink();
+        }
+
+        // Show "Make Offer" and "Chat" buttons only for non-owners
+        return Row(
+          children: [
+            Expanded(
+              child: _makeOfferBtn('Make an offer',
+                  onTap: () => _handleMakeOffer(context)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _chatBtn('Chat', onTap: () {}
+                  // onTap: () => _handleChat(context),
+                  ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -337,11 +350,30 @@ class _AdDetailPageState extends State<AdDetailPage> {
               ),
               Row(
                 children: [
-                  _circleIconButton(Icons.edit, onTap: () {
-                    _goToEdit(context, ad);
-                  }),
-                  const SizedBox(width: 8),
-                  _circleIconButton(Icons.favorite_border, onTap: () {}),
+                  // Show edit icon only if current user is the owner of the ad
+                  FutureBuilder<bool>(
+                    future: _isCurrentUserOwner(ad),
+                    builder: (context, snapshot) {
+                      final isOwner = snapshot.data ?? false;
+                      if (isOwner) {
+                        return _circleIconButton(Icons.edit, onTap: () {
+                          _goToEdit(context, ad);
+                        });
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                  // Add spacing only if edit icon is shown
+                  FutureBuilder<bool>(
+                    future: _isCurrentUserOwner(ad),
+                    builder: (context, snapshot) {
+                      final isOwner = snapshot.data ?? false;
+                      return isOwner
+                          ? const SizedBox(width: 8)
+                          : const SizedBox.shrink();
+                    },
+                  ),
+                  _buildFavoriteButton(ad),
                 ],
               ),
             ],
@@ -439,45 +471,54 @@ class _AdDetailPageState extends State<AdDetailPage> {
           '${ad.propertyType ?? ''} • ${ad.bedrooms ?? 0} BHK • ${ad.areaSqft ?? 0} sqft';
     } else {
       title =
-          '${ad.manufacturer?.name ?? ''} ${ad.model?.name ?? ''} (${ad.year ?? ''})';
+          '${ad.manufacturer?.displayName ?? ad.manufacturer?.name ?? ''} ${ad.model?.displayName ?? ad.model?.name ?? ''} (${ad.year ?? ''})';
     }
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
-      child: Container(
-        height: 50,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 3,
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  // '${ad.manufacturer?.name} ${ad.model?.name ?? ''} (${ad.year ?? ''})',
                   toTitleCase(title),
                   style: const TextStyle(
                       fontSize: 16, fontWeight: FontWeight.bold),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 Text(
                   'Posted on ${_niceDate(ad.updatedAt)}',
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
               ],
             ),
-            const VerticalDivider(
+          ),
+          const SizedBox(width: 16),
+          Container(
+            height: 40,
+            child: const VerticalDivider(
               thickness: 1,
-              width: 32, // spacing around divider
               color: Colors.grey,
             ),
-            Text(
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            flex: 1,
+            child: Text(
               '₹ ${(ad.price)}',
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
               ),
+              textAlign: TextAlign.end,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -571,9 +612,13 @@ class _AdDetailPageState extends State<AdDetailPage> {
 
     // VEHICLE SPECS (default)
     final items = <_Spec>[
-      _Spec('Brand Name', toTitleCase(ad.manufacturer?.name ?? '-'),
+      _Spec(
+          'Brand Name',
+          toTitleCase(
+              ad.manufacturer?.displayName ?? ad.manufacturer?.name ?? '-'),
           icon: Icons.factory_outlined),
-      _Spec('Model Name', toTitleCase(ad.model?.name ?? '-'),
+      _Spec('Model Name',
+          toTitleCase(ad.model?.displayName ?? ad.model?.name ?? '-'),
           icon: Icons.directions_car),
       _Spec('Transmission', ad.transmission ?? '-', icon: Icons.settings),
       _Spec('Fuel Type', ad.fuelType ?? '-', icon: Icons.local_gas_station),
@@ -677,9 +722,9 @@ class _AdDetailPageState extends State<AdDetailPage> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: _cardShell(
         child: ListTile(
-          leading: const CircleAvatar(
+          leading: CircleAvatar(
             radius: 24,
-            backgroundImage: AssetImage('assets/images/dealer.jpg'),
+            backgroundImage: NetworkImage(ad.user?.profilePic ?? ''),
           ),
           title: Text(
             ad.user?.name?.trim().isNotEmpty == true
@@ -693,6 +738,8 @@ class _AdDetailPageState extends State<AdDetailPage> {
             children: [
               if (ad.user?.email?.trim().isNotEmpty == true)
                 Text(ad.user!.email!),
+              if (ad.user?.phone?.trim().isNotEmpty == true)
+                Text(ad.user!.phone!),
               Text(ad.location),
             ],
           ),
@@ -709,6 +756,67 @@ class _AdDetailPageState extends State<AdDetailPage> {
   }
 
   // ======= Small helpers =======
+  Widget _buildFavoriteButton(AddModel ad) {
+    return BlocBuilder<FavoriteBloc, FavoriteState>(
+      builder: (context, state) {
+        bool isFavorited = ad.isFavorited ?? false;
+
+        // Check if this ad is currently being toggled
+        if (state is FavoriteToggleLoading && state.adId == ad.id) {
+          return Container(
+            height: 36,
+            width: 36,
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.35),
+              shape: BoxShape.circle,
+            ),
+            child: const Center(
+              child: SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+            ),
+          );
+        }
+
+        // Update the favorite status if we have a toggle success state for this ad
+        if (state is FavoriteToggleSuccess && state.adId == ad.id) {
+          isFavorited = state.isFavorited;
+        }
+
+        return InkWell(
+          onTap: () {
+            context.read<FavoriteBloc>().add(
+                  FavoriteEvent.toggleFavorite(
+                    adId: ad.id,
+                    isCurrentlyFavorited: isFavorited,
+                  ),
+                );
+          },
+          child: Container(
+            height: 36,
+            width: 36,
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.35),
+              shape: BoxShape.circle,
+            ),
+            child: Image.asset(
+              isFavorited
+                  ? 'assets/images/favorite_icon_filled.png'
+                  : 'assets/images/favorite_icon_unfilled.png',
+              width: 20,
+              height: 20,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _circleIconButton(IconData icon, {VoidCallback? onTap}) {
     return InkWell(
       onTap: onTap,

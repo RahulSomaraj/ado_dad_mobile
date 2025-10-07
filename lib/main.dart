@@ -20,6 +20,8 @@ import 'package:ado_dad_user/repositories/signup_repository.dart';
 import 'package:ado_dad_user/repositories/socket_service.dart';
 import 'package:ado_dad_user/features/profile/MyAds/bloc/my_ads_bloc.dart';
 import 'package:ado_dad_user/repositories/my_ads_repo.dart';
+import 'package:ado_dad_user/features/home/ui/sellerprofile/bloc/bloc/seller_profile_bloc.dart';
+import 'package:ado_dad_user/repositories/seller_profile_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -73,6 +75,10 @@ class MyApp extends StatelessWidget {
         BlocProvider<FavoriteBloc>(
           create: (context) =>
               FavoriteBloc(favoriteRepository: FavoriteRepository()),
+        ),
+        BlocProvider<SellerProfileBloc>(
+          create: (context) =>
+              SellerProfileBloc(repository: SellerProfileRepository()),
         ),
       ],
       child: MaterialApp.router(

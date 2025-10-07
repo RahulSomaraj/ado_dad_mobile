@@ -2,6 +2,7 @@ import 'package:ado_dad_user/common/api_service.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:dio/dio.dart';
 import 'package:ado_dad_user/models/my_ads_model.dart';
+import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 
 class MyAdsRepo {
   final Dio _dio = ApiService().dio;
@@ -60,11 +61,128 @@ class MyAdsRepo {
           .map((obj) => MyAd.fromJson(obj))
           .toList();
 
-      return PaginatedMyAdsResponse(data: ads, hasNext: hasNext);
+      // Enrich ads with manufacturer and model names
+      final enrichedAds = await _enrichMyAdsWithNames(ads);
+
+      return PaginatedMyAdsResponse(data: enrichedAds, hasNext: hasNext);
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
     } catch (e) {
       throw Exception('Failed to fetch my ads: $e');
+    }
+  }
+
+  /// Enrich MyAds with manufacturer and model names using IDs
+  Future<List<MyAd>> _enrichMyAdsWithNames(List<MyAd> ads) async {
+    try {
+      // Get all unique manufacturer IDs
+      final manufacturerIds = ads
+          .where((ad) => ad.vehicleDetails?.manufacturerId.isNotEmpty == true)
+          .map((ad) => ad.vehicleDetails!.manufacturerId)
+          .toSet()
+          .toList();
+
+      // Fetch manufacturer names
+      final Map<String, String> manufacturerMap = {};
+      if (manufacturerIds.isNotEmpty) {
+        try {
+          final response = await _dio.get('/vehicle/manufacturers');
+          if (response.statusCode == 200 && response.data is List) {
+            final manufacturers = response.data as List;
+            for (final manufacturer in manufacturers) {
+              if (manufacturer is Map<String, dynamic>) {
+                final id = manufacturer['_id']?.toString() ??
+                    manufacturer['id']?.toString();
+                final name = manufacturer['displayName']?.toString() ??
+                    manufacturer['name']?.toString();
+                if (id != null && name != null) {
+                  manufacturerMap[id] = name;
+                }
+              }
+            }
+          }
+        } catch (e) {
+          print('Error fetching manufacturers: $e');
+        }
+      }
+
+      // Get all unique model IDs with their manufacturer IDs
+      final modelRequests = <Map<String, String>>[];
+      for (final ad in ads) {
+        if (ad.vehicleDetails?.modelId.isNotEmpty == true &&
+            ad.vehicleDetails?.manufacturerId.isNotEmpty == true) {
+          modelRequests.add({
+            'modelId': ad.vehicleDetails!.modelId,
+            'manufacturerId': ad.vehicleDetails!.manufacturerId,
+          });
+        }
+      }
+
+      // Fetch model names
+      final Map<String, String> modelMap = {};
+      for (final request in modelRequests) {
+        try {
+          final response = await _dio.get(
+            '/vehicle/models',
+            queryParameters: {
+              'manufacturerId': request['manufacturerId'],
+            },
+          );
+          if (response.statusCode == 200 && response.data is List) {
+            final models = response.data as List;
+            for (final model in models) {
+              if (model is Map<String, dynamic>) {
+                final id = model['_id']?.toString() ?? model['id']?.toString();
+                final name = model['displayName']?.toString() ??
+                    model['name']?.toString();
+                if (id != null && name != null) {
+                  modelMap[id] = name;
+                }
+              }
+            }
+          }
+        } catch (e) {
+          print(
+              'Error fetching models for manufacturer ${request['manufacturerId']}: $e');
+        }
+      }
+
+      // Create enriched ads with manufacturer and model names
+      return ads.map((ad) {
+        if (ad.vehicleDetails == null) return ad;
+
+        final manufacturerName =
+            manufacturerMap[ad.vehicleDetails!.manufacturerId];
+        final modelName = modelMap[ad.vehicleDetails!.modelId];
+
+        // Create manufacturer and model objects if we have the names
+        Manufacturer? manufacturer;
+        if (manufacturerName != null &&
+            ad.vehicleDetails!.manufacturerId.isNotEmpty) {
+          manufacturer = Manufacturer(
+            id: ad.vehicleDetails!.manufacturerId,
+            name: manufacturerName,
+            displayName: manufacturerName,
+          );
+        }
+
+        Model? model;
+        if (modelName != null && ad.vehicleDetails!.modelId.isNotEmpty) {
+          model = Model(
+            id: ad.vehicleDetails!.modelId,
+            name: modelName,
+            displayName: modelName,
+          );
+        }
+
+        return ad.copyWith(
+          manufacturer: manufacturer,
+          model: model,
+        );
+      }).toList();
+    } catch (e) {
+      print('Error enriching MyAds: $e');
+      return ads; // Return original ads if enrichment fails
     }
   }
 }

@@ -1,18 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+import 'package:ado_dad_user/features/home/ui/sellerprofile/bloc/bloc/seller_profile_bloc.dart';
 
-class SellerProfilePage extends StatelessWidget {
+class SellerProfilePage extends StatefulWidget {
   final AdUser seller;
-  final List<AddModel> ads;
 
-  const SellerProfilePage({super.key, required this.seller, required this.ads});
+  const SellerProfilePage({super.key, required this.seller});
+
+  @override
+  State<SellerProfilePage> createState() => _SellerProfilePageState();
+}
+
+class _SellerProfilePageState extends State<SellerProfilePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Always fetch fresh data when the page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SellerProfileBloc>().add(
+            SellerProfileEvent.fetchUserAds(widget.seller.id),
+          );
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh data when returning to this page
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SellerProfileBloc>().add(
+            SellerProfileEvent.fetchUserAds(widget.seller.id),
+          );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF1EEFF), // Soft lavender background
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 16),
@@ -44,32 +73,138 @@ class SellerProfilePage extends StatelessWidget {
                     bottomRight: Radius.circular(24),
                   ),
                 ),
-                child: _SellerCard(seller: seller),
+                child: _SellerCard(seller: widget.seller),
               ),
 
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  'Seller Products (${ads.length})',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 5),
 
-              // Product list
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: ads.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) => _ProductTile(
-                  ad: ads[index],
-                  onTap: () {},
-                ),
+              // BlocBuilder for ads list
+              BlocBuilder<SellerProfileBloc, SellerProfileState>(
+                builder: (context, state) {
+                  return state.when(
+                    initial: () => const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                    loading: () => const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                    loaded: (ads, hasNext, page, isPaging) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'Seller Products (${ads.length})',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        // Product list
+                        ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: ads.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, index) => _ProductTile(
+                            ad: ads[index],
+                            onTap: () {
+                              context.push('/add-detail-page',
+                                  extra: ads[index]);
+                            },
+                          ),
+                        ),
+                        // Load more button
+                        if (hasNext) ...[
+                          const SizedBox(height: 16),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: isPaging
+                                    ? null
+                                    : () {
+                                        context.read<SellerProfileBloc>().add(
+                                              SellerProfileEvent.loadMore(
+                                                  widget.seller.id),
+                                            );
+                                      },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF6366F1),
+                                  foregroundColor: Colors.white,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: isPaging
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.white),
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Load More Products',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    error: (message) => Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          children: [
+                            const Icon(Icons.error_outline,
+                                size: 48, color: Colors.red),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Error loading ads',
+                              style: theme.textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              message,
+                              style: theme.textTheme.bodySmall,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () {
+                                context.read<SellerProfileBloc>().add(
+                                      SellerProfileEvent.fetchUserAds(
+                                          widget.seller.id),
+                                    );
+                              },
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -95,9 +230,11 @@ class _SellerCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 32,
-            backgroundImage: AssetImage('assets/images/dealer.jpg'),
+            backgroundImage: seller.profilePic?.trim().isNotEmpty == true
+                ? NetworkImage(seller.profilePic!)
+                : null,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -123,39 +260,22 @@ class _SellerCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                 ],
+                if (seller.phone?.trim().isNotEmpty == true) ...[
+                  Text(
+                    seller.phone!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF111827),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                ],
                 const SizedBox(height: 12),
-                // Row(
-                //   children: const [
-                //     _RoundAction(icon: Icons.call),
-                //     SizedBox(width: 10),
-                //     _RoundAction(icon: Icons.chat_bubble_outline),
-                //     SizedBox(width: 10),
-                //     _RoundAction(icon: Icons.share_outlined),
-                //   ],
-                // ),
               ],
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _RoundAction extends StatelessWidget {
-  const _RoundAction({required this.icon});
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 42,
-      height: 42,
-      decoration: const BoxDecoration(
-        color: Color(0xFFE9E9FF),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(icon, color: Color(0xFF4C4CF9)),
     );
   }
 }
@@ -169,14 +289,38 @@ class _ProductTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Generate title similar to add detail page
+    // Generate title - for vehicles: "ManufacturerName ModelName (Year)"
     String title;
     if (ad.category == 'property') {
       title =
-          '${ad.propertyType ?? ''} • ${ad.bedrooms ?? 0} BHK • ${ad.areaSqft ?? 0} sqft';
+          '${_toTitleCase(ad.propertyType)} • ${ad.bedrooms ?? 0} BHK • ${ad.areaSqft ?? 0} sqft';
     } else {
-      title =
-          '${ad.manufacturer?.name ?? ''} ${ad.model?.name ?? ''} (${ad.year ?? ''})';
+      // Vehicle format: ManufacturerName ModelName (Year)
+      final manufacturerName = ad.manufacturer?.displayName ??
+          ad.manufacturer?.name ??
+          'Unknown Brand';
+      final modelName =
+          ad.model?.displayName ?? ad.model?.name ?? 'Unknown Model';
+      final year = ad.year ?? '';
+
+      // Clean up the title - remove extra spaces and handle empty values
+      final cleanManufacturer = manufacturerName.trim();
+      final cleanModel = modelName.trim();
+      final cleanYear = year.toString().trim();
+
+      if (cleanManufacturer.isNotEmpty && cleanModel.isNotEmpty) {
+        title = cleanYear.isNotEmpty
+            ? '$cleanManufacturer $cleanModel ($cleanYear)'
+            : '$cleanManufacturer $cleanModel';
+      } else if (cleanManufacturer.isNotEmpty) {
+        title = cleanYear.isNotEmpty
+            ? '$cleanManufacturer ($cleanYear)'
+            : cleanManufacturer;
+      } else if (cleanModel.isNotEmpty) {
+        title = cleanYear.isNotEmpty ? '$cleanModel ($cleanYear)' : cleanModel;
+      } else {
+        title = cleanYear.isNotEmpty ? 'Vehicle ($cleanYear)' : 'Vehicle';
+      }
     }
 
     // Generate subtitle with fuel/mileage info
@@ -190,7 +334,7 @@ class _ProductTile extends StatelessWidget {
     }
 
     return Material(
-      color: Colors.white,
+      color: Colors.white, // White tiles on lavender background
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
@@ -243,6 +387,14 @@ class _ProductTile extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
+                    const SizedBox(height: 2),
+                    Text(
+                      ad.location,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFF6B7280),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     if (subtitle.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
@@ -253,37 +405,6 @@ class _ProductTile extends StatelessWidget {
                         ),
                       ),
                     ],
-                    const SizedBox(height: 2),
-                    Text(
-                      ad.location,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: const Color(0xFF6B7280),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    // User info similar to seller tile
-                    Row(
-                      children: [
-                        const CircleAvatar(
-                          radius: 8,
-                          backgroundImage:
-                              AssetImage('assets/images/dealer.jpg'),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            ad.user?.name?.trim().isNotEmpty == true
-                                ? ad.user!.name!
-                                : 'Seller',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: const Color(0xFF6B7280),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
@@ -308,4 +429,14 @@ String _formatINR(int amount) {
     rest = rest.substring(0, rest.length - 2);
   }
   return '$rest${buf.toString()},$last3';
+}
+
+String _toTitleCase(String? input) {
+  if (input == null) return '';
+  final s = input.toLowerCase().trim();
+  if (s.isEmpty) return '';
+  return s
+      .split(' ')
+      .map((w) => w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}')
+      .join(' ');
 }

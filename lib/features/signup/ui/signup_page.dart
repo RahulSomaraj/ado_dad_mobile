@@ -226,6 +226,7 @@ class _SignupPageState extends State<SignupPage> {
       initialValue: '',
       onSaved: (value) => _password = value!,
       isPassword: true,
+      isSignupPassword: true,
     );
   }
 

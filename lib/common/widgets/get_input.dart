@@ -9,6 +9,7 @@ class GetInput extends StatefulWidget {
   final bool isEmail;
   final bool isPhone;
   final bool isPassword;
+  final bool isSignupPassword;
   final bool isDate;
   final bool isNumberField;
   final bool isPrice;
@@ -25,6 +26,7 @@ class GetInput extends StatefulWidget {
     this.isEmail = false,
     this.isPhone = false,
     this.isPassword = false,
+    this.isSignupPassword = false,
     this.isDate = false,
     this.initialValue,
     this.onTap,
@@ -138,9 +140,38 @@ class _GetInputState extends State<GetInput> {
     if (widget.isPhone && !RegExp(r"^[0-9]{10}$").hasMatch(value)) {
       return "Enter a valid phone number";
     }
-    if (widget.isPassword && value.length < 6) {
-      return "Password must be at least 6 characters long";
+    if (widget.isPassword && widget.isSignupPassword) {
+      return _validateSignupPassword(value);
     }
+    return null;
+  }
+
+  /// *📌 Enhanced Password Validation Function for Signup*
+  String? _validateSignupPassword(String password) {
+    if (password.length < 8) {
+      return "Password must be at least 8 characters long";
+    }
+
+    // Check for uppercase letter
+    if (!RegExp(r'[A-Z]').hasMatch(password)) {
+      return "Password must contain at least one uppercase letter";
+    }
+
+    // Check for lowercase letter
+    if (!RegExp(r'[a-z]').hasMatch(password)) {
+      return "Password must contain at least one lowercase letter";
+    }
+
+    // Check for number
+    if (!RegExp(r'[0-9]').hasMatch(password)) {
+      return "Password must contain at least one number";
+    }
+
+    // Check for special character
+    if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) {
+      return "Password must contain at least one special character";
+    }
+
     return null;
   }
 }

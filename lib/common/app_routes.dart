@@ -28,13 +28,8 @@ import 'package:ado_dad_user/features/sell/ui/form/add_commercial_vehicle_form.d
 import 'package:ado_dad_user/features/sell/ui/form/add_private_vehicle_form.dart';
 import 'package:ado_dad_user/features/sell/ui/form/add_property_form.dart';
 import 'package:ado_dad_user/features/sell/ui/form/add_two_wheeler_form.dart';
-import 'package:ado_dad_user/features/seller/ui/add_advertisement_form1.dart';
 import 'package:ado_dad_user/features/sell/ui/item_category.dart';
-import 'package:ado_dad_user/features/seller/ui/property_category_selection.dart';
 import 'package:ado_dad_user/features/sell/ui/seller.dart';
-import 'package:ado_dad_user/features/seller/ui/vehicle_essential_details_form.dart';
-import 'package:ado_dad_user/features/seller/ui/vehicle_more_detail_form.dart';
-import 'package:ado_dad_user/features/seller/ui/vehicle_personal_detail_form.dart';
 import 'package:ado_dad_user/features/signup/ui/signup.dart';
 import 'package:ado_dad_user/features/splash/splash.dart';
 import 'package:ado_dad_user/features/splash/splash_screen1.dart';
@@ -101,63 +96,11 @@ class AppRoutes {
         },
       ),
       GoRoute(path: '/seller', builder: (context, state) => const Seller()),
-      GoRoute(
-        path: '/vehicle-form',
-        builder: (context, state) {
-          final String category =
-              state.uri.queryParameters['category'] ?? 'Vehicle';
-          return VehicleEssentialDetails(categoryTitle: category);
-        },
-      ),
-      GoRoute(
-        path: '/advertisement-form1',
-        builder: (context, state) {
-          final String category =
-              state.uri.queryParameters['category'] ?? 'Vehicle';
-          return AddAdvertisementForm1(categoryTitle: category);
-        },
-      ),
+
       GoRoute(
           path: '/item-category',
           builder: (context, state) => const ItemCategory()),
-      GoRoute(
-        path: '/vehicle-more-detail',
-        builder: (context, state) {
-          final adId = state.extra as String;
-          return VehicleMoreDetailForm(advertisementId: adId);
-        },
-        // builder: (context, state) => const VehicleMoreDetailForm()
-      ),
-      // GoRoute(
-      //     path: '/vehicle-personal-detail',
-      //     builder: (context, state) => const VehiclePersonalDetailForm()),
-      // GoRoute(
-      //   path: '/vehicle-personal-detail',
-      //   builder: (context, state) {
-      //     final adId = state.extra as String;
-      //     return VehiclePersonalDetailForm(addId: adId);
-      //   },
-      //   // builder: (context, state) => const VehicleMoreDetailForm()
-      // ),
-      GoRoute(
-        path: '/vehicle-personal-detail/:adId',
-        builder: (context, state) {
-          final adId = state.pathParameters['adId']!;
-          return VehiclePersonalDetailForm(addId: adId);
-        },
-      ),
 
-      GoRoute(
-          path: '/property-category-selection',
-          builder: (context, state) => const PropertyCategorySelection()),
-      // GoRoute(
-      //   path: '/category-list-page',
-      //   builder: (context, state) {
-      //     final String category =
-      //         state.uri.queryParameters['category'] ?? 'Vehicle';
-      //     return CategoryListPage(categoryTitle: category);
-      //   },
-      // ),
       GoRoute(
         path: '/category-list-page',
         builder: (context, state) {
@@ -191,21 +134,17 @@ class AppRoutes {
           // Get user data passed from the seller tile navigation
           final userData = state.extra as AdUser?;
 
-          // Use passed user data or fallback to basic data
-          final seller = userData ??
-              AdUser(
-                id: sellerId,
-                name: 'Seller',
-                email: null,
-              );
-
-          // TODO: Replace with actual API call to fetch seller's ads
-          // For now, using empty list
-          final sellerAds = <AddModel>[];
+          // Always use the seller ID from URL, but use userData for name/email if available
+          final seller = AdUser(
+            id: sellerId, // Always use seller ID from URL
+            name: userData?.name ?? 'Seller',
+            email: userData?.email,
+            profilePic: userData?.profilePic,
+            phone: userData?.phone,
+          );
 
           return SellerProfilePage(
             seller: seller,
-            ads: sellerAds,
           );
         },
       ),

@@ -7,7 +7,8 @@ class FavoriteState with _$FavoriteState {
   const factory FavoriteState.loading() = FavoriteLoading;
 
   const factory FavoriteState.loaded({
-    required List<FavoriteAd> favorites,
+    required List<dynamic>
+        favorites, // Changed to dynamic to handle both FavoriteAd and EnrichedFavoriteAd
     required bool hasNext,
     required int currentPage,
   }) = FavoriteLoaded;

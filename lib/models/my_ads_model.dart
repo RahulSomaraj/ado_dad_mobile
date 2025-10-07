@@ -1,3 +1,5 @@
+import 'advertisement_model/add_model.dart';
+
 class MyAd {
   final String id;
   final String description;
@@ -13,6 +15,10 @@ class MyAd {
 
   final MyAdUser? user;
   final int? year;
+
+  // Manufacturer and Model information (using same classes as AddModel)
+  final Manufacturer? manufacturer;
+  final Model? model;
 
   // Keep flexible structures for these (backend may vary)
   final MyAdVehicleDetails? vehicleDetails;
@@ -33,6 +39,8 @@ class MyAd {
     this.soldOut,
     this.user,
     this.year,
+    this.manufacturer,
+    this.model,
     this.vehicleDetails,
     this.commercialVehicleDetails = const [],
     this.propertyDetails,
@@ -52,6 +60,8 @@ class MyAd {
     bool? soldOut,
     MyAdUser? user,
     int? year,
+    Manufacturer? manufacturer,
+    Model? model,
     MyAdVehicleDetails? vehicleDetails,
     List<Map<String, dynamic>>? commercialVehicleDetails,
     PropertyDetails? propertyDetails,
@@ -70,6 +80,8 @@ class MyAd {
       soldOut: soldOut ?? this.soldOut,
       user: user ?? this.user,
       year: year ?? this.year,
+      manufacturer: manufacturer ?? this.manufacturer,
+      model: model ?? this.model,
       vehicleDetails: vehicleDetails ?? this.vehicleDetails,
       commercialVehicleDetails:
           commercialVehicleDetails ?? this.commercialVehicleDetails,
@@ -111,6 +123,19 @@ class MyAd {
                 .toList() ??
             const [];
 
+    // Parse manufacturer and model information (using same classes as AddModel)
+    Manufacturer? manufacturer;
+    final manufacturerJson = _asMap(json['manufacturer']);
+    if (manufacturerJson != null) {
+      manufacturer = Manufacturer.fromJson(manufacturerJson);
+    }
+
+    Model? model;
+    final modelJson = _asMap(json['model']);
+    if (modelJson != null) {
+      model = Model.fromJson(modelJson);
+    }
+
     return MyAd(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
       description: (json['description'] ?? '').toString(),
@@ -125,6 +150,8 @@ class MyAd {
       soldOut: json['soldOut'] as bool?,
       user: userJson != null ? MyAdUser.fromJson(userJson) : null,
       year: _asInt(json['year']) ?? vehicleDetails?.year,
+      manufacturer: manufacturer,
+      model: model,
       vehicleDetails: vehicleDetails,
       commercialVehicleDetails: commercialVehicleDetails,
       propertyDetails:
@@ -147,6 +174,8 @@ class MyAd {
       'soldOut': soldOut,
       'user': user?.toJson(),
       'year': year,
+      'manufacturer': manufacturer?.toJson(),
+      'model': model?.toJson(),
       'vehicleDetails': vehicleDetails?.toJson(),
       'commercialVehicleDetails': commercialVehicleDetails,
       'propertyDetails': propertyDetails?.toJson(),

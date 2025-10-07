@@ -227,8 +227,9 @@ class AddModel {
 
     // Prefer nested inventory objects, else fall back to IDs
     Manufacturer? manufacturer;
-    final manuObj =
-        _asMap(inv?['manufacturer']) ?? _asMap(json['manufacturer']);
+    final manuObj = _asMap(inv?['manufacturer']) ??
+        _asMap(json['manufacturer']) ??
+        _asMap(vd?['manufacturer']);
     final manuId =
         (vd?['manufacturerId'] ?? json['manufacturerId'])?.toString();
     if (manuObj != null) {
@@ -238,7 +239,8 @@ class AddModel {
     }
 
     Model? model;
-    final modelObj = _asMap(inv?['model']) ?? _asMap(json['model']);
+    final modelObj =
+        _asMap(inv?['model']) ?? _asMap(json['model']) ?? _asMap(vd?['model']);
     final modelId = (vd?['modelId'] ?? json['modelId'])?.toString();
     if (modelObj != null) {
       model = Model.fromJson(modelObj);
@@ -275,12 +277,9 @@ class AddModel {
           (vd?['transmissionTypeId'] ?? json['transmissionTypeId'])?.toString(),
       fuelTypeId: (vd?['fuelTypeId'] ?? json['fuelTypeId'])?.toString(),
 
-      // if backend also sends human names anywhere, pick them up (optional)
-      transmission: (json['transmission'] ??
-              vd?['transmission'] ??
-              vd?['transmissionType'])
-          ?.toString(),
-      fuelType: (json['fuelType'] ?? vd?['fuelType'])?.toString(),
+      // Extract names from nested objects or fallback to direct values
+      transmission: _extractTransmissionName(json, vd),
+      fuelType: _extractFuelTypeName(json, vd),
 
       color: (json['color'] ?? vd?['color'])?.toString(),
       isFirstOwner: (json['isFirstOwner'] ?? vd?['isFirstOwner']) as bool?,
@@ -326,7 +325,7 @@ class AddModel {
       hasFitness: json['hasFitness'] as bool?,
       hasPermit: json['hasPermit'] as bool?,
       // Favorite fields
-      isFavorited: json['isFavorited'] as bool?,
+      isFavorited: json['isFavorite'] as bool? ?? json['isFavorited'] as bool?,
       favoriteId: json['favoriteId'] as String?,
       favoritedAt: json['favoritedAt'] as String?,
       // Status fields
@@ -418,6 +417,31 @@ int? _asInt(dynamic v) {
   return null;
 }
 
+String? _extractTransmissionName(
+    Map<String, dynamic> json, Map<String, dynamic>? vd) {
+  // First try to get from nested transmissionType object
+  final transmissionTypeObj = _asMap(vd?['transmissionType']);
+  if (transmissionTypeObj != null) {
+    return (transmissionTypeObj['displayName'] ?? transmissionTypeObj['name'])
+        ?.toString();
+  }
+
+  // Fallback to direct values
+  return (json['transmission'] ?? vd?['transmission'])?.toString();
+}
+
+String? _extractFuelTypeName(
+    Map<String, dynamic> json, Map<String, dynamic>? vd) {
+  // First try to get from nested fuelType object
+  final fuelTypeObj = _asMap(vd?['fuelType']);
+  if (fuelTypeObj != null) {
+    return (fuelTypeObj['displayName'] ?? fuelTypeObj['name'])?.toString();
+  }
+
+  // Fallback to direct values
+  return (json['fuelType'] ?? vd?['fuelType'])?.toString();
+}
+
 // Manufacturer? _parseManufacturer(dynamic v) {
 //   if (v == null) return null;
 //   if (v is Map<String, dynamic>) return Manufacturer.fromJson(v);
@@ -452,32 +476,45 @@ class Manufacturer {
 class Model {
   final String id;
   final String name;
-  Model({required this.id, required this.name});
+  final String? displayName;
+  Model({required this.id, required this.name, this.displayName});
 
   factory Model.fromJson(Map<String, dynamic> json) => Model(
         id: (json['_id'] ?? json['id'] ?? '').toString(),
         name: (json['name'] ?? '').toString(),
+        displayName: (json['displayName'] as String?)?.toString(),
       );
 
-  Map<String, dynamic> toJson() => {'id': id, 'name': name};
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        if (displayName != null) 'displayName': displayName,
+      };
 }
 
 class AdUser {
   final String id;
   final String? name;
   final String? email;
+  final String? profilePic;
+  final String? phone;
 
-  const AdUser({required this.id, this.name, this.email});
+  const AdUser(
+      {required this.id, this.name, this.email, this.profilePic, this.phone});
 
   factory AdUser.fromJson(Map<String, dynamic> json) => AdUser(
         id: (json['id'] ?? json['_id'] ?? '').toString(),
         name: (json['name'] ?? '').toString(),
         email: (json['email'] ?? '').toString(),
+        profilePic: (json['profilePic'] ?? '').toString(),
+        phone: (json['phone'] ?? '').toString(),
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
         if (name != null) 'name': name,
         if (email != null) 'email': email,
+        if (profilePic != null) 'profilePic': profilePic,
+        if (phone != null) 'phone': phone,
       };
 }

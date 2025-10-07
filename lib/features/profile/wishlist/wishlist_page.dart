@@ -1,5 +1,7 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
+import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+import 'package:ado_dad_user/repositories/favorite_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +19,41 @@ class _WishlistPageState extends State<WishlistPage> {
     super.initState();
     // Load favorites when the page initializes
     context.read<FavoriteBloc>().add(const FavoriteEvent.loadFavorites());
+  }
+
+  // Convert FavoriteAd to AddModel for navigation
+  AddModel _convertFavoriteAdToAddModel(FavoriteAd favorite) {
+    return AddModel(
+      id: favorite.id,
+      description: favorite.description,
+      price: favorite.price,
+      images: favorite.images,
+      location: favorite.location,
+      category: favorite.category,
+      isActive: favorite.isActive,
+      updatedAt: favorite.updatedAt,
+      user: AdUser(
+        id: favorite.user.id,
+        name: favorite.user.name,
+        email: favorite.user.email,
+        phone: favorite.user.phone,
+      ),
+      // Vehicle details if available
+      vehicleType: favorite.vehicleDetails?.vehicleType,
+      year: favorite.vehicleDetails?.year,
+      mileage: favorite.vehicleDetails?.mileage,
+      color: favorite.vehicleDetails?.color,
+      isFirstOwner: favorite.vehicleDetails?.isFirstOwner,
+      hasInsurance: favorite.vehicleDetails?.hasInsurance,
+      hasRcBook: favorite.vehicleDetails?.hasRcBook,
+      additionalFeatures: favorite.vehicleDetails?.additionalFeatures,
+      transmissionId: favorite.vehicleDetails?.transmissionTypeId,
+      fuelTypeId: favorite.vehicleDetails?.fuelTypeId,
+      // Favorite fields
+      isFavorited: true, // Since it's from favorites
+      favoriteId: favorite.favoriteId,
+      favoritedAt: favorite.favoritedAt,
+    );
   }
 
   @override
@@ -175,7 +212,8 @@ class _WishlistPageState extends State<WishlistPage> {
         ),
         child: ListTile(
           onTap: () {
-            context.push('/add-detail-page', extra: favorite);
+            final addModel = _convertFavoriteAdToAddModel(favorite);
+            context.push('/add-detail-page', extra: addModel);
           },
           leading: ClipRRect(
             borderRadius: BorderRadius.circular(8),
@@ -248,6 +286,11 @@ class _WishlistPageState extends State<WishlistPage> {
                 );
               }
 
+              // Update the favorite status if we have a toggle success state for this ad
+              if (state is FavoriteToggleSuccess && state.adId == favorite.id) {
+                isFavorited = state.isFavorited;
+              }
+
               return GestureDetector(
                 onTap: () {
                   context.read<FavoriteBloc>().add(
@@ -258,7 +301,9 @@ class _WishlistPageState extends State<WishlistPage> {
                       );
                 },
                 child: Image.asset(
-                  'assets/images/favorite_icon_filled.png',
+                  isFavorited
+                      ? 'assets/images/favorite_icon_filled.png'
+                      : 'assets/images/favorite_icon_unfilled.png',
                   width: 24,
                   height: 24,
                 ),

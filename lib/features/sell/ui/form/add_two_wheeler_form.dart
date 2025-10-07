@@ -496,7 +496,7 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
             const SizedBox(width: 20),
             GestureDetector(
               onTap: () {
-                context.go('/item-category');
+                context.push('/item-category');
               },
               child: Container(
                 height: 35,

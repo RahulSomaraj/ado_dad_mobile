@@ -73,7 +73,7 @@ class AddRepository {
       // }
 
       final response = await _dio.post(
-        '/ads/list',
+        '/v2/ads/list',
         // queryParameters: qp,
         data: body,
       );
@@ -269,7 +269,7 @@ class AddRepository {
 
   Future<AddModel> fetchAdDetail(String adId) async {
     try {
-      final response = await _dio.get('/ads/$adId');
+      final response = await _dio.get('/v2/ads/$adId');
       print("Ad detail API raw response: ${response.data}");
       final raw = response.data;
 

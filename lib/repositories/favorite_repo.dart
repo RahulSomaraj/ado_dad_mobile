@@ -1,4 +1,7 @@
 import 'package:ado_dad_user/common/api_service.dart';
+import 'package:ado_dad_user/models/advertisement_post_model/vehicle_fuel_type_model.dart';
+import 'package:ado_dad_user/models/advertisement_post_model/vehicle_manufacturer_model.dart';
+import 'package:ado_dad_user/models/advertisement_post_model/vehilce_model.dart';
 import 'package:dio/dio.dart';
 
 class FavoriteRepository {
@@ -64,7 +67,21 @@ class FavoriteRepository {
       );
 
       if (response.statusCode == 200) {
-        return FavoriteAdsResponse.fromJson(response.data);
+        final favoriteResponse = FavoriteAdsResponse.fromJson(response.data);
+
+        // Enrich the favorite ads with manufacturer and model names
+        final enrichedFavorites =
+            await _enrichFavoriteAds(favoriteResponse.data);
+
+        return FavoriteAdsResponse(
+          data: enrichedFavorites,
+          total: favoriteResponse.total,
+          page: favoriteResponse.page,
+          limit: favoriteResponse.limit,
+          totalPages: favoriteResponse.totalPages,
+          hasNext: favoriteResponse.hasNext,
+          hasPrev: favoriteResponse.hasPrev,
+        );
       } else {
         throw Exception('Failed to fetch favorite ads');
       }
@@ -72,6 +89,153 @@ class FavoriteRepository {
       throw Exception(DioErrorHandler.handleError(e));
     } catch (e) {
       throw Exception('Failed to fetch favorite ads: $e');
+    }
+  }
+
+  /// Enrich favorite ads with manufacturer, model, and fuel type names
+  Future<List<FavoriteAd>> _enrichFavoriteAds(
+      List<FavoriteAd> favorites) async {
+    try {
+      print('Starting enrichment for ${favorites.length} favorites');
+      // Fetch all manufacturers
+      final manufacturersResponse =
+          await _dio.get('/vehicle-inventory/manufacturers');
+      final List<dynamic> manufacturersData =
+          manufacturersResponse.data['data'];
+      final manufacturers = manufacturersData
+          .map((e) => VehicleManufacturer.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      // Fetch all fuel types
+      final fuelTypesResponse = await _dio.get('/vehicle-inventory/fuel-types');
+      final List<dynamic> fuelTypesData = fuelTypesResponse.data['data'];
+      final fuelTypes = fuelTypesData
+          .map((e) => VehicleFuelType.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      // Create maps for quick lookup
+      final manufacturerMap = {for (var m in manufacturers) m.id: m};
+      final fuelTypeMap = {for (var f in fuelTypes) f.id: f};
+
+      // Enrich each favorite ad
+      final enrichedFavorites = <FavoriteAd>[];
+      for (final favorite in favorites) {
+        if (favorite.category == 'property' ||
+            favorite.vehicleDetails == null) {
+          enrichedFavorites.add(favorite);
+          continue;
+        }
+
+        // Get manufacturer name
+        String? manufacturerName;
+        if (favorite.vehicleDetails!.manufacturerId.isNotEmpty) {
+          final manufacturer =
+              manufacturerMap[favorite.vehicleDetails!.manufacturerId];
+          if (manufacturer != null) {
+            manufacturerName = manufacturer.displayName;
+            print(
+                'Found manufacturer: $manufacturerName for ID: ${favorite.vehicleDetails!.manufacturerId}');
+          } else {
+            print(
+                'Manufacturer not found for ID: ${favorite.vehicleDetails!.manufacturerId}');
+          }
+        }
+
+        // Get model name
+        String? modelName;
+        if (favorite.vehicleDetails!.modelId.isNotEmpty &&
+            favorite.vehicleDetails!.manufacturerId.isNotEmpty) {
+          try {
+            final modelsResponse = await _dio.get(
+              '/vehicle-inventory/models',
+              queryParameters: {
+                'manufacturerId': favorite.vehicleDetails!.manufacturerId
+              },
+            );
+            final List<dynamic> modelsData = modelsResponse.data['data'];
+            final models = modelsData
+                .map((e) => VehicleModel.fromJson(e as Map<String, dynamic>))
+                .toList();
+
+            final model = models
+                .where(
+                  (m) => m.id == favorite.vehicleDetails!.modelId,
+                )
+                .firstOrNull;
+
+            if (model != null) {
+              modelName = model.displayName;
+              print(
+                  'Found model: $modelName for ID: ${favorite.vehicleDetails!.modelId}');
+            } else {
+              print(
+                  'Model not found for ID: ${favorite.vehicleDetails!.modelId}');
+            }
+          } catch (e) {
+            // Error fetching model - continue with empty name
+          }
+        }
+
+        // Get fuel type name
+        String? fuelTypeName;
+        if (favorite.vehicleDetails!.fuelTypeId.isNotEmpty) {
+          final fuelType = fuelTypeMap[favorite.vehicleDetails!.fuelTypeId];
+          if (fuelType != null) {
+            fuelTypeName = fuelType.displayName;
+          }
+        }
+
+        // Create enriched vehicle details
+        final enrichedVehicleDetails = EnrichedVehicleDetails(
+          id: favorite.vehicleDetails!.id,
+          ad: favorite.vehicleDetails!.ad,
+          vehicleType: favorite.vehicleDetails!.vehicleType,
+          manufacturerId: favorite.vehicleDetails!.manufacturerId,
+          modelId: favorite.vehicleDetails!.modelId,
+          variantId: favorite.vehicleDetails!.variantId,
+          year: favorite.vehicleDetails!.year,
+          mileage: favorite.vehicleDetails!.mileage,
+          transmissionTypeId: favorite.vehicleDetails!.transmissionTypeId,
+          fuelTypeId: favorite.vehicleDetails!.fuelTypeId,
+          color: favorite.vehicleDetails!.color,
+          isFirstOwner: favorite.vehicleDetails!.isFirstOwner,
+          hasInsurance: favorite.vehicleDetails!.hasInsurance,
+          hasRcBook: favorite.vehicleDetails!.hasRcBook,
+          additionalFeatures: favorite.vehicleDetails!.additionalFeatures,
+          createdAt: favorite.vehicleDetails!.createdAt,
+          updatedAt: favorite.vehicleDetails!.updatedAt,
+          v: favorite.vehicleDetails!.v,
+          manufacturerName: manufacturerName,
+          modelName: modelName,
+          fuelTypeName: fuelTypeName,
+        );
+
+        // Create enriched favorite ad
+        final enrichedFavorite = EnrichedFavoriteAd(
+          id: favorite.id,
+          description: favorite.description,
+          price: favorite.price,
+          images: favorite.images,
+          location: favorite.location,
+          category: favorite.category,
+          isActive: favorite.isActive,
+          postedAt: favorite.postedAt,
+          updatedAt: favorite.updatedAt,
+          postedBy: favorite.postedBy,
+          user: favorite.user,
+          enrichedVehicleDetails: enrichedVehicleDetails,
+          favoriteId: favorite.favoriteId,
+          favoritedAt: favorite.favoritedAt,
+        );
+
+        enrichedFavorites.add(enrichedFavorite);
+      }
+
+      return enrichedFavorites;
+    } catch (e) {
+      // Return original favorites if enrichment fails
+      print('Error enriching favorite ads: $e');
+      return favorites;
     }
   }
 }
@@ -287,4 +451,56 @@ class VehicleDetails {
       v: (json['__v'] as num?)?.toInt() ?? 0,
     );
   }
+}
+
+// Enriched classes to hold manufacturer, model, and fuel type names
+class EnrichedVehicleDetails extends VehicleDetails {
+  final String? manufacturerName;
+  final String? modelName;
+  final String? fuelTypeName;
+
+  EnrichedVehicleDetails({
+    required super.id,
+    required super.ad,
+    required super.vehicleType,
+    required super.manufacturerId,
+    required super.modelId,
+    required super.variantId,
+    required super.year,
+    required super.mileage,
+    required super.transmissionTypeId,
+    required super.fuelTypeId,
+    required super.color,
+    required super.isFirstOwner,
+    required super.hasInsurance,
+    required super.hasRcBook,
+    required super.additionalFeatures,
+    required super.createdAt,
+    required super.updatedAt,
+    required super.v,
+    this.manufacturerName,
+    this.modelName,
+    this.fuelTypeName,
+  });
+}
+
+class EnrichedFavoriteAd extends FavoriteAd {
+  final EnrichedVehicleDetails? enrichedVehicleDetails;
+
+  EnrichedFavoriteAd({
+    required super.id,
+    required super.description,
+    required super.price,
+    required super.images,
+    required super.location,
+    required super.category,
+    required super.isActive,
+    required super.postedAt,
+    required super.updatedAt,
+    required super.postedBy,
+    required super.user,
+    required this.enrichedVehicleDetails,
+    super.favoriteId,
+    super.favoritedAt,
+  }) : super(vehicleDetails: enrichedVehicleDetails);
 }
