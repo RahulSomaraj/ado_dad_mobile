@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/password_validator.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/features/login/bloc/login_bloc.dart' as login_bloc;
 import 'package:ado_dad_user/features/profile/bloc/profile_bloc.dart'
@@ -33,6 +34,13 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _currentProfilePicUrl; // from API or after upload
   bool _isSaving = false;
 
+  // Change password dialog controllers
+  late TextEditingController _newPasswordController;
+  late TextEditingController _confirmPasswordController;
+  bool _isNewPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
+  final GlobalKey<FormState> _changePasswordFormKey = GlobalKey<FormState>();
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +49,19 @@ class _ProfilePageState extends State<ProfilePage> {
     nameController = TextEditingController();
     emailController = TextEditingController();
     phoneController = TextEditingController();
+
+    _newPasswordController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
   }
 
   Future<void> _pickImage() async {
@@ -155,6 +176,124 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  void _showChangePasswordDialog() {
+    // Reset form state
+    _newPasswordController.clear();
+    _confirmPasswordController.clear();
+    _isNewPasswordVisible = false;
+    _isConfirmPasswordVisible = false;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              backgroundColor: AppColors.whiteColor,
+              title: Text(
+                "Change Password",
+                textAlign: TextAlign.center,
+                style: AppTextstyle.title1,
+              ),
+              content: Form(
+                key: _changePasswordFormKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildPasswordField(
+                      controller: _newPasswordController,
+                      label: "New Password",
+                      isVisible: _isNewPasswordVisible,
+                      onToggleVisibility: () {
+                        setDialogState(() {
+                          _isNewPasswordVisible = !_isNewPasswordVisible;
+                        });
+                      },
+                      validator: PasswordValidator.validatePassword,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildPasswordField(
+                      controller: _confirmPasswordController,
+                      label: "Confirm Password",
+                      isVisible: _isConfirmPasswordVisible,
+                      onToggleVisibility: () {
+                        setDialogState(() {
+                          _isConfirmPasswordVisible =
+                              !_isConfirmPasswordVisible;
+                        });
+                      },
+                      validator: (value) =>
+                          PasswordValidator.validateConfirmPassword(
+                        value,
+                        _newPasswordController.text,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        style: ButtonStyle(
+                          backgroundColor:
+                              WidgetStatePropertyAll(AppColors.whiteColor),
+                          side: WidgetStatePropertyAll(
+                              BorderSide(color: Colors.grey[400]!, width: 1.0)),
+                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10))),
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          "Cancel",
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextButton(
+                        style: ButtonStyle(
+                          backgroundColor:
+                              WidgetStatePropertyAll(AppColors.primaryColor),
+                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10))),
+                        ),
+                        onPressed: () => _changePassword(),
+                        child: const Text(
+                          "OK",
+                          style: TextStyle(color: AppColors.whiteColor),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _changePassword() async {
+    if (_changePasswordFormKey.currentState!.validate()) {
+      try {
+        context.read<ProfileBloc>().add(
+              ProfileEvent.changePassword(_newPasswordController.text.trim()),
+            );
+        Navigator.pop(context); // Close the dialog
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to change password: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -167,6 +306,15 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (state is profile_bloc.Error) {
                   ScaffoldMessenger.of(context)
                       .showSnackBar(SnackBar(content: Text(state.message)));
+                }
+
+                if (state is profile_bloc.PasswordChanged) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Password changed successfully!')),
+                  );
+                  // Navigate back to profile page
+                  context.go('/profile');
                 }
 
                 // Seed controllers ONLY once per load (and not while editing)
@@ -196,7 +344,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                   return Stack(
                     children: [
-                      Container(height: 900),
+                      Container(height: 1100),
                       Container(
                         height: 250,
                         decoration: BoxDecoration(
@@ -287,20 +435,6 @@ class _ProfilePageState extends State<ProfilePage> {
                               buildTextField(emailController, isEditing),
                               buildLabel("Phone Number"),
                               buildTextField(phoneController, isEditing),
-                              const SizedBox(height: 8),
-                              // if (isEditing)
-                              //   Row(
-                              //     children: [
-                              //       ElevatedButton.icon(
-                              //         onPressed: _pickImage,
-                              //         icon: const Icon(Icons.photo_camera),
-                              //         label: const Text('Change Photo'),
-                              //       ),
-                              //       const SizedBox(width: 12),
-                              //       if (_pickedImageBytes != null)
-                              //         const Text('New photo selected'),
-                              //     ],
-                              //   ),
                             ],
                           ),
                         ),
@@ -365,6 +499,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                 onTap: () => context.push('/my-ads')),
                             buildMenuItem(
                                 'assets/images/help-profile-icon.png', "Help"),
+                            buildMenuItem('assets/images/profile-edit-icon.png',
+                                "Change Password",
+                                onTap: () => _showChangePasswordDialog()),
                             buildMenuItem(
                               'assets/images/logout-profile-icon.png',
                               "Logout",
@@ -456,6 +593,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                 }
                               },
                             ),
+                            // const SizedBox(
+                            //     height: 100), // Add space for bottom nav
                           ],
                         ),
                       ),
@@ -514,6 +653,48 @@ class _ProfilePageState extends State<ProfilePage> {
           : null,
       decoration: InputDecoration(
         border: InputBorder.none,
+      ),
+    );
+  }
+
+  Widget _buildPasswordField({
+    required TextEditingController controller,
+    required String label,
+    required bool isVisible,
+    required VoidCallback onToggleVisibility,
+    required String? Function(String?) validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: !isVisible,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.primaryColor),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.red),
+        ),
+        suffixIcon: IconButton(
+          icon: Icon(
+            isVisible ? Icons.visibility : Icons.visibility_off,
+            color: Colors.grey[600],
+          ),
+          onPressed: onToggleVisibility,
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       ),
     );
   }

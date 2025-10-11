@@ -33,5 +33,16 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         emit(ProfileState.error(e.toString()));
       }
     });
+
+    // 🔹 Handle Change Password Event
+    on<ChangePassword>((event, emit) async {
+      emit(const ProfileState.changingPassword());
+      try {
+        await repository.changePassword(event.newPassword);
+        emit(const ProfileState.passwordChanged());
+      } catch (e) {
+        emit(ProfileState.error(e.toString()));
+      }
+    });
   }
 }

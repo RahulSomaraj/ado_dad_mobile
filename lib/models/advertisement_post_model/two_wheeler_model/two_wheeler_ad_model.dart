@@ -17,6 +17,7 @@ class TwoWheelerAdModel {
   final bool hasInsurance;
   final bool hasRcBook;
   final List<String> additionalFeatures;
+  final String? link; // Video URL
 
   TwoWheelerAdModel({
     // required this.title,
@@ -37,6 +38,7 @@ class TwoWheelerAdModel {
     required this.hasInsurance,
     required this.hasRcBook,
     required this.additionalFeatures,
+    this.link,
   });
 
   Map<String, dynamic> toJson() {
@@ -59,6 +61,7 @@ class TwoWheelerAdModel {
       'hasInsurance': hasInsurance,
       'hasRcBook': hasRcBook,
       'additionalFeatures': additionalFeatures,
+      'link': link,
     };
   }
 }

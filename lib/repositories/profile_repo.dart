@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:ado_dad_user/common/api_service.dart';
@@ -138,6 +137,38 @@ class ProfileRepo {
     } catch (e) {
       print("❌ General error in updateUserProfile: $e");
       throw Exception("Error updating profile: $e");
+    }
+  }
+
+  Future<void> changePassword(String newPassword) async {
+    try {
+      final userId = await SharedPrefs().getUserId();
+      if (userId == null) throw Exception("User ID not found.");
+
+      final body = {
+        "password": newPassword,
+      };
+
+      final response = await _dio.put(
+        "/users/$userId",
+        data: body,
+        options: Options(headers: {
+          'Content-Type': 'application/json',
+        }),
+      );
+
+      print("✅ Password change response: ${response.statusCode}");
+      print("📄 Response data: ${response.data}");
+
+      if (response.statusCode != 200) {
+        throw Exception("Failed to change password.");
+      }
+    } on DioException catch (e) {
+      print("❌ DioException in changePassword: ${e.response?.data}");
+      throw Exception(DioErrorHandler.handleError(e));
+    } catch (e) {
+      print("❌ General error in changePassword: $e");
+      throw Exception("Error changing password: $e");
     }
   }
 }

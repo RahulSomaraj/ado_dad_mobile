@@ -191,6 +191,33 @@ enum ChatThreadType {
   channel,
 }
 
+/// Chat summary model for test compatibility
+@freezed
+class ChatSummary with _$ChatSummary {
+  const factory ChatSummary({
+    required String id,
+    String? lastMessage,
+    DateTime? updatedAt,
+  }) = _ChatSummary;
+
+  factory ChatSummary.fromJson(Map<String, dynamic> json) =>
+      _$ChatSummaryFromJson(json);
+}
+
+/// Chat model for test compatibility
+@freezed
+class Chat with _$Chat {
+  const factory Chat({
+    required String id,
+    required List<String> participants,
+    required String contextType,
+    required String contextId,
+    String? postId,
+  }) = _Chat;
+
+  factory Chat.fromJson(Map<String, dynamic> json) => _$ChatFromJson(json);
+}
+
 /// Extension methods for enums
 extension ChatMessageTypeExtension on ChatMessageType {
   String get value {

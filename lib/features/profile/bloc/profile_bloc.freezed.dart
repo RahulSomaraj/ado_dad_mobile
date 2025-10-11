@@ -21,6 +21,7 @@ mixin _$ProfileEvent {
     required TResult Function() started,
     required TResult Function() fetchProfile,
     required TResult Function(UserProfile profile) updateProfile,
+    required TResult Function(String newPassword) changePassword,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -28,6 +29,7 @@ mixin _$ProfileEvent {
     TResult? Function()? started,
     TResult? Function()? fetchProfile,
     TResult? Function(UserProfile profile)? updateProfile,
+    TResult? Function(String newPassword)? changePassword,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -35,6 +37,7 @@ mixin _$ProfileEvent {
     TResult Function()? started,
     TResult Function()? fetchProfile,
     TResult Function(UserProfile profile)? updateProfile,
+    TResult Function(String newPassword)? changePassword,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -43,6 +46,7 @@ mixin _$ProfileEvent {
     required TResult Function(Started value) started,
     required TResult Function(FetchProfile value) fetchProfile,
     required TResult Function(UpdateProfile value) updateProfile,
+    required TResult Function(ChangePassword value) changePassword,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -50,6 +54,7 @@ mixin _$ProfileEvent {
     TResult? Function(Started value)? started,
     TResult? Function(FetchProfile value)? fetchProfile,
     TResult? Function(UpdateProfile value)? updateProfile,
+    TResult? Function(ChangePassword value)? changePassword,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -57,6 +62,7 @@ mixin _$ProfileEvent {
     TResult Function(Started value)? started,
     TResult Function(FetchProfile value)? fetchProfile,
     TResult Function(UpdateProfile value)? updateProfile,
+    TResult Function(ChangePassword value)? changePassword,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -127,6 +133,7 @@ class _$StartedImpl implements Started {
     required TResult Function() started,
     required TResult Function() fetchProfile,
     required TResult Function(UserProfile profile) updateProfile,
+    required TResult Function(String newPassword) changePassword,
   }) {
     return started();
   }
@@ -137,6 +144,7 @@ class _$StartedImpl implements Started {
     TResult? Function()? started,
     TResult? Function()? fetchProfile,
     TResult? Function(UserProfile profile)? updateProfile,
+    TResult? Function(String newPassword)? changePassword,
   }) {
     return started?.call();
   }
@@ -147,6 +155,7 @@ class _$StartedImpl implements Started {
     TResult Function()? started,
     TResult Function()? fetchProfile,
     TResult Function(UserProfile profile)? updateProfile,
+    TResult Function(String newPassword)? changePassword,
     required TResult orElse(),
   }) {
     if (started != null) {
@@ -161,6 +170,7 @@ class _$StartedImpl implements Started {
     required TResult Function(Started value) started,
     required TResult Function(FetchProfile value) fetchProfile,
     required TResult Function(UpdateProfile value) updateProfile,
+    required TResult Function(ChangePassword value) changePassword,
   }) {
     return started(this);
   }
@@ -171,6 +181,7 @@ class _$StartedImpl implements Started {
     TResult? Function(Started value)? started,
     TResult? Function(FetchProfile value)? fetchProfile,
     TResult? Function(UpdateProfile value)? updateProfile,
+    TResult? Function(ChangePassword value)? changePassword,
   }) {
     return started?.call(this);
   }
@@ -181,6 +192,7 @@ class _$StartedImpl implements Started {
     TResult Function(Started value)? started,
     TResult Function(FetchProfile value)? fetchProfile,
     TResult Function(UpdateProfile value)? updateProfile,
+    TResult Function(ChangePassword value)? changePassword,
     required TResult orElse(),
   }) {
     if (started != null) {
@@ -238,6 +250,7 @@ class _$FetchProfileImpl implements FetchProfile {
     required TResult Function() started,
     required TResult Function() fetchProfile,
     required TResult Function(UserProfile profile) updateProfile,
+    required TResult Function(String newPassword) changePassword,
   }) {
     return fetchProfile();
   }
@@ -248,6 +261,7 @@ class _$FetchProfileImpl implements FetchProfile {
     TResult? Function()? started,
     TResult? Function()? fetchProfile,
     TResult? Function(UserProfile profile)? updateProfile,
+    TResult? Function(String newPassword)? changePassword,
   }) {
     return fetchProfile?.call();
   }
@@ -258,6 +272,7 @@ class _$FetchProfileImpl implements FetchProfile {
     TResult Function()? started,
     TResult Function()? fetchProfile,
     TResult Function(UserProfile profile)? updateProfile,
+    TResult Function(String newPassword)? changePassword,
     required TResult orElse(),
   }) {
     if (fetchProfile != null) {
@@ -272,6 +287,7 @@ class _$FetchProfileImpl implements FetchProfile {
     required TResult Function(Started value) started,
     required TResult Function(FetchProfile value) fetchProfile,
     required TResult Function(UpdateProfile value) updateProfile,
+    required TResult Function(ChangePassword value) changePassword,
   }) {
     return fetchProfile(this);
   }
@@ -282,6 +298,7 @@ class _$FetchProfileImpl implements FetchProfile {
     TResult? Function(Started value)? started,
     TResult? Function(FetchProfile value)? fetchProfile,
     TResult? Function(UpdateProfile value)? updateProfile,
+    TResult? Function(ChangePassword value)? changePassword,
   }) {
     return fetchProfile?.call(this);
   }
@@ -292,6 +309,7 @@ class _$FetchProfileImpl implements FetchProfile {
     TResult Function(Started value)? started,
     TResult Function(FetchProfile value)? fetchProfile,
     TResult Function(UpdateProfile value)? updateProfile,
+    TResult Function(ChangePassword value)? changePassword,
     required TResult orElse(),
   }) {
     if (fetchProfile != null) {
@@ -376,6 +394,7 @@ class _$UpdateProfileImpl implements UpdateProfile {
     required TResult Function() started,
     required TResult Function() fetchProfile,
     required TResult Function(UserProfile profile) updateProfile,
+    required TResult Function(String newPassword) changePassword,
   }) {
     return updateProfile(profile);
   }
@@ -386,6 +405,7 @@ class _$UpdateProfileImpl implements UpdateProfile {
     TResult? Function()? started,
     TResult? Function()? fetchProfile,
     TResult? Function(UserProfile profile)? updateProfile,
+    TResult? Function(String newPassword)? changePassword,
   }) {
     return updateProfile?.call(profile);
   }
@@ -396,6 +416,7 @@ class _$UpdateProfileImpl implements UpdateProfile {
     TResult Function()? started,
     TResult Function()? fetchProfile,
     TResult Function(UserProfile profile)? updateProfile,
+    TResult Function(String newPassword)? changePassword,
     required TResult orElse(),
   }) {
     if (updateProfile != null) {
@@ -410,6 +431,7 @@ class _$UpdateProfileImpl implements UpdateProfile {
     required TResult Function(Started value) started,
     required TResult Function(FetchProfile value) fetchProfile,
     required TResult Function(UpdateProfile value) updateProfile,
+    required TResult Function(ChangePassword value) changePassword,
   }) {
     return updateProfile(this);
   }
@@ -420,6 +442,7 @@ class _$UpdateProfileImpl implements UpdateProfile {
     TResult? Function(Started value)? started,
     TResult? Function(FetchProfile value)? fetchProfile,
     TResult? Function(UpdateProfile value)? updateProfile,
+    TResult? Function(ChangePassword value)? changePassword,
   }) {
     return updateProfile?.call(this);
   }
@@ -430,6 +453,7 @@ class _$UpdateProfileImpl implements UpdateProfile {
     TResult Function(Started value)? started,
     TResult Function(FetchProfile value)? fetchProfile,
     TResult Function(UpdateProfile value)? updateProfile,
+    TResult Function(ChangePassword value)? changePassword,
     required TResult orElse(),
   }) {
     if (updateProfile != null) {
@@ -452,6 +476,160 @@ abstract class UpdateProfile implements ProfileEvent {
 }
 
 /// @nodoc
+abstract class _$$ChangePasswordImplCopyWith<$Res> {
+  factory _$$ChangePasswordImplCopyWith(_$ChangePasswordImpl value,
+          $Res Function(_$ChangePasswordImpl) then) =
+      __$$ChangePasswordImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String newPassword});
+}
+
+/// @nodoc
+class __$$ChangePasswordImplCopyWithImpl<$Res>
+    extends _$ProfileEventCopyWithImpl<$Res, _$ChangePasswordImpl>
+    implements _$$ChangePasswordImplCopyWith<$Res> {
+  __$$ChangePasswordImplCopyWithImpl(
+      _$ChangePasswordImpl _value, $Res Function(_$ChangePasswordImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of ProfileEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? newPassword = null,
+  }) {
+    return _then(_$ChangePasswordImpl(
+      null == newPassword
+          ? _value.newPassword
+          : newPassword // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$ChangePasswordImpl implements ChangePassword {
+  const _$ChangePasswordImpl(this.newPassword);
+
+  @override
+  final String newPassword;
+
+  @override
+  String toString() {
+    return 'ProfileEvent.changePassword(newPassword: $newPassword)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ChangePasswordImpl &&
+            (identical(other.newPassword, newPassword) ||
+                other.newPassword == newPassword));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, newPassword);
+
+  /// Create a copy of ProfileEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ChangePasswordImplCopyWith<_$ChangePasswordImpl> get copyWith =>
+      __$$ChangePasswordImplCopyWithImpl<_$ChangePasswordImpl>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() started,
+    required TResult Function() fetchProfile,
+    required TResult Function(UserProfile profile) updateProfile,
+    required TResult Function(String newPassword) changePassword,
+  }) {
+    return changePassword(newPassword);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? started,
+    TResult? Function()? fetchProfile,
+    TResult? Function(UserProfile profile)? updateProfile,
+    TResult? Function(String newPassword)? changePassword,
+  }) {
+    return changePassword?.call(newPassword);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? started,
+    TResult Function()? fetchProfile,
+    TResult Function(UserProfile profile)? updateProfile,
+    TResult Function(String newPassword)? changePassword,
+    required TResult orElse(),
+  }) {
+    if (changePassword != null) {
+      return changePassword(newPassword);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(Started value) started,
+    required TResult Function(FetchProfile value) fetchProfile,
+    required TResult Function(UpdateProfile value) updateProfile,
+    required TResult Function(ChangePassword value) changePassword,
+  }) {
+    return changePassword(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(Started value)? started,
+    TResult? Function(FetchProfile value)? fetchProfile,
+    TResult? Function(UpdateProfile value)? updateProfile,
+    TResult? Function(ChangePassword value)? changePassword,
+  }) {
+    return changePassword?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(Started value)? started,
+    TResult Function(FetchProfile value)? fetchProfile,
+    TResult Function(UpdateProfile value)? updateProfile,
+    TResult Function(ChangePassword value)? changePassword,
+    required TResult orElse(),
+  }) {
+    if (changePassword != null) {
+      return changePassword(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class ChangePassword implements ProfileEvent {
+  const factory ChangePassword(final String newPassword) = _$ChangePasswordImpl;
+
+  String get newPassword;
+
+  /// Create a copy of ProfileEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$ChangePasswordImplCopyWith<_$ChangePasswordImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 mixin _$ProfileState {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
@@ -459,6 +637,8 @@ mixin _$ProfileState {
     required TResult Function() loading,
     required TResult Function(UserProfile profile) loaded,
     required TResult Function() saving,
+    required TResult Function() changingPassword,
+    required TResult Function() passwordChanged,
     required TResult Function(String message) error,
   }) =>
       throw _privateConstructorUsedError;
@@ -468,6 +648,8 @@ mixin _$ProfileState {
     TResult? Function()? loading,
     TResult? Function(UserProfile profile)? loaded,
     TResult? Function()? saving,
+    TResult? Function()? changingPassword,
+    TResult? Function()? passwordChanged,
     TResult? Function(String message)? error,
   }) =>
       throw _privateConstructorUsedError;
@@ -477,6 +659,8 @@ mixin _$ProfileState {
     TResult Function()? loading,
     TResult Function(UserProfile profile)? loaded,
     TResult Function()? saving,
+    TResult Function()? changingPassword,
+    TResult Function()? passwordChanged,
     TResult Function(String message)? error,
     required TResult orElse(),
   }) =>
@@ -487,6 +671,8 @@ mixin _$ProfileState {
     required TResult Function(Loading value) loading,
     required TResult Function(Loaded value) loaded,
     required TResult Function(Saving value) saving,
+    required TResult Function(ChangingPassword value) changingPassword,
+    required TResult Function(PasswordChanged value) passwordChanged,
     required TResult Function(Error value) error,
   }) =>
       throw _privateConstructorUsedError;
@@ -496,6 +682,8 @@ mixin _$ProfileState {
     TResult? Function(Loading value)? loading,
     TResult? Function(Loaded value)? loaded,
     TResult? Function(Saving value)? saving,
+    TResult? Function(ChangingPassword value)? changingPassword,
+    TResult? Function(PasswordChanged value)? passwordChanged,
     TResult? Function(Error value)? error,
   }) =>
       throw _privateConstructorUsedError;
@@ -505,6 +693,8 @@ mixin _$ProfileState {
     TResult Function(Loading value)? loading,
     TResult Function(Loaded value)? loaded,
     TResult Function(Saving value)? saving,
+    TResult Function(ChangingPassword value)? changingPassword,
+    TResult Function(PasswordChanged value)? passwordChanged,
     TResult Function(Error value)? error,
     required TResult orElse(),
   }) =>
@@ -577,6 +767,8 @@ class _$InitialImpl implements _Initial {
     required TResult Function() loading,
     required TResult Function(UserProfile profile) loaded,
     required TResult Function() saving,
+    required TResult Function() changingPassword,
+    required TResult Function() passwordChanged,
     required TResult Function(String message) error,
   }) {
     return initial();
@@ -589,6 +781,8 @@ class _$InitialImpl implements _Initial {
     TResult? Function()? loading,
     TResult? Function(UserProfile profile)? loaded,
     TResult? Function()? saving,
+    TResult? Function()? changingPassword,
+    TResult? Function()? passwordChanged,
     TResult? Function(String message)? error,
   }) {
     return initial?.call();
@@ -601,6 +795,8 @@ class _$InitialImpl implements _Initial {
     TResult Function()? loading,
     TResult Function(UserProfile profile)? loaded,
     TResult Function()? saving,
+    TResult Function()? changingPassword,
+    TResult Function()? passwordChanged,
     TResult Function(String message)? error,
     required TResult orElse(),
   }) {
@@ -617,6 +813,8 @@ class _$InitialImpl implements _Initial {
     required TResult Function(Loading value) loading,
     required TResult Function(Loaded value) loaded,
     required TResult Function(Saving value) saving,
+    required TResult Function(ChangingPassword value) changingPassword,
+    required TResult Function(PasswordChanged value) passwordChanged,
     required TResult Function(Error value) error,
   }) {
     return initial(this);
@@ -629,6 +827,8 @@ class _$InitialImpl implements _Initial {
     TResult? Function(Loading value)? loading,
     TResult? Function(Loaded value)? loaded,
     TResult? Function(Saving value)? saving,
+    TResult? Function(ChangingPassword value)? changingPassword,
+    TResult? Function(PasswordChanged value)? passwordChanged,
     TResult? Function(Error value)? error,
   }) {
     return initial?.call(this);
@@ -641,6 +841,8 @@ class _$InitialImpl implements _Initial {
     TResult Function(Loading value)? loading,
     TResult Function(Loaded value)? loaded,
     TResult Function(Saving value)? saving,
+    TResult Function(ChangingPassword value)? changingPassword,
+    TResult Function(PasswordChanged value)? passwordChanged,
     TResult Function(Error value)? error,
     required TResult orElse(),
   }) {
@@ -700,6 +902,8 @@ class _$LoadingImpl implements Loading {
     required TResult Function() loading,
     required TResult Function(UserProfile profile) loaded,
     required TResult Function() saving,
+    required TResult Function() changingPassword,
+    required TResult Function() passwordChanged,
     required TResult Function(String message) error,
   }) {
     return loading();
@@ -712,6 +916,8 @@ class _$LoadingImpl implements Loading {
     TResult? Function()? loading,
     TResult? Function(UserProfile profile)? loaded,
     TResult? Function()? saving,
+    TResult? Function()? changingPassword,
+    TResult? Function()? passwordChanged,
     TResult? Function(String message)? error,
   }) {
     return loading?.call();
@@ -724,6 +930,8 @@ class _$LoadingImpl implements Loading {
     TResult Function()? loading,
     TResult Function(UserProfile profile)? loaded,
     TResult Function()? saving,
+    TResult Function()? changingPassword,
+    TResult Function()? passwordChanged,
     TResult Function(String message)? error,
     required TResult orElse(),
   }) {
@@ -740,6 +948,8 @@ class _$LoadingImpl implements Loading {
     required TResult Function(Loading value) loading,
     required TResult Function(Loaded value) loaded,
     required TResult Function(Saving value) saving,
+    required TResult Function(ChangingPassword value) changingPassword,
+    required TResult Function(PasswordChanged value) passwordChanged,
     required TResult Function(Error value) error,
   }) {
     return loading(this);
@@ -752,6 +962,8 @@ class _$LoadingImpl implements Loading {
     TResult? Function(Loading value)? loading,
     TResult? Function(Loaded value)? loaded,
     TResult? Function(Saving value)? saving,
+    TResult? Function(ChangingPassword value)? changingPassword,
+    TResult? Function(PasswordChanged value)? passwordChanged,
     TResult? Function(Error value)? error,
   }) {
     return loading?.call(this);
@@ -764,6 +976,8 @@ class _$LoadingImpl implements Loading {
     TResult Function(Loading value)? loading,
     TResult Function(Loaded value)? loaded,
     TResult Function(Saving value)? saving,
+    TResult Function(ChangingPassword value)? changingPassword,
+    TResult Function(PasswordChanged value)? passwordChanged,
     TResult Function(Error value)? error,
     required TResult orElse(),
   }) {
@@ -850,6 +1064,8 @@ class _$LoadedImpl implements Loaded {
     required TResult Function() loading,
     required TResult Function(UserProfile profile) loaded,
     required TResult Function() saving,
+    required TResult Function() changingPassword,
+    required TResult Function() passwordChanged,
     required TResult Function(String message) error,
   }) {
     return loaded(profile);
@@ -862,6 +1078,8 @@ class _$LoadedImpl implements Loaded {
     TResult? Function()? loading,
     TResult? Function(UserProfile profile)? loaded,
     TResult? Function()? saving,
+    TResult? Function()? changingPassword,
+    TResult? Function()? passwordChanged,
     TResult? Function(String message)? error,
   }) {
     return loaded?.call(profile);
@@ -874,6 +1092,8 @@ class _$LoadedImpl implements Loaded {
     TResult Function()? loading,
     TResult Function(UserProfile profile)? loaded,
     TResult Function()? saving,
+    TResult Function()? changingPassword,
+    TResult Function()? passwordChanged,
     TResult Function(String message)? error,
     required TResult orElse(),
   }) {
@@ -890,6 +1110,8 @@ class _$LoadedImpl implements Loaded {
     required TResult Function(Loading value) loading,
     required TResult Function(Loaded value) loaded,
     required TResult Function(Saving value) saving,
+    required TResult Function(ChangingPassword value) changingPassword,
+    required TResult Function(PasswordChanged value) passwordChanged,
     required TResult Function(Error value) error,
   }) {
     return loaded(this);
@@ -902,6 +1124,8 @@ class _$LoadedImpl implements Loaded {
     TResult? Function(Loading value)? loading,
     TResult? Function(Loaded value)? loaded,
     TResult? Function(Saving value)? saving,
+    TResult? Function(ChangingPassword value)? changingPassword,
+    TResult? Function(PasswordChanged value)? passwordChanged,
     TResult? Function(Error value)? error,
   }) {
     return loaded?.call(this);
@@ -914,6 +1138,8 @@ class _$LoadedImpl implements Loaded {
     TResult Function(Loading value)? loading,
     TResult Function(Loaded value)? loaded,
     TResult Function(Saving value)? saving,
+    TResult Function(ChangingPassword value)? changingPassword,
+    TResult Function(PasswordChanged value)? passwordChanged,
     TResult Function(Error value)? error,
     required TResult orElse(),
   }) {
@@ -981,6 +1207,8 @@ class _$SavingImpl implements Saving {
     required TResult Function() loading,
     required TResult Function(UserProfile profile) loaded,
     required TResult Function() saving,
+    required TResult Function() changingPassword,
+    required TResult Function() passwordChanged,
     required TResult Function(String message) error,
   }) {
     return saving();
@@ -993,6 +1221,8 @@ class _$SavingImpl implements Saving {
     TResult? Function()? loading,
     TResult? Function(UserProfile profile)? loaded,
     TResult? Function()? saving,
+    TResult? Function()? changingPassword,
+    TResult? Function()? passwordChanged,
     TResult? Function(String message)? error,
   }) {
     return saving?.call();
@@ -1005,6 +1235,8 @@ class _$SavingImpl implements Saving {
     TResult Function()? loading,
     TResult Function(UserProfile profile)? loaded,
     TResult Function()? saving,
+    TResult Function()? changingPassword,
+    TResult Function()? passwordChanged,
     TResult Function(String message)? error,
     required TResult orElse(),
   }) {
@@ -1021,6 +1253,8 @@ class _$SavingImpl implements Saving {
     required TResult Function(Loading value) loading,
     required TResult Function(Loaded value) loaded,
     required TResult Function(Saving value) saving,
+    required TResult Function(ChangingPassword value) changingPassword,
+    required TResult Function(PasswordChanged value) passwordChanged,
     required TResult Function(Error value) error,
   }) {
     return saving(this);
@@ -1033,6 +1267,8 @@ class _$SavingImpl implements Saving {
     TResult? Function(Loading value)? loading,
     TResult? Function(Loaded value)? loaded,
     TResult? Function(Saving value)? saving,
+    TResult? Function(ChangingPassword value)? changingPassword,
+    TResult? Function(PasswordChanged value)? passwordChanged,
     TResult? Function(Error value)? error,
   }) {
     return saving?.call(this);
@@ -1045,6 +1281,8 @@ class _$SavingImpl implements Saving {
     TResult Function(Loading value)? loading,
     TResult Function(Loaded value)? loaded,
     TResult Function(Saving value)? saving,
+    TResult Function(ChangingPassword value)? changingPassword,
+    TResult Function(PasswordChanged value)? passwordChanged,
     TResult Function(Error value)? error,
     required TResult orElse(),
   }) {
@@ -1057,6 +1295,276 @@ class _$SavingImpl implements Saving {
 
 abstract class Saving implements ProfileState {
   const factory Saving() = _$SavingImpl;
+}
+
+/// @nodoc
+abstract class _$$ChangingPasswordImplCopyWith<$Res> {
+  factory _$$ChangingPasswordImplCopyWith(_$ChangingPasswordImpl value,
+          $Res Function(_$ChangingPasswordImpl) then) =
+      __$$ChangingPasswordImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$ChangingPasswordImplCopyWithImpl<$Res>
+    extends _$ProfileStateCopyWithImpl<$Res, _$ChangingPasswordImpl>
+    implements _$$ChangingPasswordImplCopyWith<$Res> {
+  __$$ChangingPasswordImplCopyWithImpl(_$ChangingPasswordImpl _value,
+      $Res Function(_$ChangingPasswordImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of ProfileState
+  /// with the given fields replaced by the non-null parameter values.
+}
+
+/// @nodoc
+
+class _$ChangingPasswordImpl implements ChangingPassword {
+  const _$ChangingPasswordImpl();
+
+  @override
+  String toString() {
+    return 'ProfileState.changingPassword()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _$ChangingPasswordImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() initial,
+    required TResult Function() loading,
+    required TResult Function(UserProfile profile) loaded,
+    required TResult Function() saving,
+    required TResult Function() changingPassword,
+    required TResult Function() passwordChanged,
+    required TResult Function(String message) error,
+  }) {
+    return changingPassword();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? initial,
+    TResult? Function()? loading,
+    TResult? Function(UserProfile profile)? loaded,
+    TResult? Function()? saving,
+    TResult? Function()? changingPassword,
+    TResult? Function()? passwordChanged,
+    TResult? Function(String message)? error,
+  }) {
+    return changingPassword?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? initial,
+    TResult Function()? loading,
+    TResult Function(UserProfile profile)? loaded,
+    TResult Function()? saving,
+    TResult Function()? changingPassword,
+    TResult Function()? passwordChanged,
+    TResult Function(String message)? error,
+    required TResult orElse(),
+  }) {
+    if (changingPassword != null) {
+      return changingPassword();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(_Initial value) initial,
+    required TResult Function(Loading value) loading,
+    required TResult Function(Loaded value) loaded,
+    required TResult Function(Saving value) saving,
+    required TResult Function(ChangingPassword value) changingPassword,
+    required TResult Function(PasswordChanged value) passwordChanged,
+    required TResult Function(Error value) error,
+  }) {
+    return changingPassword(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(_Initial value)? initial,
+    TResult? Function(Loading value)? loading,
+    TResult? Function(Loaded value)? loaded,
+    TResult? Function(Saving value)? saving,
+    TResult? Function(ChangingPassword value)? changingPassword,
+    TResult? Function(PasswordChanged value)? passwordChanged,
+    TResult? Function(Error value)? error,
+  }) {
+    return changingPassword?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(_Initial value)? initial,
+    TResult Function(Loading value)? loading,
+    TResult Function(Loaded value)? loaded,
+    TResult Function(Saving value)? saving,
+    TResult Function(ChangingPassword value)? changingPassword,
+    TResult Function(PasswordChanged value)? passwordChanged,
+    TResult Function(Error value)? error,
+    required TResult orElse(),
+  }) {
+    if (changingPassword != null) {
+      return changingPassword(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class ChangingPassword implements ProfileState {
+  const factory ChangingPassword() = _$ChangingPasswordImpl;
+}
+
+/// @nodoc
+abstract class _$$PasswordChangedImplCopyWith<$Res> {
+  factory _$$PasswordChangedImplCopyWith(_$PasswordChangedImpl value,
+          $Res Function(_$PasswordChangedImpl) then) =
+      __$$PasswordChangedImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$PasswordChangedImplCopyWithImpl<$Res>
+    extends _$ProfileStateCopyWithImpl<$Res, _$PasswordChangedImpl>
+    implements _$$PasswordChangedImplCopyWith<$Res> {
+  __$$PasswordChangedImplCopyWithImpl(
+      _$PasswordChangedImpl _value, $Res Function(_$PasswordChangedImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of ProfileState
+  /// with the given fields replaced by the non-null parameter values.
+}
+
+/// @nodoc
+
+class _$PasswordChangedImpl implements PasswordChanged {
+  const _$PasswordChangedImpl();
+
+  @override
+  String toString() {
+    return 'ProfileState.passwordChanged()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _$PasswordChangedImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() initial,
+    required TResult Function() loading,
+    required TResult Function(UserProfile profile) loaded,
+    required TResult Function() saving,
+    required TResult Function() changingPassword,
+    required TResult Function() passwordChanged,
+    required TResult Function(String message) error,
+  }) {
+    return passwordChanged();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? initial,
+    TResult? Function()? loading,
+    TResult? Function(UserProfile profile)? loaded,
+    TResult? Function()? saving,
+    TResult? Function()? changingPassword,
+    TResult? Function()? passwordChanged,
+    TResult? Function(String message)? error,
+  }) {
+    return passwordChanged?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? initial,
+    TResult Function()? loading,
+    TResult Function(UserProfile profile)? loaded,
+    TResult Function()? saving,
+    TResult Function()? changingPassword,
+    TResult Function()? passwordChanged,
+    TResult Function(String message)? error,
+    required TResult orElse(),
+  }) {
+    if (passwordChanged != null) {
+      return passwordChanged();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(_Initial value) initial,
+    required TResult Function(Loading value) loading,
+    required TResult Function(Loaded value) loaded,
+    required TResult Function(Saving value) saving,
+    required TResult Function(ChangingPassword value) changingPassword,
+    required TResult Function(PasswordChanged value) passwordChanged,
+    required TResult Function(Error value) error,
+  }) {
+    return passwordChanged(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(_Initial value)? initial,
+    TResult? Function(Loading value)? loading,
+    TResult? Function(Loaded value)? loaded,
+    TResult? Function(Saving value)? saving,
+    TResult? Function(ChangingPassword value)? changingPassword,
+    TResult? Function(PasswordChanged value)? passwordChanged,
+    TResult? Function(Error value)? error,
+  }) {
+    return passwordChanged?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(_Initial value)? initial,
+    TResult Function(Loading value)? loading,
+    TResult Function(Loaded value)? loaded,
+    TResult Function(Saving value)? saving,
+    TResult Function(ChangingPassword value)? changingPassword,
+    TResult Function(PasswordChanged value)? passwordChanged,
+    TResult Function(Error value)? error,
+    required TResult orElse(),
+  }) {
+    if (passwordChanged != null) {
+      return passwordChanged(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class PasswordChanged implements ProfileState {
+  const factory PasswordChanged() = _$PasswordChangedImpl;
 }
 
 /// @nodoc
@@ -1131,6 +1639,8 @@ class _$ErrorImpl implements Error {
     required TResult Function() loading,
     required TResult Function(UserProfile profile) loaded,
     required TResult Function() saving,
+    required TResult Function() changingPassword,
+    required TResult Function() passwordChanged,
     required TResult Function(String message) error,
   }) {
     return error(message);
@@ -1143,6 +1653,8 @@ class _$ErrorImpl implements Error {
     TResult? Function()? loading,
     TResult? Function(UserProfile profile)? loaded,
     TResult? Function()? saving,
+    TResult? Function()? changingPassword,
+    TResult? Function()? passwordChanged,
     TResult? Function(String message)? error,
   }) {
     return error?.call(message);
@@ -1155,6 +1667,8 @@ class _$ErrorImpl implements Error {
     TResult Function()? loading,
     TResult Function(UserProfile profile)? loaded,
     TResult Function()? saving,
+    TResult Function()? changingPassword,
+    TResult Function()? passwordChanged,
     TResult Function(String message)? error,
     required TResult orElse(),
   }) {
@@ -1171,6 +1685,8 @@ class _$ErrorImpl implements Error {
     required TResult Function(Loading value) loading,
     required TResult Function(Loaded value) loaded,
     required TResult Function(Saving value) saving,
+    required TResult Function(ChangingPassword value) changingPassword,
+    required TResult Function(PasswordChanged value) passwordChanged,
     required TResult Function(Error value) error,
   }) {
     return error(this);
@@ -1183,6 +1699,8 @@ class _$ErrorImpl implements Error {
     TResult? Function(Loading value)? loading,
     TResult? Function(Loaded value)? loaded,
     TResult? Function(Saving value)? saving,
+    TResult? Function(ChangingPassword value)? changingPassword,
+    TResult? Function(PasswordChanged value)? passwordChanged,
     TResult? Function(Error value)? error,
   }) {
     return error?.call(this);
@@ -1195,6 +1713,8 @@ class _$ErrorImpl implements Error {
     TResult Function(Loading value)? loading,
     TResult Function(Loaded value)? loaded,
     TResult Function(Saving value)? saving,
+    TResult Function(ChangingPassword value)? changingPassword,
+    TResult Function(PasswordChanged value)? passwordChanged,
     TResult Function(Error value)? error,
     required TResult orElse(),
   }) {

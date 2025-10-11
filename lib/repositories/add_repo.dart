@@ -232,6 +232,49 @@ class AddRepository {
     }
   }
 
+  Future<String?> uploadVideoToS3(Uint8List fileBytes) async {
+    try {
+      final mimeType = lookupMimeType('video.mp4', headerBytes: fileBytes);
+      final fileExtension = mimeType?.split('/').last ?? 'mp4';
+      final fileName =
+          'video_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
+
+      // Step 1: Get presigned URL
+      final signedUrlResponse = await _dio.get(
+        '/upload/presigned-url',
+        queryParameters: {
+          'fileName': fileName,
+          'fileType': mimeType,
+        },
+      );
+
+      final signedUrl = signedUrlResponse.data['url'];
+      if (signedUrl == null) throw Exception('No signed URL received');
+
+      // Step 2: Upload to S3
+      final uploadResponse = await Dio().put(
+        signedUrl,
+        data: fileBytes,
+        options: Options(headers: {
+          'Content-Type': mimeType,
+          'Content-Length': fileBytes.length.toString(),
+        }),
+      );
+
+      if (uploadResponse.statusCode == 200 ||
+          uploadResponse.statusCode == 204) {
+        return signedUrl.split('?').first;
+      } else {
+        throw Exception('Upload failed: ${uploadResponse.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw Exception(DioErrorHandler.handleError(e));
+    } catch (e) {
+      print('❌ Unexpected error in uploadVideoToS3: $e');
+      throw Exception('Unexpected error: $e');
+    }
+  }
+
   Future<void> postAd({
     required String category,
     required Map<String, dynamic> data,

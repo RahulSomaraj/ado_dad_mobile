@@ -59,6 +59,11 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
   final List<Uint8List> _imageFiles = [];
   final List<String> _uploadedUrls = [];
 
+  // Video upload variables
+  Uint8List? _videoFile;
+  String? _uploadedVideoUrl;
+  String? _videoFileName;
+
   @override
   void initState() {
     super.initState();
@@ -128,6 +133,28 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
     }
   }
 
+  Future<void> _pickVideo() async {
+    final picked = await _picker.pickVideo(source: ImageSource.gallery);
+    if (picked != null) {
+      final bytes = await picked.readAsBytes();
+      setState(() {
+        _videoFile = bytes;
+        _videoFileName = picked.name;
+      });
+    }
+  }
+
+  Future<void> _uploadVideo() async {
+    if (_videoFile != null) {
+      final url = await AddRepository().uploadVideoToS3(_videoFile!);
+      if (url != null) {
+        setState(() {
+          _uploadedVideoUrl = url;
+        });
+      }
+    }
+  }
+
   final List<String> _allFeatures = [
     "Sunroof",
     "Leather Seats",
@@ -143,6 +170,7 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
     _sellerFormKey.currentState!.save();
 
     await _uploadImages(); // S3 Upload
+    await _uploadVideo(); // S3 Video Upload
 
     final ad = {
       "vehicleType": _selectedVehicleType,
@@ -159,6 +187,7 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
       "hasRcBook": _hasRcBook,
       "description": _description,
       "images": _uploadedUrls,
+      "link": _uploadedVideoUrl, // Video URL
       "fuelTypeId": _selectedfuelType!.id,
       "transmissionTypeId": _selectedtransmissionType!.id,
       "additionalFeatures": _selectedFeatures,
@@ -431,6 +460,38 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
                       ),
                     ),
                   ),
+                  SizedBox(height: 20),
+                  // Video Upload Section
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.whiteColor,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 5,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 10),
+                          Text(
+                            'Upload Video',
+                            style: AppTextstyle.sectionTitleTextStyle,
+                          ),
+                          const SizedBox(height: 20),
+                          _buildVideoPicker(),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
+                  ),
                   SizedBox(height: 30),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -544,6 +605,79 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildVideoPicker() {
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+      ),
+      child: Row(
+        children: [
+          // Text field showing filename
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                _videoFileName ?? 'No video selected',
+                style: TextStyle(
+                  color: _videoFileName != null
+                      ? Colors.black87
+                      : Colors.grey.shade500,
+                  fontSize: 16,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+          // Choose File button
+          Container(
+            height: 56,
+            width: 120,
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(8),
+                bottomRight: Radius.circular(8),
+              ),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _pickVideo,
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(8),
+                  bottomRight: Radius.circular(8),
+                ),
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        _videoFileName != null ? Icons.edit : Icons.upload_file,
+                        color: Colors.black,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _videoFileName != null ? 'Change' : 'Choose File',
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

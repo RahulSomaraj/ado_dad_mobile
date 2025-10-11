@@ -13,6 +13,7 @@ class PropertyAdModel {
   final bool hasParking;
   final bool hasGarden;
   final List<String> amenities;
+  final String? link; // Video URL
 
   PropertyAdModel({
     // required this.title,
@@ -29,6 +30,7 @@ class PropertyAdModel {
     required this.hasParking,
     required this.hasGarden,
     required this.amenities,
+    this.link,
   });
 
   Map<String, dynamic> toJson() {
@@ -47,6 +49,7 @@ class PropertyAdModel {
       'hasParking': hasParking,
       'hasGarden': hasGarden,
       'amenities': amenities,
+      'link': link,
     };
   }
 }

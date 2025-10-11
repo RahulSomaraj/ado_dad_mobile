@@ -62,6 +62,9 @@ class AddModel {
   // Status fields
   final bool? soldOut;
 
+  // Video field
+  final String? link; // Video URL
+
   AddModel({
     // basic
     required this.id,
@@ -112,6 +115,8 @@ class AddModel {
     this.favoritedAt,
     // Status fields
     this.soldOut,
+    // Video field
+    this.link,
   });
 
   AddModel copyWith({
@@ -162,6 +167,8 @@ class AddModel {
     String? favoritedAt,
     // Status fields
     bool? soldOut,
+    // Video field
+    String? link,
   }) {
     return AddModel(
       id: id ?? this.id,
@@ -212,6 +219,8 @@ class AddModel {
       favoritedAt: favoritedAt ?? this.favoritedAt,
       // Status fields
       soldOut: soldOut ?? this.soldOut,
+      // Video field
+      link: link ?? this.link,
     );
   }
 
@@ -330,6 +339,8 @@ class AddModel {
       favoritedAt: json['favoritedAt'] as String?,
       // Status fields
       soldOut: json['soldOut'] as bool?,
+      // Video field
+      link: json['link'] as String?,
     );
   }
 
@@ -394,6 +405,8 @@ class AddModel {
       'favoritedAt': favoritedAt,
       // Status fields
       'soldOut': soldOut,
+      // Video field
+      'link': link,
     };
   }
 }

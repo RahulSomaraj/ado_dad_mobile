@@ -17,6 +17,7 @@ class PrivateVehicleAdModel {
   final bool hasInsurance;
   final bool hasRcBook;
   final List<String> additionalFeatures;
+  final String? link; // Video URL
 
   PrivateVehicleAdModel({
     // required this.title,
@@ -37,6 +38,7 @@ class PrivateVehicleAdModel {
     required this.hasInsurance,
     required this.hasRcBook,
     required this.additionalFeatures,
+    this.link,
   });
 
   Map<String, dynamic> toJson() {
@@ -59,6 +61,7 @@ class PrivateVehicleAdModel {
       'hasInsurance': hasInsurance,
       'hasRcBook': hasRcBook,
       'additionalFeatures': additionalFeatures,
+      'link': link,
     };
   }
 }

@@ -68,6 +68,12 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
   final List<Uint8List> _newImageFiles = []; // newly picked
   late List<String> _imageUrls; // existing + uploaded
 
+  // video upload variables
+  Uint8List? _newVideoFile; // newly picked video
+  String? _uploadedVideoUrl; // uploaded video URL
+  String? _videoFileName;
+  late String? _existingVideoUrl; // existing video from ad
+
   @override
   void initState() {
     super.initState();
@@ -83,6 +89,9 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
     _hasRcBook = widget.ad.hasRcBook ?? false;
     _description = widget.ad.description;
     _imageUrls = List<String>.from(widget.ad.images);
+    _existingVideoUrl = widget.ad.link?.isNotEmpty == true
+        ? widget.ad.link
+        : null; // existing video URL
 
     // CHANGED: init controllers with current values
     _priceCtrl = TextEditingController(text: _price.toString());
@@ -195,6 +204,28 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
     }
   }
 
+  Future<void> _pickVideo() async {
+    final picked = await _picker.pickVideo(source: ImageSource.gallery);
+    if (picked != null) {
+      final bytes = await picked.readAsBytes();
+      setState(() {
+        _newVideoFile = bytes;
+        _videoFileName = picked.name;
+      });
+    }
+  }
+
+  Future<void> _uploadVideo() async {
+    if (_newVideoFile != null) {
+      final url = await AddRepository().uploadVideoToS3(_newVideoFile!);
+      if (url != null) {
+        setState(() {
+          _uploadedVideoUrl = url;
+        });
+      }
+    }
+  }
+
   Future<void> _uploadNewImages() async {
     if (_newImageFiles.isEmpty) return;
     final repo = AddRepository();
@@ -247,6 +278,7 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
     if (!_formKey.currentState!.validate()) return;
 
     await _uploadNewImages();
+    await _uploadVideo();
 
     // CHANGED: read from controllers instead of saved fields
     final payload = {
@@ -264,6 +296,7 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
       "hasRcBook": _hasRcBook,
       "description": _descCtrl.text.trim(),
       "images": _imageUrls,
+      "link": _uploadedVideoUrl ?? _existingVideoUrl, // Video URL
       "fuelTypeId": _selectedFuelType?.id,
       "transmissionTypeId": _selectedTransmissionType?.id,
       "additionalFeatures": widget.ad.additionalFeatures ?? [],
@@ -519,6 +552,39 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
                   ),
                   const SizedBox(height: 24),
 
+                  // Video Upload Section
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.whiteColor,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 5,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 10),
+                          Text(
+                            'Upload Video',
+                            style: AppTextstyle.sectionTitleTextStyle,
+                          ),
+                          const SizedBox(height: 20),
+                          _buildVideoPicker(),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
                   // Save button
                   // SizedBox(
                   //   height: 50,
@@ -593,6 +659,84 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
               value == null ? 'Please select a variant' : null,
         ),
       ],
+    );
+  }
+
+  Widget _buildVideoPicker() {
+    // Show existing video if available, otherwise show new video selection
+    final displayText = _videoFileName ??
+        (_existingVideoUrl != null ? _existingVideoUrl! : 'No video selected');
+    final hasVideo = _videoFileName != null || _existingVideoUrl != null;
+
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+      ),
+      child: Row(
+        children: [
+          // Text field showing filename
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                displayText,
+                style: TextStyle(
+                  color: hasVideo ? Colors.black87 : Colors.grey.shade500,
+                  fontSize: 16,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+          // Choose File button
+          Container(
+            height: 56,
+            width: 120,
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(8),
+                bottomRight: Radius.circular(8),
+              ),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _pickVideo,
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(8),
+                  bottomRight: Radius.circular(8),
+                ),
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        _existingVideoUrl != null
+                            ? Icons.edit
+                            : Icons.upload_file,
+                        color: Colors.black,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _existingVideoUrl != null ? 'Change' : 'Choose File',
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

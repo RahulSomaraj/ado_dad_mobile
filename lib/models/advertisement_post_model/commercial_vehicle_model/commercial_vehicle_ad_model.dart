@@ -23,6 +23,7 @@ class CommercialVehicleAdModel {
   final bool hasPermit;
   final List<String> additionalFeatures;
   final int seatingCapacity;
+  final String? link; // Video URL
 
   CommercialVehicleAdModel({
     // required this.title,
@@ -49,6 +50,7 @@ class CommercialVehicleAdModel {
     required this.hasPermit,
     required this.additionalFeatures,
     required this.seatingCapacity,
+    this.link,
   });
 
   Map<String, dynamic> toJson() {
@@ -77,6 +79,7 @@ class CommercialVehicleAdModel {
       'hasPermit': hasPermit,
       'additionalFeatures': additionalFeatures,
       'seatingCapacity': seatingCapacity,
+      'link': link,
     };
   }
 }

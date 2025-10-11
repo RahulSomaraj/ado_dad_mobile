@@ -103,7 +103,8 @@ class _HomePageState extends State<HomePage> {
           await placemarkFromCoordinates(position.latitude, position.longitude);
       final place = placemarks[0];
 
-      final newAddress = '${place.locality}, ${place.administrativeArea}';
+      final newAddress =
+          '${place.locality},${place.subAdministrativeArea}, ${place.administrativeArea}';
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_location', newAddress);
@@ -330,30 +331,39 @@ class _HomePageState extends State<HomePage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Image.asset('assets/images/Ado-dad-home.png'),
-          Row(
-            children: [
-              // GestureDetector(
-              //   child: Image.asset('assets/images/notification.png'),
-              // ),
-              if (_userLocation != null)
-                Text(
-                  _userLocation!,
-                  style: TextStyle(color: AppColors.whiteColor, fontSize: 15),
-                ),
-              SizedBox(width: 10),
-              GestureDetector(
-                onTap: () async {
-                  final updatedLocation = await _showLocationInputDialog();
-                  if (updatedLocation != null) {
-                    setState(() {
-                      _userLocation =
-                          updatedLocation; // 🔁 updates UI immediately
-                    });
-                  }
-                },
-                child: Image.asset('assets/images/Frame.png'),
-              )
-            ],
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                // GestureDetector(
+                //   child: Image.asset('assets/images/notification.png'),
+                // ),
+                if (_userLocation != null)
+                  Expanded(
+                    child: Text(
+                      _userLocation!,
+                      style:
+                          TextStyle(color: AppColors.whiteColor, fontSize: 12),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                    ),
+                  ),
+                SizedBox(width: 10),
+                GestureDetector(
+                  onTap: () async {
+                    final updatedLocation = await _showLocationInputDialog();
+                    if (updatedLocation != null) {
+                      setState(() {
+                        _userLocation =
+                            updatedLocation; // 🔁 updates UI immediately
+                      });
+                    }
+                  },
+                  child: Image.asset('assets/images/Frame.png'),
+                )
+              ],
+            ),
           ),
         ],
       ),

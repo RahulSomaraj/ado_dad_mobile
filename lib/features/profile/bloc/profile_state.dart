@@ -6,5 +6,7 @@ class ProfileState with _$ProfileState {
   const factory ProfileState.loading() = Loading;
   const factory ProfileState.loaded(UserProfile profile) = Loaded;
   const factory ProfileState.saving() = Saving;
+  const factory ProfileState.changingPassword() = ChangingPassword;
+  const factory ProfileState.passwordChanged() = PasswordChanged;
   const factory ProfileState.error(String message) = Error;
 }

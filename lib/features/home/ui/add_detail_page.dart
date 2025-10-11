@@ -9,6 +9,8 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:video_player/video_player.dart';
+import 'package:chewie/chewie.dart';
 
 class AdDetailPage extends StatefulWidget {
   // final String adId;
@@ -21,6 +23,7 @@ class AdDetailPage extends StatefulWidget {
 
 class _AdDetailPageState extends State<AdDetailPage> {
   int _currentIndex = 0;
+  VideoPlayerController? _videoController;
 
   // Check if current user is the owner of the ad
   Future<bool> _isCurrentUserOwner(AddModel ad) async {
@@ -28,6 +31,12 @@ class _AdDetailPageState extends State<AdDetailPage> {
     return currentUserId != null &&
         ad.user?.id != null &&
         currentUserId == ad.user!.id;
+  }
+
+  @override
+  void dispose() {
+    _videoController?.dispose();
+    super.dispose();
   }
 
   @override
@@ -69,7 +78,7 @@ class _AdDetailPageState extends State<AdDetailPage> {
               loaded: (ad) => CustomScrollView(
                 slivers: [
                   SliverToBoxAdapter(child: _headerCarousel(ad)),
-                  SliverToBoxAdapter(child: _dots(ad.images.length)),
+                  SliverToBoxAdapter(child: _dots(_getTotalCarouselItems(ad))),
                   SliverToBoxAdapter(child: _titlePriceMeta(ad)),
                   SliverToBoxAdapter(child: Divider()),
 
@@ -94,7 +103,7 @@ class _AdDetailPageState extends State<AdDetailPage> {
               markedAsSold: (ad) => CustomScrollView(
                 slivers: [
                   SliverToBoxAdapter(child: _headerCarousel(ad)),
-                  SliverToBoxAdapter(child: _dots(ad.images.length)),
+                  SliverToBoxAdapter(child: _dots(_getTotalCarouselItems(ad))),
                   SliverToBoxAdapter(child: _titlePriceMeta(ad)),
                   SliverToBoxAdapter(child: Divider()),
                   SliverToBoxAdapter(child: _pillTabs(ad)),
@@ -297,43 +306,7 @@ class _AdDetailPageState extends State<AdDetailPage> {
               autoPlay: false,
               onPageChanged: (i, _) => setState(() => _currentIndex = i),
             ),
-            items: ad.images.map((img) {
-              return Stack(
-                fit: StackFit.expand,
-                children: [
-                  Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(24),
-                            bottomRight: Radius.circular(24)),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(24),
-                            bottomRight: Radius.circular(24)),
-                        child: Image.network(img, fit: BoxFit.cover),
-                      )),
-                  // dark gradient overlay (top+bottom)
-                  Container(
-                    decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(24),
-                          bottomRight: Radius.circular(24)),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0x99000000),
-                          Color(0x00000000),
-                          Color(0xAA000000),
-                        ],
-                        stops: [0.0, 0.55, 1.0],
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
+            items: _buildCarouselItems(ad),
           ),
         ),
         // floating top actions
@@ -377,6 +350,142 @@ class _AdDetailPageState extends State<AdDetailPage> {
                 ],
               ),
             ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  int _getTotalCarouselItems(AddModel ad) {
+    int count = ad.images.length;
+    if (ad.link != null && ad.link!.isNotEmpty) {
+      count += 1; // Add video
+    }
+    return count;
+  }
+
+  List<Widget> _buildCarouselItems(AddModel ad) {
+    List<Widget> items = [];
+
+    // Add video as first item if it exists
+    if (ad.link != null && ad.link!.isNotEmpty) {
+      final videoUrl = ad.link!.trim();
+      print('🎥 Adding video to carousel: $videoUrl');
+      print('🎥 Video URL length: ${videoUrl.length}');
+      print('🎥 Video URL starts with http: ${videoUrl.startsWith('http')}');
+
+      // Validate video URL format
+      if (videoUrl.isNotEmpty) {
+        items.add(_buildVideoItem(videoUrl));
+      } else {
+        print('⚠️ Video URL is empty after trimming');
+      }
+    } else {
+      print('🎥 No video URL found in ad - link is null or empty');
+      print('🎥 Ad link value: ${ad.link}');
+    }
+
+    // Add all images
+    items.addAll(ad.images.map((img) => _buildImageItem(img)));
+
+    print('🎥 Total carousel items: ${items.length}');
+    print('🎥 Images count: ${ad.images.length}');
+    return items;
+  }
+
+  Widget _buildVideoItem(String videoUrl) {
+    print('🎥 Building video item with URL: $videoUrl');
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Video player
+            _VideoPlayerWidget(
+              key: ValueKey(videoUrl),
+              videoUrl: videoUrl,
+            ),
+            // Subtle gradient overlay that doesn't interfere with controls
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 60,
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0x66000000),
+                      Color(0x00000000),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 60,
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Color(0x66000000),
+                      Color(0x00000000),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageItem(String img) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24)),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24)),
+              child: Image.network(img, fit: BoxFit.cover),
+            )),
+        // dark gradient overlay (top+bottom)
+        Container(
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24)),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0x99000000),
+                Color(0x00000000),
+                Color(0xAA000000),
+              ],
+              stops: [0.0, 0.55, 1.0],
+            ),
           ),
         ),
       ],
@@ -1015,6 +1124,382 @@ class _KeyValRow extends StatelessWidget {
                 style: const TextStyle(
                     fontWeight: FontWeight.w600, fontSize: 13))),
       ],
+    );
+  }
+}
+
+class _VideoPlayerWidget extends StatefulWidget {
+  final String videoUrl;
+
+  const _VideoPlayerWidget({super.key, required this.videoUrl});
+
+  @override
+  State<_VideoPlayerWidget> createState() => _VideoPlayerWidgetState();
+}
+
+class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
+  VideoPlayerController? _videoPlayerController;
+  ChewieController? _chewieController;
+  bool _isInitialized = false;
+  bool _hasError = false;
+  String? _errorMessage;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    print(
+        '🎥 _VideoPlayerWidget initState called with URL: ${widget.videoUrl}');
+    _initializeVideo();
+  }
+
+  Future<void> _initializeVideo() async {
+    try {
+      print('🎥 Initializing video: ${widget.videoUrl}');
+
+      // Validate URL
+      if (widget.videoUrl.isEmpty) {
+        throw Exception('Video URL is empty');
+      }
+
+      // Clean and validate URL
+      String cleanUrl = widget.videoUrl.trim();
+      if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+        cleanUrl = 'https://$cleanUrl';
+      }
+
+      final uri = Uri.parse(cleanUrl);
+      if (!uri.hasScheme || (!uri.scheme.startsWith('http'))) {
+        throw Exception('Invalid video URL format: $cleanUrl');
+      }
+
+      print('🎥 Creating VideoPlayerController with URI: $uri');
+
+      // Skip URL accessibility test as it often fails unnecessarily
+      // and video player can handle network issues better
+      print(
+          '🎥 Skipping URL accessibility test - proceeding with video initialization');
+
+      _videoPlayerController = VideoPlayerController.networkUrl(uri);
+
+      // Add listener to update UI when video state changes
+      _videoPlayerController!.addListener(_videoListener);
+
+      print('🎥 Starting video initialization...');
+
+      // Add timeout to video initialization
+      await _videoPlayerController!.initialize().timeout(
+        const Duration(seconds: 15), // Reduced timeout
+        onTimeout: () {
+          throw Exception('Video initialization timeout after 15 seconds');
+        },
+      );
+
+      print('🎥 Video initialized successfully');
+      print('🎥 Video duration: ${_videoPlayerController!.value.duration}');
+      print('🎥 Video size: ${_videoPlayerController!.value.size}');
+      print(
+          '🎥 Video aspect ratio: ${_videoPlayerController!.value.aspectRatio}');
+
+      // Initialize Chewie controller with proper controls
+      _chewieController = ChewieController(
+        videoPlayerController: _videoPlayerController!,
+        autoPlay: false,
+        looping: false,
+        allowPlaybackSpeedChanging: true,
+        allowMuting: false, // Disable sound controls
+        showControls: true,
+        showOptions: true, // Enable options for better control
+        allowFullScreen: false, // Disable fullscreen
+        startAt: Duration.zero, // Start from beginning
+        materialProgressColors: ChewieProgressColors(
+          playedColor: AppColors.primaryColor,
+          handleColor: Colors.white,
+          backgroundColor: Colors.grey.withOpacity(0.3),
+          bufferedColor: Colors.lightBlueAccent.withOpacity(0.3),
+        ),
+        cupertinoProgressColors: ChewieProgressColors(
+          playedColor: AppColors.primaryColor,
+          handleColor: Colors.white,
+          backgroundColor: Colors.grey.withOpacity(0.3),
+          bufferedColor: Colors.lightBlueAccent.withOpacity(0.3),
+        ),
+        // Ensure controls are always visible when needed
+        hideControlsTimer: const Duration(seconds: 3),
+        showControlsOnInitialize: true,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+          _isLoading = false;
+        });
+        print('🎥 Video state updated to initialized');
+      }
+    } catch (e) {
+      print('❌ Video initialization error: $e');
+      print('❌ Error type: ${e.runtimeType}');
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _isLoading = false;
+          _errorMessage = _getUserFriendlyErrorMessage(e);
+        });
+        print('🎥 Video state updated to error');
+      }
+    }
+  }
+
+  void _videoListener() {
+    if (mounted && _videoPlayerController != null) {
+      final value = _videoPlayerController!.value;
+      print(
+          '🎥 Video state: initialized=${value.isInitialized}, error=${value.errorDescription}');
+      print(
+          '🎥 Video duration: ${value.duration}, position: ${value.position}');
+      print('🎥 Video size: ${value.size}, aspectRatio: ${value.aspectRatio}');
+
+      if (value.hasError && value.errorDescription != null) {
+        print('❌ Video player error: ${value.errorDescription}');
+        setState(() {
+          _hasError = true;
+          _isLoading = false;
+          _errorMessage =
+              _getUserFriendlyErrorMessage(Exception(value.errorDescription!));
+        });
+      } else if (value.isInitialized && _isLoading) {
+        setState(() {
+          _isLoading = false;
+        });
+        print(
+            '🎥 Video player initialized successfully - controls should be available');
+      }
+    }
+  }
+
+  String _getUserFriendlyErrorMessage(dynamic error) {
+    final errorString = error.toString().toLowerCase();
+
+    if (errorString.contains('timeout')) {
+      return 'Video loading timeout. Please check your internet connection.';
+    } else if (errorString.contains('network') ||
+        errorString.contains('connection')) {
+      return 'Network error. Please check your internet connection.';
+    } else if (errorString.contains('format') ||
+        errorString.contains('codec')) {
+      return 'Video format not supported.';
+    } else if (errorString.contains('not found') ||
+        errorString.contains('404')) {
+      return 'Video not found.';
+    } else if (errorString.contains('permission') ||
+        errorString.contains('access')) {
+      return 'Access denied to video.';
+    } else {
+      return 'Unable to load video. Please try again.';
+    }
+  }
+
+  Future<void> _testWithSampleVideo() async {
+    try {
+      print('🎥 Testing with sample video...');
+
+      // Use a known working sample video URL
+      const testVideoUrl =
+          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+
+      _videoPlayerController?.removeListener(_videoListener);
+      _videoPlayerController?.dispose();
+      _chewieController?.dispose();
+
+      _videoPlayerController =
+          VideoPlayerController.networkUrl(Uri.parse(testVideoUrl));
+
+      // Add listener to update UI when video state changes
+      _videoPlayerController!.addListener(_videoListener);
+
+      print('🎥 Starting test video initialization...');
+      await _videoPlayerController!.initialize().timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          throw Exception('Test video initialization timeout after 15 seconds');
+        },
+      );
+
+      print('🎥 Test video initialized successfully');
+      print(
+          '🎥 Test video duration: ${_videoPlayerController!.value.duration}');
+      print('🎥 Test video size: ${_videoPlayerController!.value.size}');
+
+      // Initialize Chewie controller for test video
+      _chewieController = ChewieController(
+        videoPlayerController: _videoPlayerController!,
+        autoPlay: false,
+        looping: false,
+        allowPlaybackSpeedChanging: true,
+        allowMuting: false, // Disable sound controls
+        showControls: true,
+        showOptions: true,
+        allowFullScreen: false, // Disable fullscreen
+        startAt: Duration.zero,
+        materialProgressColors: ChewieProgressColors(
+          playedColor: AppColors.primaryColor,
+          handleColor: Colors.white,
+          backgroundColor: Colors.grey.withOpacity(0.3),
+          bufferedColor: Colors.lightBlueAccent.withOpacity(0.3),
+        ),
+        cupertinoProgressColors: ChewieProgressColors(
+          playedColor: AppColors.primaryColor,
+          handleColor: Colors.white,
+          backgroundColor: Colors.grey.withOpacity(0.3),
+          bufferedColor: Colors.lightBlueAccent.withOpacity(0.3),
+        ),
+        hideControlsTimer: const Duration(seconds: 3),
+        showControlsOnInitialize: true,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+          _isLoading = false;
+        });
+        print('🎥 Test video state updated to initialized');
+      }
+    } catch (e) {
+      print('❌ Test video initialization error: $e');
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _isLoading = false;
+          _errorMessage =
+              'Test video failed: ${_getUserFriendlyErrorMessage(e)}';
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _videoPlayerController?.removeListener(_videoListener);
+    _videoPlayerController?.dispose();
+    _chewieController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_hasError) {
+      return Container(
+        color: Colors.black,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.videocam_off,
+                  color: Colors.white,
+                  size: 48,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Video not available',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _hasError = false;
+                          _isInitialized = false;
+                          _isLoading = true;
+                          _errorMessage = null;
+                        });
+                        _initializeVideo();
+                      },
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: const Text('Retry'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryColor,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _hasError = false;
+                          _isInitialized = false;
+                          _isLoading = true;
+                          _errorMessage = null;
+                        });
+                        _testWithSampleVideo();
+                      },
+                      icon: const Icon(Icons.play_circle_outline, size: 18),
+                      label: const Text('Test Video'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_isLoading || !_isInitialized || _chewieController == null) {
+      return Container(
+        color: Colors.black,
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Loading video...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return GestureDetector(
+      onTap: () {
+        print('🎥 Video player tapped - controls should be visible');
+        // Controls will automatically show/hide on tap
+      },
+      child: Chewie(controller: _chewieController!),
     );
   }
 }
