@@ -3,7 +3,9 @@ import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:flutter/material.dart';
 
 class PropertyFiltersPage extends StatefulWidget {
-  const PropertyFiltersPage({super.key});
+  final String? categoryId;
+  final String? categoryTitle;
+  const PropertyFiltersPage({super.key, this.categoryId, this.categoryTitle});
 
   @override
   State<PropertyFiltersPage> createState() => _PropertyFiltersPageState();
@@ -301,6 +303,23 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
           ),
         ),
         const Divider(height: 1),
+        // View All option
+        Padding(
+          padding: const EdgeInsets.fromLTRB(30, 8, 16, 0),
+          child: InkWell(
+            onTap: () {
+              Navigator.pop<Map<String, dynamic>>(context, {});
+            },
+            child: const Text(
+              'View All Properties',
+              style: TextStyle(
+                decoration: TextDecoration.underline,
+                color: AppColors.primaryColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
         Expanded(
           child: ListView.separated(
             padding: const EdgeInsets.fromLTRB(8, 8, 8, 20),

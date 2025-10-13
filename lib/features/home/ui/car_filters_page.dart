@@ -10,7 +10,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CarFiltersPage extends StatefulWidget {
-  const CarFiltersPage({super.key});
+  final String? categoryId;
+  final String? categoryTitle;
+  const CarFiltersPage({super.key, this.categoryId, this.categoryTitle});
 
   @override
   State<CarFiltersPage> createState() => _CarFiltersPageState();
@@ -163,6 +165,25 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                                   ),
                                 ),
                                 const Divider(height: 1),
+                                // View All option
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(30, 8, 16, 0),
+                                  child: InkWell(
+                                    onTap: () {
+                                      Navigator.pop<Map<String, dynamic>>(
+                                          context, {});
+                                    },
+                                    child: Text(
+                                      'View All ${_categoryPluralLabel()}',
+                                      style: TextStyle(
+                                        decoration: TextDecoration.underline,
+                                        color: AppColors.primaryColor,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                                 Expanded(
                                   child: ListView.separated(
                                     padding:
@@ -624,5 +645,21 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
         ],
       ),
     );
+  }
+
+  String _categoryPluralLabel() {
+    // Prefer categoryId mapping; fallback to title if provided
+    final id = widget.categoryId;
+    if (id == 'two_wheeler') return 'Bikes';
+    if (id == 'private_vehicle') return 'Cars';
+    if (id == 'premium_vehicle') return 'Cars';
+    if (id == 'commercial_vehicle') return 'Commercial Vehicles';
+    // Fallback based on provided title
+    final t = (widget.categoryTitle ?? '').toLowerCase();
+    if (t.contains('bike')) return 'Bikes';
+    if (t.contains('car')) return 'Cars';
+    if (t.contains('premium')) return 'Cars';
+    if (t.contains('commercial')) return 'Commercial Vehicles';
+    return 'Vehicles';
   }
 }

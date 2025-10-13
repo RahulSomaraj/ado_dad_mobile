@@ -88,7 +88,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
                 onTap: () async {
                   // Check if this is a property category
                   if (widget.categoryId == 'property') {
-                    final result = await context.push('/property-filter');
+                    final result = await context.push(
+                        '/property-filter?categoryId=${widget.categoryId}&title=${Uri.encodeComponent(widget.categoryTitle)}');
                     if (result is Map<String, dynamic>) {
                       _filters = result;
                       context.read<AdvertisementBloc>().add(
@@ -109,7 +110,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
                     }
                   } else {
                     // For vehicle categories, use car filter
-                    final result = await context.push('/car-filter');
+                    final result = await context.push(
+                        '/car-filter?categoryId=${widget.categoryId}&title=${Uri.encodeComponent(widget.categoryTitle)}');
                     if (result is Map<String, dynamic>) {
                       _filters = result;
                       context.read<AdvertisementBloc>().add(
