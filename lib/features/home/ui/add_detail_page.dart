@@ -4,6 +4,7 @@ import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/features/chat/services/offer_service.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
+import 'package:ado_dad_user/features/home/ui/report_ad_dialog.dart';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
@@ -84,6 +85,7 @@ class _AdDetailPageState extends State<AdDetailPage> {
 
                   SliverToBoxAdapter(child: _pillTabs(ad)),
                   SliverToBoxAdapter(child: _description(ad)),
+                  SliverToBoxAdapter(child: _reportAdButton(ad)),
                   SliverToBoxAdapter(child: _sellerTile(ad)),
                   // SliverToBoxAdapter(child: _recommendationsSection()),
                   // const SliverPadding(padding: EdgeInsets.only(bottom: 90)),
@@ -97,6 +99,7 @@ class _AdDetailPageState extends State<AdDetailPage> {
                   SliverToBoxAdapter(child: Divider()),
                   SliverToBoxAdapter(child: _pillTabs(widget.ad)),
                   SliverToBoxAdapter(child: _description(widget.ad)),
+                  SliverToBoxAdapter(child: _reportAdButton(widget.ad)),
                   SliverToBoxAdapter(child: _sellerTile(widget.ad)),
                 ],
               ),
@@ -108,6 +111,7 @@ class _AdDetailPageState extends State<AdDetailPage> {
                   SliverToBoxAdapter(child: Divider()),
                   SliverToBoxAdapter(child: _pillTabs(ad)),
                   SliverToBoxAdapter(child: _description(ad)),
+                  SliverToBoxAdapter(child: _reportAdButton(ad)),
                   SliverToBoxAdapter(child: _sellerTile(ad)),
                 ],
               ),
@@ -821,6 +825,71 @@ class _AdDetailPageState extends State<AdDetailPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // ======= Report Ad Button =======
+  Widget _reportAdButton(AddModel ad) {
+    return FutureBuilder<bool>(
+      future: _isCurrentUserOwner(ad),
+      builder: (context, snapshot) {
+        final isOwner = snapshot.data ?? false;
+
+        // Only show report button for other users' ads
+        if (isOwner) {
+          return const SizedBox.shrink();
+        }
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                onPressed: () => _showReportDialog(context, ad),
+                icon: Icon(
+                  Icons.report_problem,
+                  size: 18,
+                  color: Colors.red.shade600,
+                ),
+                label: Text(
+                  'Report Ad',
+                  style: TextStyle(
+                    color: Colors.red.shade600,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Show report dialog
+  void _showReportDialog(BuildContext context, AddModel ad) {
+    final reportedUserId = ad.user?.id;
+    if (reportedUserId == null || reportedUserId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to report: User information not available'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => ReportAdDialog(
+        reportedUserId: reportedUserId,
+        adId: ad.id,
       ),
     );
   }

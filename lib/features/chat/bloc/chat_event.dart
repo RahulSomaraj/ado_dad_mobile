@@ -25,8 +25,12 @@ class ChatEvent with _$ChatEvent {
   }) = SendMessage;
 
   const factory ChatEvent.loadMessages(String threadId) = LoadMessages;
+  const factory ChatEvent.loadMessagesFromApi(String roomId) =
+      LoadMessagesFromApi;
   const factory ChatEvent.messagesReceived(
       String threadId, List<Map<String, dynamic>> messages) = MessagesReceived;
+  const factory ChatEvent.messagesLoadedFromApi(
+      String roomId, List<ChatMessage> messages) = MessagesLoadedFromApi;
   const factory ChatEvent.markMessageAsRead(String messageId) =
       MarkMessageAsRead;
   const factory ChatEvent.deleteMessage(String messageId) = DeleteMessage;

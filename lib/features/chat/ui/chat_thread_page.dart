@@ -46,8 +46,8 @@ class _ChatThreadPageState extends State<ChatThreadPage> {
     // Join the thread
     _chatBloc.add(ChatEvent.joinThread(widget.threadId));
 
-    // Load messages for this thread
-    _chatBloc.add(ChatEvent.loadMessages(widget.threadId));
+    // Load messages for this thread from API
+    _chatBloc.add(ChatEvent.loadMessagesFromApi(widget.threadId));
   }
 
   String _initials(String name) {

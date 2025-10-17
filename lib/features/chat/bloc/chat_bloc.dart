@@ -5,10 +5,12 @@ import 'package:ado_dad_user/features/chat/bloc/chat_event.dart';
 import 'package:ado_dad_user/features/chat/bloc/chat_state.dart';
 import 'package:ado_dad_user/features/chat/models/chat_models.dart';
 import 'package:ado_dad_user/features/chat/services/chat_socket_service.dart';
+import 'package:ado_dad_user/features/chat/services/chat_api_service.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatSocketService _socketService = ChatSocketService();
+  final ChatApiService _apiService = ChatApiService();
   StreamSubscription<bool>? _connectionSubscription;
   StreamSubscription<Map<String, dynamic>>? _chatEventSubscription;
   StreamSubscription<String>? _errorSubscription;
@@ -31,7 +33,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     // Message events
     on<SendMessage>(_onSendMessage);
     on<LoadMessages>(_onLoadMessages);
+    on<LoadMessagesFromApi>(_onLoadMessagesFromApi);
     on<MessagesReceived>(_onMessagesReceived);
+    on<MessagesLoadedFromApi>(_onMessagesLoadedFromApi);
     on<MarkMessageAsRead>(_onMarkMessageAsRead);
     on<DeleteMessage>(_onDeleteMessage);
     on<NewMessageReceived>(_onNewMessageReceived);
@@ -288,7 +292,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
       // Add to current messages
       final currentMessages =
-          List<ChatMessage>.from(state.currentThreadMessages);
+          List<ChatMessage>.from(state.messages[event.threadId] ?? []);
       currentMessages.add(tempMessage);
 
       final updatedMessages =
@@ -297,6 +301,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
       emit(state.copyWith(
         messages: updatedMessages,
+        selectedThreadId: event.threadId, // Ensure selectedThreadId is set
         isSendingMessage: false,
       ));
     } catch (e) {
@@ -322,6 +327,73 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       emit(state.copyWith(
         isLoadingMessages: false,
         error: 'Failed to load messages: $e',
+      ));
+    }
+  }
+
+  Future<void> _onLoadMessagesFromApi(
+      LoadMessagesFromApi event, Emitter<ChatState> emit) async {
+    emit(state.copyWith(isLoadingMessages: true));
+
+    try {
+      log('🔄 Loading messages from API for room: ${event.roomId}');
+
+      // Fetch messages from API
+      final response = await _apiService.getChatRoomMessages(event.roomId);
+
+      // Convert API messages to ChatMessage objects
+      final chatMessages = response.data.messages
+          .map((apiMessage) => apiMessage.toChatMessage())
+          .toList();
+
+      // Sort messages by timestamp (oldest first)
+      chatMessages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+      // Update state with loaded messages
+      final updatedMessages =
+          Map<String, List<ChatMessage>>.from(state.messages);
+      updatedMessages[event.roomId] = chatMessages;
+
+      emit(state.copyWith(
+        messages: updatedMessages,
+        selectedThreadId: event
+            .roomId, // Set the selected thread ID so currentThreadMessages works
+        isLoadingMessages: false,
+        error: null,
+      ));
+
+      log('✅ Loaded ${chatMessages.length} messages from API');
+    } catch (e) {
+      log('❌ Error loading messages from API: $e');
+      emit(state.copyWith(
+        isLoadingMessages: false,
+        error: 'Failed to load messages: $e',
+      ));
+    }
+  }
+
+  void _onMessagesLoadedFromApi(
+      MessagesLoadedFromApi event, Emitter<ChatState> emit) {
+    try {
+      log('📨 Processing messages loaded from API for room: ${event.roomId}');
+
+      // Update state with loaded messages
+      final updatedMessages =
+          Map<String, List<ChatMessage>>.from(state.messages);
+      updatedMessages[event.roomId] = event.messages;
+
+      emit(state.copyWith(
+        messages: updatedMessages,
+        isLoadingMessages: false,
+        error: null,
+      ));
+
+      log('✅ Updated state with ${event.messages.length} messages from API');
+    } catch (e) {
+      log('❌ Error processing messages from API: $e');
+      emit(state.copyWith(
+        isLoadingMessages: false,
+        error: 'Failed to process messages: $e',
       ));
     }
   }
@@ -429,6 +501,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     emit(state.copyWith(
       messages: updatedMessages,
+      selectedThreadId:
+          threadId, // Ensure selectedThreadId is set for new messages
       threads: updatedThreads,
       chatRooms: updatedChatRooms,
     ));
@@ -473,6 +547,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     emit(state.copyWith(
       messages: updatedMessages,
+      selectedThreadId: threadId, // Ensure selectedThreadId is set
       chatRooms: updatedChatRooms,
     ));
   }

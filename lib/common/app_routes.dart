@@ -119,8 +119,9 @@ class AppRoutes {
           final ad = state.extra as AddModel;
           // final adId = state.extra as String;
           return BlocProvider(
-            create: (_) => AdDetailBloc(repository: AddRepository())
-              ..add(AdDetailEvent.fetch(ad.id)),
+            create: (_) => AdDetailBloc(
+              repository: AddRepository(),
+            )..add(AdDetailEvent.fetch(ad.id)),
             child: AdDetailPage(ad: ad),
           );
         },

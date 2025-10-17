@@ -9,8 +9,10 @@ part 'ad_detail_bloc.freezed.dart';
 
 class AdDetailBloc extends Bloc<AdDetailEvent, AdDetailState> {
   final AddRepository repository;
-  AdDetailBloc({required this.repository})
-      : super(const AdDetailState.initial()) {
+
+  AdDetailBloc({
+    required this.repository,
+  }) : super(const AdDetailState.initial()) {
     on<AdDetailEvent>((event, emit) async {
       await event.when(
         fetch: (adId) async {

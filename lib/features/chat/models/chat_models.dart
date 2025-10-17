@@ -26,6 +26,25 @@ class ChatMessage with _$ChatMessage {
       _$ChatMessageFromJson(json);
 }
 
+/// Extension to convert ApiMessage to ChatMessage
+extension ApiMessageToChatMessage on ApiMessage {
+  ChatMessage toChatMessage() {
+    return ChatMessage(
+      id: id,
+      threadId: roomId,
+      senderId: senderId,
+      senderName: sender.name,
+      senderAvatar: sender.profilePic,
+      content: content,
+      messageType: type,
+      timestamp: createdAt,
+      isRead: isRead,
+      isDelivered: true, // Assume delivered if it's from API
+      attachments: attachments.cast<String>(),
+    );
+  }
+}
+
 /// Chat thread model
 @freezed
 class ChatThread with _$ChatThread {
@@ -170,6 +189,67 @@ enum SocketConnectionState {
   connected,
   reconnecting,
   error,
+}
+
+/// API Message model for chat messages from the server
+@freezed
+class ApiMessage with _$ApiMessage {
+  const factory ApiMessage({
+    @JsonKey(name: '_id') required String id,
+    required String roomId,
+    required String senderId,
+    required String type,
+    required String content,
+    @Default([]) List<dynamic> attachments,
+    required bool isRead,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    required ApiMessageSender sender,
+  }) = _ApiMessage;
+
+  factory ApiMessage.fromJson(Map<String, dynamic> json) =>
+      _$ApiMessageFromJson(json);
+}
+
+/// API Message sender model
+@freezed
+class ApiMessageSender with _$ApiMessageSender {
+  const factory ApiMessageSender({
+    @JsonKey(name: '_id') required String id,
+    required String name,
+    required String email,
+    String? profilePic,
+  }) = _ApiMessageSender;
+
+  factory ApiMessageSender.fromJson(Map<String, dynamic> json) =>
+      _$ApiMessageSenderFromJson(json);
+}
+
+/// API Response model for chat messages
+@freezed
+class ChatMessagesResponse with _$ChatMessagesResponse {
+  const factory ChatMessagesResponse({
+    required bool success,
+    required ChatMessagesData data,
+    required String roomId,
+  }) = _ChatMessagesResponse;
+
+  factory ChatMessagesResponse.fromJson(Map<String, dynamic> json) =>
+      _$ChatMessagesResponseFromJson(json);
+}
+
+/// Chat messages data model
+@freezed
+class ChatMessagesData with _$ChatMessagesData {
+  const factory ChatMessagesData({
+    required List<ApiMessage> messages,
+    String? nextCursor,
+    required bool hasMore,
+    required int total,
+  }) = _ChatMessagesData;
+
+  factory ChatMessagesData.fromJson(Map<String, dynamic> json) =>
+      _$ChatMessagesDataFromJson(json);
 }
 
 /// Chat message types

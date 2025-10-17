@@ -4,6 +4,7 @@ import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/features/home/ad_edit/bloc/ad_edit_bloc.dart';
 import 'package:ado_dad_user/features/home/banner_bloc/banner_bloc.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
+import 'package:ado_dad_user/features/home/report_ad_bloc/report_ad_bloc.dart';
 import 'package:ado_dad_user/features/login/bloc/login_bloc.dart';
 import 'package:ado_dad_user/features/profile/bloc/profile_bloc.dart';
 import 'package:ado_dad_user/features/sell/bloc/bloc/add_post_bloc.dart';
@@ -16,6 +17,7 @@ import 'package:ado_dad_user/repositories/favorite_repo.dart';
 import 'package:ado_dad_user/repositories/banner_repo.dart';
 import 'package:ado_dad_user/repositories/login_repository.dart';
 import 'package:ado_dad_user/repositories/profile_repo.dart';
+import 'package:ado_dad_user/repositories/report_repository.dart';
 import 'package:ado_dad_user/repositories/signup_repository.dart';
 import 'package:ado_dad_user/repositories/socket_service.dart';
 import 'package:ado_dad_user/features/profile/MyAds/bloc/my_ads_bloc.dart';
@@ -79,6 +81,10 @@ class MyApp extends StatelessWidget {
         BlocProvider<SellerProfileBloc>(
           create: (context) =>
               SellerProfileBloc(repository: SellerProfileRepository()),
+        ),
+        BlocProvider<ReportAdBloc>(
+          create: (context) =>
+              ReportAdBloc(reportRepository: ReportRepository()),
         ),
       ],
       child: MaterialApp.router(
