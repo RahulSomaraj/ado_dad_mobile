@@ -154,9 +154,9 @@ class _AdDetailPageState extends State<AdDetailPage> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _chatBtn('Chat', onTap: () {}
-                  // onTap: () => _handleChat(context),
-                  ),
+              child: _chatBtn('Chat', onTap: () {
+                context.push('/messages?from=/add-detail-page');
+              }),
             ),
           ],
         );

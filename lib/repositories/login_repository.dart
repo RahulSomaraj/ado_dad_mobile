@@ -27,4 +27,24 @@ class AuthRepository {
       throw Exception("Unexpected error: ${e.toString()}");
     }
   }
+
+  Future<void> forgotPassword(String email) async {
+    try {
+      final response = await _dio.post('users/forgot-password', data: {
+        'email': email,
+      });
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Success - password reset email sent
+        return;
+      } else {
+        throw Exception(
+            "Failed to send password reset email: ${response.statusMessage}");
+      }
+    } on DioException catch (e) {
+      throw Exception(DioErrorHandler.handleError(e));
+    } catch (e) {
+      throw Exception("Unexpected error: ${e.toString()}");
+    }
+  }
 }

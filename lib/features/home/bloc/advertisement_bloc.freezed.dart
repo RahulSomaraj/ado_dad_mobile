@@ -42,6 +42,8 @@ mixin _$AdvertisementEvent {
         applyFilters,
     required TResult Function(String adId, bool isFavorited, String? favoriteId)
         updateAdFavoriteStatus,
+    required TResult Function(double latitude, double longitude)
+        searchByLocation,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -70,6 +72,7 @@ mixin _$AdvertisementEvent {
         applyFilters,
     TResult? Function(String adId, bool isFavorited, String? favoriteId)?
         updateAdFavoriteStatus,
+    TResult? Function(double latitude, double longitude)? searchByLocation,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -98,6 +101,7 @@ mixin _$AdvertisementEvent {
         applyFilters,
     TResult Function(String adId, bool isFavorited, String? favoriteId)?
         updateAdFavoriteStatus,
+    TResult Function(double latitude, double longitude)? searchByLocation,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -110,6 +114,7 @@ mixin _$AdvertisementEvent {
     required TResult Function(ApplyFiltersEvent value) applyFilters,
     required TResult Function(UpdateAdFavoriteStatusEvent value)
         updateAdFavoriteStatus,
+    required TResult Function(SearchByLocationEvent value) searchByLocation,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -121,6 +126,7 @@ mixin _$AdvertisementEvent {
     TResult? Function(ApplyFiltersEvent value)? applyFilters,
     TResult? Function(UpdateAdFavoriteStatusEvent value)?
         updateAdFavoriteStatus,
+    TResult? Function(SearchByLocationEvent value)? searchByLocation,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -131,6 +137,7 @@ mixin _$AdvertisementEvent {
     TResult Function(FetchByCategory value)? fetchByCategory,
     TResult Function(ApplyFiltersEvent value)? applyFilters,
     TResult Function(UpdateAdFavoriteStatusEvent value)? updateAdFavoriteStatus,
+    TResult Function(SearchByLocationEvent value)? searchByLocation,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -222,6 +229,8 @@ class _$StartedImpl implements Started {
         applyFilters,
     required TResult Function(String adId, bool isFavorited, String? favoriteId)
         updateAdFavoriteStatus,
+    required TResult Function(double latitude, double longitude)
+        searchByLocation,
   }) {
     return started();
   }
@@ -253,6 +262,7 @@ class _$StartedImpl implements Started {
         applyFilters,
     TResult? Function(String adId, bool isFavorited, String? favoriteId)?
         updateAdFavoriteStatus,
+    TResult? Function(double latitude, double longitude)? searchByLocation,
   }) {
     return started?.call();
   }
@@ -284,6 +294,7 @@ class _$StartedImpl implements Started {
         applyFilters,
     TResult Function(String adId, bool isFavorited, String? favoriteId)?
         updateAdFavoriteStatus,
+    TResult Function(double latitude, double longitude)? searchByLocation,
     required TResult orElse(),
   }) {
     if (started != null) {
@@ -302,6 +313,7 @@ class _$StartedImpl implements Started {
     required TResult Function(ApplyFiltersEvent value) applyFilters,
     required TResult Function(UpdateAdFavoriteStatusEvent value)
         updateAdFavoriteStatus,
+    required TResult Function(SearchByLocationEvent value) searchByLocation,
   }) {
     return started(this);
   }
@@ -316,6 +328,7 @@ class _$StartedImpl implements Started {
     TResult? Function(ApplyFiltersEvent value)? applyFilters,
     TResult? Function(UpdateAdFavoriteStatusEvent value)?
         updateAdFavoriteStatus,
+    TResult? Function(SearchByLocationEvent value)? searchByLocation,
   }) {
     return started?.call(this);
   }
@@ -329,6 +342,7 @@ class _$StartedImpl implements Started {
     TResult Function(FetchByCategory value)? fetchByCategory,
     TResult Function(ApplyFiltersEvent value)? applyFilters,
     TResult Function(UpdateAdFavoriteStatusEvent value)? updateAdFavoriteStatus,
+    TResult Function(SearchByLocationEvent value)? searchByLocation,
     required TResult orElse(),
   }) {
     if (started != null) {
@@ -409,6 +423,8 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
         applyFilters,
     required TResult Function(String adId, bool isFavorited, String? favoriteId)
         updateAdFavoriteStatus,
+    required TResult Function(double latitude, double longitude)
+        searchByLocation,
   }) {
     return fetchAllListings();
   }
@@ -440,6 +456,7 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
         applyFilters,
     TResult? Function(String adId, bool isFavorited, String? favoriteId)?
         updateAdFavoriteStatus,
+    TResult? Function(double latitude, double longitude)? searchByLocation,
   }) {
     return fetchAllListings?.call();
   }
@@ -471,6 +488,7 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
         applyFilters,
     TResult Function(String adId, bool isFavorited, String? favoriteId)?
         updateAdFavoriteStatus,
+    TResult Function(double latitude, double longitude)? searchByLocation,
     required TResult orElse(),
   }) {
     if (fetchAllListings != null) {
@@ -489,6 +507,7 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
     required TResult Function(ApplyFiltersEvent value) applyFilters,
     required TResult Function(UpdateAdFavoriteStatusEvent value)
         updateAdFavoriteStatus,
+    required TResult Function(SearchByLocationEvent value) searchByLocation,
   }) {
     return fetchAllListings(this);
   }
@@ -503,6 +522,7 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
     TResult? Function(ApplyFiltersEvent value)? applyFilters,
     TResult? Function(UpdateAdFavoriteStatusEvent value)?
         updateAdFavoriteStatus,
+    TResult? Function(SearchByLocationEvent value)? searchByLocation,
   }) {
     return fetchAllListings?.call(this);
   }
@@ -516,6 +536,7 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
     TResult Function(FetchByCategory value)? fetchByCategory,
     TResult Function(ApplyFiltersEvent value)? applyFilters,
     TResult Function(UpdateAdFavoriteStatusEvent value)? updateAdFavoriteStatus,
+    TResult Function(SearchByLocationEvent value)? searchByLocation,
     required TResult orElse(),
   }) {
     if (fetchAllListings != null) {
@@ -594,6 +615,8 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
         applyFilters,
     required TResult Function(String adId, bool isFavorited, String? favoriteId)
         updateAdFavoriteStatus,
+    required TResult Function(double latitude, double longitude)
+        searchByLocation,
   }) {
     return fetchNextPage();
   }
@@ -625,6 +648,7 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
         applyFilters,
     TResult? Function(String adId, bool isFavorited, String? favoriteId)?
         updateAdFavoriteStatus,
+    TResult? Function(double latitude, double longitude)? searchByLocation,
   }) {
     return fetchNextPage?.call();
   }
@@ -656,6 +680,7 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
         applyFilters,
     TResult Function(String adId, bool isFavorited, String? favoriteId)?
         updateAdFavoriteStatus,
+    TResult Function(double latitude, double longitude)? searchByLocation,
     required TResult orElse(),
   }) {
     if (fetchNextPage != null) {
@@ -674,6 +699,7 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
     required TResult Function(ApplyFiltersEvent value) applyFilters,
     required TResult Function(UpdateAdFavoriteStatusEvent value)
         updateAdFavoriteStatus,
+    required TResult Function(SearchByLocationEvent value) searchByLocation,
   }) {
     return fetchNextPage(this);
   }
@@ -688,6 +714,7 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
     TResult? Function(ApplyFiltersEvent value)? applyFilters,
     TResult? Function(UpdateAdFavoriteStatusEvent value)?
         updateAdFavoriteStatus,
+    TResult? Function(SearchByLocationEvent value)? searchByLocation,
   }) {
     return fetchNextPage?.call(this);
   }
@@ -701,6 +728,7 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
     TResult Function(FetchByCategory value)? fetchByCategory,
     TResult Function(ApplyFiltersEvent value)? applyFilters,
     TResult Function(UpdateAdFavoriteStatusEvent value)? updateAdFavoriteStatus,
+    TResult Function(SearchByLocationEvent value)? searchByLocation,
     required TResult orElse(),
   }) {
     if (fetchNextPage != null) {
@@ -808,6 +836,8 @@ class _$FetchByCategoryImpl implements FetchByCategory {
         applyFilters,
     required TResult Function(String adId, bool isFavorited, String? favoriteId)
         updateAdFavoriteStatus,
+    required TResult Function(double latitude, double longitude)
+        searchByLocation,
   }) {
     return fetchByCategory(categoryId);
   }
@@ -839,6 +869,7 @@ class _$FetchByCategoryImpl implements FetchByCategory {
         applyFilters,
     TResult? Function(String adId, bool isFavorited, String? favoriteId)?
         updateAdFavoriteStatus,
+    TResult? Function(double latitude, double longitude)? searchByLocation,
   }) {
     return fetchByCategory?.call(categoryId);
   }
@@ -870,6 +901,7 @@ class _$FetchByCategoryImpl implements FetchByCategory {
         applyFilters,
     TResult Function(String adId, bool isFavorited, String? favoriteId)?
         updateAdFavoriteStatus,
+    TResult Function(double latitude, double longitude)? searchByLocation,
     required TResult orElse(),
   }) {
     if (fetchByCategory != null) {
@@ -888,6 +920,7 @@ class _$FetchByCategoryImpl implements FetchByCategory {
     required TResult Function(ApplyFiltersEvent value) applyFilters,
     required TResult Function(UpdateAdFavoriteStatusEvent value)
         updateAdFavoriteStatus,
+    required TResult Function(SearchByLocationEvent value) searchByLocation,
   }) {
     return fetchByCategory(this);
   }
@@ -902,6 +935,7 @@ class _$FetchByCategoryImpl implements FetchByCategory {
     TResult? Function(ApplyFiltersEvent value)? applyFilters,
     TResult? Function(UpdateAdFavoriteStatusEvent value)?
         updateAdFavoriteStatus,
+    TResult? Function(SearchByLocationEvent value)? searchByLocation,
   }) {
     return fetchByCategory?.call(this);
   }
@@ -915,6 +949,7 @@ class _$FetchByCategoryImpl implements FetchByCategory {
     TResult Function(FetchByCategory value)? fetchByCategory,
     TResult Function(ApplyFiltersEvent value)? applyFilters,
     TResult Function(UpdateAdFavoriteStatusEvent value)? updateAdFavoriteStatus,
+    TResult Function(SearchByLocationEvent value)? searchByLocation,
     required TResult orElse(),
   }) {
     if (fetchByCategory != null) {
@@ -1258,6 +1293,8 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
         applyFilters,
     required TResult Function(String adId, bool isFavorited, String? favoriteId)
         updateAdFavoriteStatus,
+    required TResult Function(double latitude, double longitude)
+        searchByLocation,
   }) {
     return applyFilters(
         categoryId,
@@ -1305,6 +1342,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
         applyFilters,
     TResult? Function(String adId, bool isFavorited, String? favoriteId)?
         updateAdFavoriteStatus,
+    TResult? Function(double latitude, double longitude)? searchByLocation,
   }) {
     return applyFilters?.call(
         categoryId,
@@ -1352,6 +1390,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
         applyFilters,
     TResult Function(String adId, bool isFavorited, String? favoriteId)?
         updateAdFavoriteStatus,
+    TResult Function(double latitude, double longitude)? searchByLocation,
     required TResult orElse(),
   }) {
     if (applyFilters != null) {
@@ -1386,6 +1425,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
     required TResult Function(ApplyFiltersEvent value) applyFilters,
     required TResult Function(UpdateAdFavoriteStatusEvent value)
         updateAdFavoriteStatus,
+    required TResult Function(SearchByLocationEvent value) searchByLocation,
   }) {
     return applyFilters(this);
   }
@@ -1400,6 +1440,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
     TResult? Function(ApplyFiltersEvent value)? applyFilters,
     TResult? Function(UpdateAdFavoriteStatusEvent value)?
         updateAdFavoriteStatus,
+    TResult? Function(SearchByLocationEvent value)? searchByLocation,
   }) {
     return applyFilters?.call(this);
   }
@@ -1413,6 +1454,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
     TResult Function(FetchByCategory value)? fetchByCategory,
     TResult Function(ApplyFiltersEvent value)? applyFilters,
     TResult Function(UpdateAdFavoriteStatusEvent value)? updateAdFavoriteStatus,
+    TResult Function(SearchByLocationEvent value)? searchByLocation,
     required TResult orElse(),
   }) {
     if (applyFilters != null) {
@@ -1580,6 +1622,8 @@ class _$UpdateAdFavoriteStatusEventImpl implements UpdateAdFavoriteStatusEvent {
         applyFilters,
     required TResult Function(String adId, bool isFavorited, String? favoriteId)
         updateAdFavoriteStatus,
+    required TResult Function(double latitude, double longitude)
+        searchByLocation,
   }) {
     return updateAdFavoriteStatus(adId, isFavorited, favoriteId);
   }
@@ -1611,6 +1655,7 @@ class _$UpdateAdFavoriteStatusEventImpl implements UpdateAdFavoriteStatusEvent {
         applyFilters,
     TResult? Function(String adId, bool isFavorited, String? favoriteId)?
         updateAdFavoriteStatus,
+    TResult? Function(double latitude, double longitude)? searchByLocation,
   }) {
     return updateAdFavoriteStatus?.call(adId, isFavorited, favoriteId);
   }
@@ -1642,6 +1687,7 @@ class _$UpdateAdFavoriteStatusEventImpl implements UpdateAdFavoriteStatusEvent {
         applyFilters,
     TResult Function(String adId, bool isFavorited, String? favoriteId)?
         updateAdFavoriteStatus,
+    TResult Function(double latitude, double longitude)? searchByLocation,
     required TResult orElse(),
   }) {
     if (updateAdFavoriteStatus != null) {
@@ -1660,6 +1706,7 @@ class _$UpdateAdFavoriteStatusEventImpl implements UpdateAdFavoriteStatusEvent {
     required TResult Function(ApplyFiltersEvent value) applyFilters,
     required TResult Function(UpdateAdFavoriteStatusEvent value)
         updateAdFavoriteStatus,
+    required TResult Function(SearchByLocationEvent value) searchByLocation,
   }) {
     return updateAdFavoriteStatus(this);
   }
@@ -1674,6 +1721,7 @@ class _$UpdateAdFavoriteStatusEventImpl implements UpdateAdFavoriteStatusEvent {
     TResult? Function(ApplyFiltersEvent value)? applyFilters,
     TResult? Function(UpdateAdFavoriteStatusEvent value)?
         updateAdFavoriteStatus,
+    TResult? Function(SearchByLocationEvent value)? searchByLocation,
   }) {
     return updateAdFavoriteStatus?.call(this);
   }
@@ -1687,6 +1735,7 @@ class _$UpdateAdFavoriteStatusEventImpl implements UpdateAdFavoriteStatusEvent {
     TResult Function(FetchByCategory value)? fetchByCategory,
     TResult Function(ApplyFiltersEvent value)? applyFilters,
     TResult Function(UpdateAdFavoriteStatusEvent value)? updateAdFavoriteStatus,
+    TResult Function(SearchByLocationEvent value)? searchByLocation,
     required TResult orElse(),
   }) {
     if (updateAdFavoriteStatus != null) {
@@ -1710,6 +1759,249 @@ abstract class UpdateAdFavoriteStatusEvent implements AdvertisementEvent {
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$UpdateAdFavoriteStatusEventImplCopyWith<_$UpdateAdFavoriteStatusEventImpl>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$SearchByLocationEventImplCopyWith<$Res> {
+  factory _$$SearchByLocationEventImplCopyWith(
+          _$SearchByLocationEventImpl value,
+          $Res Function(_$SearchByLocationEventImpl) then) =
+      __$$SearchByLocationEventImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({double latitude, double longitude});
+}
+
+/// @nodoc
+class __$$SearchByLocationEventImplCopyWithImpl<$Res>
+    extends _$AdvertisementEventCopyWithImpl<$Res, _$SearchByLocationEventImpl>
+    implements _$$SearchByLocationEventImplCopyWith<$Res> {
+  __$$SearchByLocationEventImplCopyWithImpl(_$SearchByLocationEventImpl _value,
+      $Res Function(_$SearchByLocationEventImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of AdvertisementEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? latitude = null,
+    Object? longitude = null,
+  }) {
+    return _then(_$SearchByLocationEventImpl(
+      latitude: null == latitude
+          ? _value.latitude
+          : latitude // ignore: cast_nullable_to_non_nullable
+              as double,
+      longitude: null == longitude
+          ? _value.longitude
+          : longitude // ignore: cast_nullable_to_non_nullable
+              as double,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$SearchByLocationEventImpl implements SearchByLocationEvent {
+  const _$SearchByLocationEventImpl(
+      {required this.latitude, required this.longitude});
+
+  @override
+  final double latitude;
+  @override
+  final double longitude;
+
+  @override
+  String toString() {
+    return 'AdvertisementEvent.searchByLocation(latitude: $latitude, longitude: $longitude)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$SearchByLocationEventImpl &&
+            (identical(other.latitude, latitude) ||
+                other.latitude == latitude) &&
+            (identical(other.longitude, longitude) ||
+                other.longitude == longitude));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, latitude, longitude);
+
+  /// Create a copy of AdvertisementEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$SearchByLocationEventImplCopyWith<_$SearchByLocationEventImpl>
+      get copyWith => __$$SearchByLocationEventImplCopyWithImpl<
+          _$SearchByLocationEventImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() started,
+    required TResult Function() fetchAllListings,
+    required TResult Function() fetchNextPage,
+    required TResult Function(String categoryId) fetchByCategory,
+    required TResult Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)
+        applyFilters,
+    required TResult Function(String adId, bool isFavorited, String? favoriteId)
+        updateAdFavoriteStatus,
+    required TResult Function(double latitude, double longitude)
+        searchByLocation,
+  }) {
+    return searchByLocation(latitude, longitude);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? started,
+    TResult? Function()? fetchAllListings,
+    TResult? Function()? fetchNextPage,
+    TResult? Function(String categoryId)? fetchByCategory,
+    TResult? Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)?
+        applyFilters,
+    TResult? Function(String adId, bool isFavorited, String? favoriteId)?
+        updateAdFavoriteStatus,
+    TResult? Function(double latitude, double longitude)? searchByLocation,
+  }) {
+    return searchByLocation?.call(latitude, longitude);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? started,
+    TResult Function()? fetchAllListings,
+    TResult Function()? fetchNextPage,
+    TResult Function(String categoryId)? fetchByCategory,
+    TResult Function(
+            String? categoryId,
+            int? minYear,
+            int? maxYear,
+            List<String>? manufacturerIds,
+            List<String>? modelIds,
+            List<String>? fuelTypeIds,
+            List<String>? transmissionTypeIds,
+            int? minPrice,
+            int? maxPrice,
+            List<String>? propertyTypes,
+            int? minBedrooms,
+            int? maxBedrooms,
+            int? minArea,
+            int? maxArea,
+            bool? isFurnished,
+            bool? hasParking)?
+        applyFilters,
+    TResult Function(String adId, bool isFavorited, String? favoriteId)?
+        updateAdFavoriteStatus,
+    TResult Function(double latitude, double longitude)? searchByLocation,
+    required TResult orElse(),
+  }) {
+    if (searchByLocation != null) {
+      return searchByLocation(latitude, longitude);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(Started value) started,
+    required TResult Function(FetchAllListingsEvent value) fetchAllListings,
+    required TResult Function(FetchNextPageEvent value) fetchNextPage,
+    required TResult Function(FetchByCategory value) fetchByCategory,
+    required TResult Function(ApplyFiltersEvent value) applyFilters,
+    required TResult Function(UpdateAdFavoriteStatusEvent value)
+        updateAdFavoriteStatus,
+    required TResult Function(SearchByLocationEvent value) searchByLocation,
+  }) {
+    return searchByLocation(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(Started value)? started,
+    TResult? Function(FetchAllListingsEvent value)? fetchAllListings,
+    TResult? Function(FetchNextPageEvent value)? fetchNextPage,
+    TResult? Function(FetchByCategory value)? fetchByCategory,
+    TResult? Function(ApplyFiltersEvent value)? applyFilters,
+    TResult? Function(UpdateAdFavoriteStatusEvent value)?
+        updateAdFavoriteStatus,
+    TResult? Function(SearchByLocationEvent value)? searchByLocation,
+  }) {
+    return searchByLocation?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(Started value)? started,
+    TResult Function(FetchAllListingsEvent value)? fetchAllListings,
+    TResult Function(FetchNextPageEvent value)? fetchNextPage,
+    TResult Function(FetchByCategory value)? fetchByCategory,
+    TResult Function(ApplyFiltersEvent value)? applyFilters,
+    TResult Function(UpdateAdFavoriteStatusEvent value)? updateAdFavoriteStatus,
+    TResult Function(SearchByLocationEvent value)? searchByLocation,
+    required TResult orElse(),
+  }) {
+    if (searchByLocation != null) {
+      return searchByLocation(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class SearchByLocationEvent implements AdvertisementEvent {
+  const factory SearchByLocationEvent(
+      {required final double latitude,
+      required final double longitude}) = _$SearchByLocationEventImpl;
+
+  double get latitude;
+  double get longitude;
+
+  /// Create a copy of AdvertisementEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$SearchByLocationEventImplCopyWith<_$SearchByLocationEventImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
 

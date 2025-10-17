@@ -1,5 +1,7 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/google_places_service.dart';
+import 'package:ado_dad_user/env/env.dart';
 import 'package:ado_dad_user/features/home/banner_bloc/banner_bloc.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
@@ -27,10 +29,14 @@ class _HomePageState extends State<HomePage> {
 
   String? _userLocation;
   final ScrollController _scrollController = ScrollController();
+  late final GooglePlacesService _placesService;
 
   @override
   void initState() {
     super.initState();
+
+    // Initialize Google Places service
+    _placesService = GooglePlacesService(apiKey: Env.googlePlacesApiKey);
 
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
@@ -99,19 +105,49 @@ class _HomePageState extends State<HomePage> {
     try {
       final position = await _determinePosition();
 
+      // First try to get detailed address using Google Places reverse geocoding
+      try {
+        final placeDetails = await _getDetailedAddressFromCoordinates(
+            position.latitude, position.longitude);
+
+        if (placeDetails != null && placeDetails.isNotEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('user_location', placeDetails);
+
+          setState(() {
+            _userLocation = placeDetails;
+          });
+          return;
+        }
+      } catch (e) {
+        print("Google Places reverse geocoding failed: $e");
+      }
+
+      // Fallback to standard geocoding
       final placemarks =
           await placemarkFromCoordinates(position.latitude, position.longitude);
       final place = placemarks[0];
 
-      final newAddress =
-          '${place.locality},${place.subAdministrativeArea}, ${place.administrativeArea}';
+      // Create a more detailed address format
+      final addressComponents = <String>[];
+
+      if (place.locality?.isNotEmpty == true) {
+        addressComponents.add(place.locality!);
+      }
+      if (place.subAdministrativeArea?.isNotEmpty == true &&
+          place.subAdministrativeArea != place.locality) {
+        addressComponents.add(place.subAdministrativeArea!);
+      }
+      if (place.administrativeArea?.isNotEmpty == true) {
+        addressComponents.add(place.administrativeArea!);
+      }
+
+      final newAddress = addressComponents.join(', ');
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_location', newAddress);
 
       setState(() {
-        // _userLocation =
-        //     '${place.locality}, ${place.administrativeArea}'; // Or full address
         _userLocation = newAddress;
       });
     } catch (e) {
@@ -122,8 +158,58 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  /// Get detailed address using Google reverse geocoding
+  Future<String?> _getDetailedAddressFromCoordinates(
+      double lat, double lng) async {
+    try {
+      // Use Google Geocoding API for reverse geocoding
+      final formattedAddress = await _placesService.reverseGeocode(
+        latitude: lat,
+        longitude: lng,
+      );
+
+      if (formattedAddress != null && formattedAddress.isNotEmpty) {
+        return _formatAddressFromGooglePlaces(formattedAddress);
+      }
+
+      return null;
+    } catch (e) {
+      print("Error getting detailed address: $e");
+      return null;
+    }
+  }
+
+  /// Format Google Places address to show locality, district, state format
+  String _formatAddressFromGooglePlaces(String formattedAddress) {
+    // Parse the formatted address to extract relevant components
+    // Google Places typically returns: "Street, Area, City, State, Country"
+    final parts = formattedAddress.split(',').map((e) => e.trim()).toList();
+
+    if (parts.length >= 3) {
+      // For Indian addresses, we want to show: Locality, District, State
+      // Remove country (usually last part) and take the last 3 parts
+      final relevantParts = parts.sublist(parts.length - 3);
+
+      // Filter out common unwanted parts
+      final filteredParts = relevantParts.where((part) {
+        final lowerPart = part.toLowerCase();
+        return !lowerPart.contains('india') &&
+            !lowerPart.contains('pin') &&
+            !lowerPart.contains('postal');
+      }).toList();
+
+      if (filteredParts.isNotEmpty) {
+        return filteredParts.join(', ');
+      }
+    }
+
+    return formattedAddress;
+  }
+
   Future<String?> _showLocationInputDialog() async {
     final controller = TextEditingController(text: _userLocation ?? '');
+    List<String> suggestions = [];
+    bool isLoadingSuggestions = false;
 
     return await showDialog<String>(
       context: context,
@@ -132,40 +218,145 @@ class _HomePageState extends State<HomePage> {
           builder: (context, setDialogState) {
             return AlertDialog(
               title: const Text('Enter Your Location'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: controller,
-                    decoration: const InputDecoration(
-                      hintText: 'e.g. Bangalore, Karnataka',
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    icon: Icon(Icons.my_location),
-                    label: Text('Use Current Location'),
-                    onPressed: () async {
-                      try {
-                        final position = await _determinePosition();
-                        final placemarks = await placemarkFromCoordinates(
-                            position.latitude, position.longitude);
-                        final place = placemarks[0];
-                        final gpsAddress =
-                            '${place.locality}, ${place.administrativeArea}';
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: controller,
+                      decoration: const InputDecoration(
+                        hintText: 'e.g. Perunnad, Pathanmathitta, Kerala',
+                        prefixIcon: Icon(Icons.location_on),
+                      ),
+                      onChanged: (value) async {
+                        if (value.length >= 2) {
+                          setDialogState(() {
+                            isLoadingSuggestions = true;
+                          });
 
-                        setDialogState(() {
-                          controller.text = gpsAddress;
-                        });
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text("Failed to fetch location: $e")),
-                        );
-                      }
-                    },
-                  ),
-                ],
+                          try {
+                            final predictions =
+                                await _placesService.getPlacePredictions(
+                              input: value,
+                              region: 'in',
+                              language: 'en',
+                            );
+
+                            setDialogState(() {
+                              suggestions = predictions
+                                  .take(5)
+                                  .map((p) => p.description)
+                                  .toList();
+                              isLoadingSuggestions = false;
+                            });
+                          } catch (e) {
+                            setDialogState(() {
+                              suggestions = [];
+                              isLoadingSuggestions = false;
+                            });
+                          }
+                        } else {
+                          setDialogState(() {
+                            suggestions = [];
+                            isLoadingSuggestions = false;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Show suggestions
+                    if (isLoadingSuggestions)
+                      const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(),
+                      )
+                    else if (suggestions.isNotEmpty)
+                      Container(
+                        height: 120,
+                        child: ListView.builder(
+                          itemCount: suggestions.length,
+                          itemBuilder: (context, index) {
+                            final suggestion = suggestions[index];
+                            return ListTile(
+                              dense: true,
+                              leading: const Icon(Icons.location_on, size: 16),
+                              title: Text(
+                                suggestion,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              onTap: () {
+                                controller.text = suggestion;
+                                setDialogState(() {
+                                  suggestions = [];
+                                });
+                              },
+                            );
+                          },
+                        ),
+                      ),
+
+                    const SizedBox(height: 10),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.my_location),
+                      label: const Text('Use Current Location'),
+                      onPressed: () async {
+                        try {
+                          setDialogState(() {
+                            isLoadingSuggestions = true;
+                          });
+
+                          final position = await _determinePosition();
+
+                          // Try to get detailed address first
+                          final detailedAddress =
+                              await _getDetailedAddressFromCoordinates(
+                                  position.latitude, position.longitude);
+
+                          String gpsAddress;
+                          if (detailedAddress != null &&
+                              detailedAddress.isNotEmpty) {
+                            gpsAddress = detailedAddress;
+                          } else {
+                            // Fallback to standard geocoding
+                            final placemarks = await placemarkFromCoordinates(
+                                position.latitude, position.longitude);
+                            final place = placemarks[0];
+
+                            final addressComponents = <String>[];
+                            if (place.locality?.isNotEmpty == true) {
+                              addressComponents.add(place.locality!);
+                            }
+                            if (place.subAdministrativeArea?.isNotEmpty ==
+                                    true &&
+                                place.subAdministrativeArea != place.locality) {
+                              addressComponents
+                                  .add(place.subAdministrativeArea!);
+                            }
+                            if (place.administrativeArea?.isNotEmpty == true) {
+                              addressComponents.add(place.administrativeArea!);
+                            }
+                            gpsAddress = addressComponents.join(', ');
+                          }
+
+                          setDialogState(() {
+                            controller.text = gpsAddress;
+                            isLoadingSuggestions = false;
+                          });
+                        } catch (e) {
+                          setDialogState(() {
+                            isLoadingSuggestions = false;
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text("Failed to fetch location: $e")),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(

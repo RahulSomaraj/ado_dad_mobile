@@ -9,4 +9,10 @@ class LoginState with _$LoginState {
     // required String userType,
   }) = Success;
   const factory LoginState.failure(String message) = Failure;
+
+  // Forgot password states
+  const factory LoginState.forgotPasswordLoading() = ForgotPasswordLoading;
+  const factory LoginState.forgotPasswordSuccess() = ForgotPasswordSuccess;
+  const factory LoginState.forgotPasswordFailure(String message) =
+      ForgotPasswordFailure;
 }

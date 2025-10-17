@@ -59,6 +59,9 @@ dependencies:
   internet_connection_checker_plus: ^2.5.0
   video_player: ^2.8.2
   chewie: ^1.10.0
+  google_maps_flutter: ^2.7.0
+  # flutter_google_places: ^0.3.0
+  # google_api_headers: ^2.0.2
 
 
 

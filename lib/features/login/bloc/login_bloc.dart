@@ -16,6 +16,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     on<Login>(_onLogin);
     on<Logout>(_onLogout);
     on<CheckLoginStatus>(_onCheckLoginStatus);
+    on<ForgotPassword>(_onForgotPassword);
   }
 
   Future<void> _onLogin(Login event, Emitter<LoginState> emit) async {
@@ -50,6 +51,18 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       emit(LoginState.success(username: username ?? ''));
     } else {
       emit(const LoginState.initial());
+    }
+  }
+
+  Future<void> _onForgotPassword(
+      ForgotPassword event, Emitter<LoginState> emit) async {
+    emit(const LoginState.forgotPasswordLoading());
+
+    try {
+      await authRepository.forgotPassword(event.email);
+      emit(const LoginState.forgotPasswordSuccess());
+    } catch (e) {
+      emit(LoginState.forgotPasswordFailure(e.toString()));
     }
   }
 }

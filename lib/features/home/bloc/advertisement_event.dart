@@ -31,4 +31,8 @@ class AdvertisementEvent with _$AdvertisementEvent {
     required bool isFavorited,
     String? favoriteId,
   }) = UpdateAdFavoriteStatusEvent;
+  const factory AdvertisementEvent.searchByLocation({
+    required double latitude,
+    required double longitude,
+  }) = SearchByLocationEvent;
 }

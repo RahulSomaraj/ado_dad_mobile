@@ -16,6 +16,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     on<FetchByCategory>(_onFetchByCategory);
     on<ApplyFiltersEvent>(_onApplyFilters);
     on<UpdateAdFavoriteStatusEvent>(_onUpdateAdFavoriteStatus);
+    on<SearchByLocationEvent>(_onSearchByLocation);
   }
 
   int _currentPage = 1;
@@ -221,6 +222,42 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
         listings: updatedListings,
         hasMore: currentState.hasMore,
       ));
+    }
+  }
+
+  Future<void> _onSearchByLocation(
+      SearchByLocationEvent event, Emitter<AdvertisementState> emit) async {
+    emit(const AdvertisementState.loading());
+    _currentPage = 1;
+
+    // Clear other filters when searching by location
+    _categoryId = null;
+    _minYear = null;
+    _maxYear = null;
+    _manufacturerIds = null;
+    _modelIds = null;
+    _fuelTypeIds = null;
+    _transmissionTypeIds = null;
+    _minPrice = null;
+    _maxPrice = null;
+    _propertyTypes = null;
+    _minBedrooms = null;
+    _maxBedrooms = null;
+    _minArea = null;
+    _maxArea = null;
+    _isFurnished = null;
+    _hasParking = null;
+
+    try {
+      final result = await repository.fetchAllAds(
+        page: _currentPage,
+        latitude: event.latitude,
+        longitude: event.longitude,
+      );
+      emit(AdvertisementState.listingsLoaded(
+          listings: result.data, hasMore: result.hasNext));
+    } catch (e) {
+      emit(AdvertisementState.error("Failed to fetch ads by location: $e"));
     }
   }
 }

@@ -34,6 +34,9 @@ class AddRepository {
     int? maxArea,
     bool? isFurnished,
     bool? hasParking,
+    // Location-based filters
+    double? latitude,
+    double? longitude,
   }) async {
     try {
       final body = <String, dynamic>{
@@ -60,6 +63,9 @@ class AddRepository {
         if (maxArea != null) 'maxArea': maxArea,
         if (isFurnished != null) 'isFurnished': isFurnished,
         if (hasParking != null) 'hasParking': hasParking,
+        // Location-based filters
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
       };
 
       // if (manufacturerIds != null && manufacturerIds.isNotEmpty) {

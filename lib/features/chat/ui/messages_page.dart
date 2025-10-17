@@ -63,13 +63,21 @@ class _MessagesPageState extends State<MessagesPage> {
   }
 
   void _handleBackNavigation() {
-    // If previousRoute is provided, navigate to that specific route
-    if (widget.previousRoute != null) {
-      context.go(widget.previousRoute!);
-    } else {
-      // Fallback to pop if no previous route is specified
+    // Prefer popping the current route to return to the previous screen
+    if (Navigator.of(context).canPop()) {
       context.pop();
+      return;
     }
+
+    // If nothing to pop, avoid navigating to routes that require extras
+    final previous = widget.previousRoute;
+    if (previous != null && previous != '/add-detail-page') {
+      context.go(previous);
+      return;
+    }
+
+    // Safe fallback
+    context.go('/home');
   }
 
   @override

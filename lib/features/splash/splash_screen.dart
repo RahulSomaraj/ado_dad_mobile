@@ -66,24 +66,20 @@ class _SplashScreenState extends State<SplashScreen>
   void _navigateBasedOnState(dynamic loginState) {
     if (!mounted || _hasNavigated) return;
 
-    _hasNavigated = true;
-    loginState.when(
-      initial: () {
-        // User is not logged in, go to login page
-        context.go('/login');
-      },
-      loading: () {
-        // Still checking, wait
-      },
-      success: (username) {
-        // User is logged in, go to home page
-        context.go('/home');
-      },
-      failure: (message) {
-        // Login check failed, go to login page
-        context.go('/login');
-      },
-    );
+    // Only navigate for core login states, ignore forgot password states
+    if (loginState is Initial) {
+      _hasNavigated = true;
+      context.go('/login');
+    } else if (loginState is Loading) {
+      // Still checking, wait
+    } else if (loginState is Success) {
+      _hasNavigated = true;
+      context.go('/home');
+    } else if (loginState is Failure) {
+      _hasNavigated = true;
+      context.go('/login');
+    }
+    // Ignore forgot password states - they shouldn't trigger navigation
   }
 
   @override

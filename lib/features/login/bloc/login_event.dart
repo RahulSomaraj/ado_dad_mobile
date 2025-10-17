@@ -11,4 +11,8 @@ class LoginEvent with _$LoginEvent {
   const factory LoginEvent.checkLoginStatus() = CheckLoginStatus;
 
   const factory LoginEvent.logout() = Logout;
+
+  const factory LoginEvent.forgotPassword({
+    required String email,
+  }) = ForgotPassword;
 }

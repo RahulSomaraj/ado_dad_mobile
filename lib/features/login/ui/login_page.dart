@@ -17,7 +17,10 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _forgotPasswordEmailController =
+      TextEditingController();
   final GlobalKey<FormState> _loginFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _forgotPasswordFormKey = GlobalKey<FormState>();
 
   /// false = phone mode (default), true = email mode
   bool _emailMode = false;
@@ -27,6 +30,137 @@ class _LoginPageState extends State<LoginPage> {
       _emailMode = !_emailMode;
       _usernameController.clear(); // avoid mixing old value
     });
+  }
+
+  void _showForgotPasswordDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          child: Container(
+            width: MediaQuery.of(context).size.width > 600
+                ? 400 // Fixed width for tablets and larger screens
+                : MediaQuery.of(context).size.width *
+                    0.85, // Responsive for phones
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Forgot Password',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryColor,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Form(
+                  key: _forgotPasswordFormKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Enter your Email',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.blackColor,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _forgotPasswordEmailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                            horizontal: 12,
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Email is required';
+                          }
+                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                              .hasMatch(value)) {
+                            return 'Enter a valid email address';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _forgotPasswordEmailController.clear();
+                      },
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(color: AppColors.greyColor),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    BlocBuilder<LoginBloc, LoginState>(
+                      builder: (context, state) {
+                        final isLoading = state is ForgotPasswordLoading;
+                        return ElevatedButton(
+                          onPressed: isLoading
+                              ? null
+                              : () {
+                                  if (_forgotPasswordFormKey.currentState!
+                                      .validate()) {
+                                    _handleForgotPassword();
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryColor,
+                            foregroundColor: AppColors.whiteColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
+                                  ),
+                                )
+                              : const Text('Continue'),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _handleForgotPassword() {
+    final email = _forgotPasswordEmailController.text.trim();
+
+    // Dispatch forgot password event to BLoC
+    context.read<LoginBloc>().add(LoginEvent.forgotPassword(email: email));
   }
 
   @override
@@ -52,9 +186,11 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   children: [
                     _buildUsernameField(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     _buildPasswordField(),
-                    const SizedBox(height: 20),
+                    // const SizedBox(height: 10),
+                    _buildForgotPasswordButton(),
+                    const SizedBox(height: 10),
                     _buildButton(),
                   ],
                 ),
@@ -149,6 +285,24 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  Widget _buildForgotPasswordButton() {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton(
+        onPressed: _showForgotPasswordDialog,
+        child: const Text(
+          'Forgot Password?',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.primaryColor,
+            decoration: TextDecoration.underline,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildButton() {
     return BlocConsumer<LoginBloc, LoginState>(
       listener: (context, state) {
@@ -159,6 +313,28 @@ class _LoginPageState extends State<LoginPage> {
             context.go('/home');
           },
           failure: (message) => DialogUtil.showErrorDialog(context, message),
+          forgotPasswordSuccess: () {
+            // Close forgot password dialog
+            Navigator.of(context).pop();
+            _forgotPasswordEmailController.clear();
+
+            // Show success message
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Password reset link sent to your email'),
+                backgroundColor: AppColors.primaryColor,
+              ),
+            );
+          },
+          forgotPasswordFailure: (message) {
+            // Show error message
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error: $message'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          },
           orElse: () {},
         );
       },
