@@ -66,6 +66,8 @@ class _AdDetailPageState extends State<AdDetailPage> {
                   backgroundColor: Colors.green,
                 ),
               );
+              // Navigate to home page after showing success message
+              context.go('/home');
             },
           );
         },

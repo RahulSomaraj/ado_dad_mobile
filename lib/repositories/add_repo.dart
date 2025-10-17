@@ -356,17 +356,88 @@ class AddRepository {
     }
   }
 
-  Future<void> markAdAsSold(String adId) async {
+  Future<AddModel> markAdAsSold(String adId) async {
     try {
-      final resp = await _dio.patch(
+      print('🔍 Marking ad as sold - Ad ID: $adId');
+      print('🔍 Base URL: ${_dio.options.baseUrl}');
+      print('🔍 Full URL will be: ${_dio.options.baseUrl}ads/$adId/sold');
+      print('🔍 Trying v2 endpoint: ${_dio.options.baseUrl}v2/ads/$adId/sold');
+      print('🔍 Request data: {"soldOut": true}');
+
+      final resp = await _dio.put(
         '/ads/$adId/sold',
         data: {
           'soldOut': true,
         },
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
       );
-      if (resp.statusCode != 200) throw Exception('Failed to mark ad as sold');
+
+      print('✅ Mark as sold response: ${resp.statusCode} - ${resp.data}');
+
+      // Accept various success status codes (200, 201, 204, etc.)
+      if (resp.statusCode! < 200 || resp.statusCode! >= 300) {
+        throw Exception(
+            'Failed to mark ad as sold - Status: ${resp.statusCode}');
+      }
+
+      // Parse and return the updated ad data from the response
+      final raw = resp.data;
+      final obj =
+          (raw is Map<String, dynamic> && raw['data'] is Map<String, dynamic>)
+              ? raw['data'] as Map<String, dynamic>
+              : (raw as Map<String, dynamic>);
+
+      return AddModel.fromJson(obj);
     } on DioException catch (e) {
-      print('Dio Error: $e');
+      print('❌ Dio error in markAdAsSold (v1): $e');
+      print('❌ Response data: ${e.response?.data}');
+      print('❌ Response status: ${e.response?.statusCode}');
+      print('❌ Request URL: ${e.requestOptions.uri}');
+
+      // If v1 fails with 404, try v2 endpoint
+      if (e.response?.statusCode == 404) {
+        print('🔄 Trying v2 endpoint...');
+        try {
+          final resp2 = await _dio.put(
+            '/v2/ads/$adId/sold',
+            data: {
+              'soldOut': true,
+            },
+            options: Options(
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            ),
+          );
+          print(
+              '✅ Mark as sold response (v2): ${resp2.statusCode} - ${resp2.data}');
+
+          if (resp2.statusCode! < 200 || resp2.statusCode! >= 300) {
+            throw Exception(
+                'Failed to mark ad as sold - Status: ${resp2.statusCode}');
+          }
+
+          // Parse and return the updated ad data from the v2 response
+          final raw2 = resp2.data;
+          final obj2 = (raw2 is Map<String, dynamic> &&
+                  raw2['data'] is Map<String, dynamic>)
+              ? raw2['data'] as Map<String, dynamic>
+              : (raw2 as Map<String, dynamic>);
+
+          return AddModel.fromJson(obj2);
+        } catch (e2) {
+          print('❌ Dio error in markAdAsSold (v2): $e2');
+          if (e2 is DioException) {
+            print('❌ Response data: ${e2.response?.data}');
+            print('❌ Response status: ${e2.response?.statusCode}');
+          }
+        }
+      }
+
       throw Exception(DioErrorHandler.handleError(e));
     }
   }

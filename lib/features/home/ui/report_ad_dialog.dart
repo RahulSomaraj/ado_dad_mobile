@@ -94,6 +94,9 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
           },
           error: (message) {
             print('🚨 ReportAdDialog: Error received: $message');
+            // Close dialog first so snackbar is visible
+            Navigator.of(context).pop();
+            // Show error snackbar after dialog is closed
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Failed to report ad: $message'),

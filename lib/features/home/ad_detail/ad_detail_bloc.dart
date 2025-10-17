@@ -28,11 +28,9 @@ class AdDetailBloc extends Bloc<AdDetailEvent, AdDetailState> {
         markAsSold: (adId) async {
           emit(const AdDetailState.markingAsSold());
           try {
-            await repository.markAdAsSold(adId);
-            // Re-fetch the updated ad detail
-            final detail = await repository.fetchAdDetail(adId);
-            // Names are now parsed directly from nested objects in the model
-            emit(AdDetailState.markedAsSold(detail));
+            // Mark as sold and get the updated ad data directly from the response
+            final updatedAd = await repository.markAdAsSold(adId);
+            emit(AdDetailState.markedAsSold(updatedAd));
           } catch (e) {
             emit(AdDetailState.error(e.toString()));
           }
