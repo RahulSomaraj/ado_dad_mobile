@@ -12,6 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
+import 'package:share_plus/share_plus.dart';
 
 class AdDetailPage extends StatefulWidget {
   // final String adId;
@@ -32,6 +33,36 @@ class _AdDetailPageState extends State<AdDetailPage> {
     return currentUserId != null &&
         ad.user?.id != null &&
         currentUserId == ad.user!.id;
+  }
+
+  // Share ad functionality
+  void _shareAd(AddModel ad) {
+    String title;
+    if (ad.category == 'property') {
+      title =
+          '${ad.propertyType ?? ''} • ${ad.bedrooms ?? 0} BHK • ${ad.areaSqft ?? 0} sqft';
+    } else {
+      title =
+          '${ad.manufacturer?.displayName ?? ad.manufacturer?.name ?? ''} ${ad.model?.displayName ?? ad.model?.name ?? ''} (${ad.year ?? ''})';
+    }
+
+    final shareText = '''
+🚗 Check out this amazing listing on Ado Dad!
+
+${toTitleCase(title)}
+📍 Location: ${ad.location}
+💰 Price: ₹${ad.price}
+📝 Description: ${ad.description}
+
+🔗 Visit: https://ado-dad.com/
+
+Download Ado Dad app to contact the seller and view more details!
+''';
+
+    Share.share(
+      shareText,
+      subject: 'Amazing listing on Ado Dad - ${toTitleCase(title)}',
+    );
   }
 
   @override
@@ -82,6 +113,8 @@ class _AdDetailPageState extends State<AdDetailPage> {
                 slivers: [
                   SliverToBoxAdapter(child: _headerCarousel(ad)),
                   SliverToBoxAdapter(child: _dots(_getTotalCarouselItems(ad))),
+                  // Share button for ad owners - positioned above price section
+                  SliverToBoxAdapter(child: _buildOwnerShareButton(ad)),
                   SliverToBoxAdapter(child: _titlePriceMeta(ad)),
                   SliverToBoxAdapter(child: Divider()),
 
@@ -97,6 +130,8 @@ class _AdDetailPageState extends State<AdDetailPage> {
                 slivers: [
                   SliverToBoxAdapter(child: _headerCarousel(widget.ad)),
                   SliverToBoxAdapter(child: _dots(widget.ad.images.length)),
+                  // Share button for ad owners - positioned above price section
+                  SliverToBoxAdapter(child: _buildOwnerShareButton(widget.ad)),
                   SliverToBoxAdapter(child: _titlePriceMeta(widget.ad)),
                   SliverToBoxAdapter(child: Divider()),
                   SliverToBoxAdapter(child: _pillTabs(widget.ad)),
@@ -109,6 +144,8 @@ class _AdDetailPageState extends State<AdDetailPage> {
                 slivers: [
                   SliverToBoxAdapter(child: _headerCarousel(ad)),
                   SliverToBoxAdapter(child: _dots(_getTotalCarouselItems(ad))),
+                  // Share button for ad owners - positioned above price section
+                  SliverToBoxAdapter(child: _buildOwnerShareButton(ad)),
                   SliverToBoxAdapter(child: _titlePriceMeta(ad)),
                   SliverToBoxAdapter(child: Divider()),
                   SliverToBoxAdapter(child: _pillTabs(ad)),
@@ -348,6 +385,29 @@ class _AdDetailPageState extends State<AdDetailPage> {
                     builder: (context, snapshot) {
                       final isOwner = snapshot.data ?? false;
                       return isOwner
+                          ? const SizedBox(width: 8)
+                          : const SizedBox.shrink();
+                    },
+                  ),
+                  // Share icon - only show for non-owners in the top overlay
+                  FutureBuilder<bool>(
+                    future: _isCurrentUserOwner(ad),
+                    builder: (context, snapshot) {
+                      final isOwner = snapshot.data ?? false;
+                      if (!isOwner) {
+                        return _circleIconButton(Icons.share, onTap: () {
+                          _shareAd(ad);
+                        });
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                  // Add spacing only if share icon is shown
+                  FutureBuilder<bool>(
+                    future: _isCurrentUserOwner(ad),
+                    builder: (context, snapshot) {
+                      final isOwner = snapshot.data ?? false;
+                      return !isOwner
                           ? const SizedBox(width: 8)
                           : const SizedBox.shrink();
                     },
@@ -936,6 +996,37 @@ class _AdDetailPageState extends State<AdDetailPage> {
   }
 
   // ======= Small helpers =======
+  // Share button for ad owners - positioned above price section on the right side
+  Widget _buildOwnerShareButton(AddModel ad) {
+    return FutureBuilder<bool>(
+      future: _isCurrentUserOwner(ad),
+      builder: (context, snapshot) {
+        final isOwner = snapshot.data ?? false;
+
+        if (!isOwner) {
+          return const SizedBox.shrink();
+        }
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              InkWell(
+                onTap: () => _shareAd(ad),
+                child: Icon(
+                  Icons.share,
+                  color: AppColors.primaryColor,
+                  size: 24,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildFavoriteButton(AddModel ad) {
     return BlocBuilder<FavoriteBloc, FavoriteState>(
       builder: (context, state) {
