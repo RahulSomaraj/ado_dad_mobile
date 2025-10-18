@@ -4,7 +4,7 @@ import 'package:ado_dad_user/features/chat/bloc/chat_bloc.dart';
 import 'package:ado_dad_user/features/chat/bloc/chat_event.dart';
 import 'package:ado_dad_user/features/chat/bloc/chat_state.dart';
 import 'package:ado_dad_user/features/chat/models/chat_models.dart';
-import 'package:ado_dad_user/env/env.dart';
+import 'package:ado_dad_user/config/app_config.dart';
 
 class ChatConnectionTest extends StatelessWidget {
   const ChatConnectionTest({super.key});
@@ -83,11 +83,11 @@ class ChatConnectionTest extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Base URL: ${Env.baseUrl}',
+                                'Base URL: ${AppConfig.baseUrl}',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                               Text(
-                                'Socket Endpoint: ${Env.baseUrl}/chat',
+                                'Socket Endpoint: ${AppConfig.baseUrl}/chat',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],

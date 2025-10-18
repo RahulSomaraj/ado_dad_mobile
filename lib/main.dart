@@ -1,6 +1,7 @@
 import 'package:ado_dad_user/common/app_routes.dart';
 import 'package:ado_dad_user/common/connectivity_checker.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
+import 'package:ado_dad_user/config/app_config.dart';
 import 'package:ado_dad_user/features/home/ad_edit/bloc/ad_edit_bloc.dart';
 import 'package:ado_dad_user/features/home/banner_bloc/banner_bloc.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
@@ -29,6 +30,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize environment configuration
+  await AppConfig.load();
+
   await SharedPrefs().init();
   final socketService = SocketService();
   socketService.connect();

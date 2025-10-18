@@ -68,6 +68,11 @@ class _WishlistPageState extends State<WishlistPage> {
               duration: const Duration(seconds: 2),
             ),
           );
+
+          // Refresh the favorites list to show updated data
+          context
+              .read<FavoriteBloc>()
+              .add(const FavoriteEvent.refreshFavorites());
         } else if (state is FavoriteToggleError) {
           // Show error message
           ScaffoldMessenger.of(context).showSnackBar(
@@ -99,7 +104,7 @@ class _WishlistPageState extends State<WishlistPage> {
         ),
         body: BlocBuilder<FavoriteBloc, FavoriteState>(
           builder: (context, state) {
-            if (state is FavoriteLoading) {
+            if (state is FavoriteLoading || state is FavoriteToggleLoading) {
               return const Center(
                 child: CircularProgressIndicator(
                   valueColor:
@@ -188,6 +193,14 @@ class _WishlistPageState extends State<WishlistPage> {
                     final favorite = state.favorites[index];
                     return buildFavoriteCard(favorite);
                   },
+                ),
+              );
+            } else if (state is FavoriteToggleSuccess) {
+              // Show loading while refreshing after toggle success
+              return const Center(
+                child: CircularProgressIndicator(
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
                 ),
               );
             }
@@ -289,6 +302,8 @@ class _WishlistPageState extends State<WishlistPage> {
               // Update the favorite status if we have a toggle success state for this ad
               if (state is FavoriteToggleSuccess && state.adId == favorite.id) {
                 isFavorited = state.isFavorited;
+                // If the item was removed from favorites, it should be removed from the wishlist
+                // The bloc will handle refreshing the list automatically
               }
 
               return GestureDetector(
@@ -301,9 +316,7 @@ class _WishlistPageState extends State<WishlistPage> {
                       );
                 },
                 child: Image.asset(
-                  isFavorited
-                      ? 'assets/images/favorite_icon_filled.png'
-                      : 'assets/images/favorite_icon_unfilled.png',
+                  'assets/images/favorite_icon_filled.png',
                   width: 24,
                   height: 24,
                 ),

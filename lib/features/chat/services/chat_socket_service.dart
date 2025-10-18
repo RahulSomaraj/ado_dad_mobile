@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:ado_dad_user/env/env.dart';
+import 'package:ado_dad_user/config/app_config.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/features/chat/utils/token_validator.dart';
 
@@ -11,8 +11,8 @@ class ChatSocketService {
   ChatSocketService._internal() {
     // Log environment configuration on initialization
     log('🚀 ChatSocketService initialized');
-    // log('🌐 Environment Base URL: ${Env.baseUrl}');
-    // log('🔗 Chat Socket Endpoint: ${Env.baseUrl}/chat');
+    // log('🌐 Environment Base URL: ${AppConfig.baseUrl}');
+    // log('🔗 Chat Socket Endpoint: ${AppConfig.baseUrl}/chat');
   }
 
   IO.Socket? _socket;
@@ -57,8 +57,8 @@ class ChatSocketService {
       }
 
       // Print base URL for confirmation
-      final socketUrl = '${Env.baseUrl}/chat';
-      // log('🌐 Base URL: ${Env.baseUrl}');
+      final socketUrl = '${AppConfig.baseUrl}/chat';
+      // log('🌐 Base URL: ${AppConfig.baseUrl}');
       // log('🔗 Socket URL: $socketUrl');
 
       // Clean token - remove "Bearer " prefix if it exists
@@ -118,7 +118,7 @@ class ChatSocketService {
       _currentSocketId = _socket!.id;
       log('✅ Connected to chat server successfully!');
       log('📡 Socket ID: ${_socket!.id}');
-      // log('🌐 Connected to: ${Env.baseUrl}/chat');
+      // log('🌐 Connected to: ${AppConfig.baseUrl}/chat');
       // log('🔍 Socket transport: ${_socket!.io.engine?.transport?.name}');
       log('🔍 Socket connected status: ${_socket!.connected}');
       _connectionController.add(true);

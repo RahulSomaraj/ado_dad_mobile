@@ -1,7 +1,7 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/google_places_service.dart';
-import 'package:ado_dad_user/env/env.dart';
+import 'package:ado_dad_user/config/app_config.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +30,7 @@ class _SearchPageState extends State<SearchPage> {
   void initState() {
     super.initState();
     // Initialize Google Places service
-    _placesService = GooglePlacesService(apiKey: Env.googlePlacesApiKey);
+    _placesService = GooglePlacesService(apiKey: AppConfig.googlePlacesApiKey);
     // Initialize with all ads from the bloc
     _loadAllAds();
     // Ensure initial state shows all ads

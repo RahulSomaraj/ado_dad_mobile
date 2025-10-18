@@ -1,7 +1,7 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/google_places_service.dart';
-import 'package:ado_dad_user/env/env.dart';
+import 'package:ado_dad_user/config/app_config.dart';
 import 'package:ado_dad_user/features/home/banner_bloc/banner_bloc.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
@@ -36,7 +36,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
 
     // Initialize Google Places service
-    _placesService = GooglePlacesService(apiKey: Env.googlePlacesApiKey);
+    _placesService = GooglePlacesService(apiKey: AppConfig.googlePlacesApiKey);
 
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
