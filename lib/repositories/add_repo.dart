@@ -20,8 +20,8 @@ class AddRepository {
     String? category,
     int? minYear,
     int? maxYear,
-    List<String>? manufacturerId,
-    List<String>? modelId,
+    List<String>? manufacturerIds,
+    List<String>? modelIds,
     List<String>? fuelTypeIds,
     List<String>? transmissionTypeIds,
     int? minPrice,
@@ -47,9 +47,9 @@ class AddRepository {
         if (maxYear != null) 'maxYear': maxYear,
         if (minPrice != null) 'minPrice': minPrice,
         if (maxPrice != null) 'maxPrice': maxPrice,
-        if (manufacturerId != null && manufacturerId.isNotEmpty)
-          'manufacturerId': manufacturerId,
-        if (modelId != null && modelId.isNotEmpty) 'modelId': modelId,
+        if (manufacturerIds != null && manufacturerIds.isNotEmpty)
+          'manufacturerIds': manufacturerIds,
+        if (modelIds != null && modelIds.isNotEmpty) 'modelIds': modelIds,
         if (fuelTypeIds != null && fuelTypeIds.isNotEmpty)
           'fuelTypeIds': fuelTypeIds, // ✅ plural
         if (transmissionTypeIds != null && transmissionTypeIds.isNotEmpty)

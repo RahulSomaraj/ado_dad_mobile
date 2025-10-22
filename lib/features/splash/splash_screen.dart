@@ -87,13 +87,13 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       backgroundColor: AppColors.primaryColor,
       body: Center(
-        child: Row(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Logo image
             Image.asset('assets/images/d-vector.png', height: 50, width: 50),
-            SizedBox(width: 15),
+            SizedBox(height: 20),
             // Title image aligned to center
             Center(
               child: Image.asset('assets/images/Ado Dad SplashTitle.png'),
