@@ -114,20 +114,57 @@ class ProfileRepo {
       final userId = await SharedPrefs().getUserId();
       if (userId == null) throw Exception("User ID not found.");
 
-      final body = Map<String, dynamic>.from(updatedProfile.toJson())
-        ..remove("_id");
+      // Get the original profile to compare changes
+      final originalProfile = await fetchUserProfile();
+
+      // Build body with only changed fields
+      final body = <String, dynamic>{};
+
+      if (updatedProfile.name != originalProfile.name) {
+        body['name'] = updatedProfile.name;
+        print(
+            "📝 Name changed: ${originalProfile.name} → ${updatedProfile.name}");
+      }
+
+      if (updatedProfile.email != originalProfile.email) {
+        body['email'] = updatedProfile.email;
+        print(
+            "📝 Email changed: ${originalProfile.email} → ${updatedProfile.email}");
+      }
+
+      if (updatedProfile.phoneNumber != originalProfile.phoneNumber) {
+        body['phoneNumber'] = updatedProfile.phoneNumber;
+        print(
+            "📝 Phone changed: ${originalProfile.phoneNumber} → ${updatedProfile.phoneNumber}");
+      }
+
+      if (updatedProfile.profilePic != originalProfile.profilePic) {
+        body['profilePic'] = updatedProfile.profilePic;
+        print(
+            "📝 ProfilePic changed: ${originalProfile.profilePic} → ${updatedProfile.profilePic}");
+      }
+
+      // If no fields changed, don't send request
+      if (body.isEmpty) {
+        print("ℹ️ No changes detected, skipping update");
+        return;
+      }
 
       print("🟢 Sending PUT request to: /users/$userId");
-      print("📝 Request Body: ${body}");
-      print("📝 ProfilePic field present: ${body.containsKey('profilePic')}");
-      print("📝 ProfilePic value: ${body['profilePic']}");
+      print("📝 Request Body (only changed fields): ${body}");
 
-      // Log profile picture URL but allow the update to proceed
+      // Validate profile picture URL if provided
       if (body.containsKey('profilePic') && body['profilePic'] != null) {
         final profilePicUrl = body['profilePic'] as String;
         print("📸 Profile picture URL: $profilePicUrl");
-        // Note: We're allowing the update to proceed even with potentially invalid URLs
-        // The backend should handle URL validation gracefully
+
+        // Check if it's a valid URL (starts with http/https) or default value
+        if (profilePicUrl.isNotEmpty &&
+            profilePicUrl != 'default-profile-pic-url' &&
+            !profilePicUrl.startsWith('http')) {
+          print("⚠️ Invalid profile picture URL format: $profilePicUrl");
+          // Don't throw error, let backend handle it, but log the issue
+        }
       }
 
       final response = await _dio.put(
@@ -148,7 +185,15 @@ class ProfileRepo {
       print("❌ DioException in updateUserProfile: ${e.response?.data}");
 
       // Provide more specific error messages for profile update failures
-      if (e.response?.statusCode == 500) {
+      if (e.response?.statusCode == 400) {
+        final errorData = e.response?.data;
+        if (errorData is Map<String, dynamic> &&
+            errorData.containsKey('message')) {
+          throw Exception("❌ ${errorData['message']}");
+        }
+        throw Exception(
+            "❌ Invalid profile data. Please check your information and try again.");
+      } else if (e.response?.statusCode == 500) {
         throw Exception(
             "❌ Server error while updating profile. Please try again or contact support if the issue persists.");
       }

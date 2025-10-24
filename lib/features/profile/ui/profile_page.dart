@@ -172,25 +172,88 @@ class _ProfilePageState extends State<ProfilePage> {
       final userId = await SharedPrefs().getUserId();
       if (userId == null || userId.isEmpty) throw 'User ID missing';
 
+      // Get current profile state to compare changes
+      final currentState = context.read<ProfileBloc>().state;
+      if (currentState is! Loaded) {
+        throw 'Profile not loaded. Please refresh and try again.';
+      }
+
+      final originalProfile = currentState.profile;
+      final updatedName = nameController.text.trim();
+      final updatedEmail = emailController.text.trim();
+      final updatedPhoneNumber = phoneController.text.trim();
+
+      // Check what fields have actually changed
+      final nameChanged = updatedName != originalProfile.name;
+      final emailChanged = updatedEmail != originalProfile.email;
+      final phoneChanged = updatedPhoneNumber != originalProfile.phoneNumber;
+      final profilePicChanged = _pickedImageBytes != null;
+
+      // If nothing changed, just exit editing mode
+      if (!nameChanged &&
+          !emailChanged &&
+          !phoneChanged &&
+          !profilePicChanged) {
+        setState(() {
+          isEditing = false;
+          _pickedImageBytes = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No changes detected.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
       String? profilePicUrl = _currentProfilePicUrl;
 
       // Upload new image if picked
       if (_pickedImageBytes != null) {
-        final repo = context.read<ProfileBloc>().repository;
-        profilePicUrl = await repo.uploadImageToS3(_pickedImageBytes!);
-        print("📸 Uploaded new profile pic: $profilePicUrl");
-        _currentProfilePicUrl = profilePicUrl;
+        try {
+          final repo = context.read<ProfileBloc>().repository;
+          profilePicUrl = await repo.uploadImageToS3(_pickedImageBytes!);
+          print("📸 Uploaded new profile pic: $profilePicUrl");
+          _currentProfilePicUrl = profilePicUrl;
+        } catch (uploadError) {
+          print("❌ Profile picture upload failed: $uploadError");
+          throw 'Failed to upload profile picture. Please try again.';
+        }
       }
 
-      // Build updated model
+      // Validate email format if provided and changed
+      if (emailChanged &&
+          updatedEmail.isNotEmpty &&
+          !RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+              .hasMatch(updatedEmail)) {
+        throw 'Please enter a valid email address';
+      }
+
+      // Validate phone number format if provided and changed
+      if (phoneChanged &&
+          updatedPhoneNumber.isNotEmpty &&
+          !RegExp(r"^[0-9]{10}$").hasMatch(updatedPhoneNumber)) {
+        throw 'Please enter a valid 10-digit phone number';
+      }
+
+      // Build updated model with only changed fields
       final updatedProfile = UserProfile(
         id: userId,
-        name: nameController.text.trim(),
-        email: emailController.text.trim(),
-        phoneNumber: phoneController.text.trim(),
-        type: "NU",
-        profilePic: profilePicUrl, // ✅ always include
+        name: nameChanged ? updatedName : originalProfile.name,
+        email: emailChanged ? updatedEmail : originalProfile.email,
+        phoneNumber:
+            phoneChanged ? updatedPhoneNumber : originalProfile.phoneNumber,
+        type: "NU", // Keep type unchanged
+        profilePic:
+            profilePicChanged ? profilePicUrl : originalProfile.profilePic,
       );
+
+      print("🔄 Changes detected:");
+      print("  - Name: ${nameChanged ? 'CHANGED' : 'unchanged'}");
+      print("  - Email: ${emailChanged ? 'CHANGED' : 'unchanged'}");
+      print("  - Phone: ${phoneChanged ? 'CHANGED' : 'unchanged'}");
+      print("  - Profile Pic: ${profilePicChanged ? 'CHANGED' : 'unchanged'}");
 
       // Dispatch update event
       context
@@ -201,9 +264,22 @@ class _ProfilePageState extends State<ProfilePage> {
         isEditing = false;
         _pickedImageBytes = null;
       });
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile updated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Save failed: $e')));
+      print("❌ Profile save error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Save failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -494,7 +570,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                   : (_currentProfilePicUrl != null &&
                                           _currentProfilePicUrl!.isNotEmpty &&
                                           _currentProfilePicUrl !=
-                                              'default-profile-pic-url')
+                                              'default-profile-pic-url' &&
+                                          _currentProfilePicUrl!
+                                              .startsWith('http'))
                                       ? NetworkImage(_currentProfilePicUrl!)
                                           as ImageProvider
                                       : null,
@@ -502,7 +580,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                       (_currentProfilePicUrl == null ||
                                           _currentProfilePicUrl!.isEmpty ||
                                           _currentProfilePicUrl ==
-                                              'default-profile-pic-url'))
+                                              'default-profile-pic-url' ||
+                                          !_currentProfilePicUrl!
+                                              .startsWith('http')))
                                   ? const Icon(Icons.person,
                                       size: 50, color: Colors.white)
                                   : null,
