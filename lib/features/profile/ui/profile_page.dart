@@ -94,83 +94,116 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // void saveProfile() async {
-  //   String? userId = await SharedPrefs().getUserId();
-  //   if (userId == null || userId.isEmpty) {
-  //     print("❌ Error: User ID is missing!");
-  //     return;
+  // Future<void> saveProfile() async {
+  //   try {
+  //     setState(() => _isSaving = true);
+
+  //     final userId = await SharedPrefs().getUserId();
+  //     if (userId == null || userId.isEmpty) {
+  //       throw 'User ID is missing';
+  //     }
+
+  //     // Validate phone number format before sending request
+  //     final phoneNumber = phoneController.text.trim();
+  //     if (phoneNumber.isNotEmpty &&
+  //         !RegExp(r"^[0-9]{10}$").hasMatch(phoneNumber)) {
+  //       throw 'Please enter a valid 10-digit phone number';
+  //     }
+
+  //     // Validate email format
+  //     final email = emailController.text.trim();
+  //     if (email.isNotEmpty &&
+  //         !RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+  //             .hasMatch(email)) {
+  //       throw 'Please enter a valid email address';
+  //     }
+
+  //     // 1) If user selected a new image, upload it first
+  //     String? profilePicUrl = _currentProfilePicUrl;
+  //     print("🔍 Current profile pic URL: $_currentProfilePicUrl");
+  //     print("🔍 Picked image bytes: ${_pickedImageBytes != null}");
+
+  //     if (_pickedImageBytes != null) {
+  //       final repo = context.read<ProfileBloc>().repository;
+  //       profilePicUrl = await repo.uploadImageToS3(_pickedImageBytes!);
+  //       print("🔍 New uploaded profile pic URL: $profilePicUrl");
+  //     }
+
+  //     // Only omit profile picture if it's null or empty - allow all other values including 'default-profile-pic-url'
+  //     if (profilePicUrl != null && profilePicUrl.isEmpty) {
+  //       profilePicUrl = null; // Set to null so it's omitted from the request
+  //       print("🔍 Empty profile picture URL, omitting from request");
+  //     }
+
+  //     print("🔍 Final profile pic URL to send: $profilePicUrl");
+
+  //     // 2) Build updated model
+  //     final updatedProfile = UserProfile(
+  //       id: userId,
+  //       name: nameController.text.trim(),
+  //       email: email,
+  //       phoneNumber: phoneNumber,
+  //       type: "NU",
+  //       profilePic: profilePicUrl, // can be null if user never set one
+  //     );
+
+  //     // 3) Dispatch update (this will also save to SharedPrefs via your bloc)
+  //     context
+  //         .read<ProfileBloc>()
+  //         .add(ProfileEvent.updateProfile(updatedProfile));
+
+  //     setState(() {
+  //       isEditing = false;
+  //       _pickedImageBytes = null; // clear local selection
+  //       _currentProfilePicUrl = profilePicUrl; // reflect latest
+  //     });
+  //   } catch (e) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Save failed: $e')),
+  //     );
+  //   } finally {
+  //     if (mounted) setState(() => _isSaving = false);
   //   }
-  //   UserProfile updatedProfile = UserProfile(
-  //     id: userId,
-  //     name: nameController.text,
-  //     email: emailController.text,
-  //     phoneNumber: phoneController.text,
-  //     type: "NU",
-  //     profilePic: "",
-  //   );
-
-  //   context.read<ProfileBloc>().add(ProfileEvent.updateProfile(updatedProfile));
-
-  //   setState(() {
-  //     isEditing = false;
-  //   });
   // }
 
   Future<void> saveProfile() async {
     try {
       setState(() => _isSaving = true);
-
       final userId = await SharedPrefs().getUserId();
-      if (userId == null || userId.isEmpty) {
-        throw 'User ID is missing';
-      }
+      if (userId == null || userId.isEmpty) throw 'User ID missing';
 
-      // Validate phone number format before sending request
-      final phoneNumber = phoneController.text.trim();
-      if (phoneNumber.isNotEmpty &&
-          !RegExp(r"^[0-9]{10}$").hasMatch(phoneNumber)) {
-        throw 'Please enter a valid 10-digit phone number';
-      }
-
-      // Validate email format
-      final email = emailController.text.trim();
-      if (email.isNotEmpty &&
-          !RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-              .hasMatch(email)) {
-        throw 'Please enter a valid email address';
-      }
-
-      // 1) If user selected a new image, upload it first
       String? profilePicUrl = _currentProfilePicUrl;
+
+      // Upload new image if picked
       if (_pickedImageBytes != null) {
         final repo = context.read<ProfileBloc>().repository;
         profilePicUrl = await repo.uploadImageToS3(_pickedImageBytes!);
+        print("📸 Uploaded new profile pic: $profilePicUrl");
+        _currentProfilePicUrl = profilePicUrl;
       }
 
-      // 2) Build updated model
+      // Build updated model
       final updatedProfile = UserProfile(
         id: userId,
         name: nameController.text.trim(),
-        email: email,
-        phoneNumber: phoneNumber,
+        email: emailController.text.trim(),
+        phoneNumber: phoneController.text.trim(),
         type: "NU",
-        profilePic: profilePicUrl, // can be null if user never set one
+        profilePic: profilePicUrl, // ✅ always include
       );
 
-      // 3) Dispatch update (this will also save to SharedPrefs via your bloc)
+      // Dispatch update event
       context
           .read<ProfileBloc>()
           .add(ProfileEvent.updateProfile(updatedProfile));
 
       setState(() {
         isEditing = false;
-        _pickedImageBytes = null; // clear local selection
-        _currentProfilePicUrl = profilePicUrl; // reflect latest
+        _pickedImageBytes = null;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Save failed: $e')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Save failed: $e')));
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -322,7 +355,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   nameController.text = state.profile.name;
                   emailController.text = state.profile.email;
                   phoneController.text = state.profile.phoneNumber;
+
+                  print(
+                      "🔍 Original profile pic from API: ${state.profile.profilePic}");
+
+                  // Keep the original profile pic value as is
                   _currentProfilePicUrl = state.profile.profilePic;
+
+                  print("🔍 Processed profile pic URL: $_currentProfilePicUrl");
                   _seededOnce = true;
                 }
               },
@@ -363,7 +403,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: Row(
                           children: [
                             IconButton(
-                              onPressed: () => Navigator.pop(context),
+                              onPressed: () => context.pop(context),
                               icon: const Icon(Icons.arrow_back,
                                   color: Colors.white),
                               iconSize: 28,
@@ -452,13 +492,17 @@ class _ProfilePageState extends State<ProfilePage> {
                               backgroundImage: _pickedImageBytes != null
                                   ? MemoryImage(_pickedImageBytes!)
                                   : (_currentProfilePicUrl != null &&
-                                          _currentProfilePicUrl!.isNotEmpty)
+                                          _currentProfilePicUrl!.isNotEmpty &&
+                                          _currentProfilePicUrl !=
+                                              'default-profile-pic-url')
                                       ? NetworkImage(_currentProfilePicUrl!)
                                           as ImageProvider
                                       : null,
                               child: (_pickedImageBytes == null &&
                                       (_currentProfilePicUrl == null ||
-                                          _currentProfilePicUrl!.isEmpty))
+                                          _currentProfilePicUrl!.isEmpty ||
+                                          _currentProfilePicUrl ==
+                                              'default-profile-pic-url'))
                                   ? const Icon(Icons.person,
                                       size: 50, color: Colors.white)
                                   : null,
@@ -775,7 +819,7 @@ class BottomNavBar extends StatelessWidget {
             _navItem(context, 'assets/images/seller-icon.png', '/seller',
                 iconSize: 36),
             _navItem(context, 'assets/images/chat-icon.png',
-                '/messages?from=/profile'),
+                '/chat-rooms?from=profile'),
             _navItem(context, 'assets/images/profile-icon.png', '/profile'),
           ],
         ),
@@ -790,7 +834,13 @@ class BottomNavBar extends StatelessWidget {
     double iconSize = 20,
   }) {
     return GestureDetector(
-      onTap: () => context.go(route!),
+      onTap: () {
+        if (route != null && route.contains('/chat-rooms')) {
+          context.go(route);
+        } else if (route != null) {
+          context.push(route);
+        }
+      },
       child: Center(
         // Fix the rendered size exactly
         child: SizedBox.square(

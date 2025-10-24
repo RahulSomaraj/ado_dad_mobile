@@ -26,6 +26,24 @@ class UserProfile {
     );
   }
 
+  // Map<String, dynamic> toJson() {
+  //   final Map<String, dynamic> json = {
+  //     "_id": id,
+  //     "name": name,
+  //     "email": email,
+  //     "phoneNumber": phoneNumber,
+  //     "type": type,
+  //   };
+
+  //   // Only include profilePic if it's not null and not empty
+  //   // Allow all profile picture values including 'default-profile-pic-url' - let backend handle validation
+  //   if (profilePic != null && profilePic!.isNotEmpty) {
+  //     json["profilePic"] = profilePic;
+  //   }
+
+  //   return json;
+  // }
+
   Map<String, dynamic> toJson() {
     return {
       "_id": id,
@@ -33,8 +51,7 @@ class UserProfile {
       "email": email,
       "phoneNumber": phoneNumber,
       "type": type,
-      // "profilePic": profilePic,
-      if (profilePic != null) "profilePic": profilePic,
+      "profilePic": profilePic, // ✅ always include it
     };
   }
 

@@ -10,8 +10,6 @@ import 'package:ado_dad_user/features/login/bloc/login_bloc.dart';
 import 'package:ado_dad_user/features/profile/bloc/profile_bloc.dart';
 import 'package:ado_dad_user/features/sell/bloc/bloc/add_post_bloc.dart';
 import 'package:ado_dad_user/features/signup/bloc/signup_bloc.dart';
-import 'package:ado_dad_user/features/chat/bloc/chat_bloc.dart';
-import 'package:ado_dad_user/features/chat/bloc/chat_event.dart';
 import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:ado_dad_user/repositories/favorite_repo.dart';
@@ -20,11 +18,11 @@ import 'package:ado_dad_user/repositories/login_repository.dart';
 import 'package:ado_dad_user/repositories/profile_repo.dart';
 import 'package:ado_dad_user/repositories/report_repository.dart';
 import 'package:ado_dad_user/repositories/signup_repository.dart';
-import 'package:ado_dad_user/repositories/socket_service.dart';
 import 'package:ado_dad_user/features/profile/MyAds/bloc/my_ads_bloc.dart';
 import 'package:ado_dad_user/repositories/my_ads_repo.dart';
 import 'package:ado_dad_user/features/home/ui/sellerprofile/bloc/bloc/seller_profile_bloc.dart';
 import 'package:ado_dad_user/repositories/seller_profile_repo.dart';
+import 'package:ado_dad_user/features/chat/bloc/chat_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -35,14 +33,11 @@ void main() async {
   await AppConfig.load();
 
   await SharedPrefs().init();
-  final socketService = SocketService();
-  socketService.connect();
-  runApp(MyApp(socketService: socketService));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final SocketService socketService;
-  const MyApp({super.key, required this.socketService});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -76,9 +71,6 @@ class MyApp extends StatelessWidget {
         BlocProvider<MyAdsBloc>(
           create: (context) => MyAdsBloc(repository: MyAdsRepo()),
         ),
-        BlocProvider<ChatBloc>(
-          create: (context) => ChatBloc()..add(const ChatEvent.connect()),
-        ),
         BlocProvider<FavoriteBloc>(
           create: (context) =>
               FavoriteBloc(favoriteRepository: FavoriteRepository()),
@@ -90,6 +82,9 @@ class MyApp extends StatelessWidget {
         BlocProvider<ReportAdBloc>(
           create: (context) =>
               ReportAdBloc(reportRepository: ReportRepository()),
+        ),
+        BlocProvider<ChatBloc>(
+          create: (context) => ChatBloc(),
         ),
       ],
       child: MaterialApp.router(
@@ -107,7 +102,6 @@ class MyApp extends StatelessWidget {
           onBackOnline: () {
             // Optional warm-ups once online (before login UI proceeds)
             // context.read<BannerBloc>().add(BannerEvent.fetchBanners());
-            // socketService.connect();
           },
         ),
       ),

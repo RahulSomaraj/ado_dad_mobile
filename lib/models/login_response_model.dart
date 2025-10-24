@@ -5,6 +5,7 @@ class LoginResponse {
   final String name;
   final String email;
   final String userType;
+  final String? profilePic; // Add profile picture field
 
   LoginResponse({
     required this.id,
@@ -13,6 +14,7 @@ class LoginResponse {
     required this.name,
     required this.email,
     required this.userType,
+    this.profilePic,
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,7 @@ class LoginResponse {
       name: json['name'] ?? '',
       email: json['email'],
       userType: json['userType'],
+      profilePic: json['profilePic'], // Capture profile picture from API
     );
   }
 }

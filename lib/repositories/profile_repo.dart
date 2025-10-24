@@ -117,6 +117,19 @@ class ProfileRepo {
       final body = Map<String, dynamic>.from(updatedProfile.toJson())
         ..remove("_id");
 
+      print("🟢 Sending PUT request to: /users/$userId");
+      print("📝 Request Body: ${body}");
+      print("📝 ProfilePic field present: ${body.containsKey('profilePic')}");
+      print("📝 ProfilePic value: ${body['profilePic']}");
+
+      // Log profile picture URL but allow the update to proceed
+      if (body.containsKey('profilePic') && body['profilePic'] != null) {
+        final profilePicUrl = body['profilePic'] as String;
+        print("📸 Profile picture URL: $profilePicUrl");
+        // Note: We're allowing the update to proceed even with potentially invalid URLs
+        // The backend should handle URL validation gracefully
+      }
+
       final response = await _dio.put(
         "/users/$userId",
         data: body, // ← pass Map, not jsonEncode
@@ -133,6 +146,13 @@ class ProfileRepo {
       }
     } on DioException catch (e) {
       print("❌ DioException in updateUserProfile: ${e.response?.data}");
+
+      // Provide more specific error messages for profile update failures
+      if (e.response?.statusCode == 500) {
+        throw Exception(
+            "❌ Server error while updating profile. Please try again or contact support if the issue persists.");
+      }
+
       throw Exception(DioErrorHandler.handleError(e));
     } catch (e) {
       print("❌ General error in updateUserProfile: $e");

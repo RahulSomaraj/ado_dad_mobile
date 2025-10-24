@@ -1,7 +1,7 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/features/home/ad_detail/ad_detail_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
-import 'package:ado_dad_user/features/chat/services/offer_service.dart';
+import 'package:ado_dad_user/features/home/services/offer_service.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
 import 'package:ado_dad_user/features/home/ui/report_ad_dialog.dart';
@@ -188,21 +188,9 @@ Download Ado Dad app to contact the seller and view more details!
           return const SizedBox.shrink();
         }
 
-        // Show "Make Offer" and "Chat" buttons only for non-owners
-        return Row(
-          children: [
-            Expanded(
-              child: _makeOfferBtn('Make an offer',
-                  onTap: () => _handleMakeOffer(context)),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _chatBtn('Chat', onTap: () {
-                context.push('/messages?from=/add-detail-page');
-              }),
-            ),
-          ],
-        );
+        // Show "Make Offer" button only for non-owners
+        return _makeOfferBtn('Make an offer',
+            onTap: () => _handleMakeOffer(context));
       },
     );
   }
@@ -1103,24 +1091,6 @@ Download Ado Dad app to contact the seller and view more details!
     );
   }
 
-  Widget _chatBtn(String label, {required VoidCallback onTap}) {
-    return SizedBox(
-      height: 48,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryColor,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          elevation: 0,
-        ),
-        onPressed: onTap,
-        child: Text(label,
-            style: const TextStyle(
-                fontWeight: FontWeight.w700, color: AppColors.whiteColor)),
-      ),
-    );
-  }
-
   void _handleMakeOffer(BuildContext context) {
     // Get the ad from the current state
     final state = context.read<AdDetailBloc>().state;
@@ -1135,6 +1105,7 @@ Download Ado Dad app to contact the seller and view more details!
           adId: ad.id,
           adTitle: ad.description.isNotEmpty ? ad.description : 'Untitled Ad',
           adPosterName: ad.user?.name ?? 'Unknown Seller',
+          otherUserId: ad.user?.id ?? '',
         );
       },
       markingAsSold: () {},
@@ -1145,6 +1116,7 @@ Download Ado Dad app to contact the seller and view more details!
           adId: ad.id,
           adTitle: ad.description.isNotEmpty ? ad.description : 'Untitled Ad',
           adPosterName: ad.user?.name ?? 'Unknown Seller',
+          otherUserId: ad.user?.id ?? '',
         );
       },
     );

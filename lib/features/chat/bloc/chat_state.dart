@@ -1,64 +1,43 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:ado_dad_user/features/chat/models/chat_models.dart';
+abstract class ChatState {}
 
-part 'chat_state.freezed.dart';
+class ChatInitial extends ChatState {}
 
-@freezed
-class ChatState with _$ChatState {
-  const factory ChatState({
-    @Default(SocketConnectionState.disconnected)
-    SocketConnectionState connectionState,
-    @Default(false) bool isConnected,
-    String? socketId,
-    String? error,
+class ChatLoading extends ChatState {}
 
-    // Threads
-    @Default([]) List<ChatThread> threads,
-    @Default([]) List<ChatThread> chatRooms,
-    @Default({}) Map<String, List<ChatMessage>> messages,
-    String? selectedThreadId,
-    @Default(false) bool isLoadingThreads,
-    @Default(false) bool isLoadingChatRooms,
+class ChatRoomsSuccess extends ChatState {
+  final List<Map<String, dynamic>> rooms;
 
-    // Current thread
-    ChatThread? currentThread,
-    @Default(false) bool isLoadingMessages,
-    @Default({}) Map<String, TypingIndicator> typingUsers,
-
-    // UI state
-    @Default(false) bool isSendingMessage,
-    @Default(false) bool isTyping,
-
-    // Offer state
-    @Default(false) bool isSendingOffer,
-    String? lastOfferRoomId,
-  }) = _ChatState;
+  ChatRoomsSuccess(this.rooms);
 }
 
-/// Extension methods for ChatState
-extension ChatStateExtension on ChatState {
-  /// Get messages for the current thread
-  List<ChatMessage> get currentThreadMessages {
-    if (selectedThreadId == null) return [];
-    return messages[selectedThreadId] ?? [];
-  }
+class ChatRoomJoined extends ChatState {
+  final String roomId;
+  final String message;
 
-  /// Get unread count for all threads
-  int get totalUnreadCount {
-    return threads.fold(0, (sum, thread) => sum + thread.unreadCount);
-  }
+  ChatRoomJoined(this.roomId, this.message);
+}
 
-  /// Check if a specific user is typing in the current thread
-  bool isUserTyping(String userId) {
-    if (selectedThreadId == null) return false;
-    final typing = typingUsers[selectedThreadId];
-    return typing?.userId == userId && typing?.isTyping == true;
-  }
+class ChatRoomCreated extends ChatState {
+  final String roomId;
 
-  /// Get typing users for the current thread
-  List<TypingIndicator> get currentThreadTypingUsers {
-    if (selectedThreadId == null) return [];
-    final typing = typingUsers[selectedThreadId];
-    return typing != null ? [typing] : [];
-  }
+  ChatRoomCreated(this.roomId);
+}
+
+class MessagesLoaded extends ChatState {
+  final String roomId;
+  final List<Map<String, dynamic>> messages;
+
+  MessagesLoaded(this.roomId, this.messages);
+}
+
+class NewMessageReceivedState extends ChatState {
+  final Map<String, dynamic> message;
+
+  NewMessageReceivedState(this.message);
+}
+
+class ChatErrorState extends ChatState {
+  final String error;
+
+  ChatErrorState(this.error);
 }

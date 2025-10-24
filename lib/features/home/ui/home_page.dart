@@ -1065,8 +1065,8 @@ class BottomNavBar extends StatelessWidget {
                 context, 'assets/images/search-icon.png', '/search?from=/home'),
             _navItem(context, 'assets/images/add-icon.png', '/seller',
                 iconSize: 36),
-            _navItem(
-                context, 'assets/images/chat-icon.png', '/messages?from=/home'),
+            _navItem(context, 'assets/images/chat-icon.png',
+                '/chat-rooms?from=home'),
             _navItem(context, 'assets/images/profile-icon.png', '/profile'),
           ],
         ),
@@ -1081,7 +1081,13 @@ class BottomNavBar extends StatelessWidget {
     double iconSize = 20,
   }) {
     return GestureDetector(
-      onTap: () => context.push(route!),
+      onTap: () {
+        if (route != null && route.contains('/chat-rooms')) {
+          context.go(route);
+        } else if (route != null) {
+          context.push(route);
+        }
+      },
       child: Center(
         // Fix the rendered size exactly
         child: SizedBox.square(

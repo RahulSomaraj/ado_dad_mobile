@@ -104,11 +104,20 @@ Future<void> saveLoginResponse(LoginResponse loginResponse) async {
   await sharedPrefs.setString('email', loginResponse.email);
   await sharedPrefs.setString('user_id', loginResponse.id);
   await sharedPrefs.setString('loginTimestamp', now.toString());
+
+  // Save profile picture if available
+  if (loginResponse.profilePic != null &&
+      loginResponse.profilePic!.isNotEmpty) {
+    await sharedPrefs.setString('profilePicture', loginResponse.profilePic!);
+    print("Profile picture saved: ${loginResponse.profilePic}");
+  }
+
   // if (loginResponse.id != null) {
   //   await sharedPrefs.saveUserId(loginResponse.id);
   // }
 
-  print("Login response saved. User ID: ${loginResponse.id}");
+  print(
+      "Login response saved. User ID: ${loginResponse.id}, Name: ${loginResponse.name}, ProfilePic: ${loginResponse.profilePic}");
 }
 
 /// Retrieve stored token

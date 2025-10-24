@@ -1,65 +1,63 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:ado_dad_user/features/chat/models/chat_models.dart';
+abstract class ChatEvent {}
 
-part 'chat_event.freezed.dart';
+class InitializeChat extends ChatEvent {}
 
-@freezed
-class ChatEvent with _$ChatEvent {
-  // Connection events
-  const factory ChatEvent.connect() = ConnectToChat;
-  const factory ChatEvent.disconnect() = DisconnectFromChat;
-  const factory ChatEvent.reconnect() = ReconnectToChat;
+class LoadChatRooms extends ChatEvent {}
 
-  // Thread events
-  const factory ChatEvent.joinThread(String threadId) = JoinThread;
-  const factory ChatEvent.leaveThread(String threadId) = LeaveThread;
-  const factory ChatEvent.loadThreads() = LoadThreads;
-  const factory ChatEvent.selectThread(String threadId) = SelectThread;
+class JoinChatRoom extends ChatEvent {
+  final String roomId;
 
-  // Message events
-  const factory ChatEvent.sendMessage({
-    required String threadId,
-    required String content,
-    String? messageType,
-    Map<String, dynamic>? metadata,
-  }) = SendMessage;
-
-  const factory ChatEvent.loadMessages(String threadId) = LoadMessages;
-  const factory ChatEvent.loadMessagesFromApi(String roomId) =
-      LoadMessagesFromApi;
-  const factory ChatEvent.messagesReceived(
-      String threadId, List<Map<String, dynamic>> messages) = MessagesReceived;
-  const factory ChatEvent.messagesLoadedFromApi(
-      String roomId, List<ChatMessage> messages) = MessagesLoadedFromApi;
-  const factory ChatEvent.markMessageAsRead(String messageId) =
-      MarkMessageAsRead;
-  const factory ChatEvent.deleteMessage(String messageId) = DeleteMessage;
-
-  // Typing events
-  const factory ChatEvent.startTyping(String threadId) = StartTyping;
-  const factory ChatEvent.stopTyping(String threadId) = StopTyping;
-
-  // Offer events
-  const factory ChatEvent.sendOffer({
-    required String adId,
-    required String amount,
-    String? adTitle,
-    String? adPosterName,
-  }) = SendOffer;
-
-  const factory ChatEvent.getUserChatRooms() = GetUserChatRooms;
-  const factory ChatEvent.chatRoomsReceived(Map<String, dynamic> response) =
-      ChatRoomsReceived;
-
-  // Socket events (internal)
-  const factory ChatEvent.socketConnected() = SocketConnected;
-  const factory ChatEvent.socketDisconnected() = SocketDisconnected;
-  const factory ChatEvent.socketError(String error) = SocketError;
-  const factory ChatEvent.newMessageReceived(ChatMessage message) =
-      NewMessageReceived;
-  const factory ChatEvent.messageSent(ChatMessage message) = MessageSent;
-  const factory ChatEvent.typingReceived(TypingIndicator typing) =
-      TypingReceived;
-  const factory ChatEvent.stopTypingReceived(TypingIndicator typing) =
-      StopTypingReceived;
+  JoinChatRoom(this.roomId);
 }
+
+class LoadRoomMessages extends ChatEvent {
+  final String roomId;
+
+  LoadRoomMessages(this.roomId);
+}
+
+class ChatRoomsLoaded extends ChatEvent {
+  final List<Map<String, dynamic>> rooms;
+
+  ChatRoomsLoaded(this.rooms);
+}
+
+class ChatError extends ChatEvent {
+  final String error;
+
+  ChatError(this.error);
+}
+
+class NewMessageReceived extends ChatEvent {
+  final Map<String, dynamic> message;
+
+  NewMessageReceived(this.message);
+}
+
+class SendMessage extends ChatEvent {
+  final String content;
+  final String type;
+
+  SendMessage(this.content, {this.type = 'text'});
+}
+
+class CreateChatRoom extends ChatEvent {
+  final String adId;
+  CreateChatRoom(this.adId);
+}
+
+class SendOffer extends ChatEvent {
+  final String adId;
+  final double amount;
+  final String adTitle;
+  final String adPosterName;
+
+  SendOffer({
+    required this.adId,
+    required this.amount,
+    required this.adTitle,
+    required this.adPosterName,
+  });
+}
+
+class DisposeChat extends ChatEvent {}

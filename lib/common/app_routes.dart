@@ -1,8 +1,3 @@
-import 'package:ado_dad_user/features/chat/ui/chat_thread_page.dart';
-import 'package:ado_dad_user/features/chat/ui/messages_page.dart';
-import 'package:ado_dad_user/features/chat/ui/chat_connection_test.dart';
-import 'package:ado_dad_user/features/chat/ui/socket_debug_page.dart';
-import 'package:ado_dad_user/features/chat/models/chat_models.dart';
 import 'package:ado_dad_user/features/home/ad_detail/ad_detail_bloc.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/features/home/fuelType_filter_bloc/fuel_type_filter_bloc.dart';
@@ -33,6 +28,9 @@ import 'package:ado_dad_user/features/sell/ui/seller.dart';
 import 'package:ado_dad_user/features/signup/ui/signup.dart';
 import 'package:ado_dad_user/features/splash/splash.dart';
 import 'package:ado_dad_user/features/splash/splash_screen1.dart';
+import 'package:ado_dad_user/features/chat/ui/chat_rooms_page.dart';
+import 'package:ado_dad_user/features/chat/ui/chat_page.dart';
+import 'package:ado_dad_user/features/chat/ui/chat_debug_page.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -51,40 +49,6 @@ class AppRoutes {
       GoRoute(path: '/home', builder: (context, state) => const Home()),
       GoRoute(path: '/logout', builder: (context, state) => const Login()),
       GoRoute(path: '/signup', builder: (context, state) => const Signup()),
-      // Chat routes
-      GoRoute(
-        path: '/messages',
-        builder: (c, s) {
-          final previousRoute = s.uri.queryParameters['from'];
-          return MessagesPage(previousRoute: previousRoute);
-        },
-      ),
-      GoRoute(
-        path: '/chat/:id',
-        builder: (c, s) {
-          final data = s.extra as ChatThread?;
-          return ChatThreadPage(
-            peerName: data?.name ?? 'Chat',
-            avatarUrl: data?.avatarUrl ?? '',
-            threadId: s.pathParameters['id']!,
-          );
-        },
-      ),
-
-      // Chat socket test route
-      GoRoute(
-        path: '/chat-test',
-        builder: (context, state) => const ChatConnectionTest(),
-      ),
-
-      // Socket debug route
-      GoRoute(
-        path: '/socket-debug',
-        builder: (context, state) => const SocketDebugPage(),
-      ),
-
-      // Legacy chat route for backward compatibility
-      // GoRoute(path: '/chat', builder: (context, state) => const MessagesPage()),
       GoRoute(path: '/profile', builder: (context, state) => const Profile()),
       GoRoute(
           path: '/wishlist', builder: (context, state) => const WishlistPage()),
@@ -96,11 +60,9 @@ class AppRoutes {
         },
       ),
       GoRoute(path: '/seller', builder: (context, state) => const Seller()),
-
       GoRoute(
           path: '/item-category',
           builder: (context, state) => const ItemCategory()),
-
       GoRoute(
         path: '/category-list-page',
         builder: (context, state) {
@@ -112,7 +74,6 @@ class AppRoutes {
           );
         },
       ),
-
       GoRoute(
         path: '/add-detail-page',
         builder: (context, state) {
@@ -126,7 +87,6 @@ class AppRoutes {
           );
         },
       ),
-
       GoRoute(
         path: '/seller-profile/:id',
         builder: (context, state) {
@@ -149,7 +109,6 @@ class AppRoutes {
           );
         },
       ),
-
       GoRoute(
         path: '/add-two-wheeler-form',
         builder: (context, state) {
@@ -258,6 +217,35 @@ class AppRoutes {
         },
       ),
       GoRoute(path: '/my-ads', builder: (context, state) => const MyAdsPage()),
+
+      // Chat routes
+      GoRoute(
+          path: '/chat-rooms',
+          builder: (context, state) {
+            final fromPage = state.uri.queryParameters['from'];
+            return ChatRoomsPage(fromPage: fromPage);
+          }),
+      GoRoute(
+          path: '/chat/:roomId',
+          builder: (context, state) {
+            final roomId = state.pathParameters['roomId']!;
+            final otherUserName = state.uri.queryParameters['name'];
+            final otherUserProfilePic = state.uri.queryParameters['profilePic'];
+            final fromPage = state.uri.queryParameters['from'];
+            final adId = state.uri.queryParameters['adId'];
+            final adTitle = state.uri.queryParameters['adTitle'];
+            return ChatPage(
+              roomId: roomId,
+              otherUserName: otherUserName,
+              otherUserProfilePic: otherUserProfilePic,
+              fromPage: fromPage,
+              adId: adId,
+              adTitle: adTitle,
+            );
+          }),
+      GoRoute(
+          path: '/chat-debug',
+          builder: (context, state) => const ChatDebugPage()),
     ],
   );
 }
