@@ -39,7 +39,7 @@ class OfferService {
 
         try {
           // Check room existence instead of sending offer
-          await _checkRoomExists(context, adId, otherUserId);
+          await _checkRoomExists(context, adId, otherUserId, amount);
         } catch (e) {
           print('💥 Error in offer flow: $e');
           // Close loading dialog
@@ -53,8 +53,8 @@ class OfferService {
   }
 
   /// Check if room exists for the ad and other user
-  static Future<void> _checkRoomExists(
-      BuildContext context, String adId, String otherUserId) async {
+  static Future<void> _checkRoomExists(BuildContext context, String adId,
+      String otherUserId, double offerAmount) async {
     try {
       print('🔍 Starting room existence check...');
       print('📋 Room check details:');
@@ -85,13 +85,14 @@ class OfferService {
         print('   Ad ID: $adIdFromResult');
         print('   Status: Existing room found');
 
-        // Show success dialog with room details
-        _showRoomExistsDialog(context, roomId, initiatorId, adIdFromResult);
+        // Join the existing room
+        await _joinRoom(context, roomId, adId, otherUserId, offerAmount,
+            isNewRoom: false);
       } else {
         print('❌ No room exists for this ad and user combination');
         print('🔄 Proceeding to create new room...');
         // Create a new room since none exists
-        await _createRoomAndJoin(context, adId, otherUserId);
+        await _createRoomAndJoin(context, adId, otherUserId, offerAmount);
       }
     } catch (e) {
       print('💥 Error checking room existence: $e');
@@ -104,46 +105,15 @@ class OfferService {
     }
   }
 
-  /// Show room exists dialog
-  static void _showRoomExistsDialog(
-      BuildContext context, String roomId, String? initiatorId, String? adId) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Room Exists'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('A chat room already exists for this ad:'),
-            const SizedBox(height: 12),
-            Text('Room ID: $roomId'),
-            if (initiatorId != null) Text('Initiator ID: $initiatorId'),
-            if (adId != null) Text('Ad ID: $adId'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
   /// Create room and join when no room exists
-  static Future<void> _createRoomAndJoin(
-      BuildContext context, String adId, String otherUserId) async {
+  static Future<void> _createRoomAndJoin(BuildContext context, String adId,
+      String otherUserId, double offerAmount) async {
     try {
       print('🏠 Starting room creation process...');
       print('📋 Room creation details:');
       print('   Ad ID: $adId');
       print('   Other User ID: $otherUserId');
       print('   Timestamp: ${DateTime.now().toIso8601String()}');
-
-      // Show loading dialog
-      _showLoadingDialog(context, 'Creating room...');
 
       // Get chat repository
       final chatRepository = ChatRepository();
@@ -154,7 +124,6 @@ class OfferService {
       final connected = await chatRepository.connect();
       if (!connected) {
         print('❌ Failed to connect to chat service');
-        Navigator.of(context).pop(); // Close loading dialog
         _showErrorDialog(context, 'Failed to connect to chat service');
         return;
       }
@@ -163,9 +132,6 @@ class OfferService {
       // Create room for the ad
       print('🏗️ Creating chat room for ad: $adId');
       final roomId = await chatRepository.createChatRoom(adId);
-
-      // Close loading dialog
-      Navigator.of(context).pop();
 
       if (roomId != null) {
         print('🎉 Room created successfully!');
@@ -177,7 +143,9 @@ class OfferService {
         print('   Status: Active');
         print('   Participants: Current user + Other user ($otherUserId)');
 
-        _showRoomCreatedDialog(context, roomId, adId);
+        // Join the newly created room (no loading dialog shown)
+        await _joinRoom(context, roomId, adId, otherUserId, offerAmount,
+            isNewRoom: true);
       } else {
         print('❌ Room creation failed - no room ID returned');
         _showErrorDialog(context, 'Failed to create chat room');
@@ -196,29 +164,524 @@ class OfferService {
     }
   }
 
-  /// Show room created dialog
-  static void _showRoomCreatedDialog(
-      BuildContext context, String roomId, String adId) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Room Created'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('A new chat room has been created:'),
-            const SizedBox(height: 12),
-            Text('Room ID: $roomId'),
-            Text('Ad ID: $adId'),
-            const SizedBox(height: 12),
-            const Text('You can now start chatting!'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+  /// Join room and provide single proper log
+  static Future<void> _joinRoom(BuildContext context, String roomId,
+      String adId, String otherUserId, double offerAmount,
+      {required bool isNewRoom}) async {
+    try {
+      print('🚪 Attempting to join room: $roomId');
+      print('📋 Join details:');
+      print('   Room ID: $roomId');
+      print('   Ad ID: $adId');
+      print('   Other User ID: $otherUserId');
+      print('   Room Type: ${isNewRoom ? "Newly Created" : "Existing"}');
+      print('   Join attempt at: ${DateTime.now().toIso8601String()}');
+
+      // Get chat repository
+      final chatRepository = ChatRepository();
+
+      // Join the room
+      await chatRepository.joinChatRoom(roomId);
+
+      // Single proper log for room join result
+      print(
+          '✅ ROOM JOIN SUCCESS - Room ID: $roomId | Status: Joined | Type: ${isNewRoom ? "New" : "Existing"} | Timestamp: ${DateTime.now().toIso8601String()}');
+
+      // Send message to the room after successful join
+      await _sendMessageToRoom(
+          context, roomId, adId, otherUserId, offerAmount, isNewRoom);
+    } catch (e) {
+      print(
+          '❌ ROOM JOIN FAILED - Room ID: $roomId | Error: $e | Timestamp: ${DateTime.now().toIso8601String()}');
+
+      // Show error dialog with delay to ensure context is stable
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Check if context is still mounted
+      if (context.mounted) {
+        _showErrorDialog(context, 'Failed to join room: $e');
+        print('❌ Error popup displayed for room: $roomId');
+      } else {
+        print(
+            '❌ Context not mounted, cannot show error popup for room: $roomId');
+        // Fallback: Print error to console
+        print(
+            '🚨 FALLBACK: Room join failed but error popup could not be shown');
+        print('🚨 Room ID: $roomId | Error: $e');
+      }
+    }
+  }
+
+  /// Send message to room after successful join
+  static Future<void> _sendMessageToRoom(
+      BuildContext context,
+      String roomId,
+      String adId,
+      String otherUserId,
+      double offerAmount,
+      bool isNewRoom) async {
+    try {
+      print('📤 Sending message to room: $roomId');
+      print('📋 Message details:');
+      print('   Room ID: $roomId');
+      print('   Ad ID: $adId');
+      print('   Other User ID: $otherUserId');
+      print('   Offer Amount: ₹${offerAmount.toStringAsFixed(0)}');
+      print('   Room Type: ${isNewRoom ? "Newly Created" : "Existing"}');
+      print('   Message attempt at: ${DateTime.now().toIso8601String()}');
+
+      // Get chat repository
+      final chatRepository = ChatRepository();
+
+      // Create the message content with actual offer amount
+      final messageContent =
+          'Hello! I\'m interested in your ad and would like to make an offer of ₹${offerAmount.toStringAsFixed(0)}.';
+
+      print('💬 Message content: $messageContent');
+
+      // Send the message
+      chatRepository.sendMessage(messageContent, type: 'text');
+
+      // Wait a moment for message to be sent
+      await Future.delayed(const Duration(milliseconds: 1000));
+
+      // Single proper log for message send result
+      print(
+          '✅ MESSAGE SENT SUCCESS - Room ID: $roomId | Status: Sent | Type: ${isNewRoom ? "New" : "Existing"} | Timestamp: ${DateTime.now().toIso8601String()}');
+
+      // Show success dialog with delay to ensure context is stable
+      print('🎉 Showing message success popup for room: $roomId');
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Check if context is still mounted
+      if (context.mounted) {
+        _showMessageSentDialog(context, roomId, adId, isNewRoom);
+        print('✅ Message success popup displayed for room: $roomId');
+      } else {
+        print(
+            '❌ Context not mounted, cannot show message popup for room: $roomId');
+        // Fallback: Show a simple snackbar or print to console
+        print(
+            '🚨 FALLBACK: Message sent successfully but popup could not be shown');
+        print(
+            '🚨 Room ID: $roomId | Status: Message Sent | Type: ${isNewRoom ? "New" : "Existing"}');
+      }
+    } catch (e) {
+      print(
+          '❌ MESSAGE SEND FAILED - Room ID: $roomId | Error: $e | Timestamp: ${DateTime.now().toIso8601String()}');
+
+      // Show error dialog with delay to ensure context is stable
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Check if context is still mounted
+      if (context.mounted) {
+        _showMessageErrorDialog(context, 'Failed to send message: $e');
+        print('❌ Message error popup displayed for room: $roomId');
+      } else {
+        print(
+            '❌ Context not mounted, cannot show message error popup for room: $roomId');
+        // Fallback: Print error to console
+        print(
+            '🚨 FALLBACK: Message send failed but error popup could not be shown');
+        print('🚨 Room ID: $roomId | Error: $e');
+      }
+    }
+  }
+
+  /// Show room joined dialog
+  static void _showRoomJoinedDialog(
+      BuildContext context, String roomId, String adId, bool isNewRoom) {
+    print('🎯 Attempting to show room joined dialog for room: $roomId');
+
+    // Ensure we're on the main thread
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  color: Colors.green.shade600,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    isNewRoom
+                        ? 'Room Created & Joined!'
+                        : 'Room Joined Successfully!',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isNewRoom
+                            ? '🎉 A new chat room has been created and you have joined it!'
+                            : '✅ You have successfully joined the existing room!',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildInfoRow('Room ID', roomId),
+                      _buildInfoRow('Ad ID', adId),
+                      _buildInfoRow('Status', 'Active'),
+                      _buildInfoRow(
+                          'Type', isNewRoom ? 'New Room' : 'Existing Room'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.chat, color: Colors.blue, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'You can now start chatting!',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade600,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text(
+                    'Great! Let\'s Chat',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+        print('✅ Room joined dialog shown successfully for room: $roomId');
+      } else {
+        print(
+            '❌ Context not mounted when trying to show room joined dialog for room: $roomId');
+      }
+    });
+  }
+
+  /// Show message sent dialog
+  static void _showMessageSentDialog(
+      BuildContext context, String roomId, String adId, bool isNewRoom) {
+    print('🎯 Attempting to show message sent dialog for room: $roomId');
+
+    // Ensure we're on the main thread
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Icon(
+                  Icons.send,
+                  color: Colors.blue.shade600,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Offer Message Sent!',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isNewRoom
+                            ? '🎉 Your offer message has been sent to the new chat room!'
+                            : '✅ Your offer message has been sent to the existing room!',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildInfoRow('Room ID', roomId),
+                      _buildInfoRow('Ad ID', adId),
+                      _buildInfoRow('Status', 'Message Sent'),
+                      _buildInfoRow(
+                          'Type', isNewRoom ? 'New Room' : 'Existing Room'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green.shade200),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.chat_bubble, color: Colors.green, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'The conversation has started!',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade600,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text(
+                    'Continue Chatting',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+        print('✅ Message sent dialog shown successfully for room: $roomId');
+      } else {
+        print(
+            '❌ Context not mounted when trying to show message sent dialog for room: $roomId');
+      }
+    });
+  }
+
+  /// Show message error dialog
+  static void _showMessageErrorDialog(BuildContext context, String message) {
+    print('🎯 Attempting to show message error dialog: $message');
+
+    // Ensure we're on the main thread
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Icon(
+                  Icons.error,
+                  color: Colors.red.shade600,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Message Send Failed',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '❌ Failed to send message to the chat room.',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Error: $message',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange.shade200),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.info, color: Colors.orange, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'You can try sending the message again.',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade600,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+        print('✅ Message error dialog shown successfully');
+      } else {
+        print('❌ Context not mounted when trying to show message error dialog');
+      }
+    });
+  }
+
+  /// Build info row for dialog
+  static Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              '$label:',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 12,
+              ),
+            ),
           ),
         ],
       ),
@@ -244,18 +707,28 @@ class OfferService {
 
   /// Show error dialog
   static void _showErrorDialog(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Error'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+    print('🎯 Attempting to show error dialog: $message');
+
+    // Ensure we're on the main thread
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Error'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
+        print('✅ Error dialog shown successfully');
+      } else {
+        print('❌ Context not mounted when trying to show error dialog');
+      }
+    });
   }
 }
