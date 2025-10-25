@@ -35,4 +35,7 @@ class AdvertisementEvent with _$AdvertisementEvent {
     required double latitude,
     required double longitude,
   }) = SearchByLocationEvent;
+  const factory AdvertisementEvent.fetchByUserId({
+    required String userId,
+  }) = FetchByUserIdEvent;
 }

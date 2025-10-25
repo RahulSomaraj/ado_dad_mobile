@@ -457,7 +457,7 @@ class _HomePageState extends State<HomePage> {
                                 carouselController: _carouselController,
                                 options: CarouselOptions(
                                   height: 140,
-                                  autoPlay: false,
+                                  autoPlay: true,
                                   enlargeCenterPage: true,
                                   viewportFraction: 0.9,
                                   onPageChanged: (index, _) {
@@ -627,6 +627,12 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.only(right: 15),
                 child: GestureDetector(
                   onTap: () async {
+                    // Special handling for Showroom category
+                    if (category.categoryId == 'showroom') {
+                      context.push('/showroom-users');
+                      return;
+                    }
+
                     // context.read<AdvertisementBloc>().add(
                     //       AdvertisementEvent.fetchByCategory(
                     //           categoryId: category.categoryId),
@@ -715,57 +721,6 @@ class _HomePageState extends State<HomePage> {
     return imageHeight + textBlockHeight + outerPadding + extra;
   }
 
-  // Widget buildGridView() {
-  //   return BlocBuilder<AdvertisementBloc, AdvertisementState>(
-  //     builder: (context, state) {
-  //       if (state is AdvertisementLoading) {
-  //         return const Center(child: CircularProgressIndicator());
-  //       } else if (state is ListingsLoaded) {
-  //         final listings = state.listings;
-  //         final hasMore = state.hasMore;
-
-  //         return RefreshIndicator(
-  //           onRefresh: () async {
-  //             context
-  //                 .read<AdvertisementBloc>()
-  //                 .add(const AdvertisementEvent.fetchAllListings());
-  //           },
-  //           child: GridView.builder(
-  //             controller: _scrollController,
-  //             physics: const AlwaysScrollableScrollPhysics(),
-  //             padding: const EdgeInsets.symmetric(horizontal: 15),
-  //             shrinkWrap: true,
-  //             itemCount: listings.length + (hasMore ? 1 : 0),
-  //             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-  //               crossAxisCount: 2,
-  //               crossAxisSpacing: 15,
-  //               mainAxisSpacing: 15,
-  //               childAspectRatio: 20 / 28,
-  //             ),
-  //             itemBuilder: (context, index) {
-  //               if (index < listings.length) {
-  //                 final ad = listings[index];
-  //                 return buildAdCard(ad);
-  //               } else {
-  //                 return hasMore
-  //                     ? const Padding(
-  //                         padding: EdgeInsets.all(16.0),
-  //                         child: Center(child: CircularProgressIndicator()),
-  //                       )
-  //                     : const SizedBox(); // no loader if no more
-  //               }
-  //             },
-  //           ),
-  //         );
-  //       } else if (state is AdvertisementError) {
-  //         return Center(child: Text("Error: ${state.message}"));
-  //       } else {
-  //         return const Center(child: Text("No data available"));
-  //       }
-  //     },
-  //   );
-  // }
-
   Widget buildGridView() {
     return BlocBuilder<AdvertisementBloc, AdvertisementState>(
       builder: (context, state) {
@@ -821,55 +776,6 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
-
-  // Widget buildAdCard(AddModel ad) {
-  //   return GestureDetector(
-  //     onTap: () {
-  //       // Push to detail page if needed
-  //       // context.push('/ad-detail', extra: ad);
-  //     },
-  //     child: Container(
-  //       decoration: BoxDecoration(
-  //         color: Colors.white,
-  //         borderRadius: BorderRadius.circular(10),
-  //         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2)],
-  //       ),
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           if (ad.images.isNotEmpty)
-  //             ClipRRect(
-  //               borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-  //               child: Image.network(
-  //                 ad.images.first,
-  //                 height: 120,
-  //                 width: double.infinity,
-  //                 fit: BoxFit.cover,
-  //               ),
-  //             ),
-  //           Padding(
-  //             padding: const EdgeInsets.all(8.0),
-  //             child: Column(
-  //               crossAxisAlignment: CrossAxisAlignment.start,
-  //               children: [
-  //                 Text("₹${ad.price}",
-  //                     style: const TextStyle(
-  //                         fontWeight: FontWeight.bold, fontSize: 16)),
-  //                 Text(ad.description,
-  //                     maxLines: 2,
-  //                     overflow: TextOverflow.ellipsis,
-  //                     style: const TextStyle(fontSize: 13)),
-  //                 Text(ad.location,
-  //                     style: const TextStyle(
-  //                         fontWeight: FontWeight.bold, fontSize: 12)),
-  //               ],
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget buildAdCard(AddModel ad) {
     return GestureDetector(

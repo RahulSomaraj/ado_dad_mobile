@@ -17,6 +17,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     on<ApplyFiltersEvent>(_onApplyFilters);
     on<UpdateAdFavoriteStatusEvent>(_onUpdateAdFavoriteStatus);
     on<SearchByLocationEvent>(_onSearchByLocation);
+    on<FetchByUserIdEvent>(_onFetchByUserId);
   }
 
   int _currentPage = 1;
@@ -258,6 +259,41 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
           listings: result.data, hasMore: result.hasNext));
     } catch (e) {
       emit(AdvertisementState.error("Failed to fetch ads by location: $e"));
+    }
+  }
+
+  Future<void> _onFetchByUserId(
+      FetchByUserIdEvent event, Emitter<AdvertisementState> emit) async {
+    emit(const AdvertisementState.loading());
+    _currentPage = 1;
+
+    // clear filters
+    _categoryId = null;
+    _minYear = null;
+    _maxYear = null;
+    _manufacturerIds = null;
+    _modelIds = null;
+    _fuelTypeIds = null;
+    _transmissionTypeIds = null;
+    _minPrice = null;
+    _maxPrice = null;
+    _propertyTypes = null;
+    _minBedrooms = null;
+    _maxBedrooms = null;
+    _minArea = null;
+    _maxArea = null;
+    _isFurnished = null;
+    _hasParking = null;
+
+    try {
+      final result = await repository.fetchAdsByUserId(
+        userId: event.userId,
+        page: _currentPage,
+      );
+      emit(AdvertisementState.listingsLoaded(
+          listings: result.data, hasMore: result.hasNext));
+    } catch (e) {
+      emit(AdvertisementState.error("Failed to fetch ads by user: $e"));
     }
   }
 }

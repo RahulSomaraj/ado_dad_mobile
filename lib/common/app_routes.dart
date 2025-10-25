@@ -31,8 +31,12 @@ import 'package:ado_dad_user/features/splash/splash_screen1.dart';
 import 'package:ado_dad_user/features/chat/ui/chat_rooms_page.dart';
 import 'package:ado_dad_user/features/chat/ui/chat_page.dart';
 import 'package:ado_dad_user/features/chat/ui/chat_debug_page.dart';
+import 'package:ado_dad_user/features/showroom/ui/showroom_users_page.dart';
+import 'package:ado_dad_user/features/showroom/ui/showroom_user_ads_page.dart';
+import 'package:ado_dad_user/features/showroom/bloc/showroom_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
+import 'package:ado_dad_user/repositories/showroom_repo.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -246,6 +250,20 @@ class AppRoutes {
       GoRoute(
           path: '/chat-debug',
           builder: (context, state) => const ChatDebugPage()),
+
+      // Showroom routes
+      GoRoute(
+          path: '/showroom-users',
+          builder: (context, state) => const ShowroomUsersPage()),
+      GoRoute(
+          path: '/showroom-user-ads',
+          builder: (context, state) {
+            final userId = state.extra as String;
+            return BlocProvider(
+              create: (_) => ShowroomBloc(repository: ShowroomRepo()),
+              child: ShowroomUserAdsPage(userId: userId),
+            );
+          }),
     ],
   );
 }

@@ -441,6 +441,39 @@ class AddRepository {
       throw Exception(DioErrorHandler.handleError(e));
     }
   }
+
+  Future<PaginatedAdsResponse> fetchAdsByUserId({
+    required String userId,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/ads',
+        queryParameters: {
+          'userId': userId,
+          'page': page,
+          'limit': limit,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final List<dynamic> adsData = data['data'] ?? [];
+        final bool hasNext = data['hasNext'] ?? false;
+
+        final List<AddModel> ads =
+            adsData.map((adJson) => AddModel.fromJson(adJson)).toList();
+
+        return PaginatedAdsResponse(data: ads, hasNext: hasNext);
+      } else {
+        throw Exception("Failed to fetch ads for user");
+      }
+    } catch (e) {
+      print('Error fetching ads by user ID: $e');
+      throw Exception("Error fetching ads by user ID: $e");
+    }
+  }
 }
 
 class PaginatedAdsResponse {

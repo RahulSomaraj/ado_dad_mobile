@@ -42,4 +42,9 @@ final List<CategoryModel> categories = [
       name: 'Real Estate',
       image: 'assets/images/real-estate.png',
       categoryId: 'property'),
+  CategoryModel(
+      id: 6,
+      name: 'Showroom',
+      image: 'assets/images/showroom.png',
+      categoryId: 'showroom'),
 ];
