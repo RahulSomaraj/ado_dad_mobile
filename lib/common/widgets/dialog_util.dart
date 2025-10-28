@@ -121,6 +121,38 @@ class DialogUtil {
     );
   }
 
+  // Simple login error dialog - only message and OK button
+  static void showLoginErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(fontSize: 16),
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text("OK", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   static void showConfirmationDialog({
     required BuildContext context,
     required String title,

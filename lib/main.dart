@@ -24,6 +24,7 @@ import 'package:ado_dad_user/features/home/ui/sellerprofile/bloc/bloc/seller_pro
 import 'package:ado_dad_user/repositories/seller_profile_repo.dart';
 import 'package:ado_dad_user/features/chat/bloc/chat_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() async {
@@ -31,6 +32,14 @@ void main() async {
 
   // Initialize environment configuration
   await AppConfig.load();
+
+  // Configure iOS scrolling behavior
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ),
+  );
 
   await SharedPrefs().init();
   runApp(const MyApp());
@@ -93,6 +102,10 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
+          // iOS-specific scrolling configurations
+          scrollbarTheme: ScrollbarThemeData(
+            thumbVisibility: WidgetStateProperty.all(true),
+          ),
         ),
         routerConfig: AppRoutes.router,
         // ✅ This wraps every page with a connectivity gate

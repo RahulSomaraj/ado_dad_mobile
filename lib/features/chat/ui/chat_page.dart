@@ -423,8 +423,16 @@ class _ChatPageState extends State<ChatPage> {
     print('🔙 Navigating back from chat page');
     print('📍 From page: ${widget.fromPage}');
 
-    // Navigate back to chat rooms page
-    context.go('/chat-rooms?from=${widget.fromPage}');
+    // Handle different navigation paths based on where user came from
+    if (widget.fromPage == 'ad-detail') {
+      // If came from ad detail page, go directly to home
+      print('🏠 Navigating to home page (came from ad detail)');
+      context.go('/home');
+    } else {
+      // Default behavior: navigate back to chat rooms page
+      print('💬 Navigating to chat rooms page');
+      context.go('/chat-rooms?from=${widget.fromPage}');
+    }
   }
 
   @override

@@ -231,26 +231,59 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Widget _buildButton(SignupState state) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          backgroundColor: AppColors.primaryColor,
-          foregroundColor: AppColors.whiteColor,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              backgroundColor: AppColors.primaryColor,
+              foregroundColor: AppColors.whiteColor,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: state is Loading ? null : _signUp,
+            child: state is Loading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: AppColors.whiteColor),
+                  )
+                : const Text("SignUp",
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ),
         ),
-        onPressed: state is Loading ? null : _signUp,
-        child: state is Loading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: AppColors.whiteColor),
-              )
-            : const Text("SignUp",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-      ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Already have an account? ',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                context.go('/login');
+              },
+              child: const Text(
+                'Login',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.primaryColor,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

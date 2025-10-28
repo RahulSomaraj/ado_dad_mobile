@@ -46,6 +46,14 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	
+	<!-- Location Permissions -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to location when open to show nearby vehicles and services.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs access to location to provide location-based services and show nearby vehicles.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs access to location to provide location-based services and show nearby vehicles.</string>
+	
 	<!-- Network Security Configuration -->
 	<key>NSAppTransportSecurity</key>
 	<dict>

@@ -67,6 +67,25 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
           style: AppTextstyle.appbarText,
         ),
         elevation: 0.5,
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _selectedManufacturerIds.clear();
+                _selectedFuelTypeIds.clear();
+                _selectedTransmissionTypeIds.clear();
+                _selectedModelIds.clear();
+                _minYearCtrl.clear();
+                _maxYearCtrl.clear();
+                _minPriceCtrl.clear();
+                _maxPriceCtrl.clear();
+                brandQuery = '';
+                modelQuery = '';
+              });
+            },
+            child: const Text('Clear All'),
+          ),
+        ],
       ),
       body: Row(
         children: [

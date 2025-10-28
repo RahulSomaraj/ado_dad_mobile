@@ -27,8 +27,10 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
     'spam',
     'inappropriate_content',
     'fraud',
-    'duplicate',
-    'misleading_information',
+    'harassment',
+    'fake_listings',
+    'price_manipulation',
+    'contact_abuse',
     'other',
   ];
 
@@ -36,8 +38,10 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
     'spam': 'Spam',
     'inappropriate_content': 'Inappropriate Content',
     'fraud': 'Fraud',
-    'duplicate': 'Duplicate Ad',
-    'misleading_information': 'Misleading Information',
+    'harassment': 'Harassment',
+    'fake_listings': 'Fake Listings',
+    'price_manipulation': 'Price Manipulation',
+    'contact_abuse': 'Contact Abuse',
     'other': 'Other',
   };
 

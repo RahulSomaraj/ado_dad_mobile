@@ -28,9 +28,9 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       emit(LoginState.success(username: response.name));
       print('response:.............:${event.username}');
     } catch (e) {
-      // emit(const LoginState.failure('Invalid Username or Password'));
       print('❌ Error in Bloc: ${e.toString()}'); // 👀 Debugging
-      emit(LoginState.failure(e.toString())); // Emit actual error message
+      // Emit clean error message without "Exception:" prefix
+      emit(const LoginState.failure('Invalid Username or Password'));
     }
   }
 

@@ -314,6 +314,9 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
       context.go('/profile');
     } else if (widget.fromPage == 'home') {
       context.go('/home');
+    } else if (widget.fromPage == 'ad-detail') {
+      // If came from ad detail page, go to home
+      context.go('/home');
     } else {
       // Default fallback
       context.pop();

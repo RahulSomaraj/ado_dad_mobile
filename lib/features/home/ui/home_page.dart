@@ -38,18 +38,8 @@ class _HomePageState extends State<HomePage> {
     // Initialize Google Places service
     _placesService = GooglePlacesService(apiKey: AppConfig.googlePlacesApiKey);
 
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent - 300) {
-        print(
-            "🧭 Scroll Position: ${_scrollController.position.pixels} / ${_scrollController.position.maxScrollExtent}");
-
-        // Trigger next page load when nearing bottom
-        context
-            .read<AdvertisementBloc>()
-            .add(const AdvertisementEvent.fetchNextPage());
-      }
-    });
+    // iOS-specific scrolling configurations
+    _scrollController.addListener(_onScroll);
 
     Future.microtask(() async {
       context
@@ -68,6 +58,19 @@ class _HomePageState extends State<HomePage> {
         _getLocationAndAddress();
       }
     });
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 300) {
+      print(
+          "🧭 Scroll Position: ${_scrollController.position.pixels} / ${_scrollController.position.maxScrollExtent}");
+
+      // Trigger next page load when nearing bottom
+      context
+          .read<AdvertisementBloc>()
+          .add(const AdvertisementEvent.fetchNextPage());
+    }
   }
 
   @override
@@ -417,96 +420,117 @@ class _HomePageState extends State<HomePage> {
         }
       },
       child: Scaffold(
-        body: SingleChildScrollView(
-          controller: _scrollController,
-          child: Column(
-            children: [
-              // 🔷 HEADER PART
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  // 🔹 Blue curved header with content
-                  Container(
-                    height: 150,
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primaryColor,
-                      borderRadius: BorderRadius.vertical(
-                        bottom: Radius.circular(30),
-                      ),
-                    ),
-                    padding: const EdgeInsets.only(top: 8, bottom: 70),
-                    child: buildTopBar(), // 🔹 AdoDad logo + location
-                  ),
+        body: RefreshIndicator(
+          onRefresh: () async {
+            context
+                .read<AdvertisementBloc>()
+                .add(const AdvertisementEvent.fetchAllListings());
+          },
+          color: AppColors.primaryColor,
+          backgroundColor: Colors.white,
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(), // iOS-style bouncing scroll
 
-                  // 🔹 Positioned Banner (slightly below blue container)
-                  Positioned(
-                    bottom: -85, // Controls how much overlaps
-                    left: 0,
-                    right: 0,
-                    child: BlocBuilder<BannerBloc, BannerState>(
-                      builder: (context, state) {
-                        return state.when(
-                          initial: () => const SizedBox(),
-                          loading: () =>
-                              const Center(child: CircularProgressIndicator()),
-                          error: (message) => Text("Error: $message"),
-                          loaded: (banners) => Column(
-                            children: [
-                              CarouselSlider(
-                                carouselController: _carouselController,
-                                options: CarouselOptions(
-                                  height: 140,
-                                  autoPlay: true,
-                                  enlargeCenterPage: true,
-                                  viewportFraction: 0.9,
-                                  onPageChanged: (index, _) {
-                                    setState(() {
-                                      BuildIndicator.currentIndex = index;
-                                    });
-                                  },
-                                ),
-                                items: banners.map((banner) {
-                                  return buildPromoCard(
-                                      banner.phoneImage, banner.link);
-                                }).toList(),
-                              ),
-                              const SizedBox(height: 10),
-                              BuildIndicator(
-                                controller: _carouselController,
-                                itemCount: banners.length,
-                              ),
-                            ],
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 🔷 HEADER PART
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      // 🔹 Blue curved header with content
+                      Container(
+                        height: 110 + MediaQuery.of(context).padding.top,
+                        width: double.infinity,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primaryColor,
+                          borderRadius: BorderRadius.vertical(
+                            bottom: Radius.circular(30),
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                        padding: EdgeInsets.only(
+                          top: MediaQuery.of(context).padding.top +
+                              8, // Add status bar height
+                          bottom: 80,
+                        ),
+                        child: buildTopBar(), // 🔹 AdoDad logo + location
+                      ),
+
+                      // 🔹 Positioned Banner (slightly below blue container)
+                      Positioned(
+                        bottom: -85, // Controls how much overlaps
+                        left: 0,
+                        right: 0,
+                        child: BlocBuilder<BannerBloc, BannerState>(
+                          builder: (context, state) {
+                            return state.when(
+                              initial: () => const SizedBox(),
+                              loading: () => const Center(
+                                  child: CircularProgressIndicator()),
+                              error: (message) => Text("Error: $message"),
+                              loaded: (banners) => Column(
+                                children: [
+                                  CarouselSlider(
+                                    carouselController: _carouselController,
+                                    options: CarouselOptions(
+                                      height: 140,
+                                      autoPlay: true,
+                                      enlargeCenterPage: true,
+                                      viewportFraction: 0.9,
+                                      onPageChanged: (index, _) {
+                                        setState(() {
+                                          BuildIndicator.currentIndex = index;
+                                        });
+                                      },
+                                    ),
+                                    items: banners.map((banner) {
+                                      return buildPromoCard(
+                                          banner.phoneImage, banner.link);
+                                    }).toList(),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  BuildIndicator(
+                                    controller: _carouselController,
+                                    itemCount: banners.length,
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 100),
+
+                  // 🔷 CATEGORIES
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: buildSectionTitle("Categories"),
+                  ),
+                  const SizedBox(height: 5),
+                  buildCategories(context),
+
+                  // 🔷 RECOMMENDATIONS TITLE
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: buildSectionTitle("Recommendations"),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // 🔷 MAIN GRIDVIEW - now uses regular GridView for proper scrolling
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: buildGridView(),
                   ),
                 ],
               ),
-              const SizedBox(height: 100),
-
-              // 🔷 CATEGORIES
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: buildSectionTitle("Categories"),
-              ),
-              const SizedBox(height: 5),
-              buildCategories(context),
-
-              // 🔷 RECOMMENDATIONS TITLE
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: buildSectionTitle("Recommendations"),
-              ),
-              const SizedBox(height: 10),
-
-              // 🔷 MAIN GRIDVIEW - now participates in page scroll
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: buildGridView(),
-              ),
-            ],
+            ),
           ),
         ),
         floatingActionButton: const BottomNavBar(),
@@ -721,6 +745,55 @@ class _HomePageState extends State<HomePage> {
     return imageHeight + textBlockHeight + outerPadding + extra;
   }
 
+  Widget buildSliverGridView() {
+    return BlocBuilder<AdvertisementBloc, AdvertisementState>(
+      builder: (context, state) {
+        if (state is AdvertisementLoading) {
+          return const SliverToBoxAdapter(
+            child: Center(child: CircularProgressIndicator()),
+          );
+        } else if (state is ListingsLoaded) {
+          final listings = state.listings;
+          final hasMore = state.hasMore;
+
+          return SliverGrid(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount:
+                  _columnsForWidth(MediaQuery.of(context).size.width),
+              crossAxisSpacing: 15,
+              mainAxisSpacing: 15,
+              mainAxisExtent: _cardMainAxisExtent(
+                  context, _columnsForWidth(MediaQuery.of(context).size.width)),
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                if (index < listings.length) {
+                  final ad = listings[index];
+                  return buildAdCard(ad);
+                }
+                return hasMore
+                    ? const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    : const SizedBox.shrink();
+              },
+              childCount: listings.length + (hasMore ? 1 : 0),
+            ),
+          );
+        } else if (state is AdvertisementError) {
+          return SliverToBoxAdapter(
+            child: Center(child: Text("Error: ${state.message}")),
+          );
+        } else {
+          return const SliverToBoxAdapter(
+            child: Center(child: Text("No data available")),
+          );
+        }
+      },
+    );
+  }
+
   Widget buildGridView() {
     return BlocBuilder<AdvertisementBloc, AdvertisementState>(
       builder: (context, state) {
@@ -736,6 +809,9 @@ class _HomePageState extends State<HomePage> {
                   .read<AdvertisementBloc>()
                   .add(const AdvertisementEvent.fetchAllListings());
             },
+            // iOS-specific refresh indicator configurations
+            color: AppColors.primaryColor,
+            backgroundColor: Colors.white,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final cols = _columnsForWidth(constraints.maxWidth);
@@ -743,8 +819,11 @@ class _HomePageState extends State<HomePage> {
 
                 return GridView.builder(
                   shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
+                  physics:
+                      const NeverScrollableScrollPhysics(), // Disable GridView scrolling
                   padding: EdgeInsets.zero,
+                  // iOS-specific scrolling configurations
+                  cacheExtent: 1000, // Cache more items for smooth scrolling
                   itemCount: listings.length + (hasMore ? 1 : 0),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: cols,

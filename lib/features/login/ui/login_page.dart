@@ -312,7 +312,8 @@ class _LoginPageState extends State<LoginPage> {
             //     context, MaterialPageRoute(builder: (context) => Home()));
             context.go('/home');
           },
-          failure: (message) => DialogUtil.showErrorDialog(context, message),
+          failure: (message) =>
+              DialogUtil.showLoginErrorDialog(context, message),
           forgotPasswordSuccess: () {
             // Close forgot password dialog
             Navigator.of(context).pop();
