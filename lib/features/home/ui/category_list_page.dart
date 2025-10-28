@@ -2,6 +2,7 @@ import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+import 'package:ado_dad_user/services/filter_state_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -20,6 +21,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
   late final List<AddModel> filteredAds;
   final ScrollController _scrollController = ScrollController();
   Map<String, dynamic> _filters = {};
+  final FilterStateService _filterStateService = FilterStateService();
 
   @override
   void initState() {
@@ -38,6 +40,15 @@ class _CategoryListPageState extends State<CategoryListPage> {
             );
       }
     });
+  }
+
+  @override
+  void dispose() {
+    // Clear filter states when leaving the category list page
+    _filterStateService.clearPropertyFilterState(widget.categoryId);
+    _filterStateService.clearCarFilterState(widget.categoryId);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   // Future<void> _fetchCategoryAds() async {
@@ -89,7 +100,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
                   // Check if this is a property category
                   if (widget.categoryId == 'property') {
                     final result = await context.push(
-                        '/property-filter?categoryId=${widget.categoryId}&title=${Uri.encodeComponent(widget.categoryTitle)}');
+                        '/property-filter?categoryId=${widget.categoryId}&title=${Uri.encodeComponent(widget.categoryTitle)}',
+                        extra: _filters);
                     if (result is Map<String, dynamic>) {
                       _filters = result;
                       context.read<AdvertisementBloc>().add(
@@ -111,7 +123,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
                   } else {
                     // For vehicle categories, use car filter
                     final result = await context.push(
-                        '/car-filter?categoryId=${widget.categoryId}&title=${Uri.encodeComponent(widget.categoryTitle)}');
+                        '/car-filter?categoryId=${widget.categoryId}&title=${Uri.encodeComponent(widget.categoryTitle)}',
+                        extra: _filters);
                     if (result is Map<String, dynamic>) {
                       _filters = result;
                       context.read<AdvertisementBloc>().add(

@@ -62,50 +62,57 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
       }
     });
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Chats'),
-        backgroundColor: AppColors.primaryColor,
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => _handleBackNavigation(),
+    return PopScope(
+      canPop: false, // Prevent default back behavior
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return; // System already handled the pop
+        _handleBackNavigation(); // Use our custom navigation
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Chats'),
+          backgroundColor: AppColors.primaryColor,
+          foregroundColor: Colors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => _handleBackNavigation(),
+          ),
         ),
-      ),
-      body: BlocListener<ChatBloc, ChatState>(
-        listener: (context, state) {
-          if (state is ChatRoomJoined) {
-            print('✅ Room joined successfully: ${state.roomId}');
+        body: BlocListener<ChatBloc, ChatState>(
+          listener: (context, state) {
+            if (state is ChatRoomJoined) {
+              print('✅ Room joined successfully: ${state.roomId}');
 
-            // Load messages for the joined room
-            context.read<ChatBloc>().add(LoadRoomMessages(state.roomId));
-          } else if (state is MessagesLoaded) {
-            print(
-                '✅ Messages loaded: ${state.messages.length} messages for room ${state.roomId}');
-          } else if (state is ChatErrorState) {
-            print('❌ Error: ${state.error}');
-          }
-        },
-        child: BlocBuilder<ChatBloc, ChatState>(
-          builder: (context, state) {
-            if (state is ChatLoading) {
+              // Load messages for the joined room
+              context.read<ChatBloc>().add(LoadRoomMessages(state.roomId));
+            } else if (state is MessagesLoaded) {
+              print(
+                  '✅ Messages loaded: ${state.messages.length} messages for room ${state.roomId}');
+            } else if (state is ChatErrorState) {
+              print('❌ Error: ${state.error}');
+            }
+          },
+          child: BlocBuilder<ChatBloc, ChatState>(
+            builder: (context, state) {
+              if (state is ChatLoading) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+
+              if (state is ChatErrorState) {
+                return _buildErrorState(state.error);
+              }
+
+              if (state is ChatRoomsSuccess) {
+                return _buildRoomsList(state.rooms);
+              }
+
               return const Center(
                 child: CircularProgressIndicator(),
               );
-            }
-
-            if (state is ChatErrorState) {
-              return _buildErrorState(state.error);
-            }
-
-            if (state is ChatRoomsSuccess) {
-              return _buildRoomsList(state.rooms);
-            }
-
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          },
+            },
+          ),
         ),
       ),
     );

@@ -1,18 +1,23 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/features/home/fuelType_filter_bloc/fuel_type_filter_bloc.dart';
-
 import 'package:ado_dad_user/features/home/manufacturer_bloc/manufacturer_bloc.dart';
 import 'package:ado_dad_user/features/home/model_filter_bloc/model_filter_bloc.dart';
 import 'package:ado_dad_user/features/home/transmissionType_filter_bloc/transmission_type_filter_bloc.dart';
-
+import 'package:ado_dad_user/services/filter_state_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CarFiltersPage extends StatefulWidget {
   final String? categoryId;
   final String? categoryTitle;
-  const CarFiltersPage({super.key, this.categoryId, this.categoryTitle});
+  final Map<String, dynamic>? currentFilters;
+  const CarFiltersPage({
+    super.key,
+    this.categoryId,
+    this.categoryTitle,
+    this.currentFilters,
+  });
 
   @override
   State<CarFiltersPage> createState() => _CarFiltersPageState();
@@ -40,6 +45,60 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
   final _maxYearCtrl = TextEditingController();
   final _minPriceCtrl = TextEditingController();
   final _maxPriceCtrl = TextEditingController();
+
+  // Filter state service
+  final FilterStateService _filterStateService = FilterStateService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedFilterState();
+  }
+
+  void _loadSavedFilterState() {
+    if (widget.categoryId != null) {
+      final savedState =
+          _filterStateService.getCarFilterState(widget.categoryId!);
+      // Only load saved state if there are actually applied filters (not empty)
+      if (savedState != null && !savedState.isEmpty) {
+        setState(() {
+          _selectedManufacturerIds.clear();
+          _selectedManufacturerIds.addAll(savedState.selectedManufacturerIds);
+          _selectedFuelTypeIds.clear();
+          _selectedFuelTypeIds.addAll(savedState.selectedFuelTypeIds);
+          _selectedTransmissionTypeIds.clear();
+          _selectedTransmissionTypeIds
+              .addAll(savedState.selectedTransmissionTypeIds);
+          _selectedModelIds.clear();
+          _selectedModelIds.addAll(savedState.selectedModelIds);
+          _minYearCtrl.text = savedState.minYear ?? '';
+          _maxYearCtrl.text = savedState.maxYear ?? '';
+          _minPriceCtrl.text = savedState.minPrice ?? '';
+          _maxPriceCtrl.text = savedState.maxPrice ?? '';
+          brandQuery = savedState.brandQuery;
+          modelQuery = savedState.modelQuery;
+        });
+      }
+    }
+  }
+
+  void _saveFilterState() {
+    if (widget.categoryId != null) {
+      final state = CarFilterState(
+        selectedManufacturerIds: _selectedManufacturerIds,
+        selectedFuelTypeIds: _selectedFuelTypeIds,
+        selectedTransmissionTypeIds: _selectedTransmissionTypeIds,
+        selectedModelIds: _selectedModelIds,
+        minYear: _minYearCtrl.text.isEmpty ? null : _minYearCtrl.text,
+        maxYear: _maxYearCtrl.text.isEmpty ? null : _maxYearCtrl.text,
+        minPrice: _minPriceCtrl.text.isEmpty ? null : _minPriceCtrl.text,
+        maxPrice: _maxPriceCtrl.text.isEmpty ? null : _maxPriceCtrl.text,
+        brandQuery: brandQuery,
+        modelQuery: modelQuery,
+      );
+      _filterStateService.saveCarFilterState(widget.categoryId!, state);
+    }
+  }
 
   @override
   void dispose() {
@@ -82,6 +141,10 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                 brandQuery = '';
                 modelQuery = '';
               });
+              // Clear saved state
+              if (widget.categoryId != null) {
+                _filterStateService.clearCarFilterState(widget.categoryId!);
+              }
             },
             child: const Text('Clear All'),
           ),
@@ -582,6 +645,9 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                   );
                   return;
                 }
+
+                // Save current filter state before returning
+                _saveFilterState();
 
                 Navigator.pop<Map<String, dynamic>>(context, {
                   'manufacturerIds': _selectedManufacturerIds.toList(),

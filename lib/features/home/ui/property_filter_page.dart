@@ -1,11 +1,18 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/services/filter_state_service.dart';
 import 'package:flutter/material.dart';
 
 class PropertyFiltersPage extends StatefulWidget {
   final String? categoryId;
   final String? categoryTitle;
-  const PropertyFiltersPage({super.key, this.categoryId, this.categoryTitle});
+  final Map<String, dynamic>? currentFilters;
+  const PropertyFiltersPage({
+    super.key,
+    this.categoryId,
+    this.categoryTitle,
+    this.currentFilters,
+  });
 
   @override
   State<PropertyFiltersPage> createState() => _PropertyFiltersPageState();
@@ -35,6 +42,9 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
   bool? _isFurnished;
   bool? _hasParking;
 
+  // Filter state service
+  final FilterStateService _filterStateService = FilterStateService();
+
   // Property type options from the add property form
   final Map<String, String> _propertyTypeMap = {
     'apartment': 'Apartment',
@@ -46,6 +56,55 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
     'shop': 'Shop',
     'warehouse': 'Warehouse',
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedFilterState();
+  }
+
+  void _loadSavedFilterState() {
+    if (widget.categoryId != null) {
+      final savedState =
+          _filterStateService.getPropertyFilterState(widget.categoryId!);
+      // Only load saved state if there are actually applied filters (not empty)
+      if (savedState != null && !savedState.isEmpty) {
+        setState(() {
+          _selectedPropertyTypes.clear();
+          _selectedPropertyTypes.addAll(savedState.selectedPropertyTypes);
+          _minBedroomsCtrl.text = savedState.minBedrooms ?? '';
+          _maxBedroomsCtrl.text = savedState.maxBedrooms ?? '';
+          _minPriceCtrl.text = savedState.minPrice ?? '';
+          _maxPriceCtrl.text = savedState.maxPrice ?? '';
+          _minAreaCtrl.text = savedState.minArea ?? '';
+          _maxAreaCtrl.text = savedState.maxArea ?? '';
+          _isFurnished = savedState.isFurnished;
+          _hasParking = savedState.hasParking;
+          propertyTypeQuery = savedState.propertyTypeQuery;
+        });
+      }
+    }
+  }
+
+  void _saveFilterState() {
+    if (widget.categoryId != null) {
+      final state = PropertyFilterState(
+        selectedPropertyTypes: _selectedPropertyTypes,
+        minBedrooms:
+            _minBedroomsCtrl.text.isEmpty ? null : _minBedroomsCtrl.text,
+        maxBedrooms:
+            _maxBedroomsCtrl.text.isEmpty ? null : _maxBedroomsCtrl.text,
+        minPrice: _minPriceCtrl.text.isEmpty ? null : _minPriceCtrl.text,
+        maxPrice: _maxPriceCtrl.text.isEmpty ? null : _maxPriceCtrl.text,
+        minArea: _minAreaCtrl.text.isEmpty ? null : _minAreaCtrl.text,
+        maxArea: _maxAreaCtrl.text.isEmpty ? null : _maxAreaCtrl.text,
+        isFurnished: _isFurnished,
+        hasParking: _hasParking,
+        propertyTypeQuery: propertyTypeQuery,
+      );
+      _filterStateService.savePropertyFilterState(widget.categoryId!, state);
+    }
+  }
 
   @override
   void dispose() {
@@ -88,7 +147,13 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
                 _maxAreaCtrl.clear();
                 _isFurnished = null;
                 _hasParking = null;
+                propertyTypeQuery = '';
               });
+              // Clear saved state
+              if (widget.categoryId != null) {
+                _filterStateService
+                    .clearPropertyFilterState(widget.categoryId!);
+              }
             },
             child: const Text('Clear All'),
           ),
@@ -249,6 +314,9 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
                   );
                   return;
                 }
+
+                // Save current filter state before returning
+                _saveFilterState();
 
                 Navigator.pop<Map<String, dynamic>>(context, {
                   'propertyTypes': _selectedPropertyTypes.toList(),

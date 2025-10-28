@@ -187,6 +187,7 @@ class AppRoutes {
           final repo = context.read<AdvertisementBloc>().repository;
           final categoryId = state.uri.queryParameters['categoryId'];
           final categoryTitle = state.uri.queryParameters['title'];
+          final currentFilters = state.extra as Map<String, dynamic>?;
           return MultiBlocProvider(
             providers: [
               BlocProvider(
@@ -207,7 +208,9 @@ class AppRoutes {
               ),
             ],
             child: CarFiltersPage(
-                categoryId: categoryId, categoryTitle: categoryTitle),
+                categoryId: categoryId,
+                categoryTitle: categoryTitle,
+                currentFilters: currentFilters),
           );
         },
       ),
@@ -216,8 +219,11 @@ class AppRoutes {
         builder: (context, state) {
           final categoryId = state.uri.queryParameters['categoryId'];
           final categoryTitle = state.uri.queryParameters['title'];
+          final currentFilters = state.extra as Map<String, dynamic>?;
           return PropertyFiltersPage(
-              categoryId: categoryId, categoryTitle: categoryTitle);
+              categoryId: categoryId,
+              categoryTitle: categoryTitle,
+              currentFilters: currentFilters);
         },
       ),
       GoRoute(path: '/my-ads', builder: (context, state) => const MyAdsPage()),
