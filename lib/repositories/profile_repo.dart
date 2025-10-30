@@ -236,4 +236,28 @@ class ProfileRepo {
       throw Exception("Error changing password: $e");
     }
   }
+
+  Future<void> deleteAccount() async {
+    try {
+      final userId = await SharedPrefs().getUserId();
+      if (userId == null) throw Exception("User ID not found.");
+
+      final response = await _dio.delete(
+        "/users/$userId",
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception("Failed to delete account.");
+      }
+    } on DioException catch (e) {
+      throw Exception(DioErrorHandler.handleError(e));
+    } catch (e) {
+      throw Exception("Error deleting account: $e");
+    }
+  }
 }

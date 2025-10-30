@@ -4,6 +4,7 @@ import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/features/login/bloc/login_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -30,6 +31,17 @@ class _LoginPageState extends State<LoginPage> {
       _emailMode = !_emailMode;
       _usernameController.clear(); // avoid mixing old value
     });
+  }
+
+  Future<void> _openExternalUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open link')),
+      );
+    }
   }
 
   void _showForgotPasswordDialog() {
@@ -239,16 +251,35 @@ class _LoginPageState extends State<LoginPage> {
                   )
                 ],
               ),
-              const SizedBox(height: 100),
+              const SizedBox(height: 70),
               Center(
-                child: GestureDetector(
-                  child: Text(
-                    'Terms & Conditions',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 12,
-                        color: AppColors.primaryColor),
-                  ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: () => _openExternalUrl(
+                          'https://adodad.com/terms-and-conditions'),
+                      child: Text(
+                        'Terms & Conditions',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                            color: AppColors.primaryColor),
+                      ),
+                    ),
+                    // const SizedBox(height: 6),
+                    TextButton(
+                      onPressed: () =>
+                          _openExternalUrl('https://adodad.com/privacy-policy'),
+                      child: const Text(
+                        'Privacy Policy',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                            color: AppColors.primaryColor),
+                      ),
+                    ),
+                  ],
                 ),
               )
             ],

@@ -717,6 +717,154 @@ class _ProfilePageState extends State<ProfilePage> {
                                 }
                               },
                             ),
+                            buildMenuItem(
+                              'assets/images/close.png',
+                              "Delete Account",
+                              isLogout: true,
+                              onTap: () async {
+                                final confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (_) {
+                                    final TextEditingController _confirmCtl =
+                                        TextEditingController();
+                                    String? _errorText;
+                                    return StatefulBuilder(
+                                      builder: (ctx, setState) => AlertDialog(
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(20)),
+                                        backgroundColor: AppColors.whiteColor,
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 24, vertical: 16),
+                                        titlePadding: const EdgeInsets.only(
+                                            left: 24,
+                                            top: 16,
+                                            right: 8,
+                                            bottom: 0),
+                                        title: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                "Delete Account",
+                                                textAlign: TextAlign.center,
+                                                style: AppTextstyle.title1,
+                                              ),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(Icons.close),
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx, false),
+                                            )
+                                          ],
+                                        ),
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            Text(
+                                              "This will permanently delete your account and data. Continue?",
+                                              textAlign: TextAlign.center,
+                                              style: AppTextstyle
+                                                  .sectionTitleTextStyle,
+                                            ),
+                                            const SizedBox(height: 16),
+                                            const Text(
+                                              "To confirm this, type 'DELETE'",
+                                              textAlign: TextAlign.left,
+                                            ),
+                                            const SizedBox(height: 8),
+                                            TextField(
+                                              controller: _confirmCtl,
+                                              decoration: InputDecoration(
+                                                hintText: "DELETE",
+                                                errorText: _errorText,
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 12),
+                                              ),
+                                              onChanged: (_) {
+                                                if (_errorText != null) {
+                                                  setState(
+                                                      () => _errorText = null);
+                                                }
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                        actionsAlignment:
+                                            MainAxisAlignment.center,
+                                        actions: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Expanded(
+                                                child: TextButton(
+                                                  style: ButtonStyle(
+                                                    backgroundColor:
+                                                        WidgetStatePropertyAll(
+                                                            AppColors.redColor),
+                                                    shape:
+                                                        WidgetStatePropertyAll(
+                                                      RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(10),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  onPressed: () {
+                                                    if (_confirmCtl.text
+                                                            .trim() !=
+                                                        'DELETE') {
+                                                      setState(() => _errorText =
+                                                          'Please type DELETE');
+                                                      return;
+                                                    }
+                                                    Navigator.pop(ctx, true);
+                                                  },
+                                                  child: const Text(
+                                                    "Delete Account",
+                                                    style: TextStyle(
+                                                        color: AppColors
+                                                            .whiteColor),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                                if (confirm == true) {
+                                  try {
+                                    await context
+                                        .read<profile_bloc.ProfileBloc>()
+                                        .deleteAccount();
+                                    context.read<login_bloc.LoginBloc>().add(
+                                        const login_bloc.LoginEvent.logout());
+                                    context.go('/');
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                            'Failed to delete account: $e'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                            ),
                             // const SizedBox(
                             //     height: 100), // Add space for bottom nav
                           ],

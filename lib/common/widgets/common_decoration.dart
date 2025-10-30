@@ -19,6 +19,8 @@ class CommonDecoration {
           ? IconButton(
               icon: Icon(
                 obscureText ? Icons.visibility_off : Icons.visibility,
+                // color: AppColors.greyColor,
+                size: 24,
               ),
               onPressed: togglePasswordVisibility,
             )

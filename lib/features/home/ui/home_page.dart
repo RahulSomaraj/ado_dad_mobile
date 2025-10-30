@@ -31,6 +31,16 @@ class _HomePageState extends State<HomePage> {
   final ScrollController _scrollController = ScrollController();
   late final GooglePlacesService _placesService;
 
+  // --- Responsive helpers for tablets ---
+  bool _isTabletWidth(double width) => width >= 600; // ~7"
+  bool _isLargeTabletWidth(double width) => width >= 900; // ~10"
+
+  double _scaleForWidth(double width) {
+    if (_isLargeTabletWidth(width)) return 1.35; // 10" tablets
+    if (_isTabletWidth(width)) return 1.18; // 7-8" tablets
+    return 1.0; // phones unchanged
+  }
+
   @override
   void initState() {
     super.initState();
@@ -389,6 +399,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final width = screenSize.width;
+    final scale = _scaleForWidth(width);
+    final isTablet = _isTabletWidth(width);
+    final isLargeTablet = _isLargeTabletWidth(width);
     return BlocListener<FavoriteBloc, FavoriteState>(
       listener: (context, state) {
         if (state is FavoriteToggleSuccess) {
@@ -445,7 +460,8 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       // 🔹 Blue curved header with content
                       Container(
-                        height: 110 + MediaQuery.of(context).padding.top,
+                        height:
+                            (110 * scale) + MediaQuery.of(context).padding.top,
                         width: double.infinity,
                         decoration: const BoxDecoration(
                           color: AppColors.primaryColor,
@@ -456,14 +472,16 @@ class _HomePageState extends State<HomePage> {
                         padding: EdgeInsets.only(
                           top: MediaQuery.of(context).padding.top +
                               8, // Add status bar height
-                          bottom: 80,
+                          bottom: isTablet ? (isLargeTablet ? 110 : 95) : 80,
                         ),
                         child: buildTopBar(), // 🔹 AdoDad logo + location
                       ),
 
                       // 🔹 Positioned Banner (slightly below blue container)
                       Positioned(
-                        bottom: -85, // Controls how much overlaps
+                        bottom: isTablet
+                            ? (isLargeTablet ? -115 : -100)
+                            : -85, // Controls how much overlaps
                         left: 0,
                         right: 0,
                         child: BlocBuilder<BannerBloc, BannerState>(
@@ -478,7 +496,9 @@ class _HomePageState extends State<HomePage> {
                                   CarouselSlider(
                                     carouselController: _carouselController,
                                     options: CarouselOptions(
-                                      height: 140,
+                                      height: isTablet
+                                          ? (isLargeTablet ? 220 : 180)
+                                          : 140,
                                       autoPlay: true,
                                       enlargeCenterPage: true,
                                       viewportFraction: 0.9,
@@ -506,7 +526,8 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 100),
+                  SizedBox(
+                      height: isTablet ? (isLargeTablet ? 140 : 120) : 100),
 
                   // 🔷 CATEGORIES
                   Padding(
@@ -540,6 +561,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget buildTopBar() {
+    final width = MediaQuery.of(context).size.width;
+    final isTablet = _isTabletWidth(width);
+    final isLargeTablet = _isLargeTabletWidth(width);
+    final double locationFont = isTablet ? (isLargeTablet ? 14 : 13) : 12;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0),
       child: Row(
@@ -557,8 +582,8 @@ class _HomePageState extends State<HomePage> {
                   Expanded(
                     child: Text(
                       _userLocation!,
-                      style:
-                          TextStyle(color: AppColors.whiteColor, fontSize: 12),
+                      style: TextStyle(
+                          color: AppColors.whiteColor, fontSize: locationFont),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.end,
@@ -638,11 +663,14 @@ class _HomePageState extends State<HomePage> {
     }
 
     final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = _isTabletWidth(screenWidth);
+    final isLargeTablet = _isLargeTabletWidth(screenWidth);
+    final scale = _scaleForWidth(screenWidth);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10),
       child: SizedBox(
-        height: 120,
+        height: isTablet ? (isLargeTablet ? 170 : 150) : 120,
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
@@ -678,8 +706,9 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     children: [
                       Container(
-                        height: 70,
-                        padding: const EdgeInsets.all(16),
+                        height: isTablet ? (isLargeTablet ? 100 : 85) : 70,
+                        padding:
+                            EdgeInsets.all(isTablet ? (16 * scale * 0.9) : 16),
                         decoration: BoxDecoration(
                           color: AppColors.whiteColor,
                           borderRadius: BorderRadius.circular(12),
@@ -1033,9 +1062,13 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final bool isTablet = width >= 600;
+    final bool isLargeTablet = width >= 900;
+    final double barWidth = isTablet ? (isLargeTablet ? 520 : 420) : 300;
     return Container(
       height: _barHeight,
-      width: 300,
+      width: barWidth,
       decoration: BoxDecoration(
         color: AppColors.primaryColor,
         borderRadius: BorderRadius.circular(50),

@@ -45,4 +45,8 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       }
     });
   }
+
+  Future<void> deleteAccount() async {
+    await repository.deleteAccount();
+  }
 }
