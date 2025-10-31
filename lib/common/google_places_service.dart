@@ -140,6 +140,61 @@ class GooglePlacesService {
         final data = response.data;
         if (data['status'] == 'OK' && data['results'].isNotEmpty) {
           final result = data['results'][0];
+
+          // Try to extract structured components (Place, District, State)
+          final addressComponents =
+              result['address_components'] as List<dynamic>?;
+
+          if (addressComponents != null) {
+            String? locality; // Place
+            String? sublocality; // Sub-place
+            String? subAdministrativeArea; // District
+            String? administrativeArea; // State
+
+            for (var component in addressComponents) {
+              final types = component['types'] as List<dynamic>?;
+              final longName = component['long_name'] as String?;
+
+              if (types != null && longName != null) {
+                if (types.contains('locality')) {
+                  locality = longName;
+                } else if (types.contains('sublocality') ||
+                    types.contains('sublocality_level_1')) {
+                  sublocality = longName;
+                } else if (types.contains('administrative_area_level_2')) {
+                  subAdministrativeArea = longName;
+                } else if (types.contains('administrative_area_level_1')) {
+                  administrativeArea = longName;
+                }
+              }
+            }
+
+            // Build address in format: Place, District, State
+            final addressParts = <String>[];
+
+            // Add place (locality or sublocality)
+            if (locality?.isNotEmpty == true) {
+              addressParts.add(locality!);
+            } else if (sublocality?.isNotEmpty == true) {
+              addressParts.add(sublocality!);
+            }
+
+            // Add district (subAdministrativeArea)
+            if (subAdministrativeArea?.isNotEmpty == true) {
+              addressParts.add(subAdministrativeArea!);
+            }
+
+            // Add state (administrativeArea)
+            if (administrativeArea?.isNotEmpty == true) {
+              addressParts.add(administrativeArea!);
+            }
+
+            if (addressParts.isNotEmpty) {
+              return addressParts.join(', ');
+            }
+          }
+
+          // Fallback to formatted_address if components parsing fails
           return result['formatted_address'];
         }
       }

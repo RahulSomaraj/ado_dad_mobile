@@ -186,25 +186,34 @@ class _HomePageState extends State<HomePage> {
   /// Format Google Places address to show locality, district, state format
   String _formatAddressFromGooglePlaces(String formattedAddress) {
     // Parse the formatted address to extract relevant components
-    // Google Places typically returns: "Street, Area, City, State, Country"
+    // Google Places typically returns: "Street, Area, City/Place, District, State, Pincode, Country"
     final parts = formattedAddress.split(',').map((e) => e.trim()).toList();
 
-    if (parts.length >= 3) {
-      // For Indian addresses, we want to show: Locality, District, State
-      // Remove country (usually last part) and take the last 3 parts
-      final relevantParts = parts.sublist(parts.length - 3);
+    // Helper function to check if a string is a pincode (6 digits)
+    bool isPincode(String str) {
+      final cleaned = str.replaceAll(RegExp(r'[^0-9]'), '');
+      return cleaned.length == 6 && RegExp(r'^\d{6}$').hasMatch(cleaned);
+    }
 
-      // Filter out common unwanted parts
-      final filteredParts = relevantParts.where((part) {
-        final lowerPart = part.toLowerCase();
-        return !lowerPart.contains('india') &&
-            !lowerPart.contains('pin') &&
-            !lowerPart.contains('postal');
-      }).toList();
+    // Filter out country, pincode, and other unwanted parts
+    final filteredParts = parts.where((part) {
+      final lowerPart = part.toLowerCase();
+      return !lowerPart.contains('india') &&
+          !lowerPart.contains('pin') &&
+          !lowerPart.contains('postal') &&
+          !isPincode(part);
+    }).toList();
 
-      if (filteredParts.isNotEmpty) {
-        return filteredParts.join(', ');
-      }
+    // For Indian addresses, we want: Place, District, State
+    // Take the last 3 meaningful parts (excluding pincode and country)
+    if (filteredParts.length >= 3) {
+      final relevantParts = filteredParts.sublist(filteredParts.length - 3);
+      return relevantParts.join(', ');
+    } else if (filteredParts.length == 2) {
+      // If only 2 parts, return as is (likely Place, State)
+      return filteredParts.join(', ');
+    } else if (filteredParts.isNotEmpty) {
+      return filteredParts.join(', ');
     }
 
     return formattedAddress;

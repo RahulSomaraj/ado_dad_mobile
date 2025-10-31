@@ -14,6 +14,7 @@ import 'package:go_router/go_router.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:share_plus/share_plus.dart';
+import 'dart:async';
 
 class AdDetailPage extends StatefulWidget {
   // final String adId;
@@ -27,6 +28,12 @@ class AdDetailPage extends StatefulWidget {
 class _AdDetailPageState extends State<AdDetailPage> {
   int _currentIndex = 0;
   VideoPlayerController? _videoController;
+  final CarouselSliderController _carouselController =
+      CarouselSliderController();
+  Timer? _autoPlayTimer;
+  bool _hasVideo = false;
+  final Map<String, VideoPlayerController?> _videoControllers = {};
+  final Map<String, VoidCallback?> _onVideoCompleteCallbacks = {};
 
   // Check if current user is the owner of the ad
   Future<bool> _isCurrentUserOwner(AddModel ad) async {
@@ -69,7 +76,46 @@ Download Ado Dad app to contact the seller and view more details!
   @override
   void dispose() {
     _videoController?.dispose();
+    _autoPlayTimer?.cancel();
+    for (var controller in _videoControllers.values) {
+      controller?.dispose();
+    }
     super.dispose();
+  }
+
+  void _startAutoPlay(AddModel ad) {
+    _autoPlayTimer?.cancel();
+
+    final totalItems = _getTotalCarouselItems(ad);
+    if (_currentIndex >= totalItems) return;
+
+    // Check if current item is video (video is always first item if exists)
+    final isVideo = _hasVideo && _currentIndex == 0;
+
+    if (isVideo) {
+      // For video, wait for it to complete (callback will handle next slide)
+      final videoUrl = ad.link;
+      if (videoUrl != null && _videoControllers.containsKey(videoUrl)) {
+        final controller = _videoControllers[videoUrl];
+        if (controller != null && controller.value.isInitialized) {
+          // Video will auto-advance via completion callback
+          return;
+        }
+      }
+    } else {
+      // For images, auto-advance after 3 seconds
+      _autoPlayTimer = Timer(const Duration(seconds: 3), () {
+        if (mounted) {
+          _carouselController.nextPage();
+        }
+      });
+    }
+  }
+
+  void _onVideoComplete() {
+    if (mounted) {
+      _carouselController.nextPage();
+    }
   }
 
   @override
@@ -189,16 +235,16 @@ Download Ado Dad app to contact the seller and view more details!
           return const SizedBox.shrink();
         }
 
-        // Show both "Chat" and "Make Offer" buttons for non-owners
+        // Show both "Make Offer" and "Chat" buttons for non-owners
         return Row(
           children: [
             Expanded(
-              child: _chatBtn('Chat', onTap: () => _handleChat(context)),
+              child: _makeOfferBtn('Make an Offer',
+                  onTap: () => _handleMakeOffer(context)),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _makeOfferBtn('Make an offer',
-                  onTap: () => _handleMakeOffer(context)),
+              child: _chatBtn('Chat', onTap: () => _handleChat(context)),
             ),
           ],
         );
@@ -337,16 +383,23 @@ Download Ado Dad app to contact the seller and view more details!
 
   // ======= Header (Carousel + overlay controls) =======
   Widget _headerCarousel(AddModel ad) {
+    // Initialize hasVideo flag
+    _hasVideo = ad.link != null && ad.link!.isNotEmpty;
+
     return Stack(
       children: [
         AspectRatio(
           aspectRatio: 16 / 10,
           child: CarouselSlider(
+            carouselController: _carouselController,
             options: CarouselOptions(
               viewportFraction: 1,
               height: double.infinity,
-              autoPlay: false,
-              onPageChanged: (i, _) => setState(() => _currentIndex = i),
+              autoPlay: false, // Disable autoPlay, we'll handle it manually
+              onPageChanged: (i, _) {
+                setState(() => _currentIndex = i);
+                _startAutoPlay(ad); // Restart auto-play for new item
+              },
             ),
             items: _buildCarouselItems(ad),
           ),
@@ -455,11 +508,21 @@ Download Ado Dad app to contact the seller and view more details!
 
     print('🎥 Total carousel items: ${items.length}');
     print('🎥 Images count: ${ad.images.length}');
+
+    // Start auto-play after building items
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _startAutoPlay(ad);
+      }
+    });
+
     return items;
   }
 
   Widget _buildVideoItem(String videoUrl) {
     print('🎥 Building video item with URL: $videoUrl');
+    // Store callback for video completion
+    _onVideoCompleteCallbacks[videoUrl] = _onVideoComplete;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.only(
@@ -475,6 +538,7 @@ Download Ado Dad app to contact the seller and view more details!
             _VideoPlayerWidget(
               key: ValueKey(videoUrl),
               videoUrl: videoUrl,
+              onVideoComplete: _onVideoCompleteCallbacks[videoUrl],
             ),
             // Subtle gradient overlay that doesn't interfere with controls
             Positioned(
@@ -1323,8 +1387,13 @@ class _KeyValRow extends StatelessWidget {
 
 class _VideoPlayerWidget extends StatefulWidget {
   final String videoUrl;
+  final VoidCallback? onVideoComplete;
 
-  const _VideoPlayerWidget({super.key, required this.videoUrl});
+  const _VideoPlayerWidget({
+    super.key,
+    required this.videoUrl,
+    this.onVideoComplete,
+  });
 
   @override
   State<_VideoPlayerWidget> createState() => _VideoPlayerWidgetState();
@@ -1337,6 +1406,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
   bool _hasError = false;
   String? _errorMessage;
   bool _isLoading = true;
+  bool _hasCalledCompletion = false; // Prevent multiple callback calls
 
   @override
   void initState() {
@@ -1397,7 +1467,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
       // Initialize Chewie controller with proper controls
       _chewieController = ChewieController(
         videoPlayerController: _videoPlayerController!,
-        autoPlay: false,
+        autoPlay: true, // Enable autoplay for video
         looping: false,
         allowPlaybackSpeedChanging: true,
         allowMuting: false, // Disable sound controls
@@ -1466,6 +1536,23 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
         });
         print(
             '🎥 Video player initialized successfully - controls should be available');
+      }
+
+      // Reset completion flag if video position resets (user seeks back, etc.)
+      if (value.position < value.duration - const Duration(seconds: 1)) {
+        _hasCalledCompletion = false;
+      }
+
+      // Check if video has completed
+      if (value.isInitialized &&
+          value.duration > Duration.zero &&
+          value.position >=
+              value.duration - const Duration(milliseconds: 100) &&
+          !_hasCalledCompletion) {
+        // Video has reached the end (with 100ms tolerance)
+        print('🎥 Video completed - calling completion callback');
+        _hasCalledCompletion = true;
+        widget.onVideoComplete?.call();
       }
     }
   }
