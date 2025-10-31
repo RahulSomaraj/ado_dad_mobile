@@ -6,35 +6,15 @@
   <component name="ChangeListManager">
     <list default="true" id="83d32f08-606f-463e-9267-26ea90d95fc2" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/settings.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/android/settings.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/chat/models/chat_models.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/chat/models/chat_models.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/home/ui/add_detail_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/home/ui/add_detail_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/home/ui/edit_add_details/commercial_vehicle_form_edit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/home/ui/edit_add_details/commercial_vehicle_form_edit.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/home/ui/edit_add_details/private_vehicle_form_edit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/home/ui/edit_add_details/private_vehicle_form_edit.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/home/ui/edit_add_details/property_form_edit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/home/ui/edit_add_details/property_form_edit.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/home/ui/edit_add_details/two_wheeler_form_edit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/home/ui/edit_add_details/two_wheeler_form_edit.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/home/ui/home.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/home/ui/home.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/features/home/ui/home_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/home/ui/home_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/profile/bloc/profile_bloc.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/profile/bloc/profile_bloc.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/profile/bloc/profile_bloc.freezed.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/profile/bloc/profile_bloc.freezed.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/profile/bloc/profile_event.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/profile/bloc/profile_event.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/profile/bloc/profile_state.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/profile/bloc/profile_state.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/login/ui/android_login_tablet.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/login/ui/android_login_tablet.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/profile/ui/profile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/profile/ui/profile.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/features/profile/ui/profile_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/profile/ui/profile_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/sell/ui/form/add_commercial_vehicle_form.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/sell/ui/form/add_commercial_vehicle_form.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/sell/ui/form/add_private_vehicle_form.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/sell/ui/form/add_private_vehicle_form.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/sell/ui/form/add_property_form.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/sell/ui/form/add_property_form.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/sell/ui/form/add_two_wheeler_form.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/sell/ui/form/add_two_wheeler_form.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/models/advertisement_model/add_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/models/advertisement_model/add_model.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/models/advertisement_post_model/commercial_vehicle_model/commercial_vehicle_ad_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/models/advertisement_post_model/commercial_vehicle_model/commercial_vehicle_ad_model.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/models/advertisement_post_model/private_vehicle_model/private_vehicle_ad_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/models/advertisement_post_model/private_vehicle_model/private_vehicle_ad_model.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/models/advertisement_post_model/property_model/property_ad_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/models/advertisement_post_model/property_model/property_ad_model.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/models/advertisement_post_model/two_wheeler_model/two_wheeler_ad_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/models/advertisement_post_model/two_wheeler_model/two_wheeler_ad_model.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/repositories/add_repo.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/repositories/add_repo.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/repositories/profile_repo.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/repositories/profile_repo.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" afterPath="$PROJECT_DIR$/macos/Flutter/GeneratedPluginRegistrant.swift" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/widget_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/widget_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/search/ui/search.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/search/ui/search.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/sell/ui/seller.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/sell/ui/seller.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/signup/ui/signup.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/signup/ui/signup.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/splash/splash.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/splash/splash.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

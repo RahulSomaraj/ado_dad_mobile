@@ -10,9 +10,9 @@ class Search extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DeviceChecker(
-      androidTabletView: Scaffold(),
+      androidTabletView: AndroidSearchMobile(previousRoute: previousRoute),
       androidMobileView: AndroidSearchMobile(previousRoute: previousRoute),
-      iosTabletView: Scaffold(),
+      iosTabletView: AndroidSearchMobile(previousRoute: previousRoute),
       iosMobileView: IosSearchMobile(previousRoute: previousRoute),
     );
   }

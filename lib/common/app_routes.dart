@@ -15,6 +15,8 @@ import 'package:ado_dad_user/features/home/ui/home.dart';
 import 'package:ado_dad_user/features/home/ui/add_detail_page.dart';
 import 'package:ado_dad_user/features/home/ui/sellerprofile/seller_profile_page.dart';
 import 'package:ado_dad_user/features/login/ui/login.dart';
+import 'package:ado_dad_user/features/login/ui/otp_login_page.dart';
+import 'package:ado_dad_user/features/login/ui/otp_verification_page.dart';
 import 'package:ado_dad_user/features/profile/MyAds/ui/my_ads_page.dart';
 import 'package:ado_dad_user/features/profile/ui/profile.dart';
 import 'package:ado_dad_user/features/profile/wishlist/wishlist_page.dart';
@@ -50,6 +52,19 @@ class AppRoutes {
       GoRoute(path: '/splash-3', builder: (context, state) => SplashScreen3()),
       GoRoute(path: '/splash-4', builder: (context, state) => SplashScreen4()),
       GoRoute(path: '/login', builder: (context, state) => const Login()),
+      GoRoute(
+          path: '/login-otp',
+          builder: (context, state) => const OtpLoginPage()),
+      GoRoute(
+        path: '/otp-verification',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return OtpVerificationPage(
+            identifier: extra['identifier'] as String,
+            isEmail: extra['isEmail'] as bool,
+          );
+        },
+      ),
       GoRoute(path: '/home', builder: (context, state) => const Home()),
       GoRoute(path: '/logout', builder: (context, state) => const Login()),
       GoRoute(path: '/signup', builder: (context, state) => const Signup()),

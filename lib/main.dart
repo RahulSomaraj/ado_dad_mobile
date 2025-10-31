@@ -7,6 +7,7 @@ import 'package:ado_dad_user/features/home/banner_bloc/banner_bloc.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/features/home/report_ad_bloc/report_ad_bloc.dart';
 import 'package:ado_dad_user/features/login/bloc/login_bloc.dart';
+import 'package:ado_dad_user/features/login/bloc/otp_bloc.dart';
 import 'package:ado_dad_user/features/profile/bloc/profile_bloc.dart';
 import 'package:ado_dad_user/features/sell/bloc/bloc/add_post_bloc.dart';
 import 'package:ado_dad_user/features/signup/bloc/signup_bloc.dart';
@@ -55,6 +56,9 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) => LoginBloc(authRepository: AuthRepository())
             ..add(const LoginEvent.checkLoginStatus()),
+        ),
+        BlocProvider<OtpBloc>(
+          create: (context) => OtpBloc(),
         ),
         BlocProvider<SignupBloc>(
             create: (context) =>

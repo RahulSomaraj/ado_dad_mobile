@@ -15,6 +15,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -30,16 +31,6 @@ class _HomePageState extends State<HomePage> {
   String? _userLocation;
   final ScrollController _scrollController = ScrollController();
   late final GooglePlacesService _placesService;
-
-  // --- Responsive helpers for tablets ---
-  bool _isTabletWidth(double width) => width >= 600; // ~7"
-  bool _isLargeTabletWidth(double width) => width >= 900; // ~10"
-
-  double _scaleForWidth(double width) {
-    if (_isLargeTabletWidth(width)) return 1.35; // 10" tablets
-    if (_isTabletWidth(width)) return 1.18; // 7-8" tablets
-    return 1.0; // phones unchanged
-  }
 
   @override
   void initState() {
@@ -401,9 +392,15 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final width = screenSize.width;
-    final scale = _scaleForWidth(width);
-    final isTablet = _isTabletWidth(width);
-    final isLargeTablet = _isLargeTabletWidth(width);
+    final isTablet = GetResponsiveSize.isTablet(context);
+    final isLargeTablet = GetResponsiveSize.isLargeTablet(context);
+    final scale = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 1.0,
+      tablet: 1.18,
+      largeTablet: 1.35,
+      desktop: 1.5,
+    );
     return BlocListener<FavoriteBloc, FavoriteState>(
       listener: (context, state) {
         if (state is FavoriteToggleSuccess) {
@@ -460,8 +457,14 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       // 🔹 Blue curved header with content
                       Container(
-                        height:
-                            (110 * scale) + MediaQuery.of(context).padding.top,
+                        height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: (110 * scale),
+                              tablet: 300,
+                              largeTablet: 350,
+                              desktop: 400,
+                            ) +
+                            MediaQuery.of(context).padding.top,
                         width: double.infinity,
                         decoration: const BoxDecoration(
                           color: AppColors.primaryColor,
@@ -472,16 +475,26 @@ class _HomePageState extends State<HomePage> {
                         padding: EdgeInsets.only(
                           top: MediaQuery.of(context).padding.top +
                               8, // Add status bar height
-                          bottom: isTablet ? (isLargeTablet ? 110 : 95) : 80,
+                          bottom: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 80,
+                            tablet: 140,
+                            largeTablet: 170,
+                            desktop: 190,
+                          ),
                         ),
                         child: buildTopBar(), // 🔹 AdoDad logo + location
                       ),
 
                       // 🔹 Positioned Banner (slightly below blue container)
                       Positioned(
-                        bottom: isTablet
-                            ? (isLargeTablet ? -115 : -100)
-                            : -85, // Controls how much overlaps
+                        bottom: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: -85,
+                          tablet: -100,
+                          largeTablet: -115,
+                          desktop: -130,
+                        ), // Controls how much overlaps
                         left: 0,
                         right: 0,
                         child: BlocBuilder<BannerBloc, BannerState>(
@@ -496,9 +509,14 @@ class _HomePageState extends State<HomePage> {
                                   CarouselSlider(
                                     carouselController: _carouselController,
                                     options: CarouselOptions(
-                                      height: isTablet
-                                          ? (isLargeTablet ? 220 : 180)
-                                          : 140,
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 140,
+                                        tablet: 250,
+                                        largeTablet: 320,
+                                        desktop: 360,
+                                      ),
                                       autoPlay: true,
                                       enlargeCenterPage: true,
                                       viewportFraction: 0.9,
@@ -513,7 +531,15 @@ class _HomePageState extends State<HomePage> {
                                           banner.phoneImage, banner.link);
                                     }).toList(),
                                   ),
-                                  const SizedBox(height: 10),
+                                  SizedBox(
+                                    height: GetResponsiveSize.getResponsiveSize(
+                                      context,
+                                      mobile: 10, // unchanged on phones
+                                      tablet: 24,
+                                      largeTablet: 30,
+                                      desktop: 30,
+                                    ),
+                                  ),
                                   BuildIndicator(
                                     controller: _carouselController,
                                     itemCount: banners.length,
@@ -527,7 +553,13 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   SizedBox(
-                      height: isTablet ? (isLargeTablet ? 140 : 120) : 100),
+                      height: GetResponsiveSize.getResponsiveSize(
+                    context,
+                    mobile: 100, // unchanged for phones
+                    tablet: 150,
+                    largeTablet: 180,
+                    desktop: 200,
+                  )),
 
                   // 🔷 CATEGORIES
                   Padding(
@@ -536,6 +568,17 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 5),
                   buildCategories(context),
+
+                  // extra space above Recommendations on larger devices
+                  SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 0, // unchanged for phones
+                      tablet: 25,
+                      largeTablet: 30,
+                      desktop: 30,
+                    ),
+                  ),
 
                   // 🔷 RECOMMENDATIONS TITLE
                   Padding(
@@ -562,15 +605,37 @@ class _HomePageState extends State<HomePage> {
 
   Widget buildTopBar() {
     final width = MediaQuery.of(context).size.width;
-    final isTablet = _isTabletWidth(width);
-    final isLargeTablet = _isLargeTabletWidth(width);
-    final double locationFont = isTablet ? (isLargeTablet ? 14 : 13) : 12;
+    final isTablet = GetResponsiveSize.isTablet(context);
+    final isLargeTablet = GetResponsiveSize.isLargeTablet(context);
+    final double locationFont = GetResponsiveSize.getResponsiveFontSize(
+      context,
+      mobile: 12,
+      tablet: 22,
+      largeTablet: 25,
+      desktop: 25,
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Image.asset('assets/images/Ado-dad-home.png'),
+          Builder(
+            builder: (context) {
+              final bool isTab = GetResponsiveSize.isTablet(context);
+              final double logoWidth = GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 0, // keep phone layout unchanged
+                tablet: 200,
+                largeTablet: 230,
+                desktop: 230,
+              );
+              return Image.asset(
+                'assets/images/Ado-dad-home.png',
+                width: isTab ? logoWidth : null,
+                fit: BoxFit.contain,
+              );
+            },
+          ),
           Expanded(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -600,7 +665,25 @@ class _HomePageState extends State<HomePage> {
                       });
                     }
                   },
-                  child: Image.asset('assets/images/Frame.png'),
+                  child: Builder(
+                    builder: (context) {
+                      final bool isTab = GetResponsiveSize.isTablet(context);
+                      final double iconSize =
+                          GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 0, // keep phone layout unchanged
+                        tablet: 30,
+                        largeTablet: 34,
+                        desktop: 34,
+                      );
+                      return Image.asset(
+                        'assets/images/Frame.png',
+                        width: isTab ? iconSize : null,
+                        height: isTab ? iconSize : null,
+                        fit: BoxFit.contain,
+                      );
+                    },
+                  ),
                 )
               ],
             ),
@@ -648,11 +731,20 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget buildSectionTitle(String title) {
+    final baseSize = AppTextstyle.sectionTitleTextStyle.fontSize ?? 16;
+    final responsiveSize = GetResponsiveSize.getResponsiveFontSize(
+      context,
+      mobile: baseSize, // keep phone unchanged
+      tablet: baseSize + 15,
+      largeTablet: baseSize + 18,
+      desktop: baseSize + 18,
+    );
     return Align(
       alignment: Alignment.centerLeft,
       child: Text(
         title,
-        style: AppTextstyle.sectionTitleTextStyle,
+        style: AppTextstyle.sectionTitleTextStyle
+            .copyWith(fontSize: responsiveSize),
       ),
     );
   }
@@ -663,14 +755,26 @@ class _HomePageState extends State<HomePage> {
     }
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = _isTabletWidth(screenWidth);
-    final isLargeTablet = _isLargeTabletWidth(screenWidth);
-    final scale = _scaleForWidth(screenWidth);
+    final isTablet = GetResponsiveSize.isTablet(context);
+    final isLargeTablet = GetResponsiveSize.isLargeTablet(context);
+    final scale = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 1.0,
+      tablet: 1.18,
+      largeTablet: 1.35,
+      desktop: 1.5,
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10),
       child: SizedBox(
-        height: isTablet ? (isLargeTablet ? 170 : 150) : 120,
+        height: GetResponsiveSize.getResponsiveSize(
+          context,
+          mobile: 120,
+          tablet: 180,
+          largeTablet: 210,
+          desktop: 230,
+        ),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
@@ -706,9 +810,21 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     children: [
                       Container(
-                        height: isTablet ? (isLargeTablet ? 100 : 85) : 70,
+                        height: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 70, // unchanged for phones
+                          tablet: 110,
+                          largeTablet: 135,
+                          desktop: 150,
+                        ),
                         padding:
-                            EdgeInsets.all(isTablet ? (16 * scale * 0.9) : 16),
+                            EdgeInsets.all(GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 16,
+                          tablet: 20,
+                          largeTablet: 22,
+                          desktop: 22,
+                        )),
                         decoration: BoxDecoration(
                           color: AppColors.whiteColor,
                           borderRadius: BorderRadius.circular(12),
@@ -716,17 +832,62 @@ class _HomePageState extends State<HomePage> {
                             BoxShadow(color: Colors.black12, blurRadius: 2)
                           ],
                         ),
-                        child: Image.asset(category.image),
+                        child: SizedBox(
+                          width: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 38, // leave phone small as before
+                            tablet: 60,
+                            largeTablet: 75,
+                            desktop: 80,
+                          ),
+                          height: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 38,
+                            tablet: 60,
+                            largeTablet: 70,
+                            desktop: 80,
+                          ),
+                          child:
+                              Image.asset(category.image, fit: BoxFit.contain),
+                        ),
                       ),
                       const SizedBox(height: 5),
                       SizedBox(
-                        width: screenWidth * 0.2,
-                        child: Text(
-                            categoryNameText(
-                              category.name,
-                            ),
-                            textAlign: TextAlign.center,
-                            style: AppTextstyle.categoryLabelTextStyle),
+                        width: GetResponsiveSize.isTablet(context)
+                            ? GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile:
+                                    screenWidth * 0.2, // not used on tablets
+                                tablet: screenWidth * 0.24,
+                                largeTablet: screenWidth * 0.26,
+                                desktop: screenWidth * 0.28,
+                              )
+                            : screenWidth * 0.2,
+                        child: Builder(
+                          builder: (context) {
+                            final double baseSize =
+                                AppTextstyle.categoryLabelTextStyle.fontSize ??
+                                    12;
+                            final double labelSize =
+                                GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: baseSize, // keep phone unchanged
+                              tablet: baseSize + 10,
+                              largeTablet: baseSize + 13,
+                              desktop: baseSize + 13,
+                            );
+                            return Text(
+                              categoryNameText(
+                                category.name,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextstyle.categoryLabelTextStyle
+                                  .copyWith(fontSize: labelSize),
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -741,10 +902,10 @@ class _HomePageState extends State<HomePage> {
 
   // 1) Helpers: decide columns and compute a responsive card height
   int _columnsForWidth(double w) {
-    if (w >= 1200) return 5;
-    if (w >= 900) return 4;
-    if (w >= 600) return 3;
-    return 2;
+    if (w >= 1200) return 5; // keep desktop dense
+    if (w >= 900) return 2; // large tablets: 2 per row
+    if (w >= 600) return 2; // tablets: 2 per row
+    return 2; // phones unchanged
   }
 
   double _cardMainAxisExtent(BuildContext context, int columns) {
@@ -760,7 +921,7 @@ class _HomePageState extends State<HomePage> {
     final cardWidth = available / columns;
 
     // make image height proportional to width for a stable look
-    final imageHeight = cardWidth * 0.60; // tweak: 0.55..0.70
+    final imageHeight = cardWidth * 0.60; // base estimate for image area
 
     // estimate text height (3 lines: price, 2-line desc, location)
     const baseLine = 16.0; // base font size used in your Texts
@@ -769,7 +930,13 @@ class _HomePageState extends State<HomePage> {
 
     // paddings + image + text + extra breathing space
     const outerPadding = 8.0 /* card inner */ + 8.0 /* bottom padding */;
-    final extra = 10.0; // small buffer for badges, rounding, etc.
+    final extra = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 10.0,
+      tablet: 40.0,
+      largeTablet: 60.0,
+      desktop: 60.0,
+    ); // more space for larger content on tablets
 
     return imageHeight + textBlockHeight + outerPadding + extra;
   }
@@ -905,9 +1072,10 @@ class _HomePageState extends State<HomePage> {
                 borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(20), bottom: Radius.circular(20)),
                 child: AspectRatio(
-                  // ✅ keeps image area stable
-                  aspectRatio:
-                      16 / 10, // ~0.625 height/width — matches 0.60 above
+                  // keep image area stable, but slightly taller on tablets
+                  aspectRatio: GetResponsiveSize.isTablet(context)
+                      ? (16 / 9)
+                      : (16 / 10),
                   child: Image.network(
                     ad.images.first,
                     fit: BoxFit.cover,
@@ -919,7 +1087,16 @@ class _HomePageState extends State<HomePage> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: DefaultTextStyle(
-                style: const TextStyle(fontSize: 13, color: Colors.black),
+                style: TextStyle(
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(
+                    context,
+                    mobile: 13,
+                    tablet: 16,
+                    largeTablet: 18,
+                    desktop: 18,
+                  ),
+                  color: Colors.black,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -927,9 +1104,15 @@ class _HomePageState extends State<HomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text("₹${ad.price}",
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: 16,
+                                tablet: 25,
+                                largeTablet: 30,
+                                desktop: 30,
+                              ),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis),
@@ -970,8 +1153,20 @@ class _HomePageState extends State<HomePage> {
                                 isFavorited
                                     ? 'assets/images/favorite_icon_filled.png'
                                     : 'assets/images/favorite_icon_unfilled.png',
-                                width: 24,
-                                height: 24,
+                                width: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 24,
+                                  tablet: 30,
+                                  largeTablet: 34,
+                                  desktop: 34,
+                                ),
+                                height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 24,
+                                  tablet: 30,
+                                  largeTablet: 34,
+                                  desktop: 34,
+                                ),
                               ),
                             );
                           },
@@ -983,12 +1178,29 @@ class _HomePageState extends State<HomePage> {
                       ad.description,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 13,
+                          tablet: 25,
+                          largeTablet: 30,
+                          desktop: 30,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       ad.location,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 12),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 12,
+                          tablet: 20,
+                          largeTablet: 22,
+                          desktop: 22,
+                        ),
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1027,6 +1239,36 @@ class _BuildIndicatorState extends State<BuildIndicator> {
           loaded: (banners) => Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(banners.length, (index) {
+              final bool isTablet = GetResponsiveSize.isTablet(context);
+              // Compute responsive indicator sizes
+              final double activeWidth = GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 15,
+                tablet: 20,
+                largeTablet: 24,
+                desktop: 24,
+              );
+              final double inactiveWidth = GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 6,
+                tablet: 8,
+                largeTablet: 10,
+                desktop: 10,
+              );
+              final double dotHeight = GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 6,
+                tablet: 10,
+                largeTablet: 10,
+                desktop: 10,
+              );
+              final double dotMargin = GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 5,
+                tablet: 8,
+                largeTablet: 7,
+                desktop: 7,
+              );
               return GestureDetector(
                 onTap: () {
                   setState(() {
@@ -1035,9 +1277,12 @@ class _BuildIndicatorState extends State<BuildIndicator> {
                   widget.controller.jumpToPage(index);
                 },
                 child: Container(
-                  width: BuildIndicator.currentIndex == index ? 15 : 6,
-                  height: 6,
-                  margin: const EdgeInsets.symmetric(horizontal: 5),
+                  width: BuildIndicator.currentIndex == index
+                      ? (isTablet ? activeWidth : 15)
+                      : (isTablet ? inactiveWidth : 6),
+                  height: isTablet ? dotHeight : 6,
+                  margin: EdgeInsets.symmetric(
+                      horizontal: isTablet ? dotMargin : 5),
                   decoration: BoxDecoration(
                     shape: BoxShape.rectangle,
                     color: BuildIndicator.currentIndex == index
@@ -1057,35 +1302,80 @@ class _BuildIndicatorState extends State<BuildIndicator> {
 
 class BottomNavBar extends StatelessWidget {
   const BottomNavBar({super.key});
-  static const double _barHeight = 60; // a bit taller to fit big icon
   static const double _vPad = 10;
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final bool isTablet = width >= 600;
-    final bool isLargeTablet = width >= 900;
-    final double barWidth = isTablet ? (isLargeTablet ? 520 : 420) : 300;
+    // Responsive sizes for bar and icons (phones unchanged)
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double horizontalMargin = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 0,
+      tablet: 24,
+      largeTablet: 32,
+      desktop: 40,
+    );
+    final double barWidth = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 300,
+      tablet: screenWidth - (horizontalMargin * 2),
+      largeTablet: screenWidth - (horizontalMargin * 2),
+      desktop: screenWidth - (horizontalMargin * 2),
+    );
+    final double barHeight = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 60,
+      tablet: 80,
+      largeTablet: 85,
+      desktop: 90,
+    );
+    final double baseIconSize = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 20,
+      tablet: 35,
+      largeTablet: 40,
+      desktop: 40,
+    );
+    final double addIconSize = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 36,
+      tablet: 50,
+      largeTablet: 50,
+      desktop: 54,
+    );
     return Container(
-      height: _barHeight,
+      height: barHeight,
       width: barWidth,
       decoration: BoxDecoration(
         color: AppColors.primaryColor,
         borderRadius: BorderRadius.circular(50),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: _vPad),
+        padding: EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: GetResponsiveSize.getResponsiveSize(
+            context,
+            mobile: _vPad,
+            tablet: 15,
+            largeTablet: 17,
+            desktop: 17,
+          ),
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _navItem(context, 'assets/images/home-icon.png', '/home'),
+            _navItem(context, 'assets/images/home-icon.png', '/home',
+                iconSize: baseIconSize),
             _navItem(
-                context, 'assets/images/search-icon.png', '/search?from=/home'),
+                context, 'assets/images/search-icon.png', '/search?from=/home',
+                iconSize: baseIconSize),
             _navItem(context, 'assets/images/add-icon.png', '/seller',
-                iconSize: 36),
-            _navItem(context, 'assets/images/chat-icon.png',
-                '/chat-rooms?from=home'),
-            _navItem(context, 'assets/images/profile-icon.png', '/profile'),
+                iconSize: addIconSize),
+            _navItem(
+                context, 'assets/images/chat-icon.png', '/chat-rooms?from=home',
+                iconSize: baseIconSize),
+            _navItem(context, 'assets/images/profile-icon.png', '/profile',
+                iconSize: baseIconSize),
           ],
         ),
       ),

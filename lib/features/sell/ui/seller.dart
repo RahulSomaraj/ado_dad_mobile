@@ -1,6 +1,7 @@
 import 'package:ado_dad_user/common/device_checker.dart';
 import 'package:ado_dad_user/features/sell/ui/android_mobile_seller.dart';
 import 'package:ado_dad_user/features/sell/ui/ios_mobile_seller.dart';
+import 'package:ado_dad_user/features/sell/ui/item_category.dart';
 import 'package:flutter/material.dart';
 
 class Seller extends StatelessWidget {
@@ -9,9 +10,9 @@ class Seller extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DeviceChecker(
-      androidTabletView: Scaffold(),
+      androidTabletView: ItemCategory(),
       androidMobileView: AndroidMobileSeller(),
-      iosTabletView: Scaffold(),
+      iosTabletView: ItemCategory(),
       iosMobileView: IosMobileSeller(),
     );
   }

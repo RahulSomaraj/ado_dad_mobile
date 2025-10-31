@@ -2,6 +2,7 @@ import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
+import 'package:ado_dad_user/common/widgets/common_decoration.dart';
 import 'package:ado_dad_user/features/login/bloc/login_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -23,14 +24,25 @@ class _LoginPageState extends State<LoginPage> {
   final GlobalKey<FormState> _loginFormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> _forgotPasswordFormKey = GlobalKey<FormState>();
 
-  /// false = phone mode (default), true = email mode
-  bool _emailMode = false;
+  /// Helper function to validate if input is email or phone
+  bool _isEmail(String value) {
+    return RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+        .hasMatch(value);
+  }
 
-  void _toggleMode() {
-    setState(() {
-      _emailMode = !_emailMode;
-      _usernameController.clear(); // avoid mixing old value
-    });
+  bool _isPhone(String value) {
+    return RegExp(r"^[0-9]{10}$").hasMatch(value);
+  }
+
+  String? _validateUsername(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return "Username is required";
+    }
+    final trimmedValue = value.trim();
+    if (!_isEmail(trimmedValue) && !_isPhone(trimmedValue)) {
+      return "Enter a valid email or phone number";
+    }
+    return null;
   }
 
   Future<void> _openExternalUrl(String url) async {
@@ -218,10 +230,11 @@ class _LoginPageState extends State<LoginPage> {
               )),
               Center(
                 child: TextButton(
-                  onPressed: _toggleMode,
+                  onPressed: () {
+                    context.push('/login-otp');
+                  },
                   child: Text(
-                    // 'Login with Email',
-                    _emailMode ? 'Login with Phone' : 'Login with Email',
+                    'Login with OTP',
                     style: TextStyle(
                         decoration: TextDecoration.underline,
                         fontSize: 14,
@@ -290,20 +303,17 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildUsernameField() {
-    // return GetInput(
-    //   label: "Username",
-    //   controller: _usernameController,
-    //   isEmail: false,
-    //   isPhone: true,
-    //   onSaved: (value) {},
-    // );
-    // In email mode: label/email validation; In phone mode: label/phone validation
-    return GetInput(
-      label: _emailMode ? "Email" : "Phone",
+    // Custom text field that accepts both email and phone
+    return TextFormField(
       controller: _usernameController,
-      isEmail: _emailMode,
-      isPhone: !_emailMode,
-      onSaved: (value) {},
+      keyboardType: TextInputType.text,
+      decoration: CommonDecoration.textFieldDecoration(
+        labelText: "Email or Phone",
+        isPassword: false,
+        obscureText: false,
+        togglePasswordVisibility: null,
+      ),
+      validator: _validateUsername,
     );
   }
 

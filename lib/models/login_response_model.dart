@@ -22,7 +22,7 @@ class LoginResponse {
       id: json['id'].toString(),
       token: json['token'],
       refreshToken: json['refreshToken'],
-      name: json['name'] ?? '',
+      name: json['name'] ?? json['userName'] ?? '',
       email: json['email'],
       userType: json['userType'],
       profilePic: json['profilePic'], // Capture profile picture from API

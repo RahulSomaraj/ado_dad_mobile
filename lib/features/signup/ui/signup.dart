@@ -1,6 +1,7 @@
 import 'package:ado_dad_user/common/device_checker.dart';
 import 'package:ado_dad_user/features/signup/ui/android_signup_mobile.dart';
 import 'package:ado_dad_user/features/signup/ui/ios_signup_mobile.dart';
+import 'package:ado_dad_user/features/signup/ui/signup_page.dart';
 import 'package:flutter/material.dart';
 
 class Signup extends StatelessWidget {
@@ -9,9 +10,9 @@ class Signup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DeviceChecker(
-      androidTabletView: Scaffold(),
+      androidTabletView: SignupPage(),
       androidMobileView: AndroidSignupMobile(),
-      iosTabletView: Scaffold(),
+      iosTabletView: SignupPage(),
       iosMobileView: IosSignupMobile(),
     );
   }

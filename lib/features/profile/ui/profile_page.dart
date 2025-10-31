@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -460,9 +461,24 @@ class _ProfilePageState extends State<ProfilePage> {
 
                   return Stack(
                     children: [
-                      Container(height: 1100),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height +
+                            GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 500,
+                              tablet: 300,
+                              largeTablet: 500,
+                              desktop: 1000,
+                            ),
+                      ),
                       Container(
-                        height: 250,
+                        height: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 250, // keep phone unchanged
+                          tablet: 340,
+                          largeTablet: 400,
+                          desktop: 440,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primaryColor,
                           borderRadius: const BorderRadius.only(
@@ -482,15 +498,28 @@ class _ProfilePageState extends State<ProfilePage> {
                               onPressed: () => context.pop(context),
                               icon: const Icon(Icons.arrow_back,
                                   color: Colors.white),
-                              iconSize: 28,
+                              iconSize: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 28,
+                                tablet: 36,
+                                largeTablet: 40,
+                                desktop: 42,
+                              ),
                             ),
                             const SizedBox(width: 10),
-                            const Text(
+                            Text(
                               "Profile",
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
+                                fontSize:
+                                    GetResponsiveSize.getResponsiveFontSize(
+                                  context,
+                                  mobile: 20,
+                                  tablet: 26,
+                                  largeTablet: 30,
+                                  desktop: 32,
+                                ),
                               ),
                             ),
                           ],
@@ -499,11 +528,25 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       // Profile card
                       Positioned(
-                        top: 120,
+                        top: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 120,
+                          tablet: 150,
+                          largeTablet: 180,
+                          desktop: 200,
+                        ),
                         left: 20,
                         right: 20,
                         child: Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: EdgeInsets.all(
+                            GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 16,
+                              tablet: 20,
+                              largeTablet: 24,
+                              desktop: 26,
+                            ),
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
@@ -529,19 +572,53 @@ class _ProfilePageState extends State<ProfilePage> {
                                   },
                                   child: isEditing
                                       ? Container(
-                                          padding: const EdgeInsets.all(8),
+                                          padding: EdgeInsets.all(
+                                            GetResponsiveSize.getResponsiveSize(
+                                              context,
+                                              mobile: 8,
+                                              tablet: 12,
+                                              largeTablet: 14,
+                                              desktop: 14,
+                                            ),
+                                          ),
                                           decoration: BoxDecoration(
                                             color: AppColors.primaryColor,
                                             shape: BoxShape.circle,
                                           ),
-                                          child: const Icon(
+                                          child: Icon(
                                             Icons.check,
                                             color: Colors.white,
-                                            size: 20,
+                                            size: GetResponsiveSize
+                                                .getResponsiveSize(
+                                              context,
+                                              mobile: 20,
+                                              tablet: 28,
+                                              largeTablet: 32,
+                                              desktop: 34,
+                                            ),
                                           ),
                                         )
-                                      : Image.asset(
-                                          'assets/images/profile-edit-icon.png',
+                                      : SizedBox(
+                                          width: GetResponsiveSize
+                                              .getResponsiveSize(
+                                            context,
+                                            mobile: 24,
+                                            tablet: 36,
+                                            largeTablet: 42,
+                                            desktop: 44,
+                                          ),
+                                          height: GetResponsiveSize
+                                              .getResponsiveSize(
+                                            context,
+                                            mobile: 24,
+                                            tablet: 36,
+                                            largeTablet: 42,
+                                            desktop: 44,
+                                          ),
+                                          child: Image.asset(
+                                            'assets/images/profile-edit-icon.png',
+                                            fit: BoxFit.contain,
+                                          ),
                                         ),
                                 ),
                               ),
@@ -558,12 +635,31 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       // Avatar (supports: existing URL, just-picked bytes, or empty)
                       Positioned(
-                        top: 75,
-                        left: MediaQuery.of(context).size.width / 2 - 50,
+                        top: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 75, // unchanged on phones
+                          tablet: 70,
+                          largeTablet: 80,
+                          desktop: 85,
+                        ),
+                        left: MediaQuery.of(context).size.width / 2 -
+                            GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 50,
+                              tablet: 65,
+                              largeTablet: 80,
+                              desktop: 90,
+                            ),
                         child: Stack(
                           children: [
                             CircleAvatar(
-                              radius: 50,
+                              radius: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 50,
+                                tablet: 80,
+                                largeTablet: 100,
+                                desktop: 110,
+                              ),
                               backgroundColor: AppColors.greyColor,
                               backgroundImage: _pickedImageBytes != null
                                   ? MemoryImage(_pickedImageBytes!)
@@ -583,8 +679,15 @@ class _ProfilePageState extends State<ProfilePage> {
                                               'default-profile-pic-url' ||
                                           !_currentProfilePicUrl!
                                               .startsWith('http')))
-                                  ? const Icon(Icons.person,
-                                      size: 50, color: Colors.white)
+                                  ? Icon(Icons.person,
+                                      size: GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 50,
+                                        tablet: 80,
+                                        largeTablet: 96,
+                                        desktop: 110,
+                                      ),
+                                      color: Colors.white)
                                   : null,
                             ),
                             if (isEditing)
@@ -594,12 +697,29 @@ class _ProfilePageState extends State<ProfilePage> {
                                 child: InkWell(
                                   onTap: _pickImage,
                                   child: Container(
-                                    padding: const EdgeInsets.all(6),
+                                    padding: EdgeInsets.all(
+                                      GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 6,
+                                        tablet: 8,
+                                        largeTablet: 10,
+                                        desktop: 10,
+                                      ),
+                                    ),
                                     decoration: const BoxDecoration(
                                       shape: BoxShape.circle,
                                       color: Colors.white,
                                     ),
-                                    child: const Icon(Icons.edit, size: 18),
+                                    child: Icon(
+                                      Icons.edit,
+                                      size: GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 18,
+                                        tablet: 26,
+                                        largeTablet: 30,
+                                        desktop: 32,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               )
@@ -609,7 +729,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       // Menu list
                       Positioned(
-                        top: 430,
+                        top: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 430,
+                          tablet: 530,
+                          largeTablet: 550,
+                          desktop: 600,
+                        ),
                         left: 20,
                         right: 20,
                         child: Column(
@@ -865,8 +991,15 @@ class _ProfilePageState extends State<ProfilePage> {
                                 }
                               },
                             ),
-                            // const SizedBox(
-                            //     height: 100), // Add space for bottom nav
+                            SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 100,
+                                tablet: 120,
+                                largeTablet: 160,
+                                desktop: 180,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -902,7 +1035,13 @@ class _ProfilePageState extends State<ProfilePage> {
         text,
         style: TextStyle(
           color: Colors.grey[600],
-          fontSize: 14,
+          fontSize: GetResponsiveSize.getResponsiveFontSize(
+            context,
+            mobile: 14,
+            tablet: 22,
+            largeTablet: 24,
+            desktop: 24,
+          ),
         ),
       ),
     );
@@ -915,7 +1054,16 @@ class _ProfilePageState extends State<ProfilePage> {
     return TextFormField(
       controller: controller,
       enabled: isEditable,
-      style: TextStyle(fontWeight: FontWeight.bold),
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: GetResponsiveSize.getResponsiveFontSize(
+          context,
+          mobile: 16,
+          tablet: 24,
+          largeTablet: 26,
+          desktop: 26,
+        ),
+      ),
       keyboardType: isPhoneField ? TextInputType.phone : TextInputType.text,
       inputFormatters: isPhoneField
           ? [
@@ -988,31 +1136,85 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: ListTile(
-            leading: Container(
-              height: 44,
-              width: 44,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: isLogout ? Colors.red[50] : Colors.grey[200],
-              ),
-              child: Center(
-                child: Image.asset(
-                  image,
-                  color: isLogout ? AppColors.redColor : AppColors.primaryColor,
-                ),
-              ),
+          padding: EdgeInsets.symmetric(
+            vertical: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 10,
+              tablet: 24,
+              largeTablet: 28,
+              desktop: 32,
             ),
+          ),
+          child: ListTile(
+            leading: Builder(builder: (context) {
+              final double boxSize = GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 44,
+                tablet: 70,
+                largeTablet: 75,
+                desktop: 80,
+              );
+              return SizedBox(
+                width: boxSize,
+                height: boxSize,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: isLogout ? Colors.red[50] : Colors.grey[200],
+                  ),
+                  child: Center(
+                    child: SizedBox(
+                      width: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 24,
+                        tablet: 38,
+                        largeTablet: 42,
+                        desktop: 46,
+                      ),
+                      height: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 24,
+                        tablet: 38,
+                        largeTablet: 42,
+                        desktop: 46,
+                      ),
+                      child: Image.asset(
+                        image,
+                        color: isLogout
+                            ? AppColors.redColor
+                            : AppColors.primaryColor,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
             title: Text(
               title,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: isLogout ? Colors.red : Colors.black,
+                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  context,
+                  mobile: 16,
+                  tablet: 24,
+                  largeTablet: 26,
+                  desktop: 26,
+                ),
               ),
             ),
-            trailing:
-                Icon(Icons.arrow_forward_ios, size: 18, color: Colors.grey),
+            trailing: Icon(
+              Icons.arrow_forward_ios,
+              size: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 18,
+                tablet: 24,
+                largeTablet: 26,
+                desktop: 28,
+              ),
+              color: Colors.grey,
+            ),
             onTap: onTap,
           ),
         ),
@@ -1024,31 +1226,79 @@ class _ProfilePageState extends State<ProfilePage> {
 class BottomNavBar extends StatelessWidget {
   const BottomNavBar({super.key});
 
-  static const double _barHeight = 60; // a bit taller to fit big icon
   static const double _vPad = 10;
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double horizontalMargin = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 0,
+      tablet: 24,
+      largeTablet: 32,
+      desktop: 40,
+    );
+    final double barWidth = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 300,
+      tablet: screenWidth - (horizontalMargin * 2),
+      largeTablet: screenWidth - (horizontalMargin * 2),
+      desktop: screenWidth - (horizontalMargin * 2),
+    );
+    final double barHeight = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 60,
+      tablet: 80,
+      largeTablet: 85,
+      desktop: 90,
+    );
+    final double baseIconSize = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 20,
+      tablet: 35,
+      largeTablet: 40,
+      desktop: 40,
+    );
+    final double addIconSize = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 36,
+      tablet: 50,
+      largeTablet: 50,
+      desktop: 54,
+    );
     return Container(
-      height: _barHeight,
-      width: 300,
+      height: barHeight,
+      width: barWidth,
       decoration: BoxDecoration(
         color: AppColors.primaryColor,
         borderRadius: BorderRadius.circular(50),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: _vPad),
+        padding: EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: GetResponsiveSize.getResponsiveSize(
+            context,
+            mobile: _vPad,
+            tablet: 15,
+            largeTablet: 17,
+            desktop: 17,
+          ),
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _navItem(context, 'assets/images/home-icon.png', '/home'),
+            _navItem(context, 'assets/images/home-icon.png', '/home',
+                iconSize: baseIconSize),
             _navItem(context, 'assets/images/search-icon.png',
-                '/search?from=/profile'),
+                '/search?from=/profile',
+                iconSize: baseIconSize),
             _navItem(context, 'assets/images/seller-icon.png', '/seller',
-                iconSize: 36),
+                iconSize: addIconSize),
             _navItem(context, 'assets/images/chat-icon.png',
-                '/chat-rooms?from=profile'),
-            _navItem(context, 'assets/images/profile-icon.png', '/profile'),
+                '/chat-rooms?from=profile',
+                iconSize: baseIconSize),
+            _navItem(context, 'assets/images/profile-icon.png', '/profile',
+                iconSize: baseIconSize),
           ],
         ),
       ),

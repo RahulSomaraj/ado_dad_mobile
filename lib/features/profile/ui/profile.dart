@@ -1,6 +1,7 @@
 import 'package:ado_dad_user/common/device_checker.dart';
 import 'package:ado_dad_user/features/profile/ui/android_profile_mobile.dart';
 import 'package:ado_dad_user/features/profile/ui/ios_profile_mobile.dart';
+import 'package:ado_dad_user/features/profile/ui/profile_page.dart';
 import 'package:flutter/material.dart';
 
 class Profile extends StatelessWidget {
@@ -9,9 +10,9 @@ class Profile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DeviceChecker(
-      androidTabletView: Scaffold(),
+      androidTabletView: ProfilePage(),
       androidMobileView: AndroidProfileMobile(),
-      iosTabletView: Scaffold(),
+      iosTabletView: ProfilePage(),
       iosMobileView: IosProfileMobile(),
     );
   }
