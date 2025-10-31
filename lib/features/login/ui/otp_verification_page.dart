@@ -70,6 +70,12 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     }
   }
 
+  void _handleResendOtp() {
+    context.read<OtpBloc>().add(
+          OtpEvent.sendOtp(identifier: widget.identifier),
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<OtpBloc, OtpState>(
@@ -80,6 +86,23 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
           },
           verifyOtpFailure: (message) {
             DialogUtil.showLoginErrorDialog(context, message);
+          },
+          sendOtpSuccess: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('OTP sent successfully'),
+                backgroundColor: AppColors.primaryColor,
+              ),
+            );
+          },
+          sendOtpFailure: (message) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Failed to send OTP: ${message.replaceAll('Exception: ', '')}'),
+                backgroundColor: Colors.red,
+              ),
+            );
           },
         );
       },
@@ -111,6 +134,8 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                 _buildOtpInputFields(),
                 const SizedBox(height: 30),
                 _buildConfirmOtpButton(),
+                const SizedBox(height: 20),
+                _buildResendCodeSection(),
               ],
             ),
           ),
@@ -196,6 +221,58 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                     'Confirm OTP',
                     style: AppTextstyle.buttonText,
                   ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildResendCodeSection() {
+    return BlocBuilder<OtpBloc, OtpState>(
+      builder: (context, state) {
+        final isResending = state.maybeWhen(
+          sendOtpLoading: () => true,
+          orElse: () => false,
+        );
+        return Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "Didn't receive code?",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.blackColor,
+                ),
+              ),
+              const SizedBox(width: 4),
+              TextButton(
+                onPressed: isResending ? null : _handleResendOtp,
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: isResending
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        'Resend Code',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.primaryColor,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+              ),
+            ],
           ),
         );
       },

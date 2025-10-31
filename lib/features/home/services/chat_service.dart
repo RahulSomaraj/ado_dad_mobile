@@ -26,7 +26,13 @@ class ChatService {
 
     try {
       // Check room existence
-      await _checkRoomExists(context, adId, otherUserId);
+      await _checkRoomExists(
+        context,
+        adId,
+        otherUserId,
+        adTitle: adTitle,
+        adPosterName: adPosterName,
+      );
     } catch (e) {
       print('💥 Error in chat flow: $e');
       // Close loading dialog
@@ -39,7 +45,8 @@ class ChatService {
 
   /// Check if room exists for the ad and other user
   static Future<void> _checkRoomExists(
-      BuildContext context, String adId, String otherUserId) async {
+      BuildContext context, String adId, String otherUserId,
+      {required String adTitle, required String adPosterName}) async {
     try {
       print('🔍 Starting room existence check...');
       print('📋 Room check details:');
@@ -71,12 +78,26 @@ class ChatService {
         print('   Status: Existing room found');
 
         // Join the existing room
-        await _joinRoom(context, roomId, adId, otherUserId, isNewRoom: false);
+        await _joinRoom(
+          context,
+          roomId,
+          adId,
+          otherUserId,
+          adTitle: adTitle,
+          adPosterName: adPosterName,
+          isNewRoom: false,
+        );
       } else {
         print('❌ No room exists for this ad and user combination');
         print('🔄 Proceeding to create new room...');
         // Create a new room since none exists
-        await _createRoomAndJoin(context, adId, otherUserId);
+        await _createRoomAndJoin(
+          context,
+          adId,
+          otherUserId,
+          adTitle: adTitle,
+          adPosterName: adPosterName,
+        );
       }
     } catch (e) {
       print('💥 Error checking room existence: $e');
@@ -91,7 +112,8 @@ class ChatService {
 
   /// Create room and join when no room exists
   static Future<void> _createRoomAndJoin(
-      BuildContext context, String adId, String otherUserId) async {
+      BuildContext context, String adId, String otherUserId,
+      {required String adTitle, required String adPosterName}) async {
     try {
       print('🏠 Starting room creation process...');
       print('📋 Room creation details:');
@@ -128,7 +150,15 @@ class ChatService {
         print('   Participants: Current user + Other user ($otherUserId)');
 
         // Join the newly created room
-        await _joinRoom(context, roomId, adId, otherUserId, isNewRoom: true);
+        await _joinRoom(
+          context,
+          roomId,
+          adId,
+          otherUserId,
+          adTitle: adTitle,
+          adPosterName: adPosterName,
+          isNewRoom: true,
+        );
       } else {
         print('❌ Room creation failed - no room ID returned');
         _showErrorDialog(context, 'Failed to create chat room');
@@ -149,8 +179,14 @@ class ChatService {
 
   /// Join room and navigate to chat page
   static Future<void> _joinRoom(
-      BuildContext context, String roomId, String adId, String otherUserId,
-      {required bool isNewRoom}) async {
+    BuildContext context,
+    String roomId,
+    String adId,
+    String otherUserId, {
+    required bool isNewRoom,
+    required String adTitle,
+    required String adPosterName,
+  }) async {
     try {
       print('🚪 Attempting to join room: $roomId');
       print('📋 Join details:');
@@ -170,10 +206,21 @@ class ChatService {
       print(
           '✅ ROOM JOIN SUCCESS - Room ID: $roomId | Status: Joined | Type: ${isNewRoom ? "New" : "Existing"} | Timestamp: ${DateTime.now().toIso8601String()}');
 
-      // Navigate to chat page with fromPage parameter
+      // Navigate to chat page with all necessary parameters
       if (context.mounted) {
-        context.push('/chat/$roomId?from=ad-detail');
+        final queryParams = <String, String>{
+          'from': 'ad-detail',
+          'name': adPosterName,
+          'adTitle': adTitle,
+          'adId': adId,
+        };
+        final queryString = queryParams.entries
+            .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+            .join('&');
+        context.push('/chat/$roomId?$queryString');
         print('✅ Navigated to chat page for room: $roomId');
+        print('👤 Other user name: $adPosterName');
+        print('📝 Ad title: $adTitle');
       }
     } catch (e) {
       print(

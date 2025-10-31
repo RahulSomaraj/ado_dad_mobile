@@ -92,26 +92,14 @@ class _ChatPageState extends State<ChatPage> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.adTitle ?? (widget.otherUserName ?? 'Chat'),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const Text(
-                    'Online',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
+              child: Text(
+                widget.adTitle ?? (widget.otherUserName ?? 'Chat'),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -423,16 +411,11 @@ class _ChatPageState extends State<ChatPage> {
     print('🔙 Navigating back from chat page');
     print('📍 From page: ${widget.fromPage}');
 
-    // Handle different navigation paths based on where user came from
-    if (widget.fromPage == 'ad-detail') {
-      // If came from ad detail page, go directly to home
-      print('🏠 Navigating to home page (came from ad detail)');
-      context.go('/home');
-    } else {
-      // Default behavior: navigate back to chat rooms page
-      print('💬 Navigating to chat rooms page');
-      context.go('/chat-rooms?from=${widget.fromPage}');
-    }
+    // Always navigate back to chat rooms page
+    // Pass the fromPage parameter so chat rooms knows where to go back
+    print('💬 Navigating to chat rooms page');
+    final fromPage = widget.fromPage ?? 'home';
+    context.go('/chat-rooms?from=$fromPage');
   }
 
   @override

@@ -406,625 +406,661 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[200],
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            child: BlocConsumer<ProfileBloc, ProfileState>(
-              listener: (context, state) {
-                if (state is profile_bloc.Error) {
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(SnackBar(content: Text(state.message)));
-                }
+    return PopScope(
+      canPop: false, // Prevent default back behavior
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return; // System already handled the pop
+        // Handle system back button press
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/home');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.grey[200],
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              child: BlocConsumer<ProfileBloc, ProfileState>(
+                listener: (context, state) {
+                  if (state is profile_bloc.Error) {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text(state.message)));
+                  }
 
-                if (state is profile_bloc.PasswordChanged) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Password changed successfully!')),
-                  );
-                  // Navigate back to profile page
-                  context.go('/profile');
-                }
+                  if (state is profile_bloc.PasswordChanged) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Password changed successfully!')),
+                    );
+                    // Navigate back to profile page
+                    context.go('/profile');
+                  }
 
-                // Seed controllers ONLY once per load (and not while editing)
-                if (state is Loaded && !_seededOnce && !isEditing) {
-                  nameController.text = state.profile.name;
-                  emailController.text = state.profile.email;
-                  phoneController.text = state.profile.phoneNumber;
+                  // Seed controllers ONLY once per load (and not while editing)
+                  if (state is Loaded && !_seededOnce && !isEditing) {
+                    nameController.text = state.profile.name;
+                    emailController.text = state.profile.email;
+                    phoneController.text = state.profile.phoneNumber;
 
-                  print(
-                      "🔍 Original profile pic from API: ${state.profile.profilePic}");
+                    print(
+                        "🔍 Original profile pic from API: ${state.profile.profilePic}");
 
-                  // Keep the original profile pic value as is
-                  _currentProfilePicUrl = state.profile.profilePic;
+                    // Keep the original profile pic value as is
+                    _currentProfilePicUrl = state.profile.profilePic;
 
-                  print("🔍 Processed profile pic URL: $_currentProfilePicUrl");
-                  _seededOnce = true;
-                }
-              },
-              builder: (context, state) {
-                if (state is profile_bloc.Loading) {
-                  return const SizedBox(
-                    height: 400,
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
+                    print(
+                        "🔍 Processed profile pic URL: $_currentProfilePicUrl");
+                    _seededOnce = true;
+                  }
+                },
+                builder: (context, state) {
+                  if (state is profile_bloc.Loading) {
+                    return const SizedBox(
+                      height: 400,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
 
-                if (state is Loaded || state is Saving) {
-                  // if (state is Loaded) {
-                  //   nameController.text = state.profile.name;
-                  //   emailController.text = state.profile.email;
-                  //   phoneController.text = state.profile.phoneNumber;
-                  //   _currentProfilePicUrl = state.profile.profilePic;
-                  // }
+                  if (state is Loaded || state is Saving) {
+                    // if (state is Loaded) {
+                    //   nameController.text = state.profile.name;
+                    //   emailController.text = state.profile.email;
+                    //   phoneController.text = state.profile.phoneNumber;
+                    //   _currentProfilePicUrl = state.profile.profilePic;
+                    // }
 
-                  return Stack(
-                    children: [
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height +
-                            GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 500,
-                              tablet: 300,
-                              largeTablet: 500,
-                              desktop: 1000,
-                            ),
-                      ),
-                      Container(
-                        height: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 250, // keep phone unchanged
-                          tablet: 340,
-                          largeTablet: 400,
-                          desktop: 440,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryColor,
-                          borderRadius: const BorderRadius.only(
-                            bottomLeft: Radius.circular(40),
-                            bottomRight: Radius.circular(40),
-                          ),
-                        ),
-                      ),
-
-                      // Header
-                      Positioned(
-                        top: 50,
-                        left: 16,
-                        child: Row(
-                          children: [
-                            IconButton(
-                              onPressed: () => context.pop(context),
-                              icon: const Icon(Icons.arrow_back,
-                                  color: Colors.white),
-                              iconSize: GetResponsiveSize.getResponsiveSize(
+                    return Stack(
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height +
+                              GetResponsiveSize.getResponsiveSize(
                                 context,
-                                mobile: 28,
-                                tablet: 36,
-                                largeTablet: 40,
-                                desktop: 42,
+                                mobile: 500,
+                                tablet: 300,
+                                largeTablet: 500,
+                                desktop: 1000,
                               ),
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              "Profile",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize:
-                                    GetResponsiveSize.getResponsiveFontSize(
-                                  context,
-                                  mobile: 20,
-                                  tablet: 26,
-                                  largeTablet: 30,
-                                  desktop: 32,
-                                ),
-                              ),
-                            ),
-                          ],
                         ),
-                      ),
-
-                      // Profile card
-                      Positioned(
-                        top: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 120,
-                          tablet: 150,
-                          largeTablet: 180,
-                          desktop: 200,
-                        ),
-                        left: 20,
-                        right: 20,
-                        child: Container(
-                          padding: EdgeInsets.all(
-                            GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 16,
-                              tablet: 20,
-                              largeTablet: 24,
-                              desktop: 26,
-                            ),
+                        Container(
+                          height: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 250, // keep phone unchanged
+                            tablet: 340,
+                            largeTablet: 400,
+                            desktop: 440,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: const [
-                              BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 10,
-                                  spreadRadius: 2),
+                            color: AppColors.primaryColor,
+                            borderRadius: const BorderRadius.only(
+                              bottomLeft: Radius.circular(40),
+                              bottomRight: Radius.circular(40),
+                            ),
+                          ),
+                        ),
+
+                        // Header
+                        Positioned(
+                          top: 50,
+                          left: 16,
+                          child: Row(
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  // Check if we can pop (has navigation history)
+                                  if (context.canPop()) {
+                                    context.pop();
+                                  } else {
+                                    // If no history, navigate to home
+                                    context.go('/home');
+                                  }
+                                },
+                                icon: const Icon(Icons.arrow_back,
+                                    color: Colors.white),
+                                iconSize: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 28,
+                                  tablet: 36,
+                                  largeTablet: 40,
+                                  desktop: 42,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                "Profile",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                    context,
+                                    mobile: 20,
+                                    tablet: 26,
+                                    largeTablet: 30,
+                                    desktop: 32,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Align(
-                                alignment: Alignment.topRight,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    if (isEditing) {
-                                      saveProfile();
-                                    } else {
-                                      setState(() => isEditing = true);
-                                    }
-                                  },
-                                  child: isEditing
-                                      ? Container(
-                                          padding: EdgeInsets.all(
-                                            GetResponsiveSize.getResponsiveSize(
-                                              context,
-                                              mobile: 8,
-                                              tablet: 12,
-                                              largeTablet: 14,
-                                              desktop: 14,
+                        ),
+
+                        // Profile card
+                        Positioned(
+                          top: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 120,
+                            tablet: 150,
+                            largeTablet: 180,
+                            desktop: 200,
+                          ),
+                          left: 20,
+                          right: 20,
+                          child: Container(
+                            padding: EdgeInsets.all(
+                              GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 16,
+                                tablet: 20,
+                                largeTablet: 24,
+                                desktop: 26,
+                              ),
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: const [
+                                BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 10,
+                                    spreadRadius: 2),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Align(
+                                  alignment: Alignment.topRight,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      if (isEditing) {
+                                        saveProfile();
+                                      } else {
+                                        setState(() => isEditing = true);
+                                      }
+                                    },
+                                    child: isEditing
+                                        ? Container(
+                                            padding: EdgeInsets.all(
+                                              GetResponsiveSize
+                                                  .getResponsiveSize(
+                                                context,
+                                                mobile: 8,
+                                                tablet: 12,
+                                                largeTablet: 14,
+                                                desktop: 14,
+                                              ),
                                             ),
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primaryColor,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Icon(
-                                            Icons.check,
-                                            color: Colors.white,
-                                            size: GetResponsiveSize
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primaryColor,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Icon(
+                                              Icons.check,
+                                              color: Colors.white,
+                                              size: GetResponsiveSize
+                                                  .getResponsiveSize(
+                                                context,
+                                                mobile: 20,
+                                                tablet: 28,
+                                                largeTablet: 32,
+                                                desktop: 34,
+                                              ),
+                                            ),
+                                          )
+                                        : SizedBox(
+                                            width: GetResponsiveSize
                                                 .getResponsiveSize(
                                               context,
-                                              mobile: 20,
-                                              tablet: 28,
-                                              largeTablet: 32,
-                                              desktop: 34,
+                                              mobile: 24,
+                                              tablet: 36,
+                                              largeTablet: 42,
+                                              desktop: 44,
+                                            ),
+                                            height: GetResponsiveSize
+                                                .getResponsiveSize(
+                                              context,
+                                              mobile: 24,
+                                              tablet: 36,
+                                              largeTablet: 42,
+                                              desktop: 44,
+                                            ),
+                                            child: Image.asset(
+                                              'assets/images/profile-edit-icon.png',
+                                              fit: BoxFit.contain,
                                             ),
                                           ),
-                                        )
-                                      : SizedBox(
-                                          width: GetResponsiveSize
-                                              .getResponsiveSize(
-                                            context,
-                                            mobile: 24,
-                                            tablet: 36,
-                                            largeTablet: 42,
-                                            desktop: 44,
-                                          ),
-                                          height: GetResponsiveSize
-                                              .getResponsiveSize(
-                                            context,
-                                            mobile: 24,
-                                            tablet: 36,
-                                            largeTablet: 42,
-                                            desktop: 44,
-                                          ),
-                                          child: Image.asset(
-                                            'assets/images/profile-edit-icon.png',
-                                            fit: BoxFit.contain,
-                                          ),
-                                        ),
+                                  ),
                                 ),
+                                buildLabel("Full Name"),
+                                buildTextField(nameController, isEditing),
+                                buildLabel("Email"),
+                                buildTextField(emailController, isEditing),
+                                buildLabel("Phone Number"),
+                                buildTextField(phoneController, isEditing),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // Avatar (supports: existing URL, just-picked bytes, or empty)
+                        Positioned(
+                          top: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 75, // unchanged on phones
+                            tablet: 70,
+                            largeTablet: 80,
+                            desktop: 85,
+                          ),
+                          left: MediaQuery.of(context).size.width / 2 -
+                              GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 50,
+                                tablet: 65,
+                                largeTablet: 80,
+                                desktop: 90,
                               ),
-                              buildLabel("Full Name"),
-                              buildTextField(nameController, isEditing),
-                              buildLabel("Email"),
-                              buildTextField(emailController, isEditing),
-                              buildLabel("Phone Number"),
-                              buildTextField(phoneController, isEditing),
+                          child: Stack(
+                            children: [
+                              CircleAvatar(
+                                radius: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 50,
+                                  tablet: 80,
+                                  largeTablet: 100,
+                                  desktop: 110,
+                                ),
+                                backgroundColor: AppColors.greyColor,
+                                backgroundImage: _pickedImageBytes != null
+                                    ? MemoryImage(_pickedImageBytes!)
+                                    : (_currentProfilePicUrl != null &&
+                                            _currentProfilePicUrl!.isNotEmpty &&
+                                            _currentProfilePicUrl !=
+                                                'default-profile-pic-url' &&
+                                            _currentProfilePicUrl!
+                                                .startsWith('http'))
+                                        ? NetworkImage(_currentProfilePicUrl!)
+                                            as ImageProvider
+                                        : null,
+                                child: (_pickedImageBytes == null &&
+                                        (_currentProfilePicUrl == null ||
+                                            _currentProfilePicUrl!.isEmpty ||
+                                            _currentProfilePicUrl ==
+                                                'default-profile-pic-url' ||
+                                            !_currentProfilePicUrl!
+                                                .startsWith('http')))
+                                    ? Icon(Icons.person,
+                                        size:
+                                            GetResponsiveSize.getResponsiveSize(
+                                          context,
+                                          mobile: 50,
+                                          tablet: 80,
+                                          largeTablet: 96,
+                                          desktop: 110,
+                                        ),
+                                        color: Colors.white)
+                                    : null,
+                              ),
+                              if (isEditing)
+                                Positioned(
+                                  right: 0,
+                                  bottom: 0,
+                                  child: InkWell(
+                                    onTap: _pickImage,
+                                    child: Container(
+                                      padding: EdgeInsets.all(
+                                        GetResponsiveSize.getResponsiveSize(
+                                          context,
+                                          mobile: 6,
+                                          tablet: 8,
+                                          largeTablet: 10,
+                                          desktop: 10,
+                                        ),
+                                      ),
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white,
+                                      ),
+                                      child: Icon(
+                                        Icons.edit,
+                                        size:
+                                            GetResponsiveSize.getResponsiveSize(
+                                          context,
+                                          mobile: 18,
+                                          tablet: 26,
+                                          largeTablet: 30,
+                                          desktop: 32,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
                             ],
                           ),
                         ),
-                      ),
 
-                      // Avatar (supports: existing URL, just-picked bytes, or empty)
-                      Positioned(
-                        top: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 75, // unchanged on phones
-                          tablet: 70,
-                          largeTablet: 80,
-                          desktop: 85,
-                        ),
-                        left: MediaQuery.of(context).size.width / 2 -
-                            GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 50,
-                              tablet: 65,
-                              largeTablet: 80,
-                              desktop: 90,
-                            ),
-                        child: Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: GetResponsiveSize.getResponsiveSize(
-                                context,
-                                mobile: 50,
-                                tablet: 80,
-                                largeTablet: 100,
-                                desktop: 110,
-                              ),
-                              backgroundColor: AppColors.greyColor,
-                              backgroundImage: _pickedImageBytes != null
-                                  ? MemoryImage(_pickedImageBytes!)
-                                  : (_currentProfilePicUrl != null &&
-                                          _currentProfilePicUrl!.isNotEmpty &&
-                                          _currentProfilePicUrl !=
-                                              'default-profile-pic-url' &&
-                                          _currentProfilePicUrl!
-                                              .startsWith('http'))
-                                      ? NetworkImage(_currentProfilePicUrl!)
-                                          as ImageProvider
-                                      : null,
-                              child: (_pickedImageBytes == null &&
-                                      (_currentProfilePicUrl == null ||
-                                          _currentProfilePicUrl!.isEmpty ||
-                                          _currentProfilePicUrl ==
-                                              'default-profile-pic-url' ||
-                                          !_currentProfilePicUrl!
-                                              .startsWith('http')))
-                                  ? Icon(Icons.person,
-                                      size: GetResponsiveSize.getResponsiveSize(
-                                        context,
-                                        mobile: 50,
-                                        tablet: 80,
-                                        largeTablet: 96,
-                                        desktop: 110,
+                        // Menu list
+                        Positioned(
+                          top: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 430,
+                            tablet: 530,
+                            largeTablet: 550,
+                            desktop: 600,
+                          ),
+                          left: 20,
+                          right: 20,
+                          child: Column(
+                            children: [
+                              buildMenuItem(
+                                  'assets/images/wishlist-profile-icon.png',
+                                  "Wishlist",
+                                  onTap: () => context.push('/wishlist')),
+                              buildMenuItem(
+                                  'assets/images/add-profile-icon.png',
+                                  "My Ads",
+                                  onTap: () => context.push('/my-ads')),
+                              buildMenuItem(
+                                  'assets/images/help-profile-icon.png',
+                                  "Help"),
+                              buildMenuItem(
+                                  'assets/images/profile-edit-icon.png',
+                                  "Change Password",
+                                  onTap: () => _showChangePasswordDialog()),
+                              buildMenuItem(
+                                'assets/images/logout-profile-icon.png',
+                                "Logout",
+                                isLogout: true,
+                                onTap: () async {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (_) => AlertDialog(
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(20)),
+                                      backgroundColor: AppColors.whiteColor,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 30, vertical: 10),
+                                      title: Text(
+                                        "Logout",
+                                        textAlign: TextAlign.center,
+                                        style: AppTextstyle.title1,
                                       ),
-                                      color: Colors.white)
-                                  : null,
-                            ),
-                            if (isEditing)
-                              Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: InkWell(
-                                  onTap: _pickImage,
-                                  child: Container(
-                                    padding: EdgeInsets.all(
-                                      GetResponsiveSize.getResponsiveSize(
-                                        context,
-                                        mobile: 6,
-                                        tablet: 8,
-                                        largeTablet: 10,
-                                        desktop: 10,
+                                      content: Text(
+                                        "Are you sure you want to logout?",
+                                        textAlign: TextAlign.center,
+                                        style:
+                                            AppTextstyle.sectionTitleTextStyle,
                                       ),
-                                    ),
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.white,
-                                    ),
-                                    child: Icon(
-                                      Icons.edit,
-                                      size: GetResponsiveSize.getResponsiveSize(
-                                        context,
-                                        mobile: 18,
-                                        tablet: 26,
-                                        largeTablet: 30,
-                                        desktop: 32,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              )
-                          ],
-                        ),
-                      ),
-
-                      // Menu list
-                      Positioned(
-                        top: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 430,
-                          tablet: 530,
-                          largeTablet: 550,
-                          desktop: 600,
-                        ),
-                        left: 20,
-                        right: 20,
-                        child: Column(
-                          children: [
-                            buildMenuItem(
-                                'assets/images/wishlist-profile-icon.png',
-                                "Wishlist",
-                                onTap: () => context.push('/wishlist')),
-                            buildMenuItem(
-                                'assets/images/add-profile-icon.png', "My Ads",
-                                onTap: () => context.push('/my-ads')),
-                            buildMenuItem(
-                                'assets/images/help-profile-icon.png', "Help"),
-                            buildMenuItem('assets/images/profile-edit-icon.png',
-                                "Change Password",
-                                onTap: () => _showChangePasswordDialog()),
-                            buildMenuItem(
-                              'assets/images/logout-profile-icon.png',
-                              "Logout",
-                              isLogout: true,
-                              onTap: () async {
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (_) => AlertDialog(
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(20)),
-                                    backgroundColor: AppColors.whiteColor,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 30, vertical: 10),
-                                    title: Text(
-                                      "Logout",
-                                      textAlign: TextAlign.center,
-                                      style: AppTextstyle.title1,
-                                    ),
-                                    content: Text(
-                                      "Are you sure you want to logout?",
-                                      textAlign: TextAlign.center,
-                                      style: AppTextstyle.sectionTitleTextStyle,
-                                    ),
-                                    actionsAlignment: MainAxisAlignment.center,
-                                    actions: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Expanded(
-                                            child: TextButton(
-                                                style: ButtonStyle(
-                                                    backgroundColor:
-                                                        WidgetStatePropertyAll(
-                                                            AppColors
-                                                                .whiteColor),
-                                                    side:
-                                                        WidgetStatePropertyAll(
-                                                            BorderSide(
-                                                                color:
-                                                                    Colors.red,
-                                                                width: 1.0)),
-                                                    shape: WidgetStatePropertyAll(
-                                                        RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        10)))),
-                                                onPressed: () => Navigator.pop(
-                                                    context, false),
-                                                child: const Text(
-                                                  "Cancel",
-                                                  style: TextStyle(
-                                                      color: Colors.red),
-                                                )),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: TextButton(
-                                                style: ButtonStyle(
-                                                    backgroundColor:
-                                                        WidgetStatePropertyAll(
-                                                            AppColors.redColor),
-                                                    shape: WidgetStatePropertyAll(
-                                                        RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        10)))),
-                                                onPressed: () => Navigator.pop(
-                                                    context, true),
-                                                child: const Text(
-                                                  "Logout",
-                                                  style: TextStyle(
-                                                      color:
-                                                          AppColors.whiteColor),
-                                                )),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                );
-                                if (confirm == true) {
-                                  context.read<login_bloc.LoginBloc>().add(
-                                      const login_bloc.LoginEvent.logout());
-                                  context.go('/');
-                                }
-                              },
-                            ),
-                            buildMenuItem(
-                              'assets/images/close.png',
-                              "Delete Account",
-                              isLogout: true,
-                              onTap: () async {
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (_) {
-                                    final TextEditingController _confirmCtl =
-                                        TextEditingController();
-                                    String? _errorText;
-                                    return StatefulBuilder(
-                                      builder: (ctx, setState) => AlertDialog(
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(20)),
-                                        backgroundColor: AppColors.whiteColor,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 24, vertical: 16),
-                                        titlePadding: const EdgeInsets.only(
-                                            left: 24,
-                                            top: 16,
-                                            right: 8,
-                                            bottom: 0),
-                                        title: Row(
+                                      actionsAlignment:
+                                          MainAxisAlignment.center,
+                                      actions: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
                                             Expanded(
-                                              child: Text(
-                                                "Delete Account",
-                                                textAlign: TextAlign.center,
-                                                style: AppTextstyle.title1,
-                                              ),
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(Icons.close),
-                                              onPressed: () =>
-                                                  Navigator.pop(ctx, false),
-                                            )
-                                          ],
-                                        ),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          children: [
-                                            Text(
-                                              "This will permanently delete your account and data. Continue?",
-                                              textAlign: TextAlign.center,
-                                              style: AppTextstyle
-                                                  .sectionTitleTextStyle,
-                                            ),
-                                            const SizedBox(height: 16),
-                                            const Text(
-                                              "To confirm this, type 'DELETE'",
-                                              textAlign: TextAlign.left,
-                                            ),
-                                            const SizedBox(height: 8),
-                                            TextField(
-                                              controller: _confirmCtl,
-                                              decoration: InputDecoration(
-                                                hintText: "DELETE",
-                                                errorText: _errorText,
-                                                border: OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                ),
-                                                contentPadding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 12),
-                                              ),
-                                              onChanged: (_) {
-                                                if (_errorText != null) {
-                                                  setState(
-                                                      () => _errorText = null);
-                                                }
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                        actionsAlignment:
-                                            MainAxisAlignment.center,
-                                        actions: [
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Expanded(
-                                                child: TextButton(
+                                              child: TextButton(
                                                   style: ButtonStyle(
-                                                    backgroundColor:
-                                                        WidgetStatePropertyAll(
-                                                            AppColors.redColor),
-                                                    shape:
-                                                        WidgetStatePropertyAll(
-                                                      RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  onPressed: () {
-                                                    if (_confirmCtl.text
-                                                            .trim() !=
-                                                        'DELETE') {
-                                                      setState(() => _errorText =
-                                                          'Please type DELETE');
-                                                      return;
-                                                    }
-                                                    Navigator.pop(ctx, true);
-                                                  },
+                                                      backgroundColor:
+                                                          WidgetStatePropertyAll(
+                                                              AppColors
+                                                                  .whiteColor),
+                                                      side:
+                                                          WidgetStatePropertyAll(
+                                                              BorderSide(
+                                                                  color: Colors
+                                                                      .red,
+                                                                  width: 1.0)),
+                                                      shape: WidgetStatePropertyAll(
+                                                          RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          10)))),
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                          context, false),
                                                   child: const Text(
-                                                    "Delete Account",
+                                                    "Cancel",
+                                                    style: TextStyle(
+                                                        color: Colors.red),
+                                                  )),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: TextButton(
+                                                  style: ButtonStyle(
+                                                      backgroundColor:
+                                                          WidgetStatePropertyAll(
+                                                              AppColors
+                                                                  .redColor),
+                                                      shape: WidgetStatePropertyAll(
+                                                          RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                      10)))),
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                          context, true),
+                                                  child: const Text(
+                                                    "Logout",
                                                     style: TextStyle(
                                                         color: AppColors
                                                             .whiteColor),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          )
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                );
-                                if (confirm == true) {
-                                  try {
-                                    await context
-                                        .read<profile_bloc.ProfileBloc>()
-                                        .deleteAccount();
+                                                  )),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm == true) {
                                     context.read<login_bloc.LoginBloc>().add(
                                         const login_bloc.LoginEvent.logout());
                                     context.go('/');
-                                  } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            'Failed to delete account: $e'),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
                                   }
-                                }
-                              },
-                            ),
-                            SizedBox(
-                              height: GetResponsiveSize.getResponsiveSize(
-                                context,
-                                mobile: 100,
-                                tablet: 120,
-                                largeTablet: 160,
-                                desktop: 180,
+                                },
                               ),
-                            ),
-                          ],
+                              buildMenuItem(
+                                'assets/images/close.png',
+                                "Delete Account",
+                                isLogout: true,
+                                onTap: () async {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (_) {
+                                      final TextEditingController _confirmCtl =
+                                          TextEditingController();
+                                      String? _errorText;
+                                      return StatefulBuilder(
+                                        builder: (ctx, setState) => AlertDialog(
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(20)),
+                                          backgroundColor: AppColors.whiteColor,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                  horizontal: 24, vertical: 16),
+                                          titlePadding: const EdgeInsets.only(
+                                              left: 24,
+                                              top: 16,
+                                              right: 8,
+                                              bottom: 0),
+                                          title: Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  "Delete Account",
+                                                  textAlign: TextAlign.center,
+                                                  style: AppTextstyle.title1,
+                                                ),
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(Icons.close),
+                                                onPressed: () =>
+                                                    Navigator.pop(ctx, false),
+                                              )
+                                            ],
+                                          ),
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
+                                            children: [
+                                              Text(
+                                                "This will permanently delete your account and data. Continue?",
+                                                textAlign: TextAlign.center,
+                                                style: AppTextstyle
+                                                    .sectionTitleTextStyle,
+                                              ),
+                                              const SizedBox(height: 16),
+                                              const Text(
+                                                "To confirm this, type 'DELETE'",
+                                                textAlign: TextAlign.left,
+                                              ),
+                                              const SizedBox(height: 8),
+                                              TextField(
+                                                controller: _confirmCtl,
+                                                decoration: InputDecoration(
+                                                  hintText: "DELETE",
+                                                  errorText: _errorText,
+                                                  border: OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                  ),
+                                                  contentPadding:
+                                                      const EdgeInsets
+                                                          .symmetric(
+                                                          horizontal: 12,
+                                                          vertical: 12),
+                                                ),
+                                                onChanged: (_) {
+                                                  if (_errorText != null) {
+                                                    setState(() =>
+                                                        _errorText = null);
+                                                  }
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                          actionsAlignment:
+                                              MainAxisAlignment.center,
+                                          actions: [
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Expanded(
+                                                  child: TextButton(
+                                                    style: ButtonStyle(
+                                                      backgroundColor:
+                                                          WidgetStatePropertyAll(
+                                                              AppColors
+                                                                  .redColor),
+                                                      shape:
+                                                          WidgetStatePropertyAll(
+                                                        RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(10),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    onPressed: () {
+                                                      if (_confirmCtl.text
+                                                              .trim() !=
+                                                          'DELETE') {
+                                                        setState(() => _errorText =
+                                                            'Please type DELETE');
+                                                        return;
+                                                      }
+                                                      Navigator.pop(ctx, true);
+                                                    },
+                                                    child: const Text(
+                                                      "Delete Account",
+                                                      style: TextStyle(
+                                                          color: AppColors
+                                                              .whiteColor),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  );
+                                  if (confirm == true) {
+                                    try {
+                                      await context
+                                          .read<profile_bloc.ProfileBloc>()
+                                          .deleteAccount();
+                                      context.read<login_bloc.LoginBloc>().add(
+                                          const login_bloc.LoginEvent.logout());
+                                      context.go('/');
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              'Failed to delete account: $e'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                              ),
+                              SizedBox(
+                                height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 100,
+                                  tablet: 120,
+                                  largeTablet: 160,
+                                  desktop: 180,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  );
-                }
+                      ],
+                    );
+                  }
 
-                if (state is Error) {
-                  return Center(child: Text("Error: ${state.message}"));
-                }
-                return const SizedBox.shrink();
-              },
+                  if (state is Error) {
+                    return Center(child: Text("Error: ${state.message}"));
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
             ),
-          ),
 
-          // Simple full-screen saving overlay
-          if (_isSaving)
-            Container(
-              color: Colors.black.withOpacity(0.25),
-              child: const Center(child: CircularProgressIndicator()),
-            ),
-        ],
+            // Simple full-screen saving overlay
+            if (_isSaving)
+              Container(
+                color: Colors.black.withOpacity(0.25),
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+          ],
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        floatingActionButton: const BottomNavBar(),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: const BottomNavBar(),
     );
   }
 

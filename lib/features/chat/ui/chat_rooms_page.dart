@@ -322,11 +322,15 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
     } else if (widget.fromPage == 'home') {
       context.go('/home');
     } else if (widget.fromPage == 'ad-detail') {
-      // If came from ad detail page, go to home
+      // If came from ad detail page (via chat page), go to home
       context.go('/home');
     } else {
-      // Default fallback
-      context.pop();
+      // Default fallback - check if we can pop, otherwise go to home
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/home');
+      }
     }
   }
 
