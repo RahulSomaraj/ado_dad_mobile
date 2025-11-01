@@ -19,6 +19,7 @@ import 'package:ado_dad_user/features/login/ui/otp_login_page.dart';
 import 'package:ado_dad_user/features/login/ui/otp_verification_page.dart';
 import 'package:ado_dad_user/features/profile/MyAds/ui/my_ads_page.dart';
 import 'package:ado_dad_user/features/profile/ui/profile.dart';
+import 'package:ado_dad_user/features/profile/help/help.dart';
 import 'package:ado_dad_user/features/profile/wishlist/wishlist_page.dart';
 import 'package:ado_dad_user/features/search/ui/search.dart';
 import 'package:ado_dad_user/features/sell/ui/form/add_commercial_vehicle_form.dart';
@@ -71,6 +72,7 @@ class AppRoutes {
       GoRoute(path: '/profile', builder: (context, state) => const Profile()),
       GoRoute(
           path: '/wishlist', builder: (context, state) => const WishlistPage()),
+      GoRoute(path: '/help', builder: (context, state) => const Help()),
       GoRoute(
         path: '/search',
         builder: (context, state) {

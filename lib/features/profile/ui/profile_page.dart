@@ -884,8 +884,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                   "My Ads",
                                   onTap: () => context.push('/my-ads')),
                               buildMenuItem(
-                                  'assets/images/help-profile-icon.png',
-                                  "Help"),
+                                  'assets/images/help-profile-icon.png', "Help",
+                                  onTap: () => context.push('/help')),
                               buildMenuItem(
                                   'assets/images/profile-edit-icon.png',
                                   "Change Password",
