@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
@@ -111,7 +113,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(
-              Icons.arrow_back,
+              (!kIsWeb && Platform.isIOS)
+                  ? Icons.arrow_back_ios
+                  : Icons.arrow_back,
               size: GetResponsiveSize.getResponsiveSize(
                 context,
                 mobile: 24.0, // Keep mobile unchanged

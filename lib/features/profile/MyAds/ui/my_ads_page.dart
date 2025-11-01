@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
@@ -51,7 +53,9 @@ class _MyAdsPageState extends State<MyAdsPage> {
         backgroundColor: const Color(0xFFF6F4FC),
         leading: IconButton(
           icon: Icon(
-            Icons.arrow_back,
+            (!kIsWeb && Platform.isIOS)
+                ? Icons.arrow_back_ios
+                : Icons.arrow_back,
             size: GetResponsiveSize.getResponsiveSize(
               context,
               mobile: 24,

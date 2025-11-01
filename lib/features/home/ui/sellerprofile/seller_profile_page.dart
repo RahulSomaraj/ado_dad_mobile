@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -57,7 +59,9 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                     IconButton(
                       onPressed: () => Navigator.maybePop(context),
                       icon: Icon(
-                        Icons.arrow_back,
+                        (!kIsWeb && Platform.isIOS)
+                            ? Icons.arrow_back_ios
+                            : Icons.arrow_back,
                         size: GetResponsiveSize.getResponsiveSize(context,
                             mobile: 20,
                             tablet: 26,

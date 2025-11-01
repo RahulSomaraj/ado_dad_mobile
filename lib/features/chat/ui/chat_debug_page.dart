@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ado_dad_user/repositories/chat_repository.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
@@ -95,7 +97,11 @@ class _ChatDebugPageState extends State<ChatDebugPage> {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(
+            (!kIsWeb && Platform.isIOS)
+                ? Icons.arrow_back_ios
+                : Icons.arrow_back,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),

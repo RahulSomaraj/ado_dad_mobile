@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
@@ -109,7 +111,12 @@ Logging In
               context.go('/profile');
             }
           },
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(
+            (!kIsWeb && Platform.isIOS)
+                ? Icons.arrow_back_ios
+                : Icons.arrow_back,
+            color: Colors.white,
+          ),
           iconSize: GetResponsiveSize.getResponsiveSize(
             context,
             mobile: 28,
@@ -120,6 +127,7 @@ Logging In
         ),
         title: Text(
           'Help & Support',
+          textAlign: TextAlign.left,
           style: GoogleFonts.poppins(
             fontSize: GetResponsiveSize.getResponsiveFontSize(
               context,
