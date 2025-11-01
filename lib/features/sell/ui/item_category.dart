@@ -1,5 +1,6 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/models/cayegory_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -9,23 +10,73 @@ class ItemCategory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Filter out showroom category
+    final filteredCategories =
+        categories.where((cat) => cat.categoryId != 'showroom').toList();
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.whiteColor,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            size: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 24,
+              tablet: 30,
+              largeTablet: 32,
+              desktop: 36,
+            ),
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(
           'Select Category',
-          style: AppTextstyle.appbarText,
+          style: AppTextstyle.appbarText.copyWith(
+            fontSize: GetResponsiveSize.getResponsiveFontSize(
+              context,
+              mobile: AppTextstyle.appbarText.fontSize ?? 20,
+              tablet: 24,
+              largeTablet: 28,
+              desktop: 32,
+            ),
+          ),
         ),
       ),
       body: ListView.builder(
-        itemCount: categories.length,
+        padding: EdgeInsets.symmetric(
+          vertical: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 10,
+            tablet: 16,
+            largeTablet: 22,
+            desktop: 28,
+          ),
+        ),
+        itemCount: filteredCategories.length,
         itemBuilder: (BuildContext context, int index) {
-          final category = categories[index];
+          final category = filteredCategories[index];
           return Column(
             children: [
-              SizedBox(height: 10),
+              SizedBox(
+                height: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 10,
+                  tablet: 16,
+                  largeTablet: 22,
+                  desktop: 28,
+                ),
+              ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(
+                  horizontal: GetResponsiveSize.getResponsivePadding(
+                    context,
+                    mobile: 20,
+                    tablet: 28,
+                    largeTablet: 36,
+                    desktop: 44,
+                  ),
+                ),
                 child: GestureDetector(
                   // onTap: () {
                   //   if (category.name == "Real Estate") {
@@ -61,22 +112,106 @@ class ItemCategory extends StatelessWidget {
 
                   child: Card(
                     color: AppColors.whiteColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        GetResponsiveSize.getResponsiveBorderRadius(
+                          context,
+                          mobile: 12,
+                          tablet: 16,
+                          largeTablet: 20,
+                          desktop: 24,
+                        ),
+                      ),
+                    ),
                     child: SizedBox(
-                      height: 100,
+                      height: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 100,
+                        tablet: 140,
+                        largeTablet: 170,
+                        desktop: 200,
+                      ),
                       child: Center(
                         child: ListTile(
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: GetResponsiveSize.getResponsivePadding(
+                              context,
+                              mobile: 16,
+                              tablet: 24,
+                              largeTablet: 32,
+                              desktop: 40,
+                            ),
+                          ),
                           leading: Container(
-                            height: 50,
-                            width: 50,
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 50,
+                              tablet: 80,
+                              largeTablet: 100,
+                              desktop: 120,
+                            ),
+                            width: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 50,
+                              tablet: 80,
+                              largeTablet: 100,
+                              desktop: 120,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.greyColor.withValues(alpha: 1.6),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(
+                                GetResponsiveSize.getResponsiveBorderRadius(
+                                  context,
+                                  mobile: 10,
+                                  tablet: 14,
+                                  largeTablet: 18,
+                                  desktop: 22,
+                                ),
+                              ),
                             ),
-                            child: Image.asset(category.image),
+                            child: Padding(
+                              padding: EdgeInsets.all(
+                                GetResponsiveSize.getResponsivePadding(
+                                  context,
+                                  mobile: 8,
+                                  tablet: 12,
+                                  largeTablet: 16,
+                                  desktop: 20,
+                                ),
+                              ),
+                              child: Image.asset(category.image),
+                            ),
                           ),
-                          title: Text(category.name),
+                          title: Text(
+                            category.name,
+                            style: AppTextstyle.appbarText.copyWith(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: AppTextstyle.appbarText.fontSize ?? 16,
+                                tablet: 22,
+                                largeTablet: 28,
+                                desktop: 34,
+                              ),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                           trailing: Image.asset(
-                              'assets/images/category-select-arrow.png'),
+                            'assets/images/category-select-arrow.png',
+                            width: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 24,
+                              tablet: 32,
+                              largeTablet: 40,
+                              desktop: 48,
+                            ),
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 24,
+                              tablet: 32,
+                              largeTablet: 40,
+                              desktop: 48,
+                            ),
+                          ),
                         ),
                       ),
                     ),

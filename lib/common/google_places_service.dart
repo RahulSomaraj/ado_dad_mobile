@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:dio/dio.dart';
 
 class GooglePlacesService {
@@ -139,7 +140,77 @@ class GooglePlacesService {
       if (response.statusCode == 200) {
         final data = response.data;
         if (data['status'] == 'OK' && data['results'].isNotEmpty) {
-          final result = data['results'][0];
+          final results = data['results'] as List<dynamic>;
+
+          // Helper function to score how specific a result's location components are
+          // Higher score = more specific location (e.g., sublocality_level_2 is better than locality)
+          int _getLocationSpecificityScore(Map<String, dynamic> result) {
+            final addressComponents =
+                result['address_components'] as List<dynamic>?;
+            if (addressComponents == null) return 0;
+
+            int score = 0;
+            for (var component in addressComponents) {
+              final types = component['types'] as List<dynamic>?;
+              if (types != null) {
+                if (types.contains('sublocality_level_2')) {
+                  score = 5; // Most specific
+                  break;
+                } else if (types.contains('sublocality_level_1')) {
+                  score = math.max(score, 4);
+                } else if (types.contains('neighborhood')) {
+                  score = math.max(score, 3);
+                } else if (types.contains('sublocality')) {
+                  score = math.max(score, 2);
+                } else if (types.contains('locality')) {
+                  score = math.max(score, 1);
+                }
+              }
+            }
+            return score;
+          }
+
+          // Find the result with the most specific location component
+          Map<String, dynamic>? bestResult;
+          int bestScore = -1;
+          String? bestLocationType;
+
+          for (var result in results) {
+            final resultMap = result as Map<String, dynamic>;
+            final specificityScore = _getLocationSpecificityScore(resultMap);
+            final locationType =
+                resultMap['geometry']?['location_type'] as String?;
+
+            // Prioritize results with higher specificity score
+            // If scores are equal, prefer ROOFTOP > RANGE_INTERPOLATED > others
+            bool shouldUseThis = false;
+
+            if (specificityScore > bestScore) {
+              // This result has a more specific location component
+              shouldUseThis = true;
+            } else if (specificityScore == bestScore && bestResult != null) {
+              // Same specificity, check location type accuracy
+              if (bestLocationType != 'ROOFTOP' && locationType == 'ROOFTOP') {
+                shouldUseThis = true;
+              } else if (bestLocationType != 'RANGE_INTERPOLATED' &&
+                  bestLocationType != 'ROOFTOP' &&
+                  locationType == 'RANGE_INTERPOLATED') {
+                shouldUseThis = true;
+              }
+            } else if (bestResult == null) {
+              // First result, use it as fallback
+              shouldUseThis = true;
+            }
+
+            if (shouldUseThis) {
+              bestResult = resultMap;
+              bestScore = specificityScore;
+              bestLocationType = locationType;
+            }
+          }
+
+          // Use the best result found, or first result as fallback
+          final result = bestResult ?? results[0] as Map<String, dynamic>;
 
           // Try to extract structured components (Place, District, State)
           final addressComponents =
@@ -147,7 +218,10 @@ class GooglePlacesService {
 
           if (addressComponents != null) {
             String? locality; // Place
-            String? sublocality; // Sub-place
+            String? sublocality; // Sub-place (more specific)
+            String? sublocalityLevel1; // Even more specific sub-place
+            String? sublocalityLevel2; // Most specific sub-place
+            String? neighborhood; // Neighborhood
             String? subAdministrativeArea; // District
             String? administrativeArea; // State
 
@@ -156,11 +230,17 @@ class GooglePlacesService {
               final longName = component['long_name'] as String?;
 
               if (types != null && longName != null) {
-                if (types.contains('locality')) {
-                  locality = longName;
-                } else if (types.contains('sublocality') ||
-                    types.contains('sublocality_level_1')) {
+                // Check for most specific location first
+                if (types.contains('sublocality_level_2')) {
+                  sublocalityLevel2 = longName;
+                } else if (types.contains('sublocality_level_1')) {
+                  sublocalityLevel1 = longName;
+                } else if (types.contains('neighborhood')) {
+                  neighborhood = longName;
+                } else if (types.contains('sublocality')) {
                   sublocality = longName;
+                } else if (types.contains('locality')) {
+                  locality = longName;
                 } else if (types.contains('administrative_area_level_2')) {
                   subAdministrativeArea = longName;
                 } else if (types.contains('administrative_area_level_1')) {
@@ -170,13 +250,20 @@ class GooglePlacesService {
             }
 
             // Build address in format: Place, District, State
+            // Prioritize most specific location components
             final addressParts = <String>[];
 
-            // Add place (locality or sublocality)
-            if (locality?.isNotEmpty == true) {
-              addressParts.add(locality!);
+            // Add place - prioritize most specific location
+            if (sublocalityLevel2?.isNotEmpty == true) {
+              addressParts.add(sublocalityLevel2!);
+            } else if (sublocalityLevel1?.isNotEmpty == true) {
+              addressParts.add(sublocalityLevel1!);
+            } else if (neighborhood?.isNotEmpty == true) {
+              addressParts.add(neighborhood!);
             } else if (sublocality?.isNotEmpty == true) {
               addressParts.add(sublocality!);
+            } else if (locality?.isNotEmpty == true) {
+              addressParts.add(locality!);
             }
 
             // Add district (subAdministrativeArea)
@@ -190,6 +277,8 @@ class GooglePlacesService {
             }
 
             if (addressParts.isNotEmpty) {
+              print(
+                  '📍 Extracted location: ${addressParts.join(", ")} (specificity_score: $bestScore, location_type: $bestLocationType)');
               return addressParts.join(', ');
             }
           }

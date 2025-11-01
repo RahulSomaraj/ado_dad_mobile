@@ -1,4 +1,5 @@
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ado_dad_user/features/chat/bloc/chat_bloc.dart';
@@ -70,11 +71,31 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Chats'),
+          title: Text(
+            'Chats',
+            style: TextStyle(
+              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                context,
+                mobile: 20,
+                tablet: 24,
+                largeTablet: 28,
+                desktop: 32,
+              ),
+            ),
+          ),
           backgroundColor: AppColors.primaryColor,
           foregroundColor: Colors.white,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: Icon(
+              Icons.arrow_back,
+              size: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 24,
+                tablet: 30,
+                largeTablet: 32,
+                desktop: 36,
+              ),
+            ),
             onPressed: () => _handleBackNavigation(),
           ),
         ),
@@ -200,9 +221,30 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
         ),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 16,
+            tablet: 24,
+            largeTablet: 32,
+            desktop: 40,
+          ),
+          vertical: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 8,
+            tablet: 12,
+            largeTablet: 16,
+            desktop: 20,
+          ),
+        ),
         leading: CircleAvatar(
-          radius: 28,
+          radius: GetResponsiveSize.getResponsiveSize(
+            context,
+            mobile: 28,
+            tablet: 36,
+            largeTablet: 42,
+            desktop: 48,
+          ),
           backgroundColor: Colors.grey[300],
           backgroundImage: otherUser?['profilePic'] != null &&
                   otherUser!['profilePic'] != 'default-profile-pic-url'
@@ -212,8 +254,14 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
                   otherUser!['profilePic'] == 'default-profile-pic-url'
               ? Text(
                   (otherUser?['name'] ?? 'U').substring(0, 1).toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 20,
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(
+                      context,
+                      mobile: 20,
+                      tablet: 24,
+                      largeTablet: 28,
+                      desktop: 32,
+                    ),
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -225,9 +273,15 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
             Expanded(
               child: Text(
                 room['adTitle'] ?? 'Ad #${adId ?? 'Unknown'}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  fontSize: 16,
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(
+                    context,
+                    mobile: 16,
+                    tablet: 20,
+                    largeTablet: 24,
+                    desktop: 28,
+                  ),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -235,7 +289,13 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
             Text(
               _formatTime(timestamp),
               style: TextStyle(
-                fontSize: 12,
+                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  context,
+                  mobile: 12,
+                  tablet: 16,
+                  largeTablet: 18,
+                  desktop: 20,
+                ),
                 color: Colors.grey[600],
               ),
             ),
@@ -244,7 +304,13 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
         subtitle: Text(
           lastMessage,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: GetResponsiveSize.getResponsiveFontSize(
+              context,
+              mobile: 14,
+              tablet: 18,
+              largeTablet: 20,
+              desktop: 24,
+            ),
             color: Colors.grey[600],
           ),
           maxLines: 1,

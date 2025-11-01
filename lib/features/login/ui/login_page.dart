@@ -1,5 +1,6 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/common/widgets/common_decoration.dart';
@@ -190,112 +191,205 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Image.asset('assets/images/Ado-dad.png'),
-              const SizedBox(height: 30),
-              Text(
-                'Login to your Account',
-                style: AppTextstyle.title1,
-              ),
-              const Text(
-                  'Securely log in and enjoy a seamless experience\nwith us!'),
-              const SizedBox(height: 20),
-              Form(
-                key: _loginFormKey,
-                child: Column(
-                  children: [
-                    _buildUsernameField(),
-                    const SizedBox(height: 10),
-                    _buildPasswordField(),
-                    // const SizedBox(height: 10),
-                    _buildForgotPasswordButton(),
-                    const SizedBox(height: 10),
-                    _buildButton(),
-                  ],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Adodad logo with responsive sizing
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: GetResponsiveSize.isTablet(context)
+                      ? SizedBox(
+                          height: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 0, // Not used since we check isTablet first
+                            tablet: 40,
+                            largeTablet: 80,
+                            desktop: 130,
+                          ),
+                          width: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 0, // Not used since we check isTablet first
+                            tablet: 200,
+                            largeTablet: 250,
+                            desktop: 300,
+                          ),
+                          child: Image.asset(
+                            'assets/images/Ado-dad.png',
+                            fit: BoxFit.contain,
+                          ),
+                        )
+                      : Image.asset(
+                          'assets/images/Ado-dad.png',
+                          fit: BoxFit.contain,
+                        ),
                 ),
-              ),
-              const SizedBox(height: 30),
-              Center(
-                  child: Text(
-                'Or',
-                style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.blackColor1),
-              )),
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    context.push('/login-otp');
-                  },
-                  child: Text(
-                    'Login with OTP',
-                    style: TextStyle(
-                        decoration: TextDecoration.underline,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.blackColor1),
+                const SizedBox(height: 30),
+                Text(
+                  'Login to your Account',
+                  style: AppTextstyle.title1.copyWith(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(
+                      context,
+                      mobile: 20.0, // Keep mobile unchanged
+                      tablet: 30.0,
+                      largeTablet: 40.0,
+                      desktop: 50.0,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('New User?',
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.blackColor)),
-                  GestureDetector(
-                    onTap: () {
-                      context.go('/signup');
+                Text(
+                  'Securely log in and enjoy a seamless experience\nwith us!',
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(
+                      context,
+                      mobile: 14.0, // Keep mobile unchanged (default size)
+                      tablet: 20.0,
+                      largeTablet: 26.0,
+                      desktop: 32.0,
+                    ),
+                    color: AppColors.blackColor,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Form(
+                  key: _loginFormKey,
+                  child: Column(
+                    children: [
+                      _buildUsernameField(),
+                      SizedBox(
+                        height: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 10, // Keep mobile unchanged
+                          tablet: 20,
+                          largeTablet: 25,
+                          desktop: 30,
+                        ),
+                      ),
+                      _buildPasswordField(),
+                      // const SizedBox(height: 10),
+                      _buildForgotPasswordButton(),
+                      const SizedBox(height: 10),
+                      _buildButton(),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+                Center(
+                    child: Text(
+                  'Or',
+                  style: TextStyle(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 14.0, // Keep mobile unchanged
+                        tablet: 20.0,
+                        largeTablet: 25.0,
+                        desktop: 30.0,
+                      ),
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.blackColor1),
+                )),
+                Center(
+                  child: TextButton(
+                    onPressed: () {
+                      context.push('/login-otp');
                     },
-                    child: Text('Signup',
-                        style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.primaryColor)),
-                  )
-                ],
-              ),
-              const SizedBox(height: 70),
-              Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                    child: Text(
+                      'Login with OTP',
+                      style: TextStyle(
+                          decoration: TextDecoration.underline,
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 14.0, // Keep mobile unchanged
+                            tablet: 20.0,
+                            largeTablet: 25.0,
+                            desktop: 30.0,
+                          ),
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.blackColor1),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Text('New User?',
+                        style: TextStyle(
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 14.0, // Keep mobile unchanged
+                              tablet: 20.0,
+                              largeTablet: 25.0,
+                              desktop: 30.0,
+                            ),
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.blackColor)),
                     GestureDetector(
-                      onTap: () => _openExternalUrl(
-                          'https://adodad.com/terms-and-conditions'),
-                      child: Text(
-                        'Terms & Conditions',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
-                            color: AppColors.primaryColor),
-                      ),
-                    ),
-                    // const SizedBox(height: 6),
-                    TextButton(
-                      onPressed: () =>
-                          _openExternalUrl('https://adodad.com/privacy-policy'),
-                      child: const Text(
-                        'Privacy Policy',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
-                            color: AppColors.primaryColor),
-                      ),
-                    ),
+                      onTap: () {
+                        context.go('/signup');
+                      },
+                      child: Text('Signup',
+                          style: TextStyle(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: 14.0, // Keep mobile unchanged
+                                tablet: 20.0,
+                                largeTablet: 25.0,
+                                desktop: 30.0,
+                              ),
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.primaryColor)),
+                    )
                   ],
                 ),
-              )
-            ],
+                const SizedBox(height: 70),
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _openExternalUrl(
+                            'https://adodad.com/terms-and-conditions'),
+                        child: Text(
+                          'Terms & Conditions',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: 12.0, // Keep mobile unchanged
+                                tablet: 20.0,
+                                largeTablet: 25.0,
+                                desktop: 30.0,
+                              ),
+                              color: AppColors.primaryColor),
+                        ),
+                      ),
+                      // const SizedBox(height: 6),
+                      TextButton(
+                        onPressed: () => _openExternalUrl(
+                            'https://adodad.com/privacy-policy'),
+                        child: Text(
+                          'Privacy Policy',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: 12.0, // Keep mobile unchanged
+                                tablet: 20.0,
+                                largeTablet: 25.0,
+                                desktop: 30.0,
+                              ),
+                              color: AppColors.primaryColor),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
           ),
         ),
       ),
@@ -304,17 +398,67 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildUsernameField() {
     // Custom text field that accepts both email and phone
-    return TextFormField(
+    final textField = TextFormField(
       controller: _usernameController,
       keyboardType: TextInputType.text,
+      style: TextStyle(
+        fontSize: GetResponsiveSize.getResponsiveFontSize(
+          context,
+          mobile: 16.0, // Keep mobile unchanged
+          tablet: 20.0,
+          largeTablet: 22.0,
+          desktop: 24.0,
+        ),
+      ),
       decoration: CommonDecoration.textFieldDecoration(
         labelText: "Email or Phone",
         isPassword: false,
         obscureText: false,
         togglePasswordVisibility: null,
+      ).copyWith(
+        labelStyle: TextStyle(
+          fontSize: GetResponsiveSize.getResponsiveFontSize(
+            context,
+            mobile: 16.0, // Keep mobile unchanged
+            tablet: 20.0,
+            largeTablet: 22.0,
+            desktop: 24.0,
+          ),
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 12,
+            tablet: 16,
+            largeTablet: 18,
+            desktop: 20,
+          ),
+          vertical: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 16,
+            tablet: 20,
+            largeTablet: 22,
+            desktop: 24,
+          ),
+        ),
       ),
       validator: _validateUsername,
     );
+
+    // Wrap in SizedBox only for tablets and above
+    if (GetResponsiveSize.isTablet(context)) {
+      return SizedBox(
+        height: GetResponsiveSize.getResponsiveSize(
+          context,
+          mobile: 0, // Not used since we check isTablet first
+          tablet: 65,
+          largeTablet: 75,
+          desktop: 85,
+        ),
+        child: textField,
+      );
+    }
+    return textField;
   }
 
   Widget _buildPasswordField() {
@@ -331,10 +475,16 @@ class _LoginPageState extends State<LoginPage> {
       alignment: Alignment.centerRight,
       child: TextButton(
         onPressed: _showForgotPasswordDialog,
-        child: const Text(
+        child: Text(
           'Forgot Password?',
           style: TextStyle(
-            fontSize: 14,
+            fontSize: GetResponsiveSize.getResponsiveFontSize(
+              context,
+              mobile: 14.0, // Keep mobile unchanged
+              tablet: 20.0,
+              largeTablet: 25.0,
+              desktop: 30.0,
+            ),
             fontWeight: FontWeight.w500,
             color: AppColors.primaryColor,
             decoration: TextDecoration.underline,
@@ -382,7 +532,13 @@ class _LoginPageState extends State<LoginPage> {
       },
       builder: (context, state) {
         return SizedBox(
-          height: 55,
+          height: GetResponsiveSize.getResponsiveSize(
+            context,
+            mobile: 55, // Keep mobile unchanged
+            tablet: 65,
+            largeTablet: 75,
+            desktop: 85,
+          ),
           width: double.infinity,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -402,7 +558,15 @@ class _LoginPageState extends State<LoginPage> {
             },
             child: Text(
               'Login',
-              style: AppTextstyle.buttonText,
+              style: AppTextstyle.buttonText.copyWith(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  context,
+                  mobile: 16.0, // Keep mobile unchanged
+                  tablet: 25.0,
+                  largeTablet: 30.0,
+                  desktop: 35.0,
+                ),
+              ),
             ),
           ),
         );

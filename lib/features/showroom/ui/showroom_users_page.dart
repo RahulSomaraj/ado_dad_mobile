@@ -1,5 +1,6 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/models/showroom_user_model.dart';
 import 'package:ado_dad_user/repositories/showroom_repo.dart';
 import 'package:flutter/material.dart';
@@ -57,7 +58,31 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Showrooms', style: AppTextstyle.appbarText),
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            size: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 24,
+              tablet: 30,
+              largeTablet: 32,
+              desktop: 36,
+            ),
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          'Showrooms',
+          style: AppTextstyle.appbarText.copyWith(
+            fontSize: GetResponsiveSize.getResponsiveFontSize(
+              context,
+              mobile: AppTextstyle.appbarText.fontSize ?? 20,
+              tablet: 24,
+              largeTablet: 28,
+              desktop: 32,
+            ),
+          ),
+        ),
         backgroundColor: AppColors.whiteColor,
         elevation: 0,
       ),
@@ -65,33 +90,128 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Error: $_error',
-                        style: const TextStyle(color: Colors.red),
-                        textAlign: TextAlign.center,
+                  child: Padding(
+                    padding: EdgeInsets.all(
+                      GetResponsiveSize.getResponsivePadding(
+                        context,
+                        mobile: 16,
+                        tablet: 24,
+                        largeTablet: 32,
+                        desktop: 40,
                       ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _fetchShowroomUsers,
-                        child: const Text('Retry'),
-                      ),
-                    ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Error: $_error',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 14,
+                              tablet: 18,
+                              largeTablet: 22,
+                              desktop: 26,
+                            ),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(
+                          height: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 16,
+                            tablet: 20,
+                            largeTablet: 24,
+                            desktop: 28,
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: _fetchShowroomUsers,
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(
+                              horizontal:
+                                  GetResponsiveSize.getResponsivePadding(
+                                context,
+                                mobile: 16,
+                                tablet: 24,
+                                largeTablet: 32,
+                                desktop: 40,
+                              ),
+                              vertical: GetResponsiveSize.getResponsivePadding(
+                                context,
+                                mobile: 12,
+                                tablet: 16,
+                                largeTablet: 20,
+                                desktop: 24,
+                              ),
+                            ),
+                            minimumSize: Size(
+                              0,
+                              GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 40,
+                                tablet: 55,
+                                largeTablet: 65,
+                                desktop: 75,
+                              ),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                GetResponsiveSize.getResponsiveBorderRadius(
+                                  context,
+                                  mobile: 8,
+                                  tablet: 10,
+                                  largeTablet: 12,
+                                  desktop: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                          child: Text(
+                            'Retry',
+                            style: TextStyle(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: 14,
+                                tablet: 18,
+                                largeTablet: 22,
+                                desktop: 26,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 )
               : _showroomUsers.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text(
                         'No showroom users found',
-                        style: TextStyle(fontSize: 16),
+                        style: TextStyle(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 16,
+                            tablet: 20,
+                            largeTablet: 24,
+                            desktop: 28,
+                          ),
+                        ),
                       ),
                     )
                   : RefreshIndicator(
                       onRefresh: _fetchShowroomUsers,
                       child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all(
+                          GetResponsiveSize.getResponsivePadding(
+                            context,
+                            mobile: 16,
+                            tablet: 24,
+                            largeTablet: 32,
+                            desktop: 40,
+                          ),
+                        ),
                         itemCount: _showroomUsers.length,
                         itemBuilder: (context, index) {
                           final user = _showroomUsers[index];
@@ -104,37 +224,102 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
 
   Widget _buildShowroomUserCard(ShowroomUser user) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(
+        bottom: GetResponsiveSize.getResponsiveSize(
+          context,
+          mobile: 12,
+          tablet: 18,
+          largeTablet: 24,
+          desktop: 30,
+        ),
+      ),
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(
+          GetResponsiveSize.getResponsiveBorderRadius(
+            context,
+            mobile: 12,
+            tablet: 16,
+            largeTablet: 20,
+            desktop: 24,
+          ),
+        ),
       ),
       child: InkWell(
         onTap: () {
           // Navigate to showroom user's ads list
           context.push('/showroom-user-ads', extra: user.id);
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(
+          GetResponsiveSize.getResponsiveBorderRadius(
+            context,
+            mobile: 12,
+            tablet: 16,
+            largeTablet: 20,
+            desktop: 24,
+          ),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(
+            GetResponsiveSize.getResponsivePadding(
+              context,
+              mobile: 16,
+              tablet: 22,
+              largeTablet: 28,
+              desktop: 34,
+            ),
+          ),
           child: Row(
             children: [
               // Profile Image
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: AppColors.primaryColor.withOpacity(0.1),
-                backgroundImage: user.profilePic != null
-                    ? NetworkImage(user.profilePic!)
-                    : null,
+              Container(
+                width: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 60,
+                  tablet: 90,
+                  largeTablet: 110,
+                  desktop: 130,
+                ),
+                height: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 60,
+                  tablet: 90,
+                  largeTablet: 110,
+                  desktop: 130,
+                ),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primaryColor.withOpacity(0.1),
+                  image: user.profilePic != null
+                      ? DecorationImage(
+                          image: NetworkImage(user.profilePic!),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
                 child: user.profilePic == null
                     ? Icon(
                         Icons.business,
-                        size: 30,
+                        size: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 30,
+                          tablet: 45,
+                          largeTablet: 55,
+                          desktop: 65,
+                        ),
                         color: AppColors.primaryColor,
                       )
                     : null,
               ),
-              const SizedBox(width: 16),
+              SizedBox(
+                width: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 16,
+                  tablet: 24,
+                  largeTablet: 30,
+                  desktop: 36,
+                ),
+              ),
               // User Info
               Expanded(
                 child: Column(
@@ -143,24 +328,58 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
                     Text(
                       user.name,
                       style: AppTextstyle.sectionTitleTextStyle.copyWith(
-                        fontSize: 16,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 16,
+                          tablet: 22,
+                          largeTablet: 28,
+                          desktop: 34,
+                        ),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 4,
+                        tablet: 8,
+                        largeTablet: 12,
+                        desktop: 16,
+                      ),
+                    ),
                     Text(
                       user.email,
                       style: AppTextstyle.categoryLabelTextStyle.copyWith(
-                        fontSize: 12,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 12,
+                          tablet: 18,
+                          largeTablet: 22,
+                          desktop: 26,
+                        ),
                         color: Colors.grey[600],
                       ),
                     ),
                     if (user.phoneNumber != null) ...[
-                      const SizedBox(height: 2),
+                      SizedBox(
+                        height: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 2,
+                          tablet: 6,
+                          largeTablet: 10,
+                          desktop: 14,
+                        ),
+                      ),
                       Text(
                         user.phoneNumber!,
                         style: AppTextstyle.categoryLabelTextStyle.copyWith(
-                          fontSize: 12,
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 12,
+                            tablet: 18,
+                            largeTablet: 22,
+                            desktop: 26,
+                          ),
                         ),
                       ),
                     ],
@@ -170,7 +389,13 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
               // Arrow Icon
               Icon(
                 Icons.arrow_forward_ios,
-                size: 16,
+                size: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 16,
+                  tablet: 22,
+                  largeTablet: 28,
+                  desktop: 34,
+                ),
                 color: Colors.grey[400],
               ),
             ],

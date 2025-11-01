@@ -1,5 +1,6 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/google_places_service.dart';
 import 'package:ado_dad_user/config/app_config.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
@@ -277,47 +278,161 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.whiteColor,
+        toolbarHeight: GetResponsiveSize.getResponsiveSize(
+          context,
+          mobile: kToolbarHeight,
+          tablet: 80,
+          largeTablet: 95,
+          desktop: 110,
+        ),
         leading: IconButton(
           onPressed: () => _handleBackNavigation(),
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(
+            Icons.arrow_back,
+            size: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 24,
+              tablet: 32,
+              largeTablet: 38,
+              desktop: 44,
+            ),
+          ),
         ),
         title: Row(
           children: [
             Expanded(
               child: TextField(
                 controller: _searchController,
+                style: TextStyle(
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(
+                    context,
+                    mobile: 16,
+                    tablet: 20,
+                    largeTablet: 24,
+                    desktop: 28,
+                  ),
+                ),
                 decoration: InputDecoration(
                   fillColor:
                       _isLocationSearchMode ? Colors.blue[50] : Colors.grey[50],
                   hintText: _isLocationSearchMode
                       ? "Search by location..."
                       : "Search ads...",
+                  hintStyle: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(
+                      context,
+                      mobile: 16,
+                      tablet: 20,
+                      largeTablet: 24,
+                      desktop: 28,
+                    ),
+                  ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(
+                      GetResponsiveSize.getResponsiveBorderRadius(
+                        context,
+                        mobile: 10,
+                        tablet: 12,
+                        largeTablet: 14,
+                        desktop: 16,
+                      ),
+                    ),
                     borderSide: BorderSide(
                       color: _isLocationSearchMode
                           ? AppColors.primaryColor
                           : Colors.grey,
-                      width: _isLocationSearchMode ? 2 : 1,
+                      width: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: _isLocationSearchMode ? 2 : 1,
+                        tablet: _isLocationSearchMode ? 2.5 : 1.5,
+                        largeTablet: _isLocationSearchMode ? 3 : 2,
+                        desktop: _isLocationSearchMode ? 3.5 : 2.5,
+                      ),
                     ),
                   ),
                   isDense: true,
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: 5, horizontal: 12),
-                  prefixIcon: Image.asset(
-                    'assets/images/search-icon.png',
-                    color: _isLocationSearchMode
-                        ? AppColors.primaryColor
-                        : AppColors.greyColor,
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: GetResponsiveSize.getResponsivePadding(
+                      context,
+                      mobile: 5,
+                      tablet: 14,
+                      largeTablet: 18,
+                      desktop: 22,
+                    ),
+                    horizontal: GetResponsiveSize.getResponsivePadding(
+                      context,
+                      mobile: 12,
+                      tablet: 18,
+                      largeTablet: 24,
+                      desktop: 30,
+                    ),
+                  ),
+                  prefixIcon: Padding(
+                    padding: EdgeInsets.all(
+                      GetResponsiveSize.getResponsivePadding(
+                        context,
+                        mobile: 12,
+                        tablet: 14,
+                        largeTablet: 16,
+                        desktop: 18,
+                      ),
+                    ),
+                    child: Image.asset(
+                      'assets/images/search-icon.png',
+                      width: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 20,
+                        tablet: 28,
+                        largeTablet: 34,
+                        desktop: 40,
+                      ),
+                      height: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 20,
+                        tablet: 28,
+                        largeTablet: 34,
+                        desktop: 40,
+                      ),
+                      color: _isLocationSearchMode
+                          ? AppColors.primaryColor
+                          : AppColors.greyColor,
+                    ),
                   ),
                   suffixIcon: _searchController.text.isNotEmpty
-                      ? GestureDetector(
-                          onTap: () {
-                            _searchController.clear();
-                            _filterAds('');
-                            setState(() {});
-                          },
-                          child: Image.asset('assets/images/close.png'),
+                      ? Padding(
+                          padding: EdgeInsets.all(
+                            GetResponsiveSize.getResponsivePadding(
+                              context,
+                              mobile: 12,
+                              tablet: 14,
+                              largeTablet: 16,
+                              desktop: 18,
+                            ),
+                          ),
+                          child: GestureDetector(
+                            onTap: () {
+                              _searchController.clear();
+                              _filterAds('');
+                              setState(() {});
+                            },
+                            child: Image.asset(
+                              'assets/images/close.png',
+                              width: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 20,
+                                tablet: 28,
+                                largeTablet: 34,
+                                desktop: 40,
+                              ),
+                              height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 20,
+                                tablet: 28,
+                                largeTablet: 34,
+                                desktop: 40,
+                              ),
+                            ),
+                          ),
                         )
                       : null,
                 ),
@@ -327,23 +442,61 @@ class _SearchPageState extends State<SearchPage> {
                 },
               ),
             ),
-            const SizedBox(width: 10),
+            SizedBox(
+                width: GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 10, tablet: 16, largeTablet: 22, desktop: 28)),
             Container(
               decoration: BoxDecoration(
                 color: _isLocationSearchMode
                     ? AppColors.primaryColor.withOpacity(0.1)
                     : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(
+                  GetResponsiveSize.getResponsiveBorderRadius(
+                    context,
+                    mobile: 8,
+                    tablet: 10,
+                    largeTablet: 12,
+                    desktop: 14,
+                  ),
+                ),
               ),
               child: IconButton(
+                padding: EdgeInsets.all(
+                  GetResponsiveSize.getResponsivePadding(
+                    context,
+                    mobile: 8,
+                    tablet: 10,
+                    largeTablet: 12,
+                    desktop: 14,
+                  ),
+                ),
+                iconSize: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 24,
+                  tablet: 36,
+                  largeTablet: 44,
+                  desktop: 52,
+                ),
                 onPressed: () {
                   // Handle location button tap
                   _handleLocationTap();
                 },
                 icon: Image.asset(
                   'assets/images/location.png',
-                  width: 24,
-                  height: 24,
+                  width: GetResponsiveSize.getResponsiveSize(
+                    context,
+                    mobile: 24,
+                    tablet: 36,
+                    largeTablet: 44,
+                    desktop: 52,
+                  ),
+                  height: GetResponsiveSize.getResponsiveSize(
+                    context,
+                    mobile: 24,
+                    tablet: 36,
+                    largeTablet: 44,
+                    desktop: 52,
+                  ),
                   color: _isLocationSearchMode
                       ? AppColors.primaryColor
                       : AppColors.greyColor,
@@ -402,10 +555,16 @@ class _SearchPageState extends State<SearchPage> {
                 left: 0,
                 right: 0,
                 child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  margin: EdgeInsets.symmetric(
+                    horizontal: GetResponsiveSize.getResponsivePadding(context,
+                        mobile: 16, tablet: 24, largeTablet: 32, desktop: 40),
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(
+                      GetResponsiveSize.getResponsiveBorderRadius(context,
+                          mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
@@ -417,11 +576,45 @@ class _SearchPageState extends State<SearchPage> {
                   child: Column(
                     children: _addressSuggestions.map((suggestion) {
                       return ListTile(
-                        leading: const Icon(Icons.location_on,
-                            color: AppColors.primaryColor),
-                        title: Text(suggestion),
+                        leading: Icon(
+                          Icons.location_on,
+                          color: AppColors.primaryColor,
+                          size: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 24,
+                            tablet: 28,
+                            largeTablet: 32,
+                            desktop: 36,
+                          ),
+                        ),
+                        title: Text(
+                          suggestion,
+                          style: TextStyle(
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 16,
+                              tablet: 20,
+                              largeTablet: 24,
+                              desktop: 28,
+                            ),
+                          ),
+                        ),
                         onTap: () => _selectAddressSuggestion(suggestion),
                         dense: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: GetResponsiveSize.getResponsivePadding(
+                              context,
+                              mobile: 16,
+                              tablet: 20,
+                              largeTablet: 24,
+                              desktop: 28),
+                          vertical: GetResponsiveSize.getResponsivePadding(
+                              context,
+                              mobile: 8,
+                              tablet: 12,
+                              largeTablet: 16,
+                              desktop: 20),
+                        ),
                       );
                     }).toList(),
                   ),
@@ -506,7 +699,12 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget _buildAdCard(AddModel ad) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: EdgeInsets.symmetric(
+        horizontal: GetResponsiveSize.getResponsivePadding(context,
+            mobile: 10, tablet: 14, largeTablet: 18, desktop: 22),
+        vertical: GetResponsiveSize.getResponsivePadding(context,
+            mobile: 5, tablet: 8, largeTablet: 12, desktop: 16),
+      ),
       child: GestureDetector(
         onTap: () {
           // Navigate to ad detail page
@@ -516,37 +714,112 @@ class _SearchPageState extends State<SearchPage> {
           color: AppColors.whiteColor,
           elevation: 5,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(
+              GetResponsiveSize.getResponsiveBorderRadius(
+                context,
+                mobile: 15,
+                tablet: 18,
+                largeTablet: 22,
+                desktop: 26,
+              ),
+            ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+            ),
             child: Row(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(
+                    GetResponsiveSize.getResponsiveBorderRadius(
+                      context,
+                      mobile: 12,
+                      tablet: 14,
+                      largeTablet: 16,
+                      desktop: 18,
+                    ),
+                  ),
                   child: ad.images.isNotEmpty
                       ? Image.network(
                           ad.images[0],
-                          height: 98,
-                          width: 98,
+                          height: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 98,
+                            tablet: 140,
+                            largeTablet: 180,
+                            desktop: 220,
+                          ),
+                          width: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 98,
+                            tablet: 140,
+                            largeTablet: 180,
+                            desktop: 220,
+                          ),
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
-                              height: 98,
-                              width: 98,
+                              height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 98,
+                                tablet: 140,
+                                largeTablet: 180,
+                                desktop: 220,
+                              ),
+                              width: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 98,
+                                tablet: 140,
+                                largeTablet: 180,
+                                desktop: 220,
+                              ),
                               color: Colors.grey[300],
-                              child: const Icon(Icons.image_not_supported),
+                              child: Icon(
+                                Icons.image_not_supported,
+                                size: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 24,
+                                  tablet: 32,
+                                  largeTablet: 40,
+                                  desktop: 48,
+                                ),
+                              ),
                             );
                           },
                         )
                       : Container(
-                          height: 100,
-                          width: 100,
+                          height: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 100,
+                            tablet: 140,
+                            largeTablet: 180,
+                            desktop: 220,
+                          ),
+                          width: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 100,
+                            tablet: 140,
+                            largeTablet: 180,
+                            desktop: 220,
+                          ),
                           color: Colors.grey[300],
-                          child: const Icon(Icons.image_not_supported),
+                          child: Icon(
+                            Icons.image_not_supported,
+                            size: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 24,
+                              tablet: 32,
+                              largeTablet: 40,
+                              desktop: 48,
+                            ),
+                          ),
                         ),
                 ),
-                const SizedBox(width: 15),
+                SizedBox(
+                    width: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 15, tablet: 20, largeTablet: 26, desktop: 32)),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -555,19 +828,36 @@ class _SearchPageState extends State<SearchPage> {
                         children: [
                           Text(
                             '₹ ${ad.price.toString()}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: 16,
+                                tablet: 22,
+                                largeTablet: 28,
+                                desktop: 34,
+                              ),
                             ),
                           ),
                           const Spacer(),
                         ],
                       ),
-                      const SizedBox(height: 5),
+                      SizedBox(
+                          height: GetResponsiveSize.getResponsiveSize(context,
+                              mobile: 5,
+                              tablet: 8,
+                              largeTablet: 12,
+                              desktop: 16)),
                       Text(
                         _getAdTitle(ad),
-                        style: const TextStyle(
-                          fontSize: 16,
+                        style: TextStyle(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 16,
+                            tablet: 22,
+                            largeTablet: 28,
+                            desktop: 34,
+                          ),
                           fontWeight: FontWeight.bold,
                         ),
                         maxLines: 2,
@@ -575,14 +865,39 @@ class _SearchPageState extends State<SearchPage> {
                       ),
                       Text(
                         ad.location,
-                        style: AppTextstyle.categoryLabelTextStyle,
+                        style: AppTextstyle.categoryLabelTextStyle.copyWith(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile:
+                                AppTextstyle.categoryLabelTextStyle.fontSize ??
+                                    14,
+                            tablet: 18,
+                            largeTablet: 22,
+                            desktop: 26,
+                          ),
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 5),
+                      SizedBox(
+                          height: GetResponsiveSize.getResponsiveSize(context,
+                              mobile: 5,
+                              tablet: 8,
+                              largeTablet: 12,
+                              desktop: 16)),
                       Text(
                         _getAdSubtitle(ad),
-                        style: AppTextstyle.categoryLabelTextStyle,
+                        style: AppTextstyle.categoryLabelTextStyle.copyWith(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile:
+                                AppTextstyle.categoryLabelTextStyle.fontSize ??
+                                    14,
+                            tablet: 18,
+                            largeTablet: 22,
+                            desktop: 26,
+                          ),
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

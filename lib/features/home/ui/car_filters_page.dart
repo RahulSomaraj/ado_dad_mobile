@@ -1,5 +1,6 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/features/home/fuelType_filter_bloc/fuel_type_filter_bloc.dart';
 import 'package:ado_dad_user/features/home/manufacturer_bloc/manufacturer_bloc.dart';
 import 'package:ado_dad_user/features/home/model_filter_bloc/model_filter_bloc.dart';
@@ -112,18 +113,42 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final w = MediaQuery.of(context).size.width;
-    final leftPaneWidth = w < 500 ? 150.0 : (w < 900 ? 180.0 : 240.0);
+    final leftPaneWidth = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 150.0, // Keep mobile unchanged
+      tablet: 200.0,
+      largeTablet: 260.0,
+      desktop: 300.0,
+    );
 
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          icon: Icon(
+            Icons.arrow_back,
+            size: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile:
+                  20.0, // Keep mobile unchanged (assuming default iOS back arrow size)
+              tablet: 26.0,
+              largeTablet: 30.0,
+              desktop: 34.0,
+            ),
+          ),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
           'Filters',
-          style: AppTextstyle.appbarText,
+          style: AppTextstyle.appbarText.copyWith(
+            fontSize: GetResponsiveSize.getResponsiveFontSize(
+              context,
+              mobile:
+                  18.0, // Keep mobile unchanged (AppTextstyle.appbarText fontSize)
+              tablet: 24.0,
+              largeTablet: 28.0,
+              desktop: 32.0,
+            ),
+          ),
         ),
         elevation: 0.5,
         actions: [
@@ -146,7 +171,18 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                 _filterStateService.clearCarFilterState(widget.categoryId!);
               }
             },
-            child: const Text('Clear All'),
+            child: Text(
+              'Clear All',
+              style: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  context,
+                  mobile: 14.0, // Keep mobile unchanged
+                  tablet: 20.0,
+                  largeTablet: 24.0,
+                  desktop: 28.0,
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -181,6 +217,14 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                             : theme.colorScheme.onSurface.withOpacity(0.8),
                         fontWeight:
                             isSelected ? FontWeight.w600 : FontWeight.w500,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: theme.textTheme.titleMedium?.fontSize ??
+                              16.0, // Keep mobile unchanged
+                          tablet: 22.0,
+                          largeTablet: 24.0,
+                          desktop: 28.0,
+                        ),
                       ),
                     ),
                   ),
@@ -228,20 +272,101 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                                  padding: EdgeInsets.fromLTRB(
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28,
+                                    ),
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28,
+                                    ),
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28,
+                                    ),
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 8,
+                                      tablet: 10,
+                                      largeTablet: 12,
+                                      desktop: 14,
+                                    ),
+                                  ),
                                   child: TextField(
                                     onChanged: (v) =>
                                         setState(() => brandQuery = v),
+                                    style: TextStyle(
+                                      fontSize: GetResponsiveSize
+                                          .getResponsiveFontSize(
+                                        context,
+                                        mobile: 16.0, // Keep mobile unchanged
+                                        tablet: 20.0,
+                                        largeTablet: 22.0,
+                                        desktop: 24.0,
+                                      ),
+                                    ),
                                     decoration: InputDecoration(
-                                      prefixIcon:
-                                          const Icon(Icons.search_rounded),
+                                      prefixIcon: Icon(
+                                        Icons.search_rounded,
+                                        size:
+                                            GetResponsiveSize.getResponsiveSize(
+                                          context,
+                                          mobile: 24.0, // Keep mobile unchanged
+                                          tablet: 28.0,
+                                          largeTablet: 32.0,
+                                          desktop: 36.0,
+                                        ),
+                                      ),
                                       hintText: 'Search Brand',
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              vertical: 14, horizontal: 12),
+                                      hintStyle: TextStyle(
+                                        fontSize: GetResponsiveSize
+                                            .getResponsiveFontSize(
+                                          context,
+                                          mobile: 16.0, // Keep mobile unchanged
+                                          tablet: 20.0,
+                                          largeTablet: 22.0,
+                                          desktop: 24.0,
+                                        ),
+                                      ),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        vertical: GetResponsiveSize
+                                            .getResponsivePadding(
+                                          context,
+                                          mobile: 14,
+                                          tablet: 18,
+                                          largeTablet: 22,
+                                          desktop: 26,
+                                        ),
+                                        horizontal: GetResponsiveSize
+                                            .getResponsivePadding(
+                                          context,
+                                          mobile: 12,
+                                          tablet: 16,
+                                          largeTablet: 20,
+                                          desktop: 24,
+                                        ),
+                                      ),
                                       border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(6),
+                                        borderRadius: BorderRadius.circular(
+                                          GetResponsiveSize
+                                              .getResponsiveBorderRadius(
+                                            context,
+                                            mobile: 6,
+                                            tablet: 8,
+                                            largeTablet: 10,
+                                            desktop: 12,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -249,8 +374,30 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                                 const Divider(height: 1),
                                 // View All option
                                 Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(30, 8, 16, 0),
+                                  padding: EdgeInsets.fromLTRB(
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 30,
+                                      tablet: 36,
+                                      largeTablet: 42,
+                                      desktop: 48,
+                                    ),
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 8,
+                                      tablet: 10,
+                                      largeTablet: 12,
+                                      desktop: 14,
+                                    ),
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28,
+                                    ),
+                                    0,
+                                  ),
                                   child: InkWell(
                                     onTap: () {
                                       Navigator.pop<Map<String, dynamic>>(
@@ -262,6 +409,14 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                                         decoration: TextDecoration.underline,
                                         color: AppColors.primaryColor,
                                         fontWeight: FontWeight.w600,
+                                        fontSize: GetResponsiveSize
+                                            .getResponsiveFontSize(
+                                          context,
+                                          mobile: 14.0, // Keep mobile unchanged
+                                          tablet: 20.0,
+                                          largeTablet: 24.0,
+                                          desktop: 28.0,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -293,14 +448,44 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                                         dense: true,
                                         controlAffinity:
                                             ListTileControlAffinity.leading,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 12, vertical: 0),
-                                        title: Text(name,
-                                            style: theme.textTheme.titleMedium),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: GetResponsiveSize
+                                              .getResponsivePadding(
+                                            context,
+                                            mobile: 12,
+                                            tablet: 16,
+                                            largeTablet: 20,
+                                            desktop: 24,
+                                          ),
+                                          vertical: 0,
+                                        ),
+                                        title: Text(
+                                          name,
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                            fontSize: GetResponsiveSize
+                                                .getResponsiveFontSize(
+                                              context,
+                                              mobile: theme.textTheme
+                                                      .titleMedium?.fontSize ??
+                                                  16.0, // Keep mobile unchanged
+                                              tablet: 20.0,
+                                              largeTablet: 24.0,
+                                              desktop: 28.0,
+                                            ),
+                                          ),
+                                        ),
                                         checkboxShape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(4),
+                                          borderRadius: BorderRadius.circular(
+                                            GetResponsiveSize
+                                                .getResponsiveBorderRadius(
+                                              context,
+                                              mobile: 4,
+                                              tablet: 5,
+                                              largeTablet: 6,
+                                              desktop: 6,
+                                            ),
+                                          ),
                                         ),
                                       );
                                     },
@@ -338,20 +523,101 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                                  padding: EdgeInsets.fromLTRB(
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28,
+                                    ),
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28,
+                                    ),
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28,
+                                    ),
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 8,
+                                      tablet: 10,
+                                      largeTablet: 12,
+                                      desktop: 14,
+                                    ),
+                                  ),
                                   child: TextField(
                                     onChanged: (v) =>
                                         setState(() => modelQuery = v),
+                                    style: TextStyle(
+                                      fontSize: GetResponsiveSize
+                                          .getResponsiveFontSize(
+                                        context,
+                                        mobile: 16.0, // Keep mobile unchanged
+                                        tablet: 20.0,
+                                        largeTablet: 22.0,
+                                        desktop: 24.0,
+                                      ),
+                                    ),
                                     decoration: InputDecoration(
-                                      prefixIcon:
-                                          const Icon(Icons.search_rounded),
+                                      prefixIcon: Icon(
+                                        Icons.search_rounded,
+                                        size:
+                                            GetResponsiveSize.getResponsiveSize(
+                                          context,
+                                          mobile: 24.0, // Keep mobile unchanged
+                                          tablet: 28.0,
+                                          largeTablet: 32.0,
+                                          desktop: 36.0,
+                                        ),
+                                      ),
                                       hintText: 'Search Model',
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              vertical: 14, horizontal: 12),
+                                      hintStyle: TextStyle(
+                                        fontSize: GetResponsiveSize
+                                            .getResponsiveFontSize(
+                                          context,
+                                          mobile: 16.0, // Keep mobile unchanged
+                                          tablet: 20.0,
+                                          largeTablet: 22.0,
+                                          desktop: 24.0,
+                                        ),
+                                      ),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        vertical: GetResponsiveSize
+                                            .getResponsivePadding(
+                                          context,
+                                          mobile: 14,
+                                          tablet: 18,
+                                          largeTablet: 22,
+                                          desktop: 26,
+                                        ),
+                                        horizontal: GetResponsiveSize
+                                            .getResponsivePadding(
+                                          context,
+                                          mobile: 12,
+                                          tablet: 16,
+                                          largeTablet: 20,
+                                          desktop: 24,
+                                        ),
+                                      ),
                                       border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(6),
+                                        borderRadius: BorderRadius.circular(
+                                          GetResponsiveSize
+                                              .getResponsiveBorderRadius(
+                                            context,
+                                            mobile: 6,
+                                            tablet: 8,
+                                            largeTablet: 10,
+                                            desktop: 12,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -383,14 +649,44 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                                         dense: true,
                                         controlAffinity:
                                             ListTileControlAffinity.leading,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 12, vertical: 0),
-                                        title: Text(name,
-                                            style: theme.textTheme.titleMedium),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: GetResponsiveSize
+                                              .getResponsivePadding(
+                                            context,
+                                            mobile: 12,
+                                            tablet: 16,
+                                            largeTablet: 20,
+                                            desktop: 24,
+                                          ),
+                                          vertical: 0,
+                                        ),
+                                        title: Text(
+                                          name,
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                            fontSize: GetResponsiveSize
+                                                .getResponsiveFontSize(
+                                              context,
+                                              mobile: theme.textTheme
+                                                      .titleMedium?.fontSize ??
+                                                  16.0, // Keep mobile unchanged
+                                              tablet: 20.0,
+                                              largeTablet: 24.0,
+                                              desktop: 28.0,
+                                            ),
+                                          ),
+                                        ),
                                         checkboxShape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(4),
+                                          borderRadius: BorderRadius.circular(
+                                            GetResponsiveSize
+                                                .getResponsiveBorderRadius(
+                                              context,
+                                              mobile: 4,
+                                              tablet: 5,
+                                              largeTablet: 6,
+                                              desktop: 6,
+                                            ),
+                                          ),
                                         ),
                                       );
                                     },
@@ -472,14 +768,44 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                                         dense: true,
                                         controlAffinity:
                                             ListTileControlAffinity.leading,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 12, vertical: 0),
-                                        title: Text(name,
-                                            style: theme.textTheme.titleMedium),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: GetResponsiveSize
+                                              .getResponsivePadding(
+                                            context,
+                                            mobile: 12,
+                                            tablet: 16,
+                                            largeTablet: 20,
+                                            desktop: 24,
+                                          ),
+                                          vertical: 0,
+                                        ),
+                                        title: Text(
+                                          name,
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                            fontSize: GetResponsiveSize
+                                                .getResponsiveFontSize(
+                                              context,
+                                              mobile: theme.textTheme
+                                                      .titleMedium?.fontSize ??
+                                                  16.0, // Keep mobile unchanged
+                                              tablet: 20.0,
+                                              largeTablet: 24.0,
+                                              desktop: 28.0,
+                                            ),
+                                          ),
+                                        ),
                                         checkboxShape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(4),
+                                          borderRadius: BorderRadius.circular(
+                                            GetResponsiveSize
+                                                .getResponsiveBorderRadius(
+                                              context,
+                                              mobile: 4,
+                                              tablet: 5,
+                                              largeTablet: 6,
+                                              desktop: 6,
+                                            ),
+                                          ),
                                         ),
                                       );
                                     },
@@ -565,14 +891,44 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                                         dense: true,
                                         controlAffinity:
                                             ListTileControlAffinity.leading,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 12, vertical: 0),
-                                        title: Text(name,
-                                            style: theme.textTheme.titleMedium),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: GetResponsiveSize
+                                              .getResponsivePadding(
+                                            context,
+                                            mobile: 12,
+                                            tablet: 16,
+                                            largeTablet: 20,
+                                            desktop: 24,
+                                          ),
+                                          vertical: 0,
+                                        ),
+                                        title: Text(
+                                          name,
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                            fontSize: GetResponsiveSize
+                                                .getResponsiveFontSize(
+                                              context,
+                                              mobile: theme.textTheme
+                                                      .titleMedium?.fontSize ??
+                                                  16.0, // Keep mobile unchanged
+                                              tablet: 20.0,
+                                              largeTablet: 24.0,
+                                              desktop: 28.0,
+                                            ),
+                                          ),
+                                        ),
                                         checkboxShape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(4),
+                                          borderRadius: BorderRadius.circular(
+                                            GetResponsiveSize
+                                                .getResponsiveBorderRadius(
+                                              context,
+                                              mobile: 4,
+                                              tablet: 5,
+                                              largeTablet: 6,
+                                              desktop: 6,
+                                            ),
+                                          ),
                                         ),
                                       );
                                     },
@@ -602,15 +958,37 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(
+            GetResponsiveSize.getResponsivePadding(
+              context,
+              mobile: 16.0,
+              tablet: 20.0,
+              largeTablet: 24.0,
+              desktop: 28.0,
+            ),
+          ),
           child: SizedBox(
             width: double.infinity,
-            height: 48,
+            height: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 48, // Keep mobile unchanged
+              tablet: 65,
+              largeTablet: 75,
+              desktop: 85,
+            ),
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryColor,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(
+                    GetResponsiveSize.getResponsiveBorderRadius(
+                      context,
+                      mobile: 8,
+                      tablet: 10,
+                      largeTablet: 12,
+                      desktop: 14,
+                    ),
+                  ),
                 ),
               ),
               onPressed: () {
@@ -660,12 +1038,19 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                   'maxPrice': maxP
                 });
               },
-              child: const Text(
+              child: Text(
                 'Apply Filters',
                 style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white),
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(
+                    context,
+                    mobile: 16.0, // Keep mobile unchanged
+                    tablet: 22.0,
+                    largeTablet: 26.0,
+                    desktop: 30.0,
+                  ),
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -676,26 +1061,143 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
 
   Widget _yearPanel() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: EdgeInsets.fromLTRB(
+        GetResponsiveSize.getResponsivePadding(
+          context,
+          mobile: 16,
+          tablet: 20,
+          largeTablet: 24,
+          desktop: 28,
+        ),
+        GetResponsiveSize.getResponsivePadding(
+          context,
+          mobile: 16,
+          tablet: 20,
+          largeTablet: 24,
+          desktop: 28,
+        ),
+        GetResponsiveSize.getResponsivePadding(
+          context,
+          mobile: 16,
+          tablet: 20,
+          largeTablet: 24,
+          desktop: 28,
+        ),
+        0,
+      ),
       child: Column(
         children: [
           TextField(
             controller: _minYearCtrl,
             keyboardType: TextInputType.number,
+            style: TextStyle(
+              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                context,
+                mobile: 16.0, // Keep mobile unchanged
+                tablet: 20.0,
+                largeTablet: 22.0,
+                desktop: 24.0,
+              ),
+            ),
             decoration: InputDecoration(
               labelText: 'Min Year',
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+              labelStyle: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  context,
+                  mobile: 16.0, // Keep mobile unchanged
+                  tablet: 20.0,
+                  largeTablet: 22.0,
+                  desktop: 24.0,
+                ),
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                vertical: GetResponsiveSize.getResponsivePadding(
+                  context,
+                  mobile: 14,
+                  tablet: 18,
+                  largeTablet: 22,
+                  desktop: 26,
+                ),
+                horizontal: GetResponsiveSize.getResponsivePadding(
+                  context,
+                  mobile: 12,
+                  tablet: 16,
+                  largeTablet: 20,
+                  desktop: 24,
+                ),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(
+                  GetResponsiveSize.getResponsiveBorderRadius(
+                    context,
+                    mobile: 6,
+                    tablet: 8,
+                    largeTablet: 10,
+                    desktop: 12,
+                  ),
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(
+            height: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 12,
+              tablet: 16,
+              largeTablet: 20,
+              desktop: 24,
+            ),
+          ),
           TextField(
             controller: _maxYearCtrl,
             keyboardType: TextInputType.number,
+            style: TextStyle(
+              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                context,
+                mobile: 16.0, // Keep mobile unchanged
+                tablet: 20.0,
+                largeTablet: 22.0,
+                desktop: 24.0,
+              ),
+            ),
             decoration: InputDecoration(
               labelText: 'Max Year',
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+              labelStyle: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  context,
+                  mobile: 16.0, // Keep mobile unchanged
+                  tablet: 20.0,
+                  largeTablet: 22.0,
+                  desktop: 24.0,
+                ),
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                vertical: GetResponsiveSize.getResponsivePadding(
+                  context,
+                  mobile: 14,
+                  tablet: 18,
+                  largeTablet: 22,
+                  desktop: 26,
+                ),
+                horizontal: GetResponsiveSize.getResponsivePadding(
+                  context,
+                  mobile: 12,
+                  tablet: 16,
+                  largeTablet: 20,
+                  desktop: 24,
+                ),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(
+                  GetResponsiveSize.getResponsiveBorderRadius(
+                    context,
+                    mobile: 6,
+                    tablet: 8,
+                    largeTablet: 10,
+                    desktop: 12,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -705,26 +1207,143 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
 
   Widget _pricePanel() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: EdgeInsets.fromLTRB(
+        GetResponsiveSize.getResponsivePadding(
+          context,
+          mobile: 16,
+          tablet: 20,
+          largeTablet: 24,
+          desktop: 28,
+        ),
+        GetResponsiveSize.getResponsivePadding(
+          context,
+          mobile: 16,
+          tablet: 20,
+          largeTablet: 24,
+          desktop: 28,
+        ),
+        GetResponsiveSize.getResponsivePadding(
+          context,
+          mobile: 16,
+          tablet: 20,
+          largeTablet: 24,
+          desktop: 28,
+        ),
+        0,
+      ),
       child: Column(
         children: [
           TextField(
             controller: _minPriceCtrl,
             keyboardType: TextInputType.number,
+            style: TextStyle(
+              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                context,
+                mobile: 16.0, // Keep mobile unchanged
+                tablet: 20.0,
+                largeTablet: 22.0,
+                desktop: 24.0,
+              ),
+            ),
             decoration: InputDecoration(
               labelText: 'Min Price',
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+              labelStyle: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  context,
+                  mobile: 16.0, // Keep mobile unchanged
+                  tablet: 20.0,
+                  largeTablet: 22.0,
+                  desktop: 24.0,
+                ),
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                vertical: GetResponsiveSize.getResponsivePadding(
+                  context,
+                  mobile: 14,
+                  tablet: 18,
+                  largeTablet: 22,
+                  desktop: 26,
+                ),
+                horizontal: GetResponsiveSize.getResponsivePadding(
+                  context,
+                  mobile: 12,
+                  tablet: 16,
+                  largeTablet: 20,
+                  desktop: 24,
+                ),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(
+                  GetResponsiveSize.getResponsiveBorderRadius(
+                    context,
+                    mobile: 6,
+                    tablet: 8,
+                    largeTablet: 10,
+                    desktop: 12,
+                  ),
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(
+            height: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 12,
+              tablet: 16,
+              largeTablet: 20,
+              desktop: 24,
+            ),
+          ),
           TextField(
             controller: _maxPriceCtrl,
             keyboardType: TextInputType.number,
+            style: TextStyle(
+              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                context,
+                mobile: 16.0, // Keep mobile unchanged
+                tablet: 20.0,
+                largeTablet: 22.0,
+                desktop: 24.0,
+              ),
+            ),
             decoration: InputDecoration(
               labelText: 'Max Price',
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+              labelStyle: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  context,
+                  mobile: 16.0, // Keep mobile unchanged
+                  tablet: 20.0,
+                  largeTablet: 22.0,
+                  desktop: 24.0,
+                ),
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                vertical: GetResponsiveSize.getResponsivePadding(
+                  context,
+                  mobile: 14,
+                  tablet: 18,
+                  largeTablet: 22,
+                  desktop: 26,
+                ),
+                horizontal: GetResponsiveSize.getResponsivePadding(
+                  context,
+                  mobile: 12,
+                  tablet: 16,
+                  largeTablet: 20,
+                  desktop: 24,
+                ),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(
+                  GetResponsiveSize.getResponsiveBorderRadius(
+                    context,
+                    mobile: 6,
+                    tablet: 8,
+                    largeTablet: 10,
+                    desktop: 12,
+                  ),
+                ),
+              ),
             ),
           ),
         ],

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/widgets/common_decoration.dart';
 import 'package:ado_dad_user/common/widgets/dropdown_widget.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
@@ -210,18 +211,44 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(40.0),
+        preferredSize: Size.fromHeight(
+          GetResponsiveSize.getResponsiveSize(
+            context,
+            mobile: 40.0,
+            tablet: 55.0,
+            largeTablet: 65.0,
+            desktop: 75.0,
+          ),
+        ),
         child: AppBar(
           backgroundColor: AppColors.whiteColor,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.black),
+            icon: Icon(
+              Icons.arrow_back,
+              color: Colors.black,
+              size: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 24,
+                tablet: 30,
+                largeTablet: 32,
+                desktop: 36,
+              ),
+            ),
             onPressed: () {
               context.pop();
             },
           ),
           title: Text(
             'Post your Ad',
-            style: AppTextstyle.appbarText,
+            style: AppTextstyle.appbarText.copyWith(
+              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                context,
+                mobile: AppTextstyle.appbarText.fontSize ?? 20,
+                tablet: 24,
+                largeTablet: 28,
+                desktop: 32,
+              ),
+            ),
           ),
         ),
       ),
@@ -262,24 +289,66 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           Text(
                             'Essential Details',
-                            style: AppTextstyle.sectionTitleTextStyle,
+                            style: AppTextstyle.sectionTitleTextStyle.copyWith(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: AppTextstyle
+                                        .sectionTitleTextStyle.fontSize ??
+                                    18,
+                                tablet: 24,
+                                largeTablet: 30,
+                                desktop: 36,
+                              ),
+                            ),
                           ),
-                          SizedBox(height: 20),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 20,
+                              tablet: 28,
+                              largeTablet: 36,
+                              desktop: 44,
+                            ),
+                          ),
                           GetInput(
                             label: 'Price',
                             isNumberField: true,
                             onSaved: (val) =>
                                 _price = int.tryParse(val ?? '0') ?? 0,
                           ),
-                          SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           GetInput(
                             label: 'Location',
                             onSaved: (val) => _location = val ?? '',
                           ),
-                          SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           IgnorePointer(
                             child: buildDropdown<String>(
                               labelText: 'Vehicle Type',
@@ -289,7 +358,15 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                               errorMsg: '',
                             ),
                           ),
-                          SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           buildDropdown<VehicleManufacturer>(
                             labelText: 'Manufacturer *',
                             items: _manufacturers,
@@ -311,7 +388,15 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                               }
                             },
                           ),
-                          SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           buildDropdown<VehicleModel>(
                             labelText: 'Model *',
                             items: _models,
@@ -331,9 +416,25 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                             },
                             errorMsg: 'Please select a model',
                           ),
-                          SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           _buildVariantDropdown(),
-                          SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           buildDropdown<VehicleTransmissionType>(
                             labelText: 'Transmission Type',
                             items: _transmissionTypes,
@@ -345,7 +446,15 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                               });
                             },
                           ),
-                          SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           buildDropdown<VehicleFuelType>(
                             labelText: 'Fuel Type',
                             items: _fuelTypes,
@@ -357,61 +466,168 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                               });
                             },
                           ),
-                          SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           GetInput(
                             label: 'Year',
                             isNumberField: true,
                             onSaved: (val) =>
                                 _year = int.tryParse(val ?? '2023') ?? 2023,
                           ),
-                          SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           GetInput(
                             label: 'Mileage (km)',
                             isNumberField: true,
                             onSaved: (val) =>
                                 _mileage = int.tryParse(val ?? '0') ?? 0,
                           ),
-                          SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           GetInput(
                             label: 'Color',
                             onSaved: (val) => _color = val ?? '',
                           ),
-                          SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           CheckboxListTile(
                             value: _isFirstOwner,
-                            title: const Text('Is First Owner'),
+                            title: Text(
+                              'Is First Owner',
+                              style: TextStyle(
+                                fontSize:
+                                    GetResponsiveSize.getResponsiveFontSize(
+                                  context,
+                                  mobile: 16,
+                                  tablet: 20,
+                                  largeTablet: 24,
+                                  desktop: 28,
+                                ),
+                              ),
+                            ),
                             onChanged: (val) {
                               setState(() {
                                 _isFirstOwner = val ?? false;
                               });
                             },
                           ),
-                          SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           CheckboxListTile(
                             value: _hasInsurance,
-                            title: const Text('Has Insurance'),
+                            title: Text(
+                              'Has Insurance',
+                              style: TextStyle(
+                                fontSize:
+                                    GetResponsiveSize.getResponsiveFontSize(
+                                  context,
+                                  mobile: 16,
+                                  tablet: 20,
+                                  largeTablet: 24,
+                                  desktop: 28,
+                                ),
+                              ),
+                            ),
                             onChanged: (val) {
                               setState(() {
                                 _hasInsurance = val ?? false;
                               });
                             },
                           ),
-                          SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           CheckboxListTile(
                             value: _hasRcBook,
-                            title: const Text('Has RC Book'),
+                            title: Text(
+                              'Has RC Book',
+                              style: TextStyle(
+                                fontSize:
+                                    GetResponsiveSize.getResponsiveFontSize(
+                                  context,
+                                  mobile: 16,
+                                  tablet: 20,
+                                  largeTablet: 24,
+                                  desktop: 28,
+                                ),
+                              ),
+                            ),
                             onChanged: (val) {
                               setState(() {
                                 _hasRcBook = val ?? false;
                               });
                             },
                           ),
-                          SizedBox(height: 10),
-                          GetInput(
-                            label: 'Description',
-                            maxLines: 5,
-                            onSaved: (val) => _description = val ?? '',
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
                           ),
+                          GetResponsiveSize.isTablet(context)
+                              ? SizedBox(
+                                  height: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 0,
+                                    tablet: 140,
+                                    largeTablet: 160,
+                                    desktop: 180,
+                                  ),
+                                  child: GetInput(
+                                    label: 'Description',
+                                    maxLines: 5,
+                                    onSaved: (val) => _description = val ?? '',
+                                  ),
+                                )
+                              : GetInput(
+                                  label: 'Description',
+                                  maxLines: 5,
+                                  onSaved: (val) => _description = val ?? '',
+                                ),
                         ],
                       ),
                     ),
@@ -426,12 +642,38 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           Text(
                             'Additional Features',
-                            style: AppTextstyle.sectionTitleTextStyle,
+                            style: AppTextstyle.sectionTitleTextStyle.copyWith(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: AppTextstyle
+                                        .sectionTitleTextStyle.fontSize ??
+                                    18,
+                                tablet: 24,
+                                largeTablet: 30,
+                                desktop: 36,
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           buildFeatureCheckboxList(
                             allFeatures: _allFeatures,
                             selectedFeatures: _selectedFeatures,
@@ -452,63 +694,219 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           Text(
                             'Upload Images',
-                            style: AppTextstyle.sectionTitleTextStyle,
+                            style: AppTextstyle.sectionTitleTextStyle.copyWith(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: AppTextstyle
+                                        .sectionTitleTextStyle.fontSize ??
+                                    18,
+                                tablet: 24,
+                                largeTablet: 30,
+                                desktop: 36,
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 20),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 20,
+                              tablet: 28,
+                              largeTablet: 36,
+                              desktop: 44,
+                            ),
+                          ),
                           _buildImagePicker(),
-                          const SizedBox(height: 20),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 20,
+                              tablet: 28,
+                              largeTablet: 36,
+                              desktop: 44,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ),
-                  SizedBox(height: 20),
+                  SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 20,
+                      tablet: 28,
+                      largeTablet: 36,
+                      desktop: 44,
+                    ),
+                  ),
                   // Video Upload Section
                   Container(
                     decoration: BoxDecoration(
                       color: AppColors.whiteColor,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(
+                        GetResponsiveSize.getResponsiveBorderRadius(
+                          context,
+                          mobile: 12,
+                          tablet: 16,
+                          largeTablet: 20,
+                          desktop: 24,
+                        ),
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 5,
-                          offset: const Offset(0, 2),
+                          spreadRadius: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 1,
+                            tablet: 1.5,
+                            largeTablet: 2,
+                            desktop: 2.5,
+                          ),
+                          blurRadius: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 5,
+                            tablet: 7,
+                            largeTablet: 9,
+                            desktop: 11,
+                          ),
+                          offset: Offset(
+                            0,
+                            GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 2,
+                              tablet: 3,
+                              largeTablet: 4,
+                              desktop: 5,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: GetResponsiveSize.getResponsivePadding(
+                          context,
+                          mobile: 16,
+                          tablet: 24,
+                          largeTablet: 32,
+                          desktop: 40,
+                        ),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
                           Text(
                             'Upload Video',
-                            style: AppTextstyle.sectionTitleTextStyle,
+                            style: AppTextstyle.sectionTitleTextStyle.copyWith(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: AppTextstyle
+                                        .sectionTitleTextStyle.fontSize ??
+                                    18,
+                                tablet: 24,
+                                largeTablet: 30,
+                                desktop: 36,
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 20),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 20,
+                              tablet: 28,
+                              largeTablet: 36,
+                              desktop: 44,
+                            ),
+                          ),
                           _buildVideoPicker(),
-                          const SizedBox(height: 20),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 20,
+                              tablet: 28,
+                              largeTablet: 36,
+                              desktop: 44,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ),
-                  SizedBox(height: 30),
+                  SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 30,
+                      tablet: 40,
+                      largeTablet: 50,
+                      desktop: 60,
+                    ),
+                  ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: GetResponsiveSize.getResponsivePadding(
+                        context,
+                        mobile: 16,
+                        tablet: 24,
+                        largeTablet: 32,
+                        desktop: 40,
+                      ),
+                    ),
                     child: SizedBox(
-                      height: 50,
+                      height: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 50,
+                        tablet: 65,
+                        largeTablet: 75,
+                        desktop: 85,
+                      ),
                       child: ElevatedButton(
                         onPressed: state.maybeWhen(
                           loading: () => () {
-                            const SizedBox(
-                              height: 20,
-                              width: 20,
+                            SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 20,
+                                tablet: 28,
+                                largeTablet: 34,
+                                desktop: 40,
+                              ),
+                              width: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 20,
+                                tablet: 28,
+                                largeTablet: 34,
+                                desktop: 40,
+                              ),
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
+                                strokeWidth:
+                                    GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 2,
+                                  tablet: 2.5,
+                                  largeTablet: 3,
+                                  desktop: 3.5,
+                                ),
+                                color: Colors.white,
+                              ),
                             );
                           },
                           orElse: () => _addAdvertisement,
@@ -518,19 +916,43 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                           foregroundColor: AppColors.whiteColor,
                           elevation: 5,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
+                            borderRadius: BorderRadius.circular(
+                              GetResponsiveSize.getResponsiveBorderRadius(
+                                context,
+                                mobile: 25,
+                                tablet: 30,
+                                largeTablet: 35,
+                                desktop: 40,
+                              ),
+                            ),
                           ),
                         ),
                         child: Center(
                           child: Text(
-                            "Create Add",
-                            style: AppTextstyle.buttonText,
+                            "Create Advertisement",
+                            style: AppTextstyle.buttonText.copyWith(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: AppTextstyle.buttonText.fontSize ?? 16,
+                                tablet: 20,
+                                largeTablet: 24,
+                                desktop: 28,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  SizedBox(height: 30)
+                  SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 30,
+                      tablet: 40,
+                      largeTablet: 50,
+                      desktop: 60,
+                    ),
+                  )
                 ],
               ),
             ),
@@ -542,36 +964,105 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
 
   Widget _formHeader() {
     return SizedBox(
-      height: 50,
+      height: GetResponsiveSize.getResponsiveSize(
+        context,
+        mobile: 50,
+        tablet: 70,
+        largeTablet: 85,
+        desktop: 100,
+      ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.symmetric(
+          horizontal: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 16,
+            tablet: 24,
+            largeTablet: 32,
+            desktop: 40,
+          ),
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
               child: Text(
                 "Sell your ${widget.categoryTitle}",
-                style: AppTextstyle.sellCategoryText,
+                style: AppTextstyle.sellCategoryText.copyWith(
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(
+                    context,
+                    mobile: AppTextstyle.sellCategoryText.fontSize ?? 18,
+                    tablet: 24,
+                    largeTablet: 30,
+                    desktop: 36,
+                  ),
+                ),
               ),
             ),
-            const SizedBox(width: 20),
+            SizedBox(
+              width: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 20,
+                tablet: 28,
+                largeTablet: 36,
+                desktop: 44,
+              ),
+            ),
             GestureDetector(
               onTap: () {
                 context.push('/item-category');
               },
               child: Container(
-                height: 35,
-                width: 135,
+                height: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 35,
+                  tablet: 50,
+                  largeTablet: 60,
+                  desktop: 70,
+                ),
+                padding: EdgeInsets.symmetric(
+                  horizontal: GetResponsiveSize.getResponsivePadding(
+                    context,
+                    mobile: 12,
+                    tablet: 18,
+                    largeTablet: 24,
+                    desktop: 30,
+                  ),
+                ),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(
+                    GetResponsiveSize.getResponsiveBorderRadius(
+                      context,
+                      mobile: 8,
+                      tablet: 12,
+                      largeTablet: 16,
+                      desktop: 20,
+                    ),
+                  ),
                   border: Border.all(
                     color: AppColors.primaryColor,
+                    width: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 1,
+                      tablet: 1.5,
+                      largeTablet: 2,
+                      desktop: 2.5,
+                    ),
                   ),
                 ),
                 child: Center(
                   child: Text(
                     "Change Category",
-                    style: AppTextstyle.changeCategoryButtonTextStyle,
+                    style: AppTextstyle.changeCategoryButtonTextStyle.copyWith(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: AppTextstyle
+                                .changeCategoryButtonTextStyle.fontSize ??
+                            14,
+                        tablet: 18,
+                        largeTablet: 22,
+                        desktop: 26,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -614,10 +1105,33 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
 
   Widget _buildVideoPicker() {
     return Container(
-      height: 56,
+      height: GetResponsiveSize.getResponsiveSize(
+        context,
+        mobile: 56,
+        tablet: 75,
+        largeTablet: 90,
+        desktop: 105,
+      ),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Colors.grey.shade300,
+          width: GetResponsiveSize.getResponsiveSize(
+            context,
+            mobile: 1,
+            tablet: 1.5,
+            largeTablet: 2,
+            desktop: 2.5,
+          ),
+        ),
+        borderRadius: BorderRadius.circular(
+          GetResponsiveSize.getResponsiveBorderRadius(
+            context,
+            mobile: 8,
+            tablet: 12,
+            largeTablet: 16,
+            desktop: 20,
+          ),
+        ),
         color: Colors.white,
       ),
       child: Row(
@@ -625,14 +1139,28 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
           // Text field showing filename
           Expanded(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(
+                horizontal: GetResponsiveSize.getResponsivePadding(
+                  context,
+                  mobile: 16,
+                  tablet: 24,
+                  largeTablet: 32,
+                  desktop: 40,
+                ),
+              ),
               child: Text(
                 _videoFileName ?? 'No video selected',
                 style: TextStyle(
                   color: _videoFileName != null
                       ? Colors.black87
                       : Colors.grey.shade500,
-                  fontSize: 16,
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(
+                    context,
+                    mobile: 16,
+                    tablet: 20,
+                    largeTablet: 24,
+                    desktop: 28,
+                  ),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -640,21 +1168,65 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
           ),
           // Choose File button
           Container(
-            height: 56,
-            width: 120,
-            decoration: const BoxDecoration(
+            height: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 56,
+              tablet: 75,
+              largeTablet: 90,
+              desktop: 105,
+            ),
+            width: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 120,
+              tablet: 160,
+              largeTablet: 200,
+              desktop: 240,
+            ),
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.only(
-                topRight: Radius.circular(8),
-                bottomRight: Radius.circular(8),
+                topRight: Radius.circular(
+                  GetResponsiveSize.getResponsiveBorderRadius(
+                    context,
+                    mobile: 8,
+                    tablet: 12,
+                    largeTablet: 16,
+                    desktop: 20,
+                  ),
+                ),
+                bottomRight: Radius.circular(
+                  GetResponsiveSize.getResponsiveBorderRadius(
+                    context,
+                    mobile: 8,
+                    tablet: 12,
+                    largeTablet: 16,
+                    desktop: 20,
+                  ),
+                ),
               ),
             ),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: _pickVideo,
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(8),
-                  bottomRight: Radius.circular(8),
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(
+                    GetResponsiveSize.getResponsiveBorderRadius(
+                      context,
+                      mobile: 8,
+                      tablet: 12,
+                      largeTablet: 16,
+                      desktop: 20,
+                    ),
+                  ),
+                  bottomRight: Radius.circular(
+                    GetResponsiveSize.getResponsiveBorderRadius(
+                      context,
+                      mobile: 8,
+                      tablet: 12,
+                      largeTablet: 16,
+                      desktop: 20,
+                    ),
+                  ),
                 ),
                 child: Center(
                   child: Row(
@@ -663,14 +1235,34 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                       Icon(
                         _videoFileName != null ? Icons.edit : Icons.upload_file,
                         color: Colors.black,
-                        size: 18,
+                        size: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 18,
+                          tablet: 24,
+                          largeTablet: 28,
+                          desktop: 32,
+                        ),
                       ),
-                      const SizedBox(width: 4),
+                      SizedBox(
+                        width: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 4,
+                          tablet: 8,
+                          largeTablet: 12,
+                          desktop: 16,
+                        ),
+                      ),
                       Text(
                         _videoFileName != null ? 'Change' : 'Choose File',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.black,
-                          fontSize: 14,
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 14,
+                            tablet: 18,
+                            largeTablet: 22,
+                            desktop: 26,
+                          ),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -691,8 +1283,20 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
     required ValueChanged<List<String>> onChanged,
   }) {
     return Wrap(
-      spacing: 10,
-      runSpacing: 8,
+      spacing: GetResponsiveSize.getResponsiveSize(
+        context,
+        mobile: 10,
+        tablet: 16,
+        largeTablet: 22,
+        desktop: 28,
+      ),
+      runSpacing: GetResponsiveSize.getResponsiveSize(
+        context,
+        mobile: 8,
+        tablet: 12,
+        largeTablet: 16,
+        desktop: 20,
+      ),
       children: allFeatures.map((feature) {
         final isSelected = selectedFeatures.contains(feature);
         return Row(
@@ -709,8 +1313,29 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                 }
                 onChanged(updated);
               },
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            Text(feature),
+            SizedBox(
+              width: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 4,
+                tablet: 8,
+                largeTablet: 12,
+                desktop: 16,
+              ),
+            ),
+            Text(
+              feature,
+              style: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  context,
+                  mobile: 16,
+                  tablet: 20,
+                  largeTablet: 24,
+                  desktop: 28,
+                ),
+              ),
+            ),
           ],
         );
       }).toList(),
@@ -718,32 +1343,92 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
   }
 
   Widget _buildVariantDropdown() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        DropdownButtonFormField<VehicleVariant>(
-          decoration:
-              CommonDecoration.textFieldDecoration(labelText: 'Variant *'),
-          value: _selectedVariant,
-          dropdownColor: Colors.white,
-          isExpanded: true,
-          items: _variants.map((VehicleVariant variant) {
-            return DropdownMenuItem<VehicleVariant>(
-              value: variant,
-              child: Text(
-                variant.name,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            );
-          }).toList(),
-          onChanged: (val) {
-            setState(() => _selectedVariant = val);
-          },
-          validator: (value) =>
-              value == null ? 'Please select a variant' : null,
+    final dropdown = DropdownButtonFormField<VehicleVariant>(
+      decoration:
+          CommonDecoration.textFieldDecoration(labelText: 'Variant *').copyWith(
+        labelStyle: TextStyle(
+          fontSize: GetResponsiveSize.getResponsiveFontSize(
+            context,
+            mobile: 16.0,
+            tablet: 20.0,
+            largeTablet: 22.0,
+            desktop: 24.0,
+          ),
         ),
-      ],
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 12,
+            tablet: 16,
+            largeTablet: 18,
+            desktop: 20,
+          ),
+          vertical: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 16,
+            tablet: 20,
+            largeTablet: 22,
+            desktop: 24,
+          ),
+        ),
+      ),
+      value: _selectedVariant,
+      dropdownColor: Colors.white,
+      isExpanded: true,
+      iconSize: GetResponsiveSize.getResponsiveSize(
+        context,
+        mobile: 24,
+        tablet: 28,
+        largeTablet: 32,
+        desktop: 36,
+      ),
+      style: TextStyle(
+        fontSize: GetResponsiveSize.getResponsiveFontSize(
+          context,
+          mobile: 16.0,
+          tablet: 20.0,
+          largeTablet: 22.0,
+          desktop: 24.0,
+        ),
+      ),
+      items: _variants.map((VehicleVariant variant) {
+        return DropdownMenuItem<VehicleVariant>(
+          value: variant,
+          child: Text(
+            variant.name,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                context,
+                mobile: 16,
+                tablet: 20,
+                largeTablet: 22,
+                desktop: 24,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+      onChanged: (val) {
+        setState(() => _selectedVariant = val);
+      },
+      validator: (value) => value == null ? 'Please select a variant' : null,
     );
+
+    // Wrap in SizedBox only for tablets and above to match GetInput height
+    if (GetResponsiveSize.isTablet(context)) {
+      return SizedBox(
+        height: GetResponsiveSize.getResponsiveSize(
+          context,
+          mobile: 0,
+          tablet: 65,
+          largeTablet: 75,
+          desktop: 85,
+        ),
+        child: dropdown,
+      );
+    }
+    return dropdown;
   }
 }

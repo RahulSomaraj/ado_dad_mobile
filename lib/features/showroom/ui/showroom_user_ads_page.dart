@@ -1,5 +1,6 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/features/showroom/bloc/showroom_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:flutter/material.dart';
@@ -49,8 +50,31 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title:
-            Text(widget.userName ?? 'Showroom', style: AppTextstyle.appbarText),
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            size: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 24,
+              tablet: 30,
+              largeTablet: 32,
+              desktop: 36,
+            ),
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          widget.userName ?? 'Showroom',
+          style: AppTextstyle.appbarText.copyWith(
+            fontSize: GetResponsiveSize.getResponsiveFontSize(
+              context,
+              mobile: AppTextstyle.appbarText.fontSize ?? 20,
+              tablet: 24,
+              largeTablet: 28,
+              desktop: 32,
+            ),
+          ),
+        ),
         backgroundColor: AppColors.whiteColor,
         elevation: 0,
       ),
@@ -118,13 +142,30 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
                   //     ),
                   //   ),
                   // ),
-                  SizedBox(height: 20),
+                  SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 20,
+                          tablet: 28,
+                          largeTablet: 36,
+                          desktop: 44)),
                   // Product list
                   Expanded(
                     child: ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: GetResponsiveSize.getResponsivePadding(
+                            context,
+                            mobile: 16,
+                            tablet: 24,
+                            largeTablet: 32,
+                            desktop: 40),
+                      ),
                       itemCount: ads.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (_, __) => SizedBox(
+                          height: GetResponsiveSize.getResponsiveSize(context,
+                              mobile: 12,
+                              tablet: 18,
+                              largeTablet: 24,
+                              desktop: 30)),
                       itemBuilder: (context, index) => _ProductTile(
                         ad: ads[index],
                         onTap: () {
@@ -135,11 +176,28 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
                   ),
                   // Load more button
                   if (hasMore) ...[
-                    const SizedBox(height: 16),
+                    SizedBox(
+                        height: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 16,
+                            tablet: 20,
+                            largeTablet: 24,
+                            desktop: 28)),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: GetResponsiveSize.getResponsivePadding(
+                            context,
+                            mobile: 16,
+                            tablet: 24,
+                            largeTablet: 32,
+                            desktop: 40),
+                      ),
                       child: SizedBox(
                         width: double.infinity,
+                        height: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 48,
+                            tablet: 65,
+                            largeTablet: 75,
+                            desktop: 85),
                         child: ElevatedButton(
                           onPressed: () {
                             context.read<ShowroomBloc>().add(
@@ -149,21 +207,47 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF6366F1),
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: EdgeInsets.symmetric(
+                              vertical: GetResponsiveSize.getResponsivePadding(
+                                  context,
+                                  mobile: 12,
+                                  tablet: 16,
+                                  largeTablet: 20,
+                                  desktop: 24),
+                            ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(
+                                GetResponsiveSize.getResponsiveBorderRadius(
+                                    context,
+                                    mobile: 12,
+                                    tablet: 14,
+                                    largeTablet: 16,
+                                    desktop: 18),
+                              ),
                             ),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Load More Products',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: 16,
+                                tablet: 20,
+                                largeTablet: 24,
+                                desktop: 28,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(
+                        height: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 16,
+                            tablet: 20,
+                            largeTablet: 24,
+                            desktop: 28)),
                   ],
                 ],
               );
@@ -262,41 +346,97 @@ class _ProductTile extends StatelessWidget {
 
     return Material(
       color: Colors.white, // White tiles on lavender background
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(
+        GetResponsiveSize.getResponsiveBorderRadius(context,
+            mobile: 20, tablet: 24, largeTablet: 28, desktop: 32),
+      ),
       elevation: 4,
       shadowColor: Colors.black.withOpacity(0.1),
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(
+          GetResponsiveSize.getResponsiveBorderRadius(context,
+              mobile: 20, tablet: 24, largeTablet: 28, desktop: 32),
+        ),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: EdgeInsets.all(
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 10, tablet: 16, largeTablet: 22, desktop: 28),
+          ),
           child: Row(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(
+                  GetResponsiveSize.getResponsiveBorderRadius(context,
+                      mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
+                ),
                 child: ad.images.isNotEmpty
                     ? Image.network(
                         ad.images.first,
-                        width: 80,
-                        height: 80,
+                        width: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 80,
+                            tablet: 140,
+                            largeTablet: 180,
+                            desktop: 220),
+                        height: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 80,
+                            tablet: 140,
+                            largeTablet: 180,
+                            desktop: 220),
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
-                            width: 80,
-                            height: 80,
+                            width: GetResponsiveSize.getResponsiveSize(context,
+                                mobile: 80,
+                                tablet: 140,
+                                largeTablet: 180,
+                                desktop: 220),
+                            height: GetResponsiveSize.getResponsiveSize(context,
+                                mobile: 80,
+                                tablet: 140,
+                                largeTablet: 180,
+                                desktop: 220),
                             color: Colors.grey.shade200,
-                            child: const Icon(Icons.image_not_supported),
+                            child: Icon(
+                              Icons.image_not_supported,
+                              size: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 24,
+                                tablet: 32,
+                                largeTablet: 40,
+                                desktop: 48,
+                              ),
+                            ),
                           );
                         },
                       )
                     : Container(
-                        width: 80,
-                        height: 80,
+                        width: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 80,
+                            tablet: 140,
+                            largeTablet: 180,
+                            desktop: 220),
+                        height: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 80,
+                            tablet: 140,
+                            largeTablet: 180,
+                            desktop: 220),
                         color: Colors.grey.shade200,
-                        child: const Icon(Icons.image_not_supported),
+                        child: Icon(
+                          Icons.image_not_supported,
+                          size: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 24,
+                            tablet: 32,
+                            largeTablet: 40,
+                            desktop: 48,
+                          ),
+                        ),
                       ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(
+                  width: GetResponsiveSize.getResponsiveSize(context,
+                      mobile: 12, tablet: 20, largeTablet: 26, desktop: 32)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,48 +444,111 @@ class _ProductTile extends StatelessWidget {
                     // Showroom label for SR users
                     Image.asset(
                       'assets/images/showroom_label.png',
-                      height: 16,
-                      width: 80,
+                      height: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 16, tablet: 24, largeTablet: 30, desktop: 36),
+                      width: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 80,
+                          tablet: 140,
+                          largeTablet: 180,
+                          desktop: 220),
                       fit: BoxFit.contain,
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(
+                        height: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 4,
+                            tablet: 8,
+                            largeTablet: 12,
+                            desktop: 16)),
                     Text(
                       '₹ ${_formatINR(ad.price)}',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: theme.textTheme.titleMedium?.fontSize ?? 16,
+                          tablet: 22,
+                          largeTablet: 28,
+                          desktop: 34,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(
+                        height: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 2,
+                            tablet: 6,
+                            largeTablet: 10,
+                            desktop: 14)),
                     Text(
                       title.trim().isNotEmpty ? title : 'Ad',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w700,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: theme.textTheme.bodyLarge?.fontSize ?? 16,
+                          tablet: 22,
+                          largeTablet: 28,
+                          desktop: 34,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(
+                        height: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 2,
+                            tablet: 6,
+                            largeTablet: 10,
+                            desktop: 14)),
                     Text(
                       ad.location,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: const Color(0xFF6B7280),
                         fontWeight: FontWeight.w600,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: theme.textTheme.bodySmall?.fontSize ?? 14,
+                          tablet: 18,
+                          largeTablet: 22,
+                          desktop: 26,
+                        ),
                       ),
                     ),
                     if (subtitle.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                      SizedBox(
+                          height: GetResponsiveSize.getResponsiveSize(context,
+                              mobile: 2,
+                              tablet: 6,
+                              largeTablet: 10,
+                              desktop: 14)),
                       Text(
                         subtitle,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: const Color(0xFF6B7280),
                           fontWeight: FontWeight.w600,
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: theme.textTheme.bodySmall?.fontSize ?? 14,
+                            tablet: 18,
+                            largeTablet: 22,
+                            desktop: 26,
+                          ),
                         ),
                       ),
                     ],
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
+              Icon(
+                Icons.chevron_right,
+                color: const Color(0xFF9CA3AF),
+                size: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 24,
+                  tablet: 30,
+                  largeTablet: 36,
+                  desktop: 42,
+                ),
+              ),
             ],
           ),
         ),

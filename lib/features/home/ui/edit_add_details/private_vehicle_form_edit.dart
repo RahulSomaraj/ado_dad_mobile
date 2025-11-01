@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/widgets/common_decoration.dart';
 import 'package:ado_dad_user/common/widgets/dropdown_widget.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
@@ -298,7 +299,15 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
       appBar: AppBar(
         title: Text(
           'Edit Add Details',
-          style: AppTextstyle.appbarText,
+          style: AppTextstyle.appbarText.copyWith(
+            fontSize: GetResponsiveSize.getResponsiveFontSize(
+              context,
+              mobile: AppTextstyle.appbarText.fontSize ?? 20,
+              tablet: 24,
+              largeTablet: 28,
+              desktop: 32,
+            ),
+          ),
         ),
       ),
       backgroundColor: AppColors.whiteColor,
@@ -327,8 +336,12 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
             return Form(
               key: _formKey,
               child: ListView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: EdgeInsets.symmetric(
+                  horizontal: GetResponsiveSize.getResponsivePadding(context,
+                      mobile: 16, tablet: 24, largeTablet: 32, desktop: 40),
+                  vertical: GetResponsiveSize.getResponsivePadding(context,
+                      mobile: 12, tablet: 18, largeTablet: 24, desktop: 30),
+                ),
                 children: [
                   // Price
                   GetInput(
@@ -336,7 +349,12 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
                     isNumberField: true,
                     controller: _priceCtrl,
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 10,
+                          tablet: 14,
+                          largeTablet: 18,
+                          desktop: 22)),
 
                   // Location
                   GetInput(
@@ -430,52 +448,164 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
                   // Toggles
                   CheckboxListTile(
                     value: _isFirstOwner,
-                    title: const Text('Is First Owner'),
+                    title: Text(
+                      'Is First Owner',
+                      style: TextStyle(
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 16,
+                          tablet: 20,
+                          largeTablet: 24,
+                          desktop: 28,
+                        ),
+                      ),
+                    ),
                     onChanged: (v) =>
                         setState(() => _isFirstOwner = v ?? false),
                     contentPadding: EdgeInsets.zero,
                   ),
                   CheckboxListTile(
                     value: _hasInsurance,
-                    title: const Text('Has Insurance'),
+                    title: Text(
+                      'Has Insurance',
+                      style: TextStyle(
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 16,
+                          tablet: 20,
+                          largeTablet: 24,
+                          desktop: 28,
+                        ),
+                      ),
+                    ),
                     onChanged: (v) =>
                         setState(() => _hasInsurance = v ?? false),
                     contentPadding: EdgeInsets.zero,
                   ),
                   CheckboxListTile(
                     value: _hasRcBook,
-                    title: const Text('Has RC Book'),
+                    title: Text(
+                      'Has RC Book',
+                      style: TextStyle(
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 16,
+                          tablet: 20,
+                          largeTablet: 24,
+                          desktop: 28,
+                        ),
+                      ),
+                    ),
                     onChanged: (v) => setState(() => _hasRcBook = v ?? false),
                     contentPadding: EdgeInsets.zero,
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 10,
+                          tablet: 14,
+                          largeTablet: 18,
+                          desktop: 22)),
 
-                  // Description
-                  GetInput(
-                    label: 'Description',
-                    maxLines: 5,
-                    controller: _descCtrl,
-                  ),
-                  const SizedBox(height: 20),
+                  // Description field with additional height for tablets/desktop
+                  GetResponsiveSize.isTablet(context)
+                      ? SizedBox(
+                          height: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 0,
+                            tablet: 140,
+                            largeTablet: 160,
+                            desktop: 180,
+                          ),
+                          child: GetInput(
+                            label: 'Description',
+                            maxLines: 5,
+                            controller: _descCtrl,
+                          ),
+                        )
+                      : GetInput(
+                          label: 'Description',
+                          maxLines: 5,
+                          controller: _descCtrl,
+                        ),
+                  SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 20,
+                          tablet: 28,
+                          largeTablet: 36,
+                          desktop: 44)),
 
                   // Additional Features
-                  Text('Additional Features',
-                      style: AppTextstyle.sectionTitleTextStyle),
-                  const SizedBox(height: 10),
+                  Text(
+                    'Additional Features',
+                    style: AppTextstyle.sectionTitleTextStyle.copyWith(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile:
+                            AppTextstyle.sectionTitleTextStyle.fontSize ?? 18,
+                        tablet: 22,
+                        largeTablet: 26,
+                        desktop: 30,
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 10,
+                          tablet: 14,
+                          largeTablet: 18,
+                          desktop: 22)),
                   _buildFeatures(),
-                  const SizedBox(height: 20),
+                  SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 20,
+                          tablet: 28,
+                          largeTablet: 36,
+                          desktop: 44)),
 
                   // Images
-                  Text('Images', style: AppTextstyle.sectionTitleTextStyle),
-                  const SizedBox(height: 10),
+                  Text(
+                    'Images',
+                    style: AppTextstyle.sectionTitleTextStyle.copyWith(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile:
+                            AppTextstyle.sectionTitleTextStyle.fontSize ?? 18,
+                        tablet: 22,
+                        largeTablet: 26,
+                        desktop: 30,
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 10,
+                          tablet: 14,
+                          largeTablet: 18,
+                          desktop: 22)),
                   Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
+                    spacing: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 10, tablet: 14, largeTablet: 18, desktop: 22),
+                    runSpacing: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 10, tablet: 14, largeTablet: 18, desktop: 22),
                     children: [
                       ..._imageUrls.map((url) => Stack(
                             children: [
-                              Image.network(url,
-                                  width: 100, height: 100, fit: BoxFit.cover),
+                              Image.network(
+                                url,
+                                width: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 100,
+                                    tablet: 130,
+                                    largeTablet: 160,
+                                    desktop: 190),
+                                height: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 100,
+                                    tablet: 130,
+                                    largeTablet: 160,
+                                    desktop: 190),
+                                fit: BoxFit.cover,
+                              ),
                               Positioned(
                                 right: 0,
                                 top: 0,
@@ -484,34 +614,85 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
                                       setState(() => _imageUrls.remove(url)),
                                   child: Container(
                                     color: Colors.black54,
-                                    padding: const EdgeInsets.all(2),
-                                    child: const Icon(Icons.close,
-                                        size: 14, color: Colors.white),
+                                    padding: EdgeInsets.all(
+                                        GetResponsiveSize.getResponsivePadding(
+                                            context,
+                                            mobile: 2,
+                                            tablet: 4,
+                                            largeTablet: 6,
+                                            desktop: 8)),
+                                    child: Icon(Icons.close,
+                                        size:
+                                            GetResponsiveSize.getResponsiveSize(
+                                                context,
+                                                mobile: 14,
+                                                tablet: 18,
+                                                largeTablet: 22,
+                                                desktop: 26),
+                                        color: Colors.white),
                                   ),
                                 ),
                               ),
                             ],
                           )),
-                      ..._newImageFiles.map((bytes) => Image.memory(bytes,
-                          width: 100, height: 100, fit: BoxFit.cover)),
+                      ..._newImageFiles.map((bytes) => Image.memory(
+                            bytes,
+                            width: GetResponsiveSize.getResponsiveSize(context,
+                                mobile: 100,
+                                tablet: 130,
+                                largeTablet: 160,
+                                desktop: 190),
+                            height: GetResponsiveSize.getResponsiveSize(context,
+                                mobile: 100,
+                                tablet: 130,
+                                largeTablet: 160,
+                                desktop: 190),
+                            fit: BoxFit.cover,
+                          )),
                       GestureDetector(
                         onTap: _pickImages,
                         child: Container(
-                          width: 100,
-                          height: 100,
+                          width: GetResponsiveSize.getResponsiveSize(context,
+                              mobile: 100,
+                              tablet: 130,
+                              largeTablet: 160,
+                              desktop: 190),
+                          height: GetResponsiveSize.getResponsiveSize(context,
+                              mobile: 100,
+                              tablet: 130,
+                              largeTablet: 160,
+                              desktop: 190),
                           color: Colors.grey.shade300,
-                          child: const Icon(Icons.add),
+                          child: Icon(
+                            Icons.add,
+                            size: GetResponsiveSize.getResponsiveSize(context,
+                                mobile: 24,
+                                tablet: 32,
+                                largeTablet: 40,
+                                desktop: 48),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 24,
+                          tablet: 32,
+                          largeTablet: 40,
+                          desktop: 48)),
 
                   // Video Upload Section
                   Container(
                     decoration: BoxDecoration(
                       color: AppColors.whiteColor,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(
+                        GetResponsiveSize.getResponsiveBorderRadius(context,
+                            mobile: 12,
+                            tablet: 16,
+                            largeTablet: 20,
+                            desktop: 24),
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.grey.withOpacity(0.1),
@@ -522,27 +703,68 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
                       ],
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: GetResponsiveSize.getResponsivePadding(
+                            context,
+                            mobile: 16,
+                            tablet: 24,
+                            largeTablet: 32,
+                            desktop: 40),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 10),
+                          SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 10,
+                                  tablet: 14,
+                                  largeTablet: 18,
+                                  desktop: 22)),
                           Text(
                             'Upload Video',
-                            style: AppTextstyle.sectionTitleTextStyle,
+                            style: AppTextstyle.sectionTitleTextStyle.copyWith(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: AppTextstyle
+                                        .sectionTitleTextStyle.fontSize ??
+                                    18,
+                                tablet: 22,
+                                largeTablet: 26,
+                                desktop: 30,
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 20),
+                          SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 20,
+                                  tablet: 28,
+                                  largeTablet: 36,
+                                  desktop: 44)),
                           _buildVideoPicker(),
-                          const SizedBox(height: 20),
+                          SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 20,
+                                  tablet: 28,
+                                  largeTablet: 36,
+                                  desktop: 44)),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 24,
+                          tablet: 32,
+                          largeTablet: 40,
+                          desktop: 48)),
 
                   // Save
                   SizedBox(
-                    height: 50,
+                    height: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 50, tablet: 65, largeTablet: 75, desktop: 85),
                     child: ElevatedButton(
                       onPressed:
                           isSaving ? null : () => _submitWithBloc(context),
@@ -550,18 +772,60 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
                         backgroundColor: AppColors.primaryColor,
                         foregroundColor: AppColors.whiteColor,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
+                          borderRadius: BorderRadius.circular(
+                            GetResponsiveSize.getResponsiveBorderRadius(context,
+                                mobile: 14,
+                                tablet: 16,
+                                largeTablet: 18,
+                                desktop: 20),
+                          ),
+                        ),
                       ),
                       child: isSaving
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2))
-                          : Text('Save Changes',
-                              style: AppTextstyle.buttonText),
+                          ? SizedBox(
+                              width: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 18,
+                                  tablet: 24,
+                                  largeTablet: 30,
+                                  desktop: 36),
+                              height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 18,
+                                  tablet: 24,
+                                  largeTablet: 30,
+                                  desktop: 36),
+                              child: CircularProgressIndicator(
+                                strokeWidth:
+                                    GetResponsiveSize.getResponsiveSize(context,
+                                        mobile: 2,
+                                        tablet: 2.5,
+                                        largeTablet: 3,
+                                        desktop: 3.5),
+                              ),
+                            )
+                          : Text(
+                              'Save Changes',
+                              style: AppTextstyle.buttonText.copyWith(
+                                fontSize:
+                                    GetResponsiveSize.getResponsiveFontSize(
+                                  context,
+                                  mobile:
+                                      AppTextstyle.buttonText.fontSize ?? 16,
+                                  tablet: 20,
+                                  largeTablet: 24,
+                                  desktop: 28,
+                                ),
+                              ),
+                            ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 16,
+                          tablet: 20,
+                          largeTablet: 24,
+                          desktop: 28)),
                 ],
               ),
             );
@@ -580,8 +844,10 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
       "Bluetooth Connectivity",
     ];
     return Wrap(
-      spacing: 10,
-      runSpacing: 8,
+      spacing: GetResponsiveSize.getResponsiveSize(context,
+          mobile: 10, tablet: 14, largeTablet: 18, desktop: 22),
+      runSpacing: GetResponsiveSize.getResponsiveSize(context,
+          mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
       children: all.map((feature) {
         final isSelected = _additionalFeatures.contains(feature);
         return Row(
@@ -599,7 +865,18 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
                 });
               },
             ),
-            Text(feature),
+            Text(
+              feature,
+              style: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  context,
+                  mobile: 16,
+                  tablet: 20,
+                  largeTablet: 24,
+                  desktop: 28,
+                ),
+              ),
+            ),
           ],
         );
       }).toList(),
@@ -607,32 +884,92 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
   }
 
   Widget _buildVariantDropdown() {
+    final dropdown = DropdownButtonFormField<VehicleVariant>(
+      decoration:
+          CommonDecoration.textFieldDecoration(labelText: 'Variant *').copyWith(
+        labelStyle: TextStyle(
+          fontSize: GetResponsiveSize.getResponsiveFontSize(
+            context,
+            mobile: 16,
+            tablet: 20,
+            largeTablet: 22,
+            desktop: 24,
+          ),
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 12,
+            tablet: 16,
+            largeTablet: 18,
+            desktop: 20,
+          ),
+          vertical: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 16,
+            tablet: 20,
+            largeTablet: 22,
+            desktop: 24,
+          ),
+        ),
+      ),
+      value: _selectedVariant,
+      dropdownColor: Colors.white,
+      isExpanded: true,
+      iconSize: GetResponsiveSize.getResponsiveSize(
+        context,
+        mobile: 24,
+        tablet: 28,
+        largeTablet: 32,
+        desktop: 36,
+      ),
+      items: _variants.map((VehicleVariant variant) {
+        return DropdownMenuItem<VehicleVariant>(
+          value: variant,
+          child: Text(
+            variant.name,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                context,
+                mobile: 16,
+                tablet: 20,
+                largeTablet: 24,
+                desktop: 28,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+      onChanged: (val) {
+        setState(() => _selectedVariant = val);
+      },
+      validator: (value) => value == null ? 'Please select a variant' : null,
+    );
+
+    // Wrap in SizedBox for tablets and above to match textbox height
+    if (GetResponsiveSize.isTablet(context)) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 0, // Not used since we check isTablet first
+              tablet: 65,
+              largeTablet: 75,
+              desktop: 85,
+            ),
+            child: dropdown,
+          ),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        DropdownButtonFormField<VehicleVariant>(
-          decoration:
-              CommonDecoration.textFieldDecoration(labelText: 'Variant *'),
-          value: _selectedVariant,
-          dropdownColor: Colors.white,
-          isExpanded: true,
-          items: _variants.map((VehicleVariant variant) {
-            return DropdownMenuItem<VehicleVariant>(
-              value: variant,
-              child: Text(
-                variant.name,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            );
-          }).toList(),
-          onChanged: (val) {
-            setState(() => _selectedVariant = val);
-          },
-          validator: (value) =>
-              value == null ? 'Please select a variant' : null,
-        ),
-      ],
+      children: [dropdown],
     );
   }
 
@@ -643,10 +980,14 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
     final hasVideo = _videoFileName != null || _existingVideoUrl != null;
 
     return Container(
-      height: 56,
+      height: GetResponsiveSize.getResponsiveSize(context,
+          mobile: 56, tablet: 70, largeTablet: 84, desktop: 98),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(
+          GetResponsiveSize.getResponsiveBorderRadius(context,
+              mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+        ),
         color: Colors.white,
       ),
       child: Row(
@@ -654,12 +995,21 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
           // Text field showing filename
           Expanded(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(
+                horizontal: GetResponsiveSize.getResponsivePadding(context,
+                    mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+              ),
               child: Text(
                 displayText,
                 style: TextStyle(
                   color: hasVideo ? Colors.black87 : Colors.grey.shade500,
-                  fontSize: 16,
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(
+                    context,
+                    mobile: 16,
+                    tablet: 20,
+                    largeTablet: 24,
+                    desktop: 28,
+                  ),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -667,21 +1017,35 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
           ),
           // Choose File button
           Container(
-            height: 56,
-            width: 120,
-            decoration: const BoxDecoration(
+            height: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 56, tablet: 70, largeTablet: 84, desktop: 98),
+            width: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 120, tablet: 150, largeTablet: 180, desktop: 210),
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.only(
-                topRight: Radius.circular(8),
-                bottomRight: Radius.circular(8),
+                topRight: Radius.circular(
+                  GetResponsiveSize.getResponsiveBorderRadius(context,
+                      mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+                ),
+                bottomRight: Radius.circular(
+                  GetResponsiveSize.getResponsiveBorderRadius(context,
+                      mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+                ),
               ),
             ),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: _pickVideo,
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(8),
-                  bottomRight: Radius.circular(8),
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(
+                    GetResponsiveSize.getResponsiveBorderRadius(context,
+                        mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+                  ),
+                  bottomRight: Radius.circular(
+                    GetResponsiveSize.getResponsiveBorderRadius(context,
+                        mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+                  ),
                 ),
                 child: Center(
                   child: Row(
@@ -692,14 +1056,29 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
                             ? Icons.edit
                             : Icons.upload_file,
                         color: Colors.black,
-                        size: 18,
+                        size: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 18,
+                            tablet: 24,
+                            largeTablet: 30,
+                            desktop: 36),
                       ),
-                      const SizedBox(width: 4),
+                      SizedBox(
+                          width: GetResponsiveSize.getResponsiveSize(context,
+                              mobile: 4,
+                              tablet: 6,
+                              largeTablet: 8,
+                              desktop: 10)),
                       Text(
                         _existingVideoUrl != null ? 'Change' : 'Choose File',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.black,
-                          fontSize: 14,
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 14,
+                            tablet: 18,
+                            largeTablet: 22,
+                            desktop: 26,
+                          ),
                           fontWeight: FontWeight.w500,
                         ),
                       ),

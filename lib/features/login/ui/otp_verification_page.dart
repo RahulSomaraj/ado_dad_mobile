@@ -1,5 +1,6 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:ado_dad_user/features/login/bloc/otp_bloc.dart';
 import 'package:flutter/material.dart';
@@ -109,7 +110,16 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: Icon(
+              Icons.arrow_back,
+              size: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 24.0, // Keep mobile unchanged
+                tablet: 30.0,
+                largeTablet: 35.0,
+                desktop: 40.0,
+              ),
+            ),
             onPressed: () {
               context.pop();
             },
@@ -123,13 +133,61 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.asset('assets/images/Ado-dad.png'),
+                // Adodad logo with responsive sizing
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: GetResponsiveSize.isTablet(context)
+                      ? SizedBox(
+                          height: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 0, // Not used since we check isTablet first
+                            tablet: 40,
+                            largeTablet: 80,
+                            desktop: 100,
+                          ),
+                          width: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 0, // Not used since we check isTablet first
+                            tablet: 200,
+                            largeTablet: 250,
+                            desktop: 300,
+                          ),
+                          child: Image.asset(
+                            'assets/images/Ado-dad.png',
+                            fit: BoxFit.contain,
+                          ),
+                        )
+                      : Image.asset(
+                          'assets/images/Ado-dad.png',
+                          fit: BoxFit.contain,
+                        ),
+                ),
                 const SizedBox(height: 30),
                 Text(
                   'OTP Verification',
-                  style: AppTextstyle.title1,
+                  style: AppTextstyle.title1.copyWith(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(
+                      context,
+                      mobile: 20.0, // Keep mobile unchanged
+                      tablet: 30.0,
+                      largeTablet: 40.0,
+                      desktop: 50.0,
+                    ),
+                  ),
                 ),
-                const Text('Enter the OTP you received'),
+                Text(
+                  'Enter the OTP you received',
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(
+                      context,
+                      mobile: 14.0, // Keep mobile unchanged
+                      tablet: 20.0,
+                      largeTablet: 26.0,
+                      desktop: 32.0,
+                    ),
+                    color: AppColors.blackColor,
+                  ),
+                ),
                 const SizedBox(height: 30),
                 _buildOtpInputFields(),
                 const SizedBox(height: 30),
@@ -145,12 +203,38 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
   }
 
   Widget _buildOtpInputFields() {
+    final boxSize = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 50.0, // Keep mobile unchanged
+      tablet: 60.0,
+      largeTablet: 70.0,
+      desktop: 80.0,
+    );
+    final fontSize = GetResponsiveSize.getResponsiveFontSize(
+      context,
+      mobile: 24.0, // Keep mobile unchanged
+      tablet: 30.0,
+      largeTablet: 36.0,
+      desktop: 42.0,
+    );
+    final borderWidth = GetResponsiveSize.isTablet(context) ? 1.0 : 0.5;
+    final focusedBorderWidth = GetResponsiveSize.isTablet(context) ? 2.0 : 1.5;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(
         6,
         (index) => SizedBox(
-          width: 50,
+          width: boxSize,
+          height: GetResponsiveSize.isTablet(context)
+              ? GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 0,
+                  tablet: 65,
+                  largeTablet: 75,
+                  desktop: 85,
+                )
+              : null,
           child: TextFormField(
             controller: _otpControllers[index],
             focusNode: _focusNodes[index],
@@ -167,22 +251,31 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
+                borderSide: BorderSide(
                   color: AppColors.greyColor,
-                  width: 0.5,
+                  width: borderWidth,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
+                borderSide: BorderSide(
                   color: AppColors.greyColor,
-                  width: 1.5,
+                  width: focusedBorderWidth,
+                ),
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                vertical: GetResponsiveSize.getResponsivePadding(
+                  context,
+                  mobile: 12,
+                  tablet: 16,
+                  largeTablet: 18,
+                  desktop: 20,
                 ),
               ),
             ),
             onChanged: (value) => _onOtpChanged(index, value),
-            style: const TextStyle(
-              fontSize: 24,
+            style: TextStyle(
+              fontSize: fontSize,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -199,7 +292,13 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
           orElse: () => false,
         );
         return SizedBox(
-          height: 55,
+          height: GetResponsiveSize.getResponsiveSize(
+            context,
+            mobile: 55, // Keep mobile unchanged
+            tablet: 65,
+            largeTablet: 75,
+            desktop: 85,
+          ),
           width: double.infinity,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -209,17 +308,37 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                     borderRadius: BorderRadius.circular(10))),
             onPressed: isLoading ? null : _handleConfirmOtp,
             child: isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
+                ? SizedBox(
+                    width: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 20,
+                      tablet: 25,
+                      largeTablet: 30,
+                      desktop: 35,
+                    ),
+                    height: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 20,
+                      tablet: 25,
+                      largeTablet: 30,
+                      desktop: 35,
+                    ),
+                    child: const CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
                 : Text(
                     'Confirm OTP',
-                    style: AppTextstyle.buttonText,
+                    style: AppTextstyle.buttonText.copyWith(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 16.0, // Keep mobile unchanged
+                        tablet: 25.0,
+                        largeTablet: 30.0,
+                        desktop: 35.0,
+                      ),
+                    ),
                   ),
           ),
         );
@@ -241,31 +360,71 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
               Text(
                 "Didn't receive code?",
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(
+                    context,
+                    mobile: 14.0, // Keep mobile unchanged
+                    tablet: 20.0,
+                    largeTablet: 25.0,
+                    desktop: 30.0,
+                  ),
                   fontWeight: FontWeight.w500,
                   color: AppColors.blackColor,
                 ),
               ),
-              const SizedBox(width: 4),
+              SizedBox(
+                width: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 4,
+                  tablet: 6,
+                  largeTablet: 8,
+                  desktop: 10,
+                ),
+              ),
               TextButton(
                 onPressed: isResending ? null : _handleResendOtp,
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: GetResponsiveSize.getResponsivePadding(
+                      context,
+                      mobile: 4,
+                      tablet: 6,
+                      largeTablet: 8,
+                      desktop: 10,
+                    ),
+                  ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 child: isResending
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
+                    ? SizedBox(
+                        width: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 14,
+                          tablet: 18,
+                          largeTablet: 22,
+                          desktop: 26,
+                        ),
+                        height: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 14,
+                          tablet: 18,
+                          largeTablet: 22,
+                          desktop: 26,
+                        ),
+                        child: const CircularProgressIndicator(
                           strokeWidth: 2,
                         ),
                       )
                     : Text(
                         'Resend Code',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 14.0, // Keep mobile unchanged
+                            tablet: 20.0,
+                            largeTablet: 25.0,
+                            desktop: 30.0,
+                          ),
                           fontWeight: FontWeight.w500,
                           color: AppColors.primaryColor,
                           decoration: TextDecoration.underline,

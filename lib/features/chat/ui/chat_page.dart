@@ -5,6 +5,7 @@ import 'package:ado_dad_user/features/chat/bloc/chat_bloc.dart';
 import 'package:ado_dad_user/features/chat/bloc/chat_event.dart';
 import 'package:ado_dad_user/features/chat/bloc/chat_state.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/repositories/chat_repository.dart';
 import 'package:go_router/go_router.dart';
 
@@ -70,7 +71,13 @@ class _ChatPageState extends State<ChatPage> {
         title: Row(
           children: [
             CircleAvatar(
-              radius: 16,
+              radius: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 16,
+                tablet: 20,
+                largeTablet: 24,
+                desktop: 28,
+              ),
               backgroundColor: Colors.grey[300],
               backgroundImage: widget.otherUserProfilePic != null &&
                       widget.otherUserProfilePic != 'default-profile-pic-url'
@@ -82,20 +89,40 @@ class _ChatPageState extends State<ChatPage> {
                       (widget.otherUserName ?? 'U')
                           .substring(0, 1)
                           .toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: TextStyle(
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 14,
+                          tablet: 18,
+                          largeTablet: 22,
+                          desktop: 26,
+                        ),
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     )
                   : null,
             ),
-            const SizedBox(width: 12),
+            SizedBox(
+              width: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 12,
+                tablet: 16,
+                largeTablet: 20,
+                desktop: 24,
+              ),
+            ),
             Expanded(
               child: Text(
                 widget.adTitle ?? (widget.otherUserName ?? 'Chat'),
-                style: const TextStyle(
-                  fontSize: 16,
+                style: TextStyle(
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(
+                    context,
+                    mobile: 16,
+                    tablet: 20,
+                    largeTablet: 24,
+                    desktop: 28,
+                  ),
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
@@ -107,12 +134,30 @@ class _ChatPageState extends State<ChatPage> {
         backgroundColor: AppColors.primaryColor,
         foregroundColor: Colors.white,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(
+            Icons.arrow_back,
+            size: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 24,
+              tablet: 30,
+              largeTablet: 32,
+              desktop: 36,
+            ),
+          ),
           onPressed: () => _handleBackNavigation(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.more_vert),
+            icon: Icon(
+              Icons.more_vert,
+              size: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 24,
+                tablet: 30,
+                largeTablet: 32,
+                desktop: 36,
+              ),
+            ),
             onPressed: () {
               // TODO: Add more options menu
             },
@@ -193,28 +238,64 @@ class _ChatPageState extends State<ChatPage> {
                 // Messages list
                 Expanded(
                   child: _messages.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
                                 Icons.chat_bubble_outline,
-                                size: 64,
+                                size: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 64,
+                                  tablet: 80,
+                                  largeTablet: 96,
+                                  desktop: 112,
+                                ),
                                 color: Colors.grey,
                               ),
-                              SizedBox(height: 16),
+                              SizedBox(
+                                height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 16,
+                                  tablet: 20,
+                                  largeTablet: 24,
+                                  desktop: 28,
+                                ),
+                              ),
                               Text(
                                 'No messages yet',
                                 style: TextStyle(
-                                  fontSize: 18,
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                    context,
+                                    mobile: 18,
+                                    tablet: 22,
+                                    largeTablet: 26,
+                                    desktop: 30,
+                                  ),
                                   color: Colors.grey,
                                 ),
                               ),
-                              SizedBox(height: 8),
+                              SizedBox(
+                                height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 8,
+                                  tablet: 12,
+                                  largeTablet: 16,
+                                  desktop: 20,
+                                ),
+                              ),
                               Text(
                                 'Start a conversation!',
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                    context,
+                                    mobile: 14,
+                                    tablet: 18,
+                                    largeTablet: 20,
+                                    desktop: 24,
+                                  ),
                                   color: Colors.grey,
                                 ),
                               ),
@@ -223,7 +304,15 @@ class _ChatPageState extends State<ChatPage> {
                         )
                       : ListView.builder(
                           controller: _scrollController,
-                          padding: const EdgeInsets.all(16),
+                          padding: EdgeInsets.all(
+                            GetResponsiveSize.getResponsivePadding(
+                              context,
+                              mobile: 16,
+                              tablet: 24,
+                              largeTablet: 32,
+                              desktop: 40,
+                            ),
+                          ),
                           itemCount: _messages.length,
                           itemBuilder: (context, index) {
                             final message = _messages[index];
@@ -254,14 +343,28 @@ class _ChatPageState extends State<ChatPage> {
     final isMe = _currentUserId != null && senderId == _currentUserId;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.only(
+        bottom: GetResponsiveSize.getResponsiveSize(
+          context,
+          mobile: 8,
+          tablet: 12,
+          largeTablet: 16,
+          desktop: 20,
+        ),
+      ),
       child: Row(
         mainAxisAlignment:
             isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!isMe) ...[
             CircleAvatar(
-              radius: 16,
+              radius: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 16,
+                tablet: 20,
+                largeTablet: 24,
+                desktop: 28,
+              ),
               backgroundColor: Colors.grey[300],
               backgroundImage: sender?['profilePic'] != null &&
                       sender!['profilePic'] != 'default-profile-pic-url'
@@ -271,22 +374,59 @@ class _ChatPageState extends State<ChatPage> {
                       sender?['profilePic'] == 'default-profile-pic-url'
                   ? Text(
                       (sender?['name'] ?? 'U').substring(0, 1).toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 12,
+                      style: TextStyle(
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 12,
+                          tablet: 16,
+                          largeTablet: 18,
+                          desktop: 20,
+                        ),
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     )
                   : null,
             ),
-            const SizedBox(width: 8),
+            SizedBox(
+              width: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 8,
+                tablet: 12,
+                largeTablet: 16,
+                desktop: 20,
+              ),
+            ),
           ],
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: EdgeInsets.symmetric(
+                horizontal: GetResponsiveSize.getResponsivePadding(
+                  context,
+                  mobile: 16,
+                  tablet: 20,
+                  largeTablet: 24,
+                  desktop: 28,
+                ),
+                vertical: GetResponsiveSize.getResponsivePadding(
+                  context,
+                  mobile: 12,
+                  tablet: 16,
+                  largeTablet: 20,
+                  desktop: 24,
+                ),
+              ),
               decoration: BoxDecoration(
                 color: isMe ? AppColors.primaryColor : Colors.grey[200],
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(
+                  GetResponsiveSize.getResponsiveBorderRadius(
+                    context,
+                    mobile: 20,
+                    tablet: 24,
+                    largeTablet: 28,
+                    desktop: 32,
+                  ),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,15 +435,35 @@ class _ChatPageState extends State<ChatPage> {
                     content,
                     style: TextStyle(
                       color: isMe ? Colors.white : Colors.black87,
-                      fontSize: 16,
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 16,
+                        tablet: 20,
+                        largeTablet: 22,
+                        desktop: 26,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 4,
+                      tablet: 6,
+                      largeTablet: 8,
+                      desktop: 10,
+                    ),
+                  ),
                   Text(
                     _formatTime(timestamp),
                     style: TextStyle(
                       color: isMe ? Colors.white70 : Colors.grey[600],
-                      fontSize: 12,
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 12,
+                        tablet: 16,
+                        largeTablet: 18,
+                        desktop: 20,
+                      ),
                     ),
                   ),
                 ],
@@ -311,13 +471,33 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
           if (isMe) ...[
-            const SizedBox(width: 8),
+            SizedBox(
+              width: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 8,
+                tablet: 12,
+                largeTablet: 16,
+                desktop: 20,
+              ),
+            ),
             CircleAvatar(
-              radius: 16,
+              radius: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 16,
+                tablet: 20,
+                largeTablet: 24,
+                desktop: 28,
+              ),
               backgroundColor: AppColors.primaryColor,
-              child: const Icon(
+              child: Icon(
                 Icons.person,
-                size: 16,
+                size: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 16,
+                  tablet: 20,
+                  largeTablet: 24,
+                  desktop: 28,
+                ),
                 color: Colors.white,
               ),
             ),
@@ -329,11 +509,28 @@ class _ChatPageState extends State<ChatPage> {
 
   Widget _buildMessageInput() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(
+        GetResponsiveSize.getResponsivePadding(
+          context,
+          mobile: 16,
+          tablet: 20,
+          largeTablet: 24,
+          desktop: 28,
+        ),
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
-          top: BorderSide(color: Colors.grey[300]!),
+          top: BorderSide(
+            color: Colors.grey[300]!,
+            width: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 1,
+              tablet: 1.5,
+              largeTablet: 2,
+              desktop: 2.5,
+            ),
+          ),
         ),
       ),
       child: Row(
@@ -343,34 +540,94 @@ class _ChatPageState extends State<ChatPage> {
               controller: _messageController,
               decoration: InputDecoration(
                 hintText: 'Type a message...',
+                hintStyle: TextStyle(
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(
+                    context,
+                    mobile: 16,
+                    tablet: 20,
+                    largeTablet: 22,
+                    desktop: 26,
+                  ),
+                ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(
+                    GetResponsiveSize.getResponsiveBorderRadius(
+                      context,
+                      mobile: 25,
+                      tablet: 30,
+                      largeTablet: 35,
+                      desktop: 40,
+                    ),
+                  ),
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
                 fillColor: Colors.grey[100],
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: GetResponsiveSize.getResponsivePadding(
+                    context,
+                    mobile: 16,
+                    tablet: 20,
+                    largeTablet: 24,
+                    desktop: 28,
+                  ),
+                  vertical: GetResponsiveSize.getResponsivePadding(
+                    context,
+                    mobile: 12,
+                    tablet: 16,
+                    largeTablet: 20,
+                    desktop: 24,
+                  ),
+                ),
+              ),
+              style: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  context,
+                  mobile: 16,
+                  tablet: 20,
+                  largeTablet: 22,
+                  desktop: 26,
                 ),
               ),
               maxLines: null,
               textCapitalization: TextCapitalization.sentences,
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(
+            width: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 8,
+              tablet: 12,
+              largeTablet: 16,
+              desktop: 20,
+            ),
+          ),
           GestureDetector(
             onTap: _sendMessage,
             child: Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(
+                GetResponsiveSize.getResponsivePadding(
+                  context,
+                  mobile: 12,
+                  tablet: 16,
+                  largeTablet: 20,
+                  desktop: 24,
+                ),
+              ),
               decoration: BoxDecoration(
                 color: AppColors.primaryColor,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.send,
                 color: Colors.white,
-                size: 20,
+                size: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 20,
+                  tablet: 26,
+                  largeTablet: 30,
+                  desktop: 34,
+                ),
               ),
             ),
           ),

@@ -6,15 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="83d32f08-606f-463e-9267-26ea90d95fc2" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/home/ui/home.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/home/ui/home.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/home/ui/home_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/home/ui/home_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/login/ui/android_login_tablet.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/login/ui/android_login_tablet.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/profile/ui/profile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/profile/ui/profile.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/profile/ui/profile_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/profile/ui/profile_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/search/ui/search.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/search/ui/search.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/sell/ui/seller.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/sell/ui/seller.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/signup/ui/signup.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/signup/ui/signup.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/splash/splash.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/splash/splash.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/common/google_places_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/common/google_places_service.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/common/widgets/get_input.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/common/widgets/get_input.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/login/ui/login.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/login/ui/login.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/login/ui/login_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/login/ui/login_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/splash/splash_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/splash/splash_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

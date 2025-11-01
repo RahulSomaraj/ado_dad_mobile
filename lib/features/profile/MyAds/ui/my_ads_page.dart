@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/features/profile/MyAds/bloc/my_ads_bloc.dart';
 import 'package:ado_dad_user/models/my_ads_model.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
@@ -49,7 +50,16 @@ class _MyAdsPageState extends State<MyAdsPage> {
         elevation: 0,
         backgroundColor: const Color(0xFFF6F4FC),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          icon: Icon(
+            Icons.arrow_back,
+            size: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 24,
+              tablet: 30,
+              largeTablet: 32,
+              desktop: 36,
+            ),
+          ),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: BlocBuilder<MyAdsBloc, MyAdsState>(
@@ -60,10 +70,16 @@ class _MyAdsPageState extends State<MyAdsPage> {
             );
             return Text(
               'My Ads ($count)',
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w700,
-                fontSize: 20,
-                color: Color(0xFF16181B),
+                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  context,
+                  mobile: 20,
+                  tablet: 24,
+                  largeTablet: 28,
+                  desktop: 32,
+                ),
+                color: const Color(0xFF16181B),
               ),
             );
           },
@@ -77,38 +93,118 @@ class _MyAdsPageState extends State<MyAdsPage> {
             initial: (_) => const Center(child: CircularProgressIndicator()),
             error: (e) => Center(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(
+                  GetResponsiveSize.getResponsivePadding(
+                    context,
+                    mobile: 16,
+                    tablet: 24,
+                    largeTablet: 32,
+                    desktop: 40,
+                  ),
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.error_outline,
-                      size: 64,
+                      size: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 64,
+                        tablet: 80,
+                        largeTablet: 96,
+                        desktop: 112,
+                      ),
                       color: Colors.red.shade300,
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 16,
+                        tablet: 20,
+                        largeTablet: 24,
+                        desktop: 28,
+                      ),
+                    ),
                     Text(
                       'Error loading your ads',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 18,
+                          tablet: 22,
+                          largeTablet: 26,
+                          desktop: 30,
+                        ),
                         fontWeight: FontWeight.w600,
                         color: Colors.grey.shade700,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 8,
+                        tablet: 12,
+                        largeTablet: 16,
+                        desktop: 20,
+                      ),
+                    ),
                     Text(
                       e.message,
                       style: TextStyle(
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 14,
+                          tablet: 18,
+                          largeTablet: 20,
+                          desktop: 24,
+                        ),
                         color: Colors.grey.shade600,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 16,
+                        tablet: 24,
+                        largeTablet: 32,
+                        desktop: 40,
+                      ),
+                    ),
                     ElevatedButton(
                       onPressed: () {
                         context.read<MyAdsBloc>().add(const MyAdsEvent.load());
                       },
-                      child: const Text('Retry'),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: GetResponsiveSize.getResponsivePadding(
+                            context,
+                            mobile: 16,
+                            tablet: 24,
+                            largeTablet: 32,
+                            desktop: 40,
+                          ),
+                          vertical: GetResponsiveSize.getResponsivePadding(
+                            context,
+                            mobile: 12,
+                            tablet: 16,
+                            largeTablet: 20,
+                            desktop: 24,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        'Retry',
+                        style: TextStyle(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 14,
+                            tablet: 18,
+                            largeTablet: 20,
+                            desktop: 24,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -116,12 +212,62 @@ class _MyAdsPageState extends State<MyAdsPage> {
             ),
             loaded: (loaded) {
               if (loaded.ads.isEmpty) {
-                return const Center(child: Text('No ads yet'));
+                return Center(
+                  child: Text(
+                    'No ads yet',
+                    style: TextStyle(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 16,
+                        tablet: 20,
+                        largeTablet: 24,
+                        desktop: 28,
+                      ),
+                    ),
+                  ),
+                );
               }
               return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                padding: EdgeInsets.fromLTRB(
+                  GetResponsiveSize.getResponsivePadding(
+                    context,
+                    mobile: 16,
+                    tablet: 24,
+                    largeTablet: 32,
+                    desktop: 40,
+                  ),
+                  GetResponsiveSize.getResponsivePadding(
+                    context,
+                    mobile: 8,
+                    tablet: 12,
+                    largeTablet: 16,
+                    desktop: 20,
+                  ),
+                  GetResponsiveSize.getResponsivePadding(
+                    context,
+                    mobile: 16,
+                    tablet: 24,
+                    largeTablet: 32,
+                    desktop: 40,
+                  ),
+                  GetResponsiveSize.getResponsivePadding(
+                    context,
+                    mobile: 24,
+                    tablet: 32,
+                    largeTablet: 40,
+                    desktop: 48,
+                  ),
+                ),
                 itemCount: loaded.ads.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 16),
+                separatorBuilder: (_, __) => SizedBox(
+                  height: GetResponsiveSize.getResponsiveSize(
+                    context,
+                    mobile: 16,
+                    tablet: 22,
+                    largeTablet: 28,
+                    desktop: 34,
+                  ),
+                ),
                 itemBuilder: (context, i) => _AdTile(ad: loaded.ads[i]),
               );
             },
@@ -141,7 +287,15 @@ class _AdTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(18);
+    final radius = BorderRadius.circular(
+      GetResponsiveSize.getResponsiveBorderRadius(
+        context,
+        mobile: 18,
+        tablet: 22,
+        largeTablet: 26,
+        desktop: 30,
+      ),
+    );
     final isSold = ad.soldOut == true;
 
     return InkWell(
@@ -154,13 +308,36 @@ class _AdTile extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              blurRadius: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 12,
+                tablet: 16,
+                largeTablet: 20,
+                desktop: 24,
+              ),
+              offset: Offset(
+                0,
+                GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 4,
+                  tablet: 6,
+                  largeTablet: 8,
+                  desktop: 10,
+                ),
+              ),
             ),
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: EdgeInsets.all(
+            GetResponsiveSize.getResponsivePadding(
+              context,
+              mobile: 14,
+              tablet: 20,
+              largeTablet: 26,
+              desktop: 32,
+            ),
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -168,90 +345,143 @@ class _AdTile extends StatelessWidget {
                 url: ad.images.isNotEmpty ? ad.images.first : '',
                 isSold: isSold,
               ),
-              const SizedBox(width: 12),
+              SizedBox(
+                width: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 12,
+                  tablet: 18,
+                  largeTablet: 24,
+                  desktop: 30,
+                ),
+              ),
               Expanded(
-                child: SizedBox(
-                  height: 92,
-                  child: Stack(
-                    children: [
-                      // Main texts
-                      Positioned.fill(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                child: Stack(
+                  children: [
+                    // Main texts
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Price
+                        Text(
+                          _formatINR(ad.price),
+                          style: TextStyle(
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 16,
+                              tablet: 22,
+                              largeTablet: 28,
+                              desktop: 34,
+                            ),
+                            fontWeight: FontWeight.w800,
+                            color: isSold
+                                ? Colors.grey.shade500
+                                : const Color(0xFF1C1F23),
+                          ),
+                        ),
+                        SizedBox(
+                          height: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 2,
+                            tablet: 4,
+                            largeTablet: 6,
+                            desktop: 8,
+                          ),
+                        ),
+                        // Title + optional showroom pill
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            // Price
-                            Text(
-                              _formatINR(ad.price),
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                color: isSold
-                                    ? Colors.grey.shade500
-                                    : const Color(0xFF1C1F23),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            // Title + optional showroom pill
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    _titleFor(ad),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: isSold
-                                          ? Colors.grey.shade500
-                                          : const Color(0xFF1C1F23),
-                                    ),
+                            Expanded(
+                              child: Text(
+                                _titleFor(ad),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                    context,
+                                    mobile: 15,
+                                    tablet: 21,
+                                    largeTablet: 27,
+                                    desktop: 33,
                                   ),
+                                  fontWeight: FontWeight.w600,
+                                  color: isSold
+                                      ? Colors.grey.shade500
+                                      : const Color(0xFF1C1F23),
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-
-                            // KM / Fuel
-                            Text(
-                              _metaLine(ad),
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: isSold
-                                    ? Colors.grey.shade400
-                                    : const Color(0xFF6B7280),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            // Location
-                            Text(
-                              ad.location,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isSold
-                                    ? Colors.grey.shade400
-                                    : const Color(0xFFA0A4AB),
-                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      // Status chip (right side)
-                      Align(
-                        alignment: Alignment.topRight,
-                        child: _StatusChip(
-                          status: ad.soldOut == true
-                              ? AdStatus.soldOut
-                              : AdStatus.listed,
+                        SizedBox(
+                          height: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 6,
+                            tablet: 10,
+                            largeTablet: 14,
+                            desktop: 18,
+                          ),
                         ),
+
+                        // KM / Fuel
+                        Text(
+                          _metaLine(ad),
+                          style: TextStyle(
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 13,
+                              tablet: 19,
+                              largeTablet: 23,
+                              desktop: 27,
+                            ),
+                            color: isSold
+                                ? Colors.grey.shade400
+                                : const Color(0xFF6B7280),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(
+                          height: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 2,
+                            tablet: 4,
+                            largeTablet: 6,
+                            desktop: 8,
+                          ),
+                        ),
+                        // Location
+                        Text(
+                          ad.location,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 12,
+                              tablet: 18,
+                              largeTablet: 22,
+                              desktop: 26,
+                            ),
+                            color: isSold
+                                ? Colors.grey.shade400
+                                : const Color(0xFFA0A4AB),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Status chip (right side)
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: _StatusChip(
+                        status: ad.soldOut == true
+                            ? AdStatus.soldOut
+                            : AdStatus.listed,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -342,20 +572,52 @@ class _Thumb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(
+        GetResponsiveSize.getResponsiveBorderRadius(
+          context,
+          mobile: 14,
+          tablet: 18,
+          largeTablet: 22,
+          desktop: 26,
+        ),
+      ),
       child: SizedBox(
-        width: 98,
-        height: 98,
+        width: GetResponsiveSize.getResponsiveSize(
+          context,
+          mobile: 98,
+          tablet: 140,
+          largeTablet: 180,
+          desktop: 220,
+        ),
+        height: GetResponsiveSize.getResponsiveSize(
+          context,
+          mobile: 98,
+          tablet: 140,
+          largeTablet: 180,
+          desktop: 220,
+        ),
         child: Stack(
           children: [
             if (url.isNotEmpty)
               Image.network(
                 url,
-                width: 98,
-                height: 98,
+                width: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 98,
+                  tablet: 140,
+                  largeTablet: 180,
+                  desktop: 220,
+                ),
+                height: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 98,
+                  tablet: 140,
+                  largeTablet: 180,
+                  desktop: 220,
+                ),
                 fit: BoxFit.cover,
                 loadingBuilder: (c, child, progress) =>
-                    progress == null ? child : const _ShimmerBox(),
+                    progress == null ? child : _ShimmerBox(),
                 errorBuilder: (_, __, ___) => const _BrokenImage(),
               )
             else
@@ -363,11 +625,17 @@ class _Thumb extends StatelessWidget {
             if (isSold)
               Container(
                 color: Colors.black.withOpacity(0.4),
-                child: const Center(
+                child: Center(
                   child: Icon(
                     Icons.sell,
                     color: Colors.white,
-                    size: 24,
+                    size: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 24,
+                      tablet: 32,
+                      largeTablet: 40,
+                      desktop: 48,
+                    ),
                   ),
                 ),
               ),
@@ -384,11 +652,33 @@ class _ShimmerBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 98,
-      height: 98,
+      width: GetResponsiveSize.getResponsiveSize(
+        context,
+        mobile: 98,
+        tablet: 140,
+        largeTablet: 180,
+        desktop: 220,
+      ),
+      height: GetResponsiveSize.getResponsiveSize(
+        context,
+        mobile: 98,
+        tablet: 140,
+        largeTablet: 180,
+        desktop: 220,
+      ),
       color: const Color(0xFFF0F2F6),
       alignment: Alignment.center,
-      child: const Icon(Icons.image, size: 22, color: Color(0xFFB9C0CC)),
+      child: Icon(
+        Icons.image,
+        size: GetResponsiveSize.getResponsiveSize(
+          context,
+          mobile: 22,
+          tablet: 30,
+          largeTablet: 38,
+          desktop: 46,
+        ),
+        color: const Color(0xFFB9C0CC),
+      ),
     );
   }
 }
@@ -399,12 +689,33 @@ class _BrokenImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 98,
-      height: 98,
+      width: GetResponsiveSize.getResponsiveSize(
+        context,
+        mobile: 98,
+        tablet: 140,
+        largeTablet: 180,
+        desktop: 220,
+      ),
+      height: GetResponsiveSize.getResponsiveSize(
+        context,
+        mobile: 98,
+        tablet: 140,
+        largeTablet: 180,
+        desktop: 220,
+      ),
       color: const Color(0xFFF0F2F6),
       alignment: Alignment.center,
-      child: const Icon(Icons.broken_image_outlined,
-          size: 22, color: Color(0xFFB9C0CC)),
+      child: Icon(
+        Icons.broken_image_outlined,
+        size: GetResponsiveSize.getResponsiveSize(
+          context,
+          mobile: 22,
+          tablet: 30,
+          largeTablet: 38,
+          desktop: 46,
+        ),
+        color: const Color(0xFFB9C0CC),
+      ),
     );
   }
 }
@@ -423,17 +734,46 @@ class _StatusChip extends StatelessWidget {
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(
+        horizontal: GetResponsiveSize.getResponsivePadding(
+          context,
+          mobile: 12,
+          tablet: 16,
+          largeTablet: 20,
+          desktop: 24,
+        ),
+        vertical: GetResponsiveSize.getResponsivePadding(
+          context,
+          mobile: 6,
+          tablet: 10,
+          largeTablet: 14,
+          desktop: 18,
+        ),
+      ),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(
+          GetResponsiveSize.getResponsiveBorderRadius(
+            context,
+            mobile: 20,
+            tablet: 24,
+            largeTablet: 28,
+            desktop: 32,
+          ),
+        ),
       ),
       child: Text(
         text,
         style: TextStyle(
           color: fg,
           fontWeight: FontWeight.w800,
-          fontSize: 12,
+          fontSize: GetResponsiveSize.getResponsiveFontSize(
+            context,
+            mobile: 12,
+            tablet: 18,
+            largeTablet: 22,
+            desktop: 26,
+          ),
           height: 1,
         ),
       ),

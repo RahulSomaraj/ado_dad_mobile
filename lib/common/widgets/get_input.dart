@@ -1,3 +1,4 @@
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/widgets/common_decoration.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -61,13 +62,21 @@ class _GetInputState extends State<GetInput> {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
+    final textField = TextFormField(
       controller: _internalController,
-
       maxLines: widget.maxLines,
       // readOnly: widget.readOnly ||
       //     widget.isDate, // Prevent manual typing for date inputs
       onTap: widget.onTap,
+      style: TextStyle(
+        fontSize: GetResponsiveSize.getResponsiveFontSize(
+          context,
+          mobile: 16.0, // Keep mobile unchanged
+          tablet: 20.0,
+          largeTablet: 22.0,
+          desktop: 24.0,
+        ),
+      ),
       decoration: CommonDecoration.textFieldDecoration(
         labelText: widget.label,
         isPassword: widget.isPassword,
@@ -80,6 +89,32 @@ class _GetInputState extends State<GetInput> {
               }
             : null,
         prefixText: widget.isPrice ? '₹ ' : '',
+      ).copyWith(
+        labelStyle: TextStyle(
+          fontSize: GetResponsiveSize.getResponsiveFontSize(
+            context,
+            mobile: 16.0, // Keep mobile unchanged
+            tablet: 20.0,
+            largeTablet: 22.0,
+            desktop: 24.0,
+          ),
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 12,
+            tablet: 16,
+            largeTablet: 18,
+            desktop: 20,
+          ),
+          vertical: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 16,
+            tablet: 20,
+            largeTablet: 22,
+            desktop: 24,
+          ),
+        ),
       ),
       keyboardType: widget.isEmail
           ? TextInputType.emailAddress
@@ -95,6 +130,21 @@ class _GetInputState extends State<GetInput> {
       validator: _validateInput,
       onSaved: widget.onSaved,
     );
+
+    // Wrap in SizedBox only for tablets and above to increase field height
+    if (GetResponsiveSize.isTablet(context)) {
+      return SizedBox(
+        height: GetResponsiveSize.getResponsiveSize(
+          context,
+          mobile: 0, // Not used since we check isTablet first
+          tablet: 65,
+          largeTablet: 75,
+          desktop: 85,
+        ),
+        child: textField,
+      );
+    }
+    return textField;
   }
 
   // /// *📌 Function to Show Date Picker*

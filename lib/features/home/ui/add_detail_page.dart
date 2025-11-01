@@ -1,4 +1,5 @@
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/features/home/ad_detail/ad_detail_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/features/home/services/offer_service.dart';
@@ -194,7 +195,25 @@ Download Ado Dad app to contact the seller and view more details!
                   // Share button for ad owners - positioned above price section
                   SliverToBoxAdapter(child: _buildOwnerShareButton(ad)),
                   SliverToBoxAdapter(child: _titlePriceMeta(ad)),
-                  SliverToBoxAdapter(child: Divider()),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: GetResponsiveSize.getResponsivePadding(
+                            context,
+                            mobile: 16,
+                            tablet: 20,
+                            largeTablet: 24,
+                            desktop: 28),
+                      ),
+                      child: Divider(
+                        thickness: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 1,
+                            tablet: 1.2,
+                            largeTablet: 1.4,
+                            desktop: 1.5),
+                      ),
+                    ),
+                  ),
                   SliverToBoxAdapter(child: _pillTabs(ad)),
                   SliverToBoxAdapter(child: _description(ad)),
                   SliverToBoxAdapter(child: _reportAdButton(ad)),
@@ -242,7 +261,9 @@ Download Ado Dad app to contact the seller and view more details!
               child: _makeOfferBtn('Make an Offer',
                   onTap: () => _handleMakeOffer(context)),
             ),
-            const SizedBox(width: 12),
+            SizedBox(
+                width: GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 12, tablet: 16, largeTablet: 20, desktop: 24)),
             Expanded(
               child: _chatBtn('Chat', onTap: () => _handleChat(context)),
             ),
@@ -269,23 +290,47 @@ Download Ado Dad app to contact the seller and view more details!
         if (isSold) {
           return Container(
             width: double.infinity,
-            height: 48,
+            height: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 48, tablet: 65, largeTablet: 75, desktop: 85),
             decoration: BoxDecoration(
               color: Colors.green,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(
+                GetResponsiveSize.getResponsiveBorderRadius(context,
+                    mobile: 12, tablet: 14, largeTablet: 16, desktop: 18),
+              ),
             ),
-            child: const Center(
+            padding: EdgeInsets.symmetric(
+              horizontal: GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+            ),
+            child: Center(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.check_circle, color: Colors.white, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'SOLD',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.white,
+                    size: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 20, tablet: 26, largeTablet: 30, desktop: 34),
+                  ),
+                  SizedBox(
+                      width: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 8, tablet: 10, largeTablet: 12, desktop: 14)),
+                  Flexible(
+                    child: Text(
+                      'SOLD',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 16,
+                            tablet: 22,
+                            largeTablet: 26,
+                            desktop: 30),
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -296,19 +341,35 @@ Download Ado Dad app to contact the seller and view more details!
 
         return SizedBox(
           width: double.infinity,
-          height: 48,
+          height: GetResponsiveSize.getResponsiveSize(context,
+              mobile: 48, tablet: 65, largeTablet: 75, desktop: 85),
           child: OutlinedButton(
             style: OutlinedButton.styleFrom(
-              side: BorderSide(color: AppColors.primaryColor),
+              side: BorderSide(
+                color: AppColors.primaryColor,
+                width: GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 1, tablet: 1.5, largeTablet: 2, desktop: 2.5),
+              ),
+              padding: EdgeInsets.symmetric(
+                horizontal: GetResponsiveSize.getResponsivePadding(context,
+                    mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+                vertical: GetResponsiveSize.getResponsivePadding(context,
+                    mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+              ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(
+                  GetResponsiveSize.getResponsiveBorderRadius(context,
+                      mobile: 12, tablet: 14, largeTablet: 16, desktop: 18),
+                ),
               ),
             ),
             onPressed: isLoading ? null : () => _handleMarkAsSold(context, ad),
             child: isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
+                ? SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 20, tablet: 26, largeTablet: 30, desktop: 34),
+                    width: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 20, tablet: 26, largeTablet: 30, desktop: 34),
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor:
@@ -317,14 +378,37 @@ Download Ado Dad app to contact the seller and view more details!
                   )
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.sell, color: AppColors.primaryColor, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Mark as Sold',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primaryColor,
+                      Icon(
+                        Icons.sell,
+                        color: AppColors.primaryColor,
+                        size: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 20,
+                            tablet: 26,
+                            largeTablet: 30,
+                            desktop: 34),
+                      ),
+                      SizedBox(
+                          width: GetResponsiveSize.getResponsiveSize(context,
+                              mobile: 8,
+                              tablet: 10,
+                              largeTablet: 12,
+                              desktop: 14)),
+                      Flexible(
+                        child: Text(
+                          'Mark as Sold',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryColor,
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: 16,
+                                tablet: 22,
+                                largeTablet: 26,
+                                desktop: 30),
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -344,14 +428,67 @@ Download Ado Dad app to contact the seller and view more details!
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Mark as Sold'),
-          content: const Text(
+          titlePadding: EdgeInsets.fromLTRB(
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 0, tablet: 4, largeTablet: 8, desktop: 12),
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+          ),
+          contentPadding: EdgeInsets.fromLTRB(
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+            0,
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+          ),
+          actionsPadding: EdgeInsets.fromLTRB(
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+            0,
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+          ),
+          title: Text(
+            'Mark as Sold',
+            style: TextStyle(
+              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                  mobile: 20, tablet: 26, largeTablet: 30, desktop: 34),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          content: Text(
             'Are you sure you want to mark this ad as sold? This action cannot be undone.',
+            style: TextStyle(
+              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                  mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.symmetric(
+                  horizontal: GetResponsiveSize.getResponsivePadding(context,
+                      mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+                  vertical: GetResponsiveSize.getResponsivePadding(context,
+                      mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+                ),
+              ),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                      mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
+                ),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -362,16 +499,27 @@ Download Ado Dad app to contact the seller and view more details!
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryColor,
+                padding: EdgeInsets.symmetric(
+                  horizontal: GetResponsiveSize.getResponsivePadding(context,
+                      mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+                  vertical: GetResponsiveSize.getResponsivePadding(context,
+                      mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+                ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(
+                    GetResponsiveSize.getResponsiveBorderRadius(context,
+                        mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
+                  ),
                 ),
                 elevation: 0,
               ),
-              child: const Text(
+              child: Text(
                 'Mark as Sold',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                      mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
                 ),
               ),
             ),
@@ -389,7 +537,15 @@ Download Ado Dad app to contact the seller and view more details!
     return Stack(
       children: [
         AspectRatio(
-          aspectRatio: 16 / 10,
+          aspectRatio: GetResponsiveSize.isTablet(context)
+              ? GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 16 / 10, // Not used since we check isTablet first
+                  tablet: 20 / 10,
+                  largeTablet: 20 / 10,
+                  desktop: 22 / 10,
+                )
+              : 16 / 10, // Keep mobile unchanged
           child: CarouselSlider(
             carouselController: _carouselController,
             options: CarouselOptions(
@@ -659,19 +815,66 @@ Download Ado Dad app to contact the seller and view more details!
   // page indicators (small pills)
   Widget _dots(int count) {
     return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 6),
+      padding: EdgeInsets.only(
+        top: GetResponsiveSize.getResponsivePadding(
+          context,
+          mobile: 8,
+          tablet: 10,
+          largeTablet: 12,
+          desktop: 14,
+        ),
+        bottom: GetResponsiveSize.getResponsivePadding(
+          context,
+          mobile: 6,
+          tablet: 8,
+          largeTablet: 10,
+          desktop: 12,
+        ),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(count, (i) {
           final isActive = i == _currentIndex;
+          final dotHeight = GetResponsiveSize.getResponsiveSize(
+            context,
+            mobile: 6, // Keep mobile unchanged
+            tablet: 8,
+            largeTablet: 10,
+            desktop: 12,
+          );
+          final dotWidth = isActive
+              ? GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 14, // Keep mobile unchanged
+                  tablet: 18,
+                  largeTablet: 22,
+                  desktop: 26,
+                )
+              : dotHeight;
           return AnimatedContainer(
             duration: const Duration(milliseconds: 250),
-            margin: const EdgeInsets.symmetric(horizontal: 3),
-            height: 6,
-            width: isActive ? 14 : 6,
+            margin: EdgeInsets.symmetric(
+              horizontal: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 3,
+                tablet: 4,
+                largeTablet: 5,
+                desktop: 6,
+              ),
+            ),
+            height: dotHeight,
+            width: dotWidth,
             decoration: BoxDecoration(
               color: isActive ? Colors.indigo : Colors.grey.shade400,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(
+                GetResponsiveSize.getResponsiveBorderRadius(
+                  context,
+                  mobile: 4,
+                  tablet: 5,
+                  largeTablet: 6,
+                  desktop: 6,
+                ),
+              ),
             ),
           );
         }),
@@ -712,7 +915,16 @@ Download Ado Dad app to contact the seller and view more details!
           '${ad.manufacturer?.displayName ?? ad.manufacturer?.name ?? ''} ${ad.model?.displayName ?? ad.model?.name ?? ''} (${ad.year ?? ''})';
     }
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
+      padding: EdgeInsets.fromLTRB(
+        GetResponsiveSize.getResponsivePadding(context,
+            mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+        GetResponsiveSize.getResponsivePadding(context,
+            mobile: 6, tablet: 8, largeTablet: 10, desktop: 12),
+        GetResponsiveSize.getResponsivePadding(context,
+            mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+        GetResponsiveSize.getResponsivePadding(context,
+            mobile: 10, tablet: 14, largeTablet: 18, desktop: 22),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -723,34 +935,48 @@ Download Ado Dad app to contact the seller and view more details!
               children: [
                 Text(
                   toTitleCase(title),
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                          mobile: 16, tablet: 25, largeTablet: 29, desktop: 33),
+                      fontWeight: FontWeight.bold),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8),
+                SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 8, tablet: 10, largeTablet: 12, desktop: 14)),
                 Text(
                   'Posted on ${_niceDate(ad.updatedAt)}',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 12, tablet: 20, largeTablet: 22, desktop: 24),
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(
+              width: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 16, tablet: 20, largeTablet: 24, desktop: 28)),
           Container(
-            height: 40,
+            height: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 40, tablet: 60, largeTablet: 70, desktop: 80),
             child: const VerticalDivider(
               thickness: 1,
               color: Colors.grey,
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(
+              width: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 16, tablet: 20, largeTablet: 24, desktop: 28)),
           Expanded(
             flex: 1,
             child: Text(
               '₹ ${(ad.price)}',
-              style: const TextStyle(
-                fontSize: 16,
+              style: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                    mobile: 16, tablet: 25, largeTablet: 29, desktop: 33),
                 fontWeight: FontWeight.w800,
               ),
               textAlign: TextAlign.end,
@@ -764,43 +990,59 @@ Download Ado Dad app to contact the seller and view more details!
   // ======= Tabs (Pill segmented) + content =======
   Widget _pillTabs(AddModel ad) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: GetResponsiveSize.getResponsivePadding(context,
+            mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+        vertical: GetResponsiveSize.getResponsivePadding(context,
+            mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+      ),
       child: DefaultTabController(
         length: 2,
         child: Column(
           children: [
             Container(
-              height: 50,
+              height: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 50, tablet: 70, largeTablet: 80, desktop: 90),
               decoration: BoxDecoration(
                 color: const Color(0xFFF2F3F6),
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(
+                  GetResponsiveSize.getResponsiveBorderRadius(context,
+                      mobile: 28, tablet: 32, largeTablet: 36, desktop: 40),
+                ),
               ),
-              padding: const EdgeInsets.all(6),
+              padding: EdgeInsets.all(
+                GetResponsiveSize.getResponsivePadding(context,
+                    mobile: 6, tablet: 8, largeTablet: 10, desktop: 12),
+              ),
               child: TabBar(
                 indicatorSize: TabBarIndicatorSize.tab,
                 indicator: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  // boxShadow: [
-                  //   BoxShadow(
-                  //     color: Colors.black.withOpacity(0.06),
-                  //     blurRadius: 8,
-                  //   )
-                  // ],
+                  borderRadius: BorderRadius.circular(
+                    GetResponsiveSize.getResponsiveBorderRadius(context,
+                        mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+                  ),
                 ),
-                indicatorColor: Colors.transparent, // removes default underline
+                indicatorColor: Colors.transparent,
                 dividerColor: Colors.transparent,
                 labelColor: AppColors.primaryColor,
                 unselectedLabelColor: Colors.grey.shade600,
+                labelStyle: TextStyle(
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                      mobile: 14, tablet: 22, largeTablet: 25, desktop: 27),
+                ),
                 tabs: const [
                   Tab(text: 'Specifications'),
                   Tab(text: 'Other Details'),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
             SizedBox(
-              height: _contentHeightForSpecs(ad),
+                height: GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 12, tablet: 16, largeTablet: 20, desktop: 24)),
+            SizedBox(
+              height: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 320, tablet: 450, largeTablet: 550, desktop: 650),
               child: TabBarView(
                 children: [
                   _specsCard(ad),
@@ -834,13 +1076,19 @@ Download Ado Dad app to contact the seller and view more details!
 
       return _cardShell(
         child: GridView.builder(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+          ),
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            mainAxisExtent: 55,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
+            mainAxisExtent: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 55, tablet: 90, largeTablet: 110, desktop: 130),
+            crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+            mainAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
           ),
           itemCount: items.length,
           itemBuilder: (_, i) => _specTile(items[i]),
@@ -868,13 +1116,19 @@ Download Ado Dad app to contact the seller and view more details!
 
     return _cardShell(
       child: GridView.builder(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(
+          GetResponsiveSize.getResponsivePadding(context,
+              mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+        ),
         physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          mainAxisExtent: 64,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
+          mainAxisExtent: GetResponsiveSize.getResponsiveSize(context,
+              mobile: 64, tablet: 95, largeTablet: 110, desktop: 125),
+          crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+              mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+          mainAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+              mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
         ),
         itemCount: items.length,
         itemBuilder: (_, i) => _specTile(items[i]),
@@ -887,30 +1141,55 @@ Download Ado Dad app to contact the seller and view more details!
     final sellerEmail = (ad.user?.email ?? '').trim();
     return _cardShell(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(
+          GetResponsiveSize.getResponsivePadding(context,
+              mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (sellerName.isNotEmpty) ...[
-              const Text('Seller Information',
-                  style: TextStyle(fontWeight: FontWeight.w700)),
-              const SizedBox(height: 10),
+              Text('Seller Information',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 16, tablet: 24, largeTablet: 28, desktop: 32),
+                  )),
+              SizedBox(
+                  height: GetResponsiveSize.getResponsiveSize(context,
+                      mobile: 10, tablet: 12, largeTablet: 14, desktop: 16)),
               _KeyValRow(label: 'Name', value: sellerName),
               if (sellerEmail.isNotEmpty) ...[
-                const SizedBox(height: 8),
+                SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 8, tablet: 10, largeTablet: 12, desktop: 14)),
                 _KeyValRow(label: 'Email', value: sellerEmail),
               ],
-              const SizedBox(height: 16),
+              SizedBox(
+                  height: GetResponsiveSize.getResponsiveSize(context,
+                      mobile: 16, tablet: 20, largeTablet: 24, desktop: 28)),
             ],
-            const Text('Ad Details',
-                style: TextStyle(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 10),
+            Text('Ad Details',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                      mobile: 16, tablet: 24, largeTablet: 28, desktop: 32),
+                )),
+            SizedBox(
+                height: GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 10, tablet: 12, largeTablet: 14, desktop: 16)),
             _KeyValRow(label: 'Location', value: ad.location),
-            const SizedBox(height: 8),
+            SizedBox(
+                height: GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 8, tablet: 10, largeTablet: 12, desktop: 14)),
             _KeyValRow(label: 'Category', value: toTitleCase(ad.category)),
-            const SizedBox(height: 8),
+            SizedBox(
+                height: GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 8, tablet: 10, largeTablet: 12, desktop: 14)),
             _KeyValRow(label: 'Posted On', value: _niceDate(ad.updatedAt)),
-            const SizedBox(height: 16),
+            SizedBox(
+                height: GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 16, tablet: 24, largeTablet: 32, desktop: 40)),
             // Mark as Sold button for ad owners
             FutureBuilder<bool>(
               future: _isCurrentUserOwner(ad),
@@ -922,6 +1201,9 @@ Download Ado Dad app to contact the seller and view more details!
                 return const SizedBox.shrink();
               },
             ),
+            SizedBox(
+                height: GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 0, tablet: 8, largeTablet: 12, desktop: 16)),
           ],
         ),
       ),
@@ -931,21 +1213,46 @@ Download Ado Dad app to contact the seller and view more details!
   // ======= Description =======
   Widget _description(AddModel ad) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: EdgeInsets.fromLTRB(
+        GetResponsiveSize.getResponsivePadding(context,
+            mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+        GetResponsiveSize.getResponsivePadding(context,
+            mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+        GetResponsiveSize.getResponsivePadding(context,
+            mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+        0,
+      ),
       child: _cardShell(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: EdgeInsets.symmetric(
+            horizontal: GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+            vertical: GetResponsiveSize.getResponsivePadding(context,
+                mobile: 10, tablet: 14, largeTablet: 18, desktop: 22),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Description',
-                style: TextStyle(color: Color(0xFF6B7280)),
+                style: TextStyle(
+                  color: const Color(0xFF6B7280),
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                      mobile: 14, tablet: 22, largeTablet: 26, desktop: 30),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              SizedBox(height: 10),
+              SizedBox(
+                  height: GetResponsiveSize.getResponsiveSize(context,
+                      mobile: 10, tablet: 12, largeTablet: 14, desktop: 16)),
               Text(
                 ad.description,
-                style: TextStyle(color: Colors.black, height: 1.35),
+                style: TextStyle(
+                  color: Colors.black,
+                  height: 1.35,
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                      mobile: 14, tablet: 22, largeTablet: 26, desktop: 30),
+                ),
               ),
             ],
           ),
@@ -967,7 +1274,15 @@ Download Ado Dad app to contact the seller and view more details!
         }
 
         return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: EdgeInsets.fromLTRB(
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+            0,
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
@@ -975,7 +1290,8 @@ Download Ado Dad app to contact the seller and view more details!
                 onPressed: () => _showReportDialog(context, ad),
                 icon: Icon(
                   Icons.report_problem,
-                  size: 18,
+                  size: GetResponsiveSize.getResponsiveSize(context,
+                      mobile: 18, tablet: 25, largeTablet: 29, desktop: 33),
                   color: Colors.red.shade600,
                 ),
                 label: Text(
@@ -983,11 +1299,17 @@ Download Ado Dad app to contact the seller and view more details!
                   style: TextStyle(
                     color: Colors.red.shade600,
                     fontWeight: FontWeight.w600,
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 14, tablet: 22, largeTablet: 25, desktop: 30),
                   ),
                 ),
                 style: TextButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: GetResponsiveSize.getResponsivePadding(context,
+                        mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+                    vertical: GetResponsiveSize.getResponsivePadding(context,
+                        mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+                  ),
                 ),
               ),
             ],
@@ -1022,31 +1344,72 @@ Download Ado Dad app to contact the seller and view more details!
   // ======= Seller Tile =======
   Widget _sellerTile(AddModel ad) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: EdgeInsets.fromLTRB(
+        GetResponsiveSize.getResponsivePadding(context,
+            mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+        GetResponsiveSize.getResponsivePadding(context,
+            mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+        GetResponsiveSize.getResponsivePadding(context,
+            mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+        0,
+      ),
       child: _cardShell(
         child: ListTile(
           leading: CircleAvatar(
-            radius: 24,
+            radius: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 24, tablet: 32, largeTablet: 38, desktop: 44),
             backgroundImage: NetworkImage(ad.user?.profilePic ?? ''),
           ),
           title: Text(
             ad.user?.name?.trim().isNotEmpty == true
                 ? ad.user!.name!
                 : 'Seller',
-            style: const TextStyle(fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                  mobile: 16, tablet: 24, largeTablet: 28, desktop: 32),
+            ),
           ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               if (ad.user?.email?.trim().isNotEmpty == true)
-                Text(ad.user!.email!),
+                Text(
+                  ad.user!.email!,
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 14, tablet: 20, largeTablet: 24, desktop: 28),
+                  ),
+                ),
               if (ad.user?.phone?.trim().isNotEmpty == true)
-                Text(ad.user!.phone!),
-              Text(ad.location),
+                Text(
+                  ad.user!.phone!,
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 14, tablet: 20, largeTablet: 24, desktop: 28),
+                  ),
+                ),
+              Text(
+                ad.location,
+                style: TextStyle(
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                      mobile: 14, tablet: 20, largeTablet: 24, desktop: 28),
+                ),
+              ),
             ],
           ),
-          trailing: const Icon(Icons.chevron_right),
+          trailing: Icon(
+            Icons.chevron_right,
+            size: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+          ),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+            vertical: GetResponsiveSize.getResponsivePadding(context,
+                mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+          ),
           onTap: () {
             final sellerId = ad.user?.id;
             if (sellerId != null && sellerId.isNotEmpty && ad.user != null) {
@@ -1071,7 +1434,15 @@ Download Ado Dad app to contact the seller and view more details!
         }
 
         return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: EdgeInsets.fromLTRB(
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+            0,
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
@@ -1080,7 +1451,8 @@ Download Ado Dad app to contact the seller and view more details!
                 child: Icon(
                   Icons.share,
                   color: AppColors.primaryColor,
-                  size: 24,
+                  size: GetResponsiveSize.getResponsiveSize(context,
+                      mobile: 24, tablet: 30, largeTablet: 36, desktop: 42),
                 ),
               ),
             ],
@@ -1098,17 +1470,41 @@ Download Ado Dad app to contact the seller and view more details!
         // Check if this ad is currently being toggled
         if (state is FavoriteToggleLoading && state.adId == ad.id) {
           return Container(
-            height: 36,
-            width: 36,
+            height: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 36, // Keep mobile unchanged
+              tablet: 48,
+              largeTablet: 56,
+              desktop: 64,
+            ),
+            width: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 36, // Keep mobile unchanged
+              tablet: 48,
+              largeTablet: 56,
+              desktop: 64,
+            ),
             decoration: BoxDecoration(
               color: Colors.black.withOpacity(0.35),
               shape: BoxShape.circle,
             ),
-            child: const Center(
+            child: Center(
               child: SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
+                width: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 16,
+                  tablet: 20,
+                  largeTablet: 24,
+                  desktop: 28,
+                ),
+                height: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 16,
+                  tablet: 20,
+                  largeTablet: 24,
+                  desktop: 28,
+                ),
+                child: const CircularProgressIndicator(
                   strokeWidth: 2,
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
@@ -1132,8 +1528,20 @@ Download Ado Dad app to contact the seller and view more details!
                 );
           },
           child: Container(
-            height: 36,
-            width: 36,
+            height: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 36, // Keep mobile unchanged
+              tablet: 48,
+              largeTablet: 56,
+              desktop: 64,
+            ),
+            width: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 36, // Keep mobile unchanged
+              tablet: 48,
+              largeTablet: 56,
+              desktop: 64,
+            ),
             decoration: BoxDecoration(
               color: Colors.black.withOpacity(0.35),
               shape: BoxShape.circle,
@@ -1142,8 +1550,20 @@ Download Ado Dad app to contact the seller and view more details!
               isFavorited
                   ? 'assets/images/favorite_icon_filled.png'
                   : 'assets/images/favorite_icon_unfilled.png',
-              width: 20,
-              height: 20,
+              width: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 20, // Keep mobile unchanged
+                tablet: 26,
+                largeTablet: 30,
+                desktop: 34,
+              ),
+              height: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 20, // Keep mobile unchanged
+                tablet: 26,
+                largeTablet: 30,
+                desktop: 34,
+              ),
             ),
           ),
         );
@@ -1155,13 +1575,35 @@ Download Ado Dad app to contact the seller and view more details!
     return InkWell(
       onTap: onTap,
       child: Container(
-        height: 36,
-        width: 36,
+        height: GetResponsiveSize.getResponsiveSize(
+          context,
+          mobile: 36, // Keep mobile unchanged
+          tablet: 48,
+          largeTablet: 56,
+          desktop: 64,
+        ),
+        width: GetResponsiveSize.getResponsiveSize(
+          context,
+          mobile: 36, // Keep mobile unchanged
+          tablet: 48,
+          largeTablet: 56,
+          desktop: 64,
+        ),
         decoration: BoxDecoration(
           color: Colors.black.withOpacity(0.35),
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, color: Colors.white, size: 20),
+        child: Icon(
+          icon,
+          color: Colors.white,
+          size: GetResponsiveSize.getResponsiveSize(
+            context,
+            mobile: 20, // Keep mobile unchanged
+            tablet: 26,
+            largeTablet: 30,
+            desktop: 34,
+          ),
+        ),
       ),
     );
   }
@@ -1230,49 +1672,99 @@ Download Ado Dad app to contact the seller and view more details!
 
   Widget _makeOfferBtn(String label, {required VoidCallback onTap}) {
     return SizedBox(
-      height: 48,
+      height: GetResponsiveSize.getResponsiveSize(context,
+          mobile: 48, tablet: 65, largeTablet: 75, desktop: 85),
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: AppColors.primaryColor),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          side: BorderSide(
+            color: AppColors.primaryColor,
+            width: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 1, tablet: 1.5, largeTablet: 2, desktop: 2.5),
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+            vertical: GetResponsiveSize.getResponsivePadding(context,
+                mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              GetResponsiveSize.getResponsiveBorderRadius(context,
+                  mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
+            ),
+          ),
         ),
         onPressed: onTap,
-        child: Text(label,
-            style: TextStyle(
-                color: AppColors.primaryColor, fontWeight: FontWeight.w700)),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: AppColors.primaryColor,
+            fontWeight: FontWeight.w700,
+            fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                mobile: 16, tablet: 22, largeTablet: 26, desktop: 30),
+          ),
+        ),
       ),
     );
   }
 
   Widget _chatBtn(String label, {required VoidCallback onTap}) {
     return SizedBox(
-      height: 48,
+      height: GetResponsiveSize.getResponsiveSize(context,
+          mobile: 48, tablet: 65, largeTablet: 75, desktop: 85),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryColor,
           foregroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          padding: EdgeInsets.symmetric(
+            horizontal: GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+            vertical: GetResponsiveSize.getResponsivePadding(context,
+                mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              GetResponsiveSize.getResponsiveBorderRadius(context,
+                  mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
+            ),
+          ),
         ),
         onPressed: onTap,
-        child: Text(label,
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                mobile: 16, tablet: 22, largeTablet: 26, desktop: 30),
+          ),
+        ),
       ),
     );
   }
 
   Widget _cardShell({required Widget child}) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.only(
+        bottom: GetResponsiveSize.getResponsiveSize(context,
+            mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(
+          GetResponsiveSize.getResponsiveBorderRadius(context,
+              mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 10, tablet: 12, largeTablet: 14, desktop: 16),
+            offset: Offset(
+              0,
+              GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 4, tablet: 5, largeTablet: 6, desktop: 7),
+            ),
           ),
         ],
       ),
@@ -1285,39 +1777,58 @@ Download Ado Dad app to contact the seller and view more details!
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
-          height: 36,
-          width: 36,
+          height: GetResponsiveSize.getResponsiveSize(context,
+              mobile: 36, tablet: 56, largeTablet: 68, desktop: 80),
+          width: GetResponsiveSize.getResponsiveSize(context,
+              mobile: 36, tablet: 56, largeTablet: 68, desktop: 80),
           decoration: BoxDecoration(
             color: const Color(0xFFF4F6FA),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(
+              GetResponsiveSize.getResponsiveBorderRadius(context,
+                  mobile: 10, tablet: 14, largeTablet: 16, desktop: 18),
+            ),
           ),
-          child: Icon(spec.icon, size: 18, color: const Color(0xFF475569)),
+          child: Icon(
+            spec.icon,
+            size: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 18, tablet: 28, largeTablet: 34, desktop: 40),
+            color: const Color(0xFF475569),
+          ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(
+            width: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 10, tablet: 14, largeTablet: 16, desktop: 18)),
         Expanded(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(spec.label,
-                  style:
-                      const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
-              const SizedBox(height: 2),
-              Text(spec.value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w600)),
+              Text(
+                spec.label,
+                style: TextStyle(
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                      mobile: 11, tablet: 18, largeTablet: 22, desktop: 26),
+                  color: const Color(0xFF6B7280),
+                ),
+              ),
+              SizedBox(
+                  height: GetResponsiveSize.getResponsiveSize(context,
+                      mobile: 2, tablet: 4, largeTablet: 5, desktop: 6)),
+              Text(
+                spec.value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                      mobile: 13, tablet: 20, largeTablet: 24, desktop: 28),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         )
       ],
     );
-  }
-
-  double _contentHeightForSpecs(AddModel ad) {
-    // enough room for grid + showroom + mark as sold button; adjust if you add more rows
-    return 320; // Increased from 260 to accommodate the Mark as Sold button
   }
 
   // String _vehicleTitle(AddModel ad) {
@@ -1371,15 +1882,28 @@ class _KeyValRow extends StatelessWidget {
     return Row(
       children: [
         SizedBox(
-            width: 110,
-            child: Text(label,
-                style:
-                    const TextStyle(fontSize: 12, color: Color(0xFF6B7280)))),
-        const SizedBox(width: 8),
+            width: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 110, tablet: 140, largeTablet: 170, desktop: 200),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                    mobile: 12, tablet: 18, largeTablet: 22, desktop: 26),
+                color: const Color(0xFF6B7280),
+              ),
+            )),
+        SizedBox(
+            width: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 8, tablet: 12, largeTablet: 16, desktop: 20)),
         Expanded(
-            child: Text(value,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w600, fontSize: 13))),
+            child: Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                mobile: 13, tablet: 20, largeTablet: 24, desktop: 28),
+          ),
+        )),
       ],
     );
   }

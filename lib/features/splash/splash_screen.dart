@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/features/login/bloc/login_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -91,12 +92,53 @@ class _SplashScreenState extends State<SplashScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Logo image
-            Image.asset('assets/images/d-vector.png', height: 50, width: 50),
-            SizedBox(height: 20),
-            // Title image aligned to center
+            // Logo image with responsive sizing
+            Image.asset(
+              'assets/images/d-vector.png',
+              height: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 50,
+                tablet: 80,
+                largeTablet: 90,
+                desktop: 110,
+              ),
+              width: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 50,
+                tablet: 80,
+                largeTablet: 90,
+                desktop: 110,
+              ),
+            ),
+            SizedBox(
+              height: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 20,
+                tablet: 30,
+                largeTablet: 40,
+                desktop: 50,
+              ),
+            ),
+            // Title image aligned to center with responsive sizing
             Center(
-              child: Image.asset('assets/images/Ado Dad SplashTitle.png'),
+              child: GetResponsiveSize.isTablet(context)
+                  ? SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 0, // Not used since we check isTablet first
+                        tablet: 80,
+                        largeTablet: 100,
+                        desktop: 120,
+                      ),
+                      child: Image.asset(
+                        'assets/images/Ado Dad SplashTitle.png',
+                        fit: BoxFit.contain,
+                      ),
+                    )
+                  : Image.asset(
+                      'assets/images/Ado Dad SplashTitle.png',
+                      fit: BoxFit.contain,
+                    ),
             ),
           ],
         ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/features/home/report_ad_bloc/report_ad_bloc.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 
 class ReportAdDialog extends StatefulWidget {
   final String reportedUserId;
@@ -113,11 +114,20 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
       },
       child: Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(
+            GetResponsiveSize.getResponsiveBorderRadius(context,
+                mobile: 16, tablet: 18, largeTablet: 20, desktop: 22),
+          ),
         ),
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 400),
-          padding: const EdgeInsets.all(24),
+          constraints: BoxConstraints(
+            maxWidth: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 400, tablet: 500, largeTablet: 600, desktop: 700),
+          ),
+          padding: EdgeInsets.all(
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+          ),
           child: Form(
             key: _formKey,
             child: Column(
@@ -130,55 +140,118 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                     Icon(
                       Icons.report_problem,
                       color: AppColors.primaryColor,
-                      size: 24,
+                      size: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 24, tablet: 30, largeTablet: 36, desktop: 42),
                     ),
-                    const SizedBox(width: 12),
-                    const Text(
+                    SizedBox(
+                        width: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 12,
+                            tablet: 14,
+                            largeTablet: 16,
+                            desktop: 18)),
+                    Text(
                       'Report Ad',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 20,
+                            tablet: 26,
+                            largeTablet: 30,
+                            desktop: 34),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const Spacer(),
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.close),
+                      icon: Icon(
+                        Icons.close,
+                        size: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 24,
+                            tablet: 28,
+                            largeTablet: 32,
+                            desktop: 36),
+                      ),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 20, tablet: 24, largeTablet: 28, desktop: 32)),
 
                 // Reason Selection
-                const Text(
+                Text(
                   'Reason for reporting:',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 12, tablet: 14, largeTablet: 16, desktop: 18)),
 
                 // Reason dropdown
                 Container(
                   width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: GetResponsiveSize.getResponsivePadding(context,
+                        mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+                    vertical: GetResponsiveSize.getResponsivePadding(context,
+                        mobile: 4, tablet: 8, largeTablet: 12, desktop: 16),
+                  ),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(
+                      GetResponsiveSize.getResponsiveBorderRadius(context,
+                          mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+                    ),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedReason.isEmpty ? null : _selectedReason,
-                      hint: const Text('Select a reason'),
+                      hint: Text(
+                        'Select a reason',
+                        style: TextStyle(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 14,
+                              tablet: 18,
+                              largeTablet: 22,
+                              desktop: 26),
+                          color: Colors.black,
+                        ),
+                      ),
                       isExpanded: true,
+                      style: TextStyle(
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 14,
+                            tablet: 18,
+                            largeTablet: 22,
+                            desktop: 26),
+                        color: Colors.black,
+                      ),
+                      iconSize: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
                       items: _reasons.map((String reason) {
                         return DropdownMenuItem<String>(
                           value: reason,
-                          child: Text(_reasonLabels[reason] ?? reason),
+                          child: Text(
+                            _reasonLabels[reason] ?? reason,
+                            style: TextStyle(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                  context,
+                                  mobile: 14,
+                                  tablet: 18,
+                                  largeTablet: 22,
+                                  desktop: 26),
+                              color: Colors.black,
+                            ),
+                          ),
                         );
                       }).toList(),
                       onChanged: (String? newValue) {
@@ -189,35 +262,83 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 20, tablet: 24, largeTablet: 28, desktop: 32)),
 
                 // Description
-                const Text(
+                Text(
                   'Description:',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 12, tablet: 14, largeTablet: 16, desktop: 18)),
 
                 TextFormField(
                   controller: _descriptionController,
                   maxLines: 4,
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
+                  ),
                   decoration: InputDecoration(
                     hintText:
                         'Please provide additional details about why you are reporting this ad...',
+                    hintStyle: TextStyle(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                          mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: GetResponsiveSize.getResponsivePadding(
+                          context,
+                          mobile: 12,
+                          tablet: 16,
+                          largeTablet: 20,
+                          desktop: 24),
+                      vertical: GetResponsiveSize.getResponsivePadding(context,
+                          mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
+                    ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(
+                        GetResponsiveSize.getResponsiveBorderRadius(context,
+                            mobile: 8,
+                            tablet: 10,
+                            largeTablet: 12,
+                            desktop: 14),
+                      ),
                       borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(
+                        GetResponsiveSize.getResponsiveBorderRadius(context,
+                            mobile: 8,
+                            tablet: 10,
+                            largeTablet: 12,
+                            desktop: 14),
+                      ),
                       borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: AppColors.primaryColor),
+                      borderRadius: BorderRadius.circular(
+                        GetResponsiveSize.getResponsiveBorderRadius(context,
+                            mobile: 8,
+                            tablet: 10,
+                            largeTablet: 12,
+                            desktop: 14),
+                      ),
+                      borderSide: BorderSide(
+                        color: AppColors.primaryColor,
+                        width: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 2,
+                            tablet: 2.5,
+                            largeTablet: 3,
+                            desktop: 3.5),
+                      ),
                     ),
                   ),
                   validator: (value) {
@@ -230,7 +351,9 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 24),
+                SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 24, tablet: 28, largeTablet: 32, desktop: 36)),
 
                 // Action buttons
                 Row(
@@ -247,24 +370,66 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                                 ? null
                                 : () => Navigator.of(context).pop(),
                             style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: Colors.grey.shade400),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(
+                                color: Colors.grey.shade400,
+                                width: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 1,
+                                    tablet: 1.5,
+                                    largeTablet: 2,
+                                    desktop: 2.5),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  GetResponsiveSize.getResponsiveBorderRadius(
+                                      context,
+                                      mobile: 8,
+                                      tablet: 10,
+                                      largeTablet: 12,
+                                      desktop: 14),
+                                ),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                horizontal:
+                                    GetResponsiveSize.getResponsivePadding(
+                                        context,
+                                        mobile: 16,
+                                        tablet: 20,
+                                        largeTablet: 24,
+                                        desktop: 28),
+                                vertical:
+                                    GetResponsiveSize.getResponsivePadding(
+                                        context,
+                                        mobile: 12,
+                                        tablet: 16,
+                                        largeTablet: 20,
+                                        desktop: 24),
+                              ),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Cancel',
                               style: TextStyle(
                                 color: Colors.grey,
                                 fontWeight: FontWeight.w600,
+                                fontSize:
+                                    GetResponsiveSize.getResponsiveFontSize(
+                                        context,
+                                        mobile: 14,
+                                        tablet: 18,
+                                        largeTablet: 22,
+                                        desktop: 26),
                               ),
                             ),
                           );
                         },
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(
+                        width: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 12,
+                            tablet: 16,
+                            largeTablet: 20,
+                            desktop: 24)),
                     Expanded(
                       child: BlocBuilder<ReportAdBloc, ReportAdState>(
                         builder: (context, state) {
@@ -277,26 +442,64 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primaryColor,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  GetResponsiveSize.getResponsiveBorderRadius(
+                                      context,
+                                      mobile: 8,
+                                      tablet: 10,
+                                      largeTablet: 12,
+                                      desktop: 14),
+                                ),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: EdgeInsets.symmetric(
+                                horizontal:
+                                    GetResponsiveSize.getResponsivePadding(
+                                        context,
+                                        mobile: 16,
+                                        tablet: 20,
+                                        largeTablet: 24,
+                                        desktop: 28),
+                                vertical:
+                                    GetResponsiveSize.getResponsivePadding(
+                                        context,
+                                        mobile: 12,
+                                        tablet: 16,
+                                        largeTablet: 20,
+                                        desktop: 24),
+                              ),
                               elevation: 0,
                             ),
                             child: isSubmitting
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
+                                ? SizedBox(
+                                    height: GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 20,
+                                        tablet: 26,
+                                        largeTablet: 30,
+                                        desktop: 34),
+                                    width: GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 20,
+                                        tablet: 26,
+                                        largeTablet: 30,
+                                        desktop: 34),
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       valueColor: AlwaysStoppedAnimation<Color>(
                                           Colors.white),
                                     ),
                                   )
-                                : const Text(
+                                : Text(
                                     'Submit Report',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w600,
+                                      fontSize: GetResponsiveSize
+                                          .getResponsiveFontSize(context,
+                                              mobile: 14,
+                                              tablet: 18,
+                                              largeTablet: 22,
+                                              desktop: 26),
                                     ),
                                   ),
                           );

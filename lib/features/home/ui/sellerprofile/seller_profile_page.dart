@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/features/home/ui/sellerprofile/bloc/bloc/seller_profile_bloc.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 
 class SellerProfilePage extends StatefulWidget {
   final AdUser seller;
@@ -55,7 +56,14 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.maybePop(context),
-                      icon: const Icon(Icons.arrow_back, size: 20),
+                      icon: Icon(
+                        Icons.arrow_back,
+                        size: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 20,
+                            tablet: 26,
+                            largeTablet: 30,
+                            desktop: 34),
+                      ),
                     ),
                   ],
                 ),
@@ -65,12 +73,27 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
               const SizedBox(height: 4),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF1EEFF), // soft lavender bg
+                padding: EdgeInsets.fromLTRB(
+                  GetResponsiveSize.getResponsivePadding(context,
+                      mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+                  GetResponsiveSize.getResponsivePadding(context,
+                      mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+                  GetResponsiveSize.getResponsivePadding(context,
+                      mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+                  GetResponsiveSize.getResponsivePadding(context,
+                      mobile: 20, tablet: 24, largeTablet: 28, desktop: 32),
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1EEFF), // soft lavender bg
                   borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(24),
-                    bottomRight: Radius.circular(24),
+                    bottomLeft: Radius.circular(
+                      GetResponsiveSize.getResponsiveBorderRadius(context,
+                          mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+                    ),
+                    bottomRight: Radius.circular(
+                      GetResponsiveSize.getResponsiveBorderRadius(context,
+                          mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+                    ),
                   ),
                 ),
                 child: _SellerCard(seller: widget.seller),
@@ -98,23 +121,55 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: GetResponsiveSize.getResponsivePadding(
+                                context,
+                                mobile: 16,
+                                tablet: 20,
+                                largeTablet: 24,
+                                desktop: 28),
+                          ),
                           child: Text(
                             'Seller Products (${ads.length})',
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w700,
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                  context,
+                                  mobile:
+                                      theme.textTheme.titleMedium?.fontSize ??
+                                          16.0,
+                                  tablet: 22,
+                                  largeTablet: 26,
+                                  desktop: 30),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 10),
+                        SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(context,
+                                mobile: 10,
+                                tablet: 14,
+                                largeTablet: 18,
+                                desktop: 22)),
                         // Product list
                         ListView.separated(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: GetResponsiveSize.getResponsivePadding(
+                                context,
+                                mobile: 16,
+                                tablet: 20,
+                                largeTablet: 24,
+                                desktop: 28),
+                          ),
                           itemCount: ads.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 12),
+                          separatorBuilder: (_, __) => SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 12,
+                                  tablet: 16,
+                                  largeTablet: 20,
+                                  desktop: 24)),
                           itemBuilder: (context, index) => _ProductTile(
                             ad: ads[index],
                             onTap: () {
@@ -125,11 +180,31 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                         ),
                         // Load more button
                         if (hasNext) ...[
-                          const SizedBox(height: 16),
+                          SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 16,
+                                  tablet: 20,
+                                  largeTablet: 24,
+                                  desktop: 28)),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            padding: EdgeInsets.symmetric(
+                              horizontal:
+                                  GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28),
+                            ),
                             child: SizedBox(
                               width: double.infinity,
+                              height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 48,
+                                  tablet: 65,
+                                  largeTablet: 75,
+                                  desktop: 85),
                               child: ElevatedButton(
                                 onPressed: isPaging
                                     ? null
@@ -142,16 +217,49 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF6366F1),
                                   foregroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal:
+                                        GetResponsiveSize.getResponsivePadding(
+                                            context,
+                                            mobile: 16,
+                                            tablet: 20,
+                                            largeTablet: 24,
+                                            desktop: 28),
+                                    vertical:
+                                        GetResponsiveSize.getResponsivePadding(
+                                            context,
+                                            mobile: 12,
+                                            tablet: 16,
+                                            largeTablet: 20,
+                                            desktop: 24),
+                                  ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(
+                                      GetResponsiveSize
+                                          .getResponsiveBorderRadius(context,
+                                              mobile: 12,
+                                              tablet: 14,
+                                              largeTablet: 16,
+                                              desktop: 18),
+                                    ),
                                   ),
                                 ),
                                 child: isPaging
-                                    ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
+                                    ? SizedBox(
+                                        height:
+                                            GetResponsiveSize.getResponsiveSize(
+                                                context,
+                                                mobile: 20,
+                                                tablet: 26,
+                                                largeTablet: 30,
+                                                desktop: 34),
+                                        width:
+                                            GetResponsiveSize.getResponsiveSize(
+                                                context,
+                                                mobile: 20,
+                                                tablet: 26,
+                                                largeTablet: 30,
+                                                desktop: 34),
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
                                           valueColor:
@@ -159,10 +267,16 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                                                   Colors.white),
                                         ),
                                       )
-                                    : const Text(
+                                    : Text(
                                         'Load More Products',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w600,
+                                          fontSize: GetResponsiveSize
+                                              .getResponsiveFontSize(context,
+                                                  mobile: 14,
+                                                  tablet: 18,
+                                                  largeTablet: 22,
+                                                  desktop: 26),
                                         ),
                                       ),
                               ),
@@ -224,19 +338,28 @@ class _SellerCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(
+          GetResponsiveSize.getResponsiveBorderRadius(context,
+              mobile: 20, tablet: 24, largeTablet: 28, desktop: 32),
+        ),
       ),
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(
+        GetResponsiveSize.getResponsivePadding(context,
+            mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            radius: 32,
+            radius: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 32, tablet: 42, largeTablet: 52, desktop: 62),
             backgroundImage: seller.profilePic?.trim().isNotEmpty == true
                 ? NetworkImage(seller.profilePic!)
                 : null,
           ),
-          const SizedBox(width: 12),
+          SizedBox(
+              width: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 12, tablet: 16, largeTablet: 20, desktop: 24)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,18 +370,32 @@ class _SellerCard extends StatelessWidget {
                       : 'Seller',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: theme.textTheme.titleMedium?.fontSize ?? 16.0,
+                        tablet: 22,
+                        largeTablet: 26,
+                        desktop: 30),
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 4, tablet: 6, largeTablet: 8, desktop: 10)),
                 if (seller.email?.trim().isNotEmpty == true) ...[
                   Text(
                     seller.email!,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF111827),
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                          mobile: theme.textTheme.bodyMedium?.fontSize ?? 14.0,
+                          tablet: 18,
+                          largeTablet: 22,
+                          desktop: 26),
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 2, tablet: 3, largeTablet: 4, desktop: 5)),
                 ],
                 if (seller.phone?.trim().isNotEmpty == true) ...[
                   Text(
@@ -266,11 +403,20 @@ class _SellerCard extends StatelessWidget {
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF111827),
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                          mobile: theme.textTheme.bodyMedium?.fontSize ?? 14.0,
+                          tablet: 18,
+                          largeTablet: 22,
+                          desktop: 26),
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 2, tablet: 3, largeTablet: 4, desktop: 5)),
                 ],
-                const SizedBox(height: 12),
+                SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 12, tablet: 16, largeTablet: 20, desktop: 24)),
               ],
             ),
           ),
@@ -335,39 +481,91 @@ class _ProductTile extends StatelessWidget {
 
     return Material(
       color: Colors.white, // White tiles on lavender background
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(
+        GetResponsiveSize.getResponsiveBorderRadius(context,
+            mobile: 20, tablet: 24, largeTablet: 28, desktop: 32),
+      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(
+          GetResponsiveSize.getResponsiveBorderRadius(context,
+              mobile: 20, tablet: 24, largeTablet: 28, desktop: 32),
+        ),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: EdgeInsets.all(
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 10, tablet: 14, largeTablet: 18, desktop: 22),
+          ),
           child: Row(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(
+                  GetResponsiveSize.getResponsiveBorderRadius(context,
+                      mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
+                ),
                 child: ad.images.isNotEmpty
                     ? Image.network(
                         ad.images.first,
-                        width: 80,
-                        height: 80,
+                        width: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 80,
+                            tablet: 110,
+                            largeTablet: 140,
+                            desktop: 170),
+                        height: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 80,
+                            tablet: 110,
+                            largeTablet: 140,
+                            desktop: 170),
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
-                            width: 80,
-                            height: 80,
+                            width: GetResponsiveSize.getResponsiveSize(context,
+                                mobile: 80,
+                                tablet: 110,
+                                largeTablet: 140,
+                                desktop: 170),
+                            height: GetResponsiveSize.getResponsiveSize(context,
+                                mobile: 80,
+                                tablet: 110,
+                                largeTablet: 140,
+                                desktop: 170),
                             color: Colors.grey.shade200,
-                            child: const Icon(Icons.image_not_supported),
+                            child: Icon(
+                              Icons.image_not_supported,
+                              size: GetResponsiveSize.getResponsiveSize(context,
+                                  mobile: 24,
+                                  tablet: 32,
+                                  largeTablet: 40,
+                                  desktop: 48),
+                            ),
                           );
                         },
                       )
                     : Container(
-                        width: 80,
-                        height: 80,
+                        width: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 80,
+                            tablet: 110,
+                            largeTablet: 140,
+                            desktop: 170),
+                        height: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 80,
+                            tablet: 110,
+                            largeTablet: 140,
+                            desktop: 170),
                         color: Colors.grey.shade200,
-                        child: const Icon(Icons.image_not_supported),
+                        child: Icon(
+                          Icons.image_not_supported,
+                          size: GetResponsiveSize.getResponsiveSize(context,
+                              mobile: 24,
+                              tablet: 32,
+                              largeTablet: 40,
+                              desktop: 48),
+                        ),
                       ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(
+                  width: GetResponsiveSize.getResponsiveSize(context,
+                      mobile: 12, tablet: 16, largeTablet: 20, desktop: 24)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -376,39 +574,79 @@ class _ProductTile extends StatelessWidget {
                       '₹ ${_formatINR(ad.price)}',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile:
+                                theme.textTheme.titleMedium?.fontSize ?? 16.0,
+                            tablet: 22,
+                            largeTablet: 26,
+                            desktop: 30),
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(
+                        height: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 2, tablet: 4, largeTablet: 6, desktop: 8)),
                     Text(
                       title.trim().isNotEmpty ? title : 'Ad',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w700,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: theme.textTheme.bodyLarge?.fontSize ?? 16.0,
+                            tablet: 20,
+                            largeTablet: 24,
+                            desktop: 28),
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(
+                        height: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 2, tablet: 4, largeTablet: 6, desktop: 8)),
                     Text(
                       ad.location,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: const Color(0xFF6B7280),
                         fontWeight: FontWeight.w600,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: theme.textTheme.bodySmall?.fontSize ?? 12.0,
+                            tablet: 16,
+                            largeTablet: 20,
+                            desktop: 24),
                       ),
                     ),
                     if (subtitle.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                      SizedBox(
+                          height: GetResponsiveSize.getResponsiveSize(context,
+                              mobile: 2,
+                              tablet: 4,
+                              largeTablet: 6,
+                              desktop: 8)),
                       Text(
                         subtitle,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: const Color(0xFF6B7280),
                           fontWeight: FontWeight.w600,
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile:
+                                  theme.textTheme.bodySmall?.fontSize ?? 12.0,
+                              tablet: 16,
+                              largeTablet: 20,
+                              desktop: 24),
                         ),
                       ),
                     ],
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
+              Icon(
+                Icons.chevron_right,
+                color: const Color(0xFF9CA3AF),
+                size: GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+              ),
             ],
           ),
         ),
