@@ -764,147 +764,131 @@ class _HomePageState extends State<HomePage> {
     }
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = GetResponsiveSize.isTablet(context);
-    final isLargeTablet = GetResponsiveSize.isLargeTablet(context);
-    final scale = GetResponsiveSize.getResponsiveSize(
-      context,
-      mobile: 1.0,
-      tablet: 1.18,
-      largeTablet: 1.35,
-      desktop: 1.5,
-    );
+
+    // Calculate item width to show multiple items per row
+    final itemWidth = GetResponsiveSize.isTablet(context)
+        ? GetResponsiveSize.getResponsiveSize(
+            context,
+            mobile: screenWidth * 0.2, // not used on tablets
+            tablet: screenWidth * 0.24,
+            largeTablet: screenWidth * 0.26,
+            desktop: screenWidth * 0.28,
+          )
+        : screenWidth * 0.2;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10),
-      child: SizedBox(
-        height: GetResponsiveSize.getResponsiveSize(
+      child: Wrap(
+        spacing: 15, // Horizontal spacing between items
+        runSpacing: GetResponsiveSize.getResponsiveSize(
           context,
-          mobile: 120,
-          tablet: 180,
-          largeTablet: 210,
-          desktop: 230,
-        ),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: categories.map((category) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 15),
-                child: GestureDetector(
-                  onTap: () async {
-                    // Special handling for Showroom category
-                    if (category.categoryId == 'showroom') {
-                      context.push('/showroom-users');
-                      return;
-                    }
+          mobile: 15,
+          tablet: 20,
+          largeTablet: 25,
+          desktop: 25,
+        ), // Vertical spacing between rows
+        alignment: WrapAlignment.start,
+        children: categories.map((category) {
+          return SizedBox(
+            width: itemWidth,
+            child: GestureDetector(
+              onTap: () async {
+                // Special handling for Showroom category
+                if (category.categoryId == 'showroom') {
+                  context.push('/showroom-users');
+                  return;
+                }
 
-                    // context.read<AdvertisementBloc>().add(
-                    //       AdvertisementEvent.fetchByCategory(
-                    //           categoryId: category.categoryId),
-                    //     );
-                    // context.push(
-                    //     '/category-list-page?categoryId=${category.categoryId}&title=${category.name}');
+                // context.read<AdvertisementBloc>().add(
+                //       AdvertisementEvent.fetchByCategory(
+                //           categoryId: category.categoryId),
+                //     );
+                // context.push(
+                //     '/category-list-page?categoryId=${category.categoryId}&title=${category.name}');
 
-                    final result = await context.push(
-                      '/category-list-page?categoryId=${category.categoryId}&title=${category.name}',
-                    );
+                final result = await context.push(
+                  '/category-list-page?categoryId=${category.categoryId}&title=${category.name}',
+                );
 
-                    // ✅ If coming back with "true", refresh Home list
-                    if (context.mounted && result == true) {
-                      context
-                          .read<AdvertisementBloc>()
-                          .add(const AdvertisementEvent.fetchAllListings());
-                    }
-                  },
-                  child: Column(
-                    children: [
-                      Container(
-                        height: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 70, // unchanged for phones
-                          tablet: 110,
-                          largeTablet: 135,
-                          desktop: 150,
-                        ),
-                        padding:
-                            EdgeInsets.all(GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 16,
-                          tablet: 20,
-                          largeTablet: 22,
-                          desktop: 22,
-                        )),
-                        decoration: BoxDecoration(
-                          color: AppColors.whiteColor,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black12, blurRadius: 2)
-                          ],
-                        ),
-                        child: SizedBox(
-                          width: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 38, // leave phone small as before
-                            tablet: 60,
-                            largeTablet: 75,
-                            desktop: 80,
-                          ),
-                          height: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 38,
-                            tablet: 60,
-                            largeTablet: 70,
-                            desktop: 80,
-                          ),
-                          child:
-                              Image.asset(category.image, fit: BoxFit.contain),
-                        ),
+                // ✅ If coming back with "true", refresh Home list
+                if (context.mounted && result == true) {
+                  context
+                      .read<AdvertisementBloc>()
+                      .add(const AdvertisementEvent.fetchAllListings());
+                }
+              },
+              child: Column(
+                children: [
+                  Container(
+                    height: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 70, // unchanged for phones
+                      tablet: 110,
+                      largeTablet: 135,
+                      desktop: 150,
+                    ),
+                    padding: EdgeInsets.all(GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 16,
+                      tablet: 20,
+                      largeTablet: 22,
+                      desktop: 22,
+                    )),
+                    decoration: BoxDecoration(
+                      color: AppColors.whiteColor,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black12, blurRadius: 2)
+                      ],
+                    ),
+                    child: SizedBox(
+                      width: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 38, // leave phone small as before
+                        tablet: 60,
+                        largeTablet: 75,
+                        desktop: 80,
                       ),
-                      const SizedBox(height: 5),
-                      SizedBox(
-                        width: GetResponsiveSize.isTablet(context)
-                            ? GetResponsiveSize.getResponsiveSize(
-                                context,
-                                mobile:
-                                    screenWidth * 0.2, // not used on tablets
-                                tablet: screenWidth * 0.24,
-                                largeTablet: screenWidth * 0.26,
-                                desktop: screenWidth * 0.28,
-                              )
-                            : screenWidth * 0.2,
-                        child: Builder(
-                          builder: (context) {
-                            final double baseSize =
-                                AppTextstyle.categoryLabelTextStyle.fontSize ??
-                                    12;
-                            final double labelSize =
-                                GetResponsiveSize.getResponsiveFontSize(
-                              context,
-                              mobile: baseSize, // keep phone unchanged
-                              tablet: baseSize + 10,
-                              largeTablet: baseSize + 13,
-                              desktop: baseSize + 13,
-                            );
-                            return Text(
-                              categoryNameText(
-                                category.name,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextstyle.categoryLabelTextStyle
-                                  .copyWith(fontSize: labelSize),
-                            );
-                          },
-                        ),
+                      height: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 38,
+                        tablet: 60,
+                        largeTablet: 70,
+                        desktop: 80,
                       ),
-                    ],
+                      child: Image.asset(category.image, fit: BoxFit.contain),
+                    ),
                   ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
+                  const SizedBox(height: 5),
+                  Builder(
+                    builder: (context) {
+                      final double baseSize =
+                          AppTextstyle.categoryLabelTextStyle.fontSize ?? 12;
+                      final double labelSize =
+                          GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: baseSize, // keep phone unchanged
+                        tablet: baseSize + 10,
+                        largeTablet: baseSize + 13,
+                        desktop: baseSize + 13,
+                      );
+                      return Text(
+                        categoryNameText(
+                          category.name,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextstyle.categoryLabelTextStyle
+                            .copyWith(fontSize: labelSize),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

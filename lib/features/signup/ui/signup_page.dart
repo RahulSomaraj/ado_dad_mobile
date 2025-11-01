@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/features/signup/bloc/signup_bloc.dart';
 import 'package:ado_dad_user/models/signup_model.dart';
@@ -104,89 +105,226 @@ class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
-        child: BlocListener<SignupBloc, SignupState>(
-          listenWhen: (prev, curr) => curr is SignUpSuccess || curr is Error,
-          listener: (context, state) {
-            if (state is SignUpSuccess) {
-              _showSuccessPopup(context, state.message);
-            } else if (state is Error) {
-              _showErrorPopup(context, state.message); // implement below
-            }
-          },
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Image.asset('assets/images/Ado-dad.png'),
-                const SizedBox(height: 30),
-                Text(
-                  'Sign up your Account',
-                  style: AppTextstyle.title1,
-                ),
-                const Text(
-                    'Securely sign up and enjoy a seamless experience\nwith us!'),
-                const SizedBox(height: 20),
-                // ---------- NEW: Circular avatar picker ----------
-                Center(
-                  child: GestureDetector(
-                    onTap: _pickAvatar,
-                    child: Stack(
-                      children: [
-                        CircleAvatar(
-                          radius: 48,
-                          backgroundColor:
-                              AppColors.primaryColor.withOpacity(.1),
-                          backgroundImage: _avatarBytes != null
-                              ? MemoryImage(_avatarBytes!)
-                              : null,
-                          child: _avatarBytes == null
-                              ? const Icon(Icons.person, size: 48)
-                              : null,
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryColor,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
+          child: BlocListener<SignupBloc, SignupState>(
+            listenWhen: (prev, curr) => curr is SignUpSuccess || curr is Error,
+            listener: (context, state) {
+              if (state is SignUpSuccess) {
+                _showSuccessPopup(context, state.message);
+              } else if (state is Error) {
+                _showErrorPopup(context, state.message); // implement below
+              }
+            },
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Adodad logo with responsive sizing (matching login page)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: GetResponsiveSize.isTablet(context)
+                        ? SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile:
+                                  0, // Not used since we check isTablet first
+                              tablet: 40,
+                              largeTablet: 80,
+                              desktop: 130,
                             ),
-                            padding: const EdgeInsets.all(6),
-                            child: const Icon(Icons.camera_alt,
-                                size: 16, color: Colors.white),
+                            width: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile:
+                                  0, // Not used since we check isTablet first
+                              tablet: 200,
+                              largeTablet: 250,
+                              desktop: 300,
+                            ),
+                            child: Image.asset(
+                              'assets/images/Ado-dad.png',
+                              fit: BoxFit.contain,
+                            ),
+                          )
+                        : Image.asset(
+                            'assets/images/Ado-dad.png',
+                            fit: BoxFit.contain,
                           ),
-                        ),
-                      ],
+                  ),
+                  const SizedBox(height: 30),
+                  Text(
+                    'Sign up your Account',
+                    style: AppTextstyle.title1.copyWith(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 20.0, // Keep mobile unchanged
+                        tablet: 30.0,
+                        largeTablet: 40.0,
+                        desktop: 50.0,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                const Center(child: Text('Add profile photo')),
-                const SizedBox(height: 20),
-                BlocBuilder<SignupBloc, SignupState>(
-                  builder: (context, state) {
-                    return Form(
-                      key: _signupFormKey,
-                      child: Column(
+                  Text(
+                    'Securely sign up and enjoy a seamless experience\nwith us!',
+                    style: TextStyle(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 14.0, // Keep mobile unchanged (default size)
+                        tablet: 20.0,
+                        largeTablet: 26.0,
+                        desktop: 32.0,
+                      ),
+                      color: AppColors.blackColor,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // ---------- NEW: Circular avatar picker ----------
+                  Center(
+                    child: GestureDetector(
+                      onTap: _pickAvatar,
+                      child: Stack(
                         children: [
-                          _buildNameField(),
-                          const SizedBox(height: 10),
-                          _buildEmailField(),
-                          const SizedBox(height: 10),
-                          _buildPhoneField(),
-                          const SizedBox(height: 10),
-                          _buildPasswordField(),
-                          const SizedBox(height: 20),
-                          _buildButton(state)
+                          CircleAvatar(
+                            radius: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 48,
+                              tablet: 64,
+                              largeTablet: 75,
+                              desktop: 85,
+                            ),
+                            backgroundColor:
+                                AppColors.primaryColor.withOpacity(.1),
+                            backgroundImage: _avatarBytes != null
+                                ? MemoryImage(_avatarBytes!)
+                                : null,
+                            child: _avatarBytes == null
+                                ? Icon(
+                                    Icons.person,
+                                    size: GetResponsiveSize.getResponsiveSize(
+                                      context,
+                                      mobile: 48,
+                                      tablet: 64,
+                                      largeTablet: 75,
+                                      desktop: 85,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 2,
+                                    tablet: 3,
+                                    largeTablet: 3,
+                                    desktop: 4,
+                                  ),
+                                ),
+                              ),
+                              padding: EdgeInsets.all(
+                                GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 6,
+                                  tablet: 8,
+                                  largeTablet: 10,
+                                  desktop: 12,
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.camera_alt,
+                                size: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 16,
+                                  tablet: 20,
+                                  largeTablet: 24,
+                                  desktop: 28,
+                                ),
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                    );
-                  },
-                )
-              ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 16,
+                      tablet: 20,
+                      largeTablet: 24,
+                      desktop: 28,
+                    ),
+                  ),
+                  Center(
+                    child: Text(
+                      'Add profile photo',
+                      style: TextStyle(
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 14.0, // Keep mobile unchanged
+                          tablet: 20.0,
+                          largeTablet: 25.0,
+                          desktop: 30.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  BlocBuilder<SignupBloc, SignupState>(
+                    builder: (context, state) {
+                      return Form(
+                        key: _signupFormKey,
+                        child: Column(
+                          children: [
+                            _buildNameField(),
+                            SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 10, // Keep mobile unchanged
+                                tablet: 20,
+                                largeTablet: 25,
+                                desktop: 30,
+                              ),
+                            ),
+                            _buildEmailField(),
+                            SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 10, // Keep mobile unchanged
+                                tablet: 20,
+                                largeTablet: 25,
+                                desktop: 30,
+                              ),
+                            ),
+                            _buildPhoneField(),
+                            SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 10, // Keep mobile unchanged
+                                tablet: 20,
+                                largeTablet: 25,
+                                desktop: 30,
+                              ),
+                            ),
+                            _buildPasswordField(),
+                            const SizedBox(height: 10),
+                            _buildButton(state)
+                          ],
+                        ),
+                      );
+                    },
+                  )
+                ],
+              ),
             ),
           ),
         ),
@@ -234,50 +372,82 @@ class _SignupPageState extends State<SignupPage> {
     return Column(
       children: [
         SizedBox(
+          height: GetResponsiveSize.getResponsiveSize(
+            context,
+            mobile: 55, // Keep mobile unchanged
+            tablet: 65,
+            largeTablet: 75,
+            desktop: 85,
+          ),
           width: double.infinity,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
               backgroundColor: AppColors.primaryColor,
               foregroundColor: AppColors.whiteColor,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: state is Loading ? null : _signUp,
             child: state is Loading
                 ? const SizedBox(
-                    height: 20,
                     width: 20,
+                    height: 20,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppColors.whiteColor),
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Colors.white,
+                      ),
+                    ),
                   )
-                : const Text("SignUp",
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                : Text(
+                    "SignUp",
+                    style: AppTextstyle.buttonText.copyWith(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 16.0, // Keep mobile unchanged
+                        tablet: 25.0,
+                        largeTablet: 30.0,
+                        desktop: 35.0,
+                      ),
+                    ),
+                  ),
           ),
         ),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
+            Text(
               'Already have an account? ',
               style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
+                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  context,
+                  mobile: 14.0, // Keep mobile unchanged
+                  tablet: 20.0,
+                  largeTablet: 25.0,
+                  desktop: 30.0,
+                ),
+                fontWeight: FontWeight.w500,
+                color: AppColors.blackColor,
               ),
             ),
             GestureDetector(
               onTap: () {
                 context.go('/login');
               },
-              child: const Text(
+              child: Text(
                 'Login',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(
+                    context,
+                    mobile: 14.0, // Keep mobile unchanged
+                    tablet: 20.0,
+                    largeTablet: 25.0,
+                    desktop: 30.0,
+                  ),
+                  fontWeight: FontWeight.w500,
                   color: AppColors.primaryColor,
-                  fontWeight: FontWeight.w600,
-                  decoration: TextDecoration.underline,
                 ),
               ),
             ),
