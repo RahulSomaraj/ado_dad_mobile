@@ -326,7 +326,10 @@ class _ChatPageState extends State<ChatPage> {
                 ),
 
                 // Message input
-                _buildMessageInput(),
+                SafeArea(
+                  top: false,
+                  child: _buildMessageInput(),
+                ),
               ],
             );
           },
