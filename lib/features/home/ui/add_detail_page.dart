@@ -12,6 +12,7 @@ import 'package:ado_dad_user/features/home/ui/report_ad_dialog.dart';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:video_player/video_player.dart';
@@ -125,109 +126,117 @@ Download Ado Dad app to contact the seller and view more details!
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: BlocListener<AdDetailBloc, AdDetailState>(
-        listener: (context, state) {
-          state.when(
-            initial: () {},
-            loading: () {},
-            error: (e) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error: $e'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            },
-            loaded: (ad) {},
-            markingAsSold: () {},
-            markedAsSold: (ad) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Ad marked as sold successfully!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-              // Navigate to home page after showing success message
-              context.go('/home');
-            },
-          );
-        },
-        child: BlocBuilder<AdDetailBloc, AdDetailState>(
-          builder: (context, state) {
-            return state.when(
-              initial: () =>
-                  const Center(child: Text('Waiting for details...')),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e) => Center(child: Text('Error: $e')),
-              loaded: (ad) => CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(child: _headerCarousel(ad)),
-                  SliverToBoxAdapter(child: _dots(_getTotalCarouselItems(ad))),
-                  // Share button for ad owners - positioned above price section
-                  SliverToBoxAdapter(child: _buildOwnerShareButton(ad)),
-                  SliverToBoxAdapter(child: _titlePriceMeta(ad)),
-                  SliverToBoxAdapter(child: Divider()),
-
-                  SliverToBoxAdapter(child: _pillTabs(ad)),
-                  SliverToBoxAdapter(child: _description(ad)),
-                  SliverToBoxAdapter(child: _reportAdButton(ad)),
-                  SliverToBoxAdapter(child: _sellerTile(ad)),
-                  // SliverToBoxAdapter(child: _recommendationsSection()),
-                  // const SliverPadding(padding: EdgeInsets.only(bottom: 90)),
-                ],
-              ),
-              markingAsSold: () => CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(child: _headerCarousel(widget.ad)),
-                  SliverToBoxAdapter(child: _dots(widget.ad.images.length)),
-                  // Share button for ad owners - positioned above price section
-                  SliverToBoxAdapter(child: _buildOwnerShareButton(widget.ad)),
-                  SliverToBoxAdapter(child: _titlePriceMeta(widget.ad)),
-                  SliverToBoxAdapter(child: Divider()),
-                  SliverToBoxAdapter(child: _pillTabs(widget.ad)),
-                  SliverToBoxAdapter(child: _description(widget.ad)),
-                  SliverToBoxAdapter(child: _reportAdButton(widget.ad)),
-                  SliverToBoxAdapter(child: _sellerTile(widget.ad)),
-                ],
-              ),
-              markedAsSold: (ad) => CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(child: _headerCarousel(ad)),
-                  SliverToBoxAdapter(child: _dots(_getTotalCarouselItems(ad))),
-                  // Share button for ad owners - positioned above price section
-                  SliverToBoxAdapter(child: _buildOwnerShareButton(ad)),
-                  SliverToBoxAdapter(child: _titlePriceMeta(ad)),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: GetResponsiveSize.getResponsivePadding(
-                            context,
-                            mobile: 16,
-                            tablet: 20,
-                            largeTablet: 24,
-                            desktop: 28),
-                      ),
-                      child: Divider(
-                        thickness: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 1,
-                            tablet: 1.2,
-                            largeTablet: 1.4,
-                            desktop: 1.5),
-                      ),
-                    ),
+      body: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.only(bottom: 40),
+        child: BlocListener<AdDetailBloc, AdDetailState>(
+          listener: (context, state) {
+            state.when(
+              initial: () {},
+              loading: () {},
+              error: (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error: $e'),
+                    backgroundColor: Colors.red,
                   ),
-                  SliverToBoxAdapter(child: _pillTabs(ad)),
-                  SliverToBoxAdapter(child: _description(ad)),
-                  SliverToBoxAdapter(child: _reportAdButton(ad)),
-                  SliverToBoxAdapter(child: _sellerTile(ad)),
-                ],
-              ),
+                );
+              },
+              loaded: (ad) {},
+              markingAsSold: () {},
+              markedAsSold: (ad) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Ad marked as sold successfully!'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                // Navigate to home page after showing success message
+                context.go('/home');
+              },
             );
           },
+          child: BlocBuilder<AdDetailBloc, AdDetailState>(
+            builder: (context, state) {
+              return state.when(
+                initial: () =>
+                    const Center(child: Text('Waiting for details...')),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e) => Center(child: Text('Error: $e')),
+                loaded: (ad) => CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(child: _headerCarousel(ad)),
+                    SliverToBoxAdapter(
+                        child: _dots(_getTotalCarouselItems(ad))),
+                    // Share button for ad owners - positioned above price section
+                    SliverToBoxAdapter(child: _buildOwnerShareButton(ad)),
+                    SliverToBoxAdapter(child: _titlePriceMeta(ad)),
+                    SliverToBoxAdapter(child: Divider()),
+
+                    SliverToBoxAdapter(child: _pillTabs(ad)),
+                    SliverToBoxAdapter(child: _description(ad)),
+                    SliverToBoxAdapter(child: _reportAdButton(ad)),
+                    SliverToBoxAdapter(child: _sellerTile(ad)),
+                    // SliverToBoxAdapter(child: _recommendationsSection()),
+                    // const SliverPadding(padding: EdgeInsets.only(bottom: 90)),
+                  ],
+                ),
+                markingAsSold: () => CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(child: _headerCarousel(widget.ad)),
+                    SliverToBoxAdapter(child: _dots(widget.ad.images.length)),
+                    // Share button for ad owners - positioned above price section
+                    SliverToBoxAdapter(
+                        child: _buildOwnerShareButton(widget.ad)),
+                    SliverToBoxAdapter(child: _titlePriceMeta(widget.ad)),
+                    SliverToBoxAdapter(child: Divider()),
+                    SliverToBoxAdapter(child: _pillTabs(widget.ad)),
+                    SliverToBoxAdapter(child: _description(widget.ad)),
+                    SliverToBoxAdapter(child: _reportAdButton(widget.ad)),
+                    SliverToBoxAdapter(child: _sellerTile(widget.ad)),
+                  ],
+                ),
+                markedAsSold: (ad) => CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(child: _headerCarousel(ad)),
+                    SliverToBoxAdapter(
+                        child: _dots(_getTotalCarouselItems(ad))),
+                    // Share button for ad owners - positioned above price section
+                    SliverToBoxAdapter(child: _buildOwnerShareButton(ad)),
+                    SliverToBoxAdapter(child: _titlePriceMeta(ad)),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: GetResponsiveSize.getResponsivePadding(
+                              context,
+                              mobile: 16,
+                              tablet: 20,
+                              largeTablet: 24,
+                              desktop: 28),
+                        ),
+                        child: Divider(
+                          thickness: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 1,
+                              tablet: 1.2,
+                              largeTablet: 1.4,
+                              desktop: 1.5),
+                        ),
+                      ),
+                    ),
+                    SliverToBoxAdapter(child: _pillTabs(ad)),
+                    SliverToBoxAdapter(child: _description(ad)),
+                    SliverToBoxAdapter(child: _reportAdButton(ad)),
+                    SliverToBoxAdapter(child: _sellerTile(ad)),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
       bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 40),
         child: BlocBuilder<AdDetailBloc, AdDetailState>(
           builder: (context, state) {
             return state.when(
@@ -1336,13 +1345,23 @@ Download Ado Dad app to contact the seller and view more details!
       return;
     }
 
-    showDialog(
-      context: context,
-      builder: (context) => ReportAdDialog(
-        reportedUserId: reportedUserId,
-        adId: ad.id,
-      ),
-    );
+    if (!kIsWeb && Platform.isIOS) {
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => ReportAdDialog(
+          reportedUserId: reportedUserId,
+          adId: ad.id,
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => ReportAdDialog(
+          reportedUserId: reportedUserId,
+          adId: ad.id,
+        ),
+      );
+    }
   }
 
   // ======= Seller Tile =======

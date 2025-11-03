@@ -44,6 +44,17 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         emit(ProfileState.error(e.toString()));
       }
     });
+
+    // 🔹 Handle Delete My Data Event
+    on<DeleteMyData>((event, emit) async {
+      emit(const ProfileState.deletingData());
+      try {
+        await repository.deleteMyData();
+        emit(const ProfileState.dataDeleted());
+      } catch (e) {
+        emit(ProfileState.error(e.toString()));
+      }
+    });
   }
 
   Future<void> deleteAccount() async {

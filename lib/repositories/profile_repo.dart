@@ -260,4 +260,58 @@ class ProfileRepo {
       throw Exception("Error deleting account: $e");
     }
   }
+
+  Future<void> deleteMyData() async {
+    try {
+      final userId = await SharedPrefs().getUserId();
+      if (userId == null) throw Exception("User ID not found.");
+
+      final response = await _dio.post(
+        "/users/delete-my-data",
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          // Don't throw exceptions for successful status codes
+          validateStatus: (status) {
+            return status != null && (status >= 200 && status < 300);
+          },
+        ),
+      );
+
+      // Check if the operation was successful
+      if (response.statusCode == 200 ||
+          response.statusCode == 201 ||
+          response.statusCode == 204) {
+        // Success - data deleted
+        print('✅ Delete my data successful: ${response.statusCode}');
+        return;
+      } else {
+        print('❌ Delete my data failed with status: ${response.statusCode}');
+        throw Exception("Failed to delete my data.");
+      }
+    } on DioException catch (e) {
+      print('❌ DioException in deleteMyData: ${e.message}');
+      print('❌ Response status: ${e.response?.statusCode}');
+
+      // Check if DioException occurred but status code indicates success
+      if (e.response != null) {
+        final statusCode = e.response!.statusCode;
+        if (statusCode == 200 || statusCode == 201 || statusCode == 204) {
+          // Operation was successful despite DioException
+          print(
+              '✅ Delete my data successful (despite DioException): $statusCode');
+          return;
+        }
+      }
+      throw Exception(DioErrorHandler.handleError(e));
+    } catch (e) {
+      print('❌ Exception in deleteMyData: $e');
+      // Re-throw if it's already an Exception with a message
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception("Error deleting my data: $e");
+    }
+  }
 }

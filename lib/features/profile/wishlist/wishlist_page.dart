@@ -124,124 +124,19 @@ class _WishlistPageState extends State<WishlistPage> {
             ),
           ),
         ),
-        body: BlocBuilder<FavoriteBloc, FavoriteState>(
-          builder: (context, state) {
-            if (state is FavoriteLoading || state is FavoriteToggleLoading) {
-              return const Center(
-                child: CircularProgressIndicator(
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
-                ),
-              );
-            } else if (state is FavoriteError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Icon(
-                    //   Icons.favorite_border,
-                    //   size: 64,
-                    //   color: Colors.grey[400],
-                    // ),
-                    SizedBox(
-                      height: GetResponsiveSize.getResponsiveSize(
-                        context,
-                        mobile: 16,
-                        tablet: 20,
-                        largeTablet: 24,
-                        desktop: 28,
-                      ),
-                    ),
-                    Text(
-                      'Failed to load wishlist',
-                      style: TextStyle(
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: 18,
-                          tablet: 22,
-                          largeTablet: 26,
-                          desktop: 30,
-                        ),
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    SizedBox(
-                      height: GetResponsiveSize.getResponsiveSize(
-                        context,
-                        mobile: 8,
-                        tablet: 12,
-                        largeTablet: 16,
-                        desktop: 20,
-                      ),
-                    ),
-                    Text(
-                      state.message,
-                      style: TextStyle(
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: 14,
-                          tablet: 18,
-                          largeTablet: 20,
-                          desktop: 24,
-                        ),
-                        color: Colors.grey[500],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(
-                      height: GetResponsiveSize.getResponsiveSize(
-                        context,
-                        mobile: 24,
-                        tablet: 32,
-                        largeTablet: 40,
-                        desktop: 48,
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        context
-                            .read<FavoriteBloc>()
-                            .add(const FavoriteEvent.refreshFavorites());
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryColor,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: GetResponsiveSize.getResponsivePadding(
-                            context,
-                            mobile: 16,
-                            tablet: 24,
-                            largeTablet: 32,
-                            desktop: 40,
-                          ),
-                          vertical: GetResponsiveSize.getResponsivePadding(
-                            context,
-                            mobile: 12,
-                            tablet: 16,
-                            largeTablet: 20,
-                            desktop: 24,
-                          ),
-                        ),
-                      ),
-                      child: Text(
-                        'Retry',
-                        style: TextStyle(
-                          fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile: 14,
-                            tablet: 18,
-                            largeTablet: 20,
-                            desktop: 24,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            } else if (state is FavoriteLoaded) {
-              if (state.favorites.isEmpty) {
+        body: SafeArea(
+          top: false,
+          minimum: const EdgeInsets.only(bottom: 30),
+          child: BlocBuilder<FavoriteBloc, FavoriteState>(
+            builder: (context, state) {
+              if (state is FavoriteLoading || state is FavoriteToggleLoading) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
+                  ),
+                );
+              } else if (state is FavoriteError) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -261,7 +156,7 @@ class _WishlistPageState extends State<WishlistPage> {
                         ),
                       ),
                       Text(
-                        'Your wishlist is empty',
+                        'Failed to load wishlist',
                         style: TextStyle(
                           fontSize: GetResponsiveSize.getResponsiveFontSize(
                             context,
@@ -274,48 +169,157 @@ class _WishlistPageState extends State<WishlistPage> {
                           color: Colors.grey[600],
                         ),
                       ),
+                      SizedBox(
+                        height: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 8,
+                          tablet: 12,
+                          largeTablet: 16,
+                          desktop: 20,
+                        ),
+                      ),
+                      Text(
+                        state.message,
+                        style: TextStyle(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 14,
+                            tablet: 18,
+                            largeTablet: 20,
+                            desktop: 24,
+                          ),
+                          color: Colors.grey[500],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(
+                        height: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 24,
+                          tablet: 32,
+                          largeTablet: 40,
+                          desktop: 48,
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          context
+                              .read<FavoriteBloc>()
+                              .add(const FavoriteEvent.refreshFavorites());
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: GetResponsiveSize.getResponsivePadding(
+                              context,
+                              mobile: 16,
+                              tablet: 24,
+                              largeTablet: 32,
+                              desktop: 40,
+                            ),
+                            vertical: GetResponsiveSize.getResponsivePadding(
+                              context,
+                              mobile: 12,
+                              tablet: 16,
+                              largeTablet: 20,
+                              desktop: 24,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          'Retry',
+                          style: TextStyle(
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 14,
+                              tablet: 18,
+                              largeTablet: 20,
+                              desktop: 24,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
+                  ),
+                );
+              } else if (state is FavoriteLoaded) {
+                if (state.favorites.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Icon(
+                        //   Icons.favorite_border,
+                        //   size: 64,
+                        //   color: Colors.grey[400],
+                        // ),
+                        SizedBox(
+                          height: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 16,
+                            tablet: 20,
+                            largeTablet: 24,
+                            desktop: 28,
+                          ),
+                        ),
+                        Text(
+                          'Your wishlist is empty',
+                          style: TextStyle(
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 18,
+                              tablet: 22,
+                              largeTablet: 26,
+                              desktop: 30,
+                            ),
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    context
+                        .read<FavoriteBloc>()
+                        .add(const FavoriteEvent.refreshFavorites());
+                  },
+                  child: ListView.builder(
+                    padding: EdgeInsets.all(
+                      GetResponsiveSize.getResponsivePadding(
+                        context,
+                        mobile: 16,
+                        tablet: 24,
+                        largeTablet: 32,
+                        desktop: 40,
+                      ),
+                    ),
+                    itemCount: state.favorites.length,
+                    itemBuilder: (context, index) {
+                      final favorite = state.favorites[index];
+                      return buildFavoriteCard(favorite);
+                    },
+                  ),
+                );
+              } else if (state is FavoriteToggleSuccess) {
+                // Show loading while refreshing after toggle success
+                return const Center(
+                  child: CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
                   ),
                 );
               }
 
-              return RefreshIndicator(
-                onRefresh: () async {
-                  context
-                      .read<FavoriteBloc>()
-                      .add(const FavoriteEvent.refreshFavorites());
-                },
-                child: ListView.builder(
-                  padding: EdgeInsets.all(
-                    GetResponsiveSize.getResponsivePadding(
-                      context,
-                      mobile: 16,
-                      tablet: 24,
-                      largeTablet: 32,
-                      desktop: 40,
-                    ),
-                  ),
-                  itemCount: state.favorites.length,
-                  itemBuilder: (context, index) {
-                    final favorite = state.favorites[index];
-                    return buildFavoriteCard(favorite);
-                  },
-                ),
-              );
-            } else if (state is FavoriteToggleSuccess) {
-              // Show loading while refreshing after toggle success
               return const Center(
-                child: CircularProgressIndicator(
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
-                ),
+                child: Text('No data available'),
               );
-            }
-
-            return const Center(
-              child: Text('No data available'),
-            );
-          },
+            },
+          ),
         ),
       ),
     );

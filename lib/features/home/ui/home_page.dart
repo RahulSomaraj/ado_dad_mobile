@@ -606,7 +606,10 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-        floatingActionButton: const BottomNavBar(),
+        floatingActionButton: SafeArea(
+          minimum: const EdgeInsets.only(bottom: 20),
+          child: const BottomNavBar(),
+        ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       ),
     );
@@ -770,14 +773,25 @@ class _HomePageState extends State<HomePage> {
         ? GetResponsiveSize.getResponsiveSize(
             context,
             mobile: screenWidth * 0.2, // not used on tablets
-            tablet: screenWidth * 0.24,
+            tablet: screenWidth * 0.20,
             largeTablet: screenWidth * 0.26,
             desktop: screenWidth * 0.28,
           )
         : screenWidth * 0.2;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10),
+      padding: EdgeInsets.symmetric(
+        horizontal: GetResponsiveSize.isTablet(context)
+            ? GetResponsiveSize.getResponsivePadding(
+                context,
+                mobile: 12.0, // Not used on tablets
+                tablet: 8.0, // Decreased left/right padding for tablets
+                largeTablet: 8.0,
+                desktop: 8.0,
+              )
+            : 12.0, // Keep mobile padding unchanged
+        vertical: 10,
+      ),
       child: Wrap(
         spacing: 15, // Horizontal spacing between items
         runSpacing: GetResponsiveSize.getResponsiveSize(

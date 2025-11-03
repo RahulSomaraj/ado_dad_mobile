@@ -1,5 +1,6 @@
 import 'package:ado_dad_user/common/api_response.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
+import 'package:ado_dad_user/services/auth_service.dart';
 import 'package:dio/dio.dart';
 
 class ApiService {
@@ -36,49 +37,24 @@ class ApiService {
         },
         onError: (DioException e, handler) async {
           if (e.response?.statusCode == 401) {
-            final newToken = await _refreshToken();
+            // Try to refresh the token using centralized AuthService
+            final authService = AuthService();
+            final newToken = await authService.refreshAccessToken();
             if (newToken != null) {
+              // Token refreshed successfully, retry the original request
               e.requestOptions.headers['Authorization'] = newToken;
               final retryResponse = await _dio.fetch(e.requestOptions);
               return handler.resolve(retryResponse);
             } else {
-              await logout();
+              // Refresh token expired, AuthService will handle logout automatically
+              // Don't proceed with the original request
+              return handler.reject(e);
             }
           }
           return handler.next(e);
         },
       ),
     );
-  }
-
-  Future<String?> _refreshToken() async {
-    try {
-      final refreshToken = await getRefreshToken();
-      if (refreshToken == null) {
-        return null;
-      }
-
-      final response = await _dio.post('/refresh-token', data: {
-        'refreshToken': refreshToken,
-      });
-
-      if (response.statusCode == 200) {
-        final newAccessToken = response.data['token'];
-        await SharedPrefs().setString('token', newAccessToken);
-
-        return newAccessToken;
-      } else {
-        await logout();
-        return null;
-      }
-    } catch (e) {
-      await logout();
-      return null;
-    }
-  }
-
-  Future<void> logout() async {
-    await clearUserData();
   }
 }
 

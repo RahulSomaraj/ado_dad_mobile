@@ -510,121 +510,132 @@ class _SearchPageState extends State<SearchPage> {
           ],
         ),
       ),
-      body: GestureDetector(
-        onTap: () {
-          // Hide suggestions when tapping outside
-          if (_showSuggestions) {
-            setState(() {
-              _showSuggestions = false;
-            });
-          }
-        },
-        child: Stack(
-          children: [
-            BlocConsumer<AdvertisementBloc, AdvertisementState>(
-              listener: (context, state) {
-                state.when(
-                  initial: () {},
-                  loading: () {},
-                  listingsLoaded: (listings, hasMore) {
-                    setState(() {
-                      allAds = listings;
-                      // Always update filteredAds when new listings are loaded
-                      // If not currently searching, show all ads
-                      if (!_isSearching || _searchController.text.isEmpty) {
-                        filteredAds = listings;
-                      }
-                    });
-                  },
-                  error: (message) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(message)),
-                    );
-                  },
-                );
-              },
-              builder: (context, state) {
-                return state.when(
-                  initial: () => _buildLoadingState(),
-                  loading: () => _buildLoadingState(),
-                  listingsLoaded: (listings, hasMore) => _buildAdsList(),
-                  error: (message) => _buildErrorState(message),
-                );
-              },
-            ),
-            // Address suggestions overlay
-            if (_showSuggestions && _isLocationSearchMode)
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  margin: EdgeInsets.symmetric(
-                    horizontal: GetResponsiveSize.getResponsivePadding(context,
-                        mobile: 16, tablet: 24, largeTablet: 32, desktop: 40),
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(
-                      GetResponsiveSize.getResponsiveBorderRadius(context,
-                          mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+      body: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.only(bottom: 30),
+        child: GestureDetector(
+          onTap: () {
+            // Hide suggestions when tapping outside
+            if (_showSuggestions) {
+              setState(() {
+                _showSuggestions = false;
+              });
+            }
+          },
+          child: Stack(
+            children: [
+              BlocConsumer<AdvertisementBloc, AdvertisementState>(
+                listener: (context, state) {
+                  state.when(
+                    initial: () {},
+                    loading: () {},
+                    listingsLoaded: (listings, hasMore) {
+                      setState(() {
+                        allAds = listings;
+                        // Always update filteredAds when new listings are loaded
+                        // If not currently searching, show all ads
+                        if (!_isSearching || _searchController.text.isEmpty) {
+                          filteredAds = listings;
+                        }
+                      });
+                    },
+                    error: (message) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(message)),
+                      );
+                    },
+                  );
+                },
+                builder: (context, state) {
+                  return state.when(
+                    initial: () => _buildLoadingState(),
+                    loading: () => _buildLoadingState(),
+                    listingsLoaded: (listings, hasMore) => _buildAdsList(),
+                    error: (message) => _buildErrorState(message),
+                  );
+                },
+              ),
+              // Address suggestions overlay
+              if (_showSuggestions && _isLocationSearchMode)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    margin: EdgeInsets.symmetric(
+                      horizontal: GetResponsiveSize.getResponsivePadding(
+                          context,
+                          mobile: 16,
+                          tablet: 24,
+                          largeTablet: 32,
+                          desktop: 40),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(
+                        GetResponsiveSize.getResponsiveBorderRadius(context,
+                            mobile: 8,
+                            tablet: 10,
+                            largeTablet: 12,
+                            desktop: 14),
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    children: _addressSuggestions.map((suggestion) {
-                      return ListTile(
-                        leading: Icon(
-                          Icons.location_on,
-                          color: AppColors.primaryColor,
-                          size: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 24,
-                            tablet: 28,
-                            largeTablet: 32,
-                            desktop: 36,
-                          ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         ),
-                        title: Text(
-                          suggestion,
-                          style: TextStyle(
-                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                      ],
+                    ),
+                    child: Column(
+                      children: _addressSuggestions.map((suggestion) {
+                        return ListTile(
+                          leading: Icon(
+                            Icons.location_on,
+                            color: AppColors.primaryColor,
+                            size: GetResponsiveSize.getResponsiveSize(
                               context,
-                              mobile: 16,
-                              tablet: 20,
-                              largeTablet: 24,
-                              desktop: 28,
+                              mobile: 24,
+                              tablet: 28,
+                              largeTablet: 32,
+                              desktop: 36,
                             ),
                           ),
-                        ),
-                        onTap: () => _selectAddressSuggestion(suggestion),
-                        dense: true,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: GetResponsiveSize.getResponsivePadding(
-                              context,
-                              mobile: 16,
-                              tablet: 20,
-                              largeTablet: 24,
-                              desktop: 28),
-                          vertical: GetResponsiveSize.getResponsivePadding(
-                              context,
-                              mobile: 8,
-                              tablet: 12,
-                              largeTablet: 16,
-                              desktop: 20),
-                        ),
-                      );
-                    }).toList(),
+                          title: Text(
+                            suggestion,
+                            style: TextStyle(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: 16,
+                                tablet: 20,
+                                largeTablet: 24,
+                                desktop: 28,
+                              ),
+                            ),
+                          ),
+                          onTap: () => _selectAddressSuggestion(suggestion),
+                          dense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: GetResponsiveSize.getResponsivePadding(
+                                context,
+                                mobile: 16,
+                                tablet: 20,
+                                largeTablet: 24,
+                                desktop: 28),
+                            vertical: GetResponsiveSize.getResponsivePadding(
+                                context,
+                                mobile: 8,
+                                tablet: 12,
+                                largeTablet: 16,
+                                desktop: 20),
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

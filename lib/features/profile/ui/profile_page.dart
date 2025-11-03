@@ -44,10 +44,25 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isConfirmPasswordVisible = false;
   final GlobalKey<FormState> _changePasswordFormKey = GlobalKey<FormState>();
 
+  /// Clean error message by removing "Exception: " or "Exception" text
+  String _cleanErrorMessage(String message) {
+    String cleaned = message;
+    // Remove "Exception: " prefix
+    if (cleaned.startsWith('Exception: ')) {
+      cleaned = cleaned.substring('Exception: '.length);
+    }
+    // Remove "Exception: " if it appears anywhere
+    cleaned = cleaned.replaceAll('Exception: ', '');
+    // Remove standalone "Exception" word
+    cleaned = cleaned.replaceAll(RegExp(r'\bException\b'), '');
+    return cleaned.trim();
+  }
+
   @override
   void initState() {
     super.initState();
-    context.read<ProfileBloc>().add(const ProfileEvent.fetchProfile());
+    // Reset the seeded flag to allow fresh data loading when page opens
+    _seededOnce = false;
 
     nameController = TextEditingController();
     emailController = TextEditingController();
@@ -55,6 +70,14 @@ class _ProfilePageState extends State<ProfilePage> {
 
     _newPasswordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
+
+    // Fetch profile data using addPostFrameCallback to ensure context is available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Always fetch fresh data when the page opens, regardless of current bloc state
+      // This fixes the issue where the bloc might be stuck in Loading or Error state
+      // from a previous session
+      context.read<ProfileBloc>().add(const ProfileEvent.fetchProfile());
+    });
   }
 
   @override
@@ -640,8 +663,27 @@ class _ProfilePageState extends State<ProfilePage> {
               child: BlocConsumer<ProfileBloc, ProfileState>(
                 listener: (context, state) {
                   if (state is profile_bloc.Error) {
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(SnackBar(content: Text(state.message)));
+                    // Check if error is related to "Delete My Data"
+                    final isDeleteMyDataError =
+                        state.message.toLowerCase().contains('delete') &&
+                            state.message.toLowerCase().contains('data');
+
+                    if (isDeleteMyDataError) {
+                      // Navigate back to profile page and show error in red snackbar
+                      context.go('/profile');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(_cleanErrorMessage(state.message)),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    } else {
+                      // For other errors, show normal snackbar
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(_cleanErrorMessage(state.message))),
+                      );
+                    }
                   }
 
                   if (state is profile_bloc.PasswordChanged) {
@@ -653,7 +695,32 @@ class _ProfilePageState extends State<ProfilePage> {
                     context.go('/profile');
                   }
 
-                  // Seed controllers ONLY once per load (and not while editing)
+                  if (state is profile_bloc.DataDeleted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content:
+                            Text('Your data has been deleted successfully!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    // Navigate back to profile page and refresh profile data
+                    context.go('/profile');
+                    // Trigger profile refresh to show updated data
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        context.read<ProfileBloc>().add(
+                              const ProfileEvent.fetchProfile(),
+                            );
+                      }
+                    });
+                  }
+
+                  // Reset seeded flag when loading starts to ensure fresh data is seeded
+                  if (state is profile_bloc.Loading) {
+                    _seededOnce = false;
+                  }
+
+                  // Seed controllers when data is loaded (and not while editing)
                   if (state is Loaded && !_seededOnce && !isEditing) {
                     nameController.text = state.profile.name;
                     emailController.text = state.profile.email;
@@ -675,6 +742,78 @@ class _ProfilePageState extends State<ProfilePage> {
                     return const SizedBox(
                       height: 400,
                       child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  // Handle error state with retry option
+                  if (state is profile_bloc.Error) {
+                    // Check if error is related to "Delete My Data" - don't show error UI for this
+                    final isDeleteMyDataError =
+                        state.message.toLowerCase().contains('delete') &&
+                            state.message.toLowerCase().contains('data');
+
+                    // For delete my data errors, don't show error UI (already handled in listener with navigation)
+                    if (isDeleteMyDataError) {
+                      // Trigger a profile fetch to show the profile page content
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          context.read<ProfileBloc>().add(
+                                const ProfileEvent.fetchProfile(),
+                              );
+                        }
+                      });
+                      return const SizedBox(
+                        height: 400,
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    // For other errors, show error UI with retry
+                    return SizedBox(
+                      height: 400,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error_outline,
+                                size: 48, color: Colors.red[300]),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Failed to load profile',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey[800],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              state.message,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 24),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                // Reset seeded flag and retry
+                                _seededOnce = false;
+                                context.read<ProfileBloc>().add(
+                                      const ProfileEvent.fetchProfile(),
+                                    );
+                              },
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Retry'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryColor,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     );
                   }
 
@@ -2146,6 +2285,760 @@ class _ProfilePageState extends State<ProfilePage> {
                                   }
                                 },
                               ),
+                              buildMenuItem(
+                                'assets/images/close.png',
+                                "Delete My Data",
+                                isLogout: true,
+                                onTap: () async {
+                                  final TextEditingController _confirmCtl =
+                                      TextEditingController();
+                                  String? _errorText;
+
+                                  bool? confirm;
+                                  if (!kIsWeb && Platform.isIOS) {
+                                    confirm = await showCupertinoDialog<bool>(
+                                      context: context,
+                                      builder: (dialogContext) {
+                                        return StatefulBuilder(
+                                          builder: (stateContext, setState) =>
+                                              CupertinoAlertDialog(
+                                            title: Text(
+                                              "Delete My Data",
+                                              style: TextStyle(
+                                                fontSize: GetResponsiveSize
+                                                    .getResponsiveFontSize(
+                                                  context,
+                                                  mobile: 18,
+                                                  tablet: 22,
+                                                  largeTablet: 26,
+                                                  desktop: 30,
+                                                ),
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            content: Container(
+                                              padding: EdgeInsets.only(
+                                                top: GetResponsiveSize
+                                                    .getResponsivePadding(
+                                                  context,
+                                                  mobile: 16,
+                                                  tablet: 20,
+                                                  largeTablet: 24,
+                                                  desktop: 28,
+                                                ),
+                                              ),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.stretch,
+                                                children: [
+                                                  Text(
+                                                    "This will permanently delete all your ads. Continue?",
+                                                    textAlign: TextAlign.center,
+                                                    style: TextStyle(
+                                                      fontSize: GetResponsiveSize
+                                                          .getResponsiveFontSize(
+                                                        context,
+                                                        mobile: 14,
+                                                        tablet: 16,
+                                                        largeTablet: 18,
+                                                        desktop: 20,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    height: GetResponsiveSize
+                                                        .getResponsiveSize(
+                                                      context,
+                                                      mobile: 12,
+                                                      tablet: 16,
+                                                      largeTablet: 20,
+                                                      desktop: 24,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    "To confirm this, type 'DELETE'",
+                                                    textAlign: TextAlign.left,
+                                                    style: TextStyle(
+                                                      fontSize: GetResponsiveSize
+                                                          .getResponsiveFontSize(
+                                                        context,
+                                                        mobile: 13,
+                                                        tablet: 15,
+                                                        largeTablet: 17,
+                                                        desktop: 19,
+                                                      ),
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    height: GetResponsiveSize
+                                                        .getResponsiveSize(
+                                                      context,
+                                                      mobile: 8,
+                                                      tablet: 12,
+                                                      largeTablet: 16,
+                                                      desktop: 20,
+                                                    ),
+                                                  ),
+                                                  CupertinoTextField(
+                                                    controller: _confirmCtl,
+                                                    placeholder: "DELETE",
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                      horizontal: GetResponsiveSize
+                                                          .getResponsivePadding(
+                                                        context,
+                                                        mobile: 12,
+                                                        tablet: 16,
+                                                        largeTablet: 20,
+                                                        desktop: 24,
+                                                      ),
+                                                      vertical: GetResponsiveSize
+                                                          .getResponsivePadding(
+                                                        context,
+                                                        mobile: 10,
+                                                        tablet: 14,
+                                                        largeTablet: 18,
+                                                        desktop: 22,
+                                                      ),
+                                                    ),
+                                                    style: TextStyle(
+                                                      fontSize: GetResponsiveSize
+                                                          .getResponsiveFontSize(
+                                                        context,
+                                                        mobile: 16,
+                                                        tablet: 18,
+                                                        largeTablet: 20,
+                                                        desktop: 22,
+                                                      ),
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      color: CupertinoColors
+                                                          .systemGrey6,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              8),
+                                                    ),
+                                                    onChanged: (_) {
+                                                      if (_errorText != null) {
+                                                        setState(() =>
+                                                            _errorText = null);
+                                                      }
+                                                    },
+                                                  ),
+                                                  if (_errorText != null)
+                                                    Padding(
+                                                      padding: EdgeInsets.only(
+                                                        top: GetResponsiveSize
+                                                            .getResponsiveSize(
+                                                          context,
+                                                          mobile: 8,
+                                                          tablet: 10,
+                                                          largeTablet: 12,
+                                                          desktop: 14,
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        _errorText!,
+                                                        style: TextStyle(
+                                                          color: CupertinoColors
+                                                              .systemRed,
+                                                          fontSize:
+                                                              GetResponsiveSize
+                                                                  .getResponsiveFontSize(
+                                                            context,
+                                                            mobile: 12,
+                                                            tablet: 14,
+                                                            largeTablet: 16,
+                                                            desktop: 18,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                            actions: [
+                                              CupertinoDialogAction(
+                                                isDefaultAction: false,
+                                                onPressed: () => Navigator.pop(
+                                                    dialogContext, false),
+                                                child: Text(
+                                                  "Cancel",
+                                                  style: TextStyle(
+                                                    color: CupertinoColors
+                                                        .systemBlue,
+                                                    fontSize: GetResponsiveSize
+                                                        .getResponsiveFontSize(
+                                                      context,
+                                                      mobile: 16,
+                                                      tablet: 18,
+                                                      largeTablet: 20,
+                                                      desktop: 22,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              CupertinoDialogAction(
+                                                isDefaultAction: false,
+                                                isDestructiveAction: true,
+                                                onPressed: () {
+                                                  if (_confirmCtl.text.trim() !=
+                                                      'DELETE') {
+                                                    setState(() => _errorText =
+                                                        'Please type DELETE');
+                                                    return;
+                                                  }
+                                                  Navigator.pop(
+                                                      dialogContext, true);
+                                                },
+                                                child: Text(
+                                                  "Delete My Data",
+                                                  style: TextStyle(
+                                                    fontSize: GetResponsiveSize
+                                                        .getResponsiveFontSize(
+                                                      context,
+                                                      mobile: 16,
+                                                      tablet: 18,
+                                                      largeTablet: 20,
+                                                      desktop: 22,
+                                                    ),
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  } else {
+                                    confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (_) {
+                                        return StatefulBuilder(
+                                          builder: (ctx, setState) =>
+                                              AlertDialog(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                GetResponsiveSize
+                                                    .getResponsiveBorderRadius(
+                                                  context,
+                                                  mobile: 20,
+                                                  tablet: 24,
+                                                  largeTablet: 28,
+                                                  desktop: 32,
+                                                ),
+                                              ),
+                                            ),
+                                            backgroundColor:
+                                                AppColors.whiteColor,
+                                            insetPadding: EdgeInsets.symmetric(
+                                              horizontal: GetResponsiveSize
+                                                  .getResponsivePadding(
+                                                context,
+                                                mobile: 16,
+                                                tablet: 40,
+                                                largeTablet: 60,
+                                                desktop: 80,
+                                              ),
+                                            ),
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                              horizontal: GetResponsiveSize
+                                                  .getResponsivePadding(
+                                                context,
+                                                mobile: 24,
+                                                tablet: 32,
+                                                largeTablet: 40,
+                                                desktop: 48,
+                                              ),
+                                              vertical: GetResponsiveSize
+                                                  .getResponsivePadding(
+                                                context,
+                                                mobile: 16,
+                                                tablet: 24,
+                                                largeTablet: 28,
+                                                desktop: 32,
+                                              ),
+                                            ),
+                                            titlePadding: EdgeInsets.only(
+                                              left: GetResponsiveSize
+                                                  .getResponsivePadding(
+                                                context,
+                                                mobile: 24,
+                                                tablet: 32,
+                                                largeTablet: 40,
+                                                desktop: 48,
+                                              ),
+                                              top: GetResponsiveSize
+                                                  .getResponsivePadding(
+                                                context,
+                                                mobile: 16,
+                                                tablet: 24,
+                                                largeTablet: 28,
+                                                desktop: 32,
+                                              ),
+                                              right: GetResponsiveSize
+                                                  .getResponsivePadding(
+                                                context,
+                                                mobile: 8,
+                                                tablet: 12,
+                                                largeTablet: 16,
+                                                desktop: 20,
+                                              ),
+                                              bottom: GetResponsiveSize
+                                                  .getResponsivePadding(
+                                                context,
+                                                mobile: 0,
+                                                tablet: 8,
+                                                largeTablet: 12,
+                                                desktop: 16,
+                                              ),
+                                            ),
+                                            title: Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    "Delete My Data",
+                                                    textAlign: TextAlign.center,
+                                                    style: AppTextstyle.title1
+                                                        .copyWith(
+                                                      fontSize: GetResponsiveSize
+                                                          .getResponsiveFontSize(
+                                                        context,
+                                                        mobile: AppTextstyle
+                                                                .title1
+                                                                .fontSize ??
+                                                            20,
+                                                        tablet: 24,
+                                                        largeTablet: 28,
+                                                        desktop: 34,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                IconButton(
+                                                  icon: Icon(
+                                                    Icons.close,
+                                                    size: GetResponsiveSize
+                                                        .getResponsiveSize(
+                                                      context,
+                                                      mobile: 24,
+                                                      tablet: 28,
+                                                      largeTablet: 32,
+                                                      desktop: 36,
+                                                    ),
+                                                  ),
+                                                  onPressed: () =>
+                                                      Navigator.pop(ctx, false),
+                                                )
+                                              ],
+                                            ),
+                                            content: SizedBox(
+                                              width: GetResponsiveSize
+                                                  .getResponsiveSize(
+                                                context,
+                                                mobile: 300,
+                                                tablet: 400,
+                                                largeTablet: 500,
+                                                desktop: 600,
+                                              ),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.stretch,
+                                                children: [
+                                                  Text(
+                                                    "This will permanently delete all your ads. Continue?",
+                                                    textAlign: TextAlign.center,
+                                                    style: AppTextstyle
+                                                        .sectionTitleTextStyle
+                                                        .copyWith(
+                                                      fontSize: GetResponsiveSize
+                                                          .getResponsiveFontSize(
+                                                        context,
+                                                        mobile: AppTextstyle
+                                                                .sectionTitleTextStyle
+                                                                .fontSize ??
+                                                            16,
+                                                        tablet: 20,
+                                                        largeTablet: 24,
+                                                        desktop: 28,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    height: GetResponsiveSize
+                                                        .getResponsiveSize(
+                                                      context,
+                                                      mobile: 16,
+                                                      tablet: 20,
+                                                      largeTablet: 24,
+                                                      desktop: 28,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    "To confirm this, type 'DELETE'",
+                                                    textAlign: TextAlign.left,
+                                                    style: TextStyle(
+                                                      fontSize: GetResponsiveSize
+                                                          .getResponsiveFontSize(
+                                                        context,
+                                                        mobile: 14,
+                                                        tablet: 18,
+                                                        largeTablet: 22,
+                                                        desktop: 26,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    height: GetResponsiveSize
+                                                        .getResponsiveSize(
+                                                      context,
+                                                      mobile: 8,
+                                                      tablet: 12,
+                                                      largeTablet: 16,
+                                                      desktop: 20,
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    height: GetResponsiveSize
+                                                        .getResponsiveSize(
+                                                      context,
+                                                      mobile: 56,
+                                                      tablet: 65,
+                                                      largeTablet: 75,
+                                                      desktop: 85,
+                                                    ),
+                                                    child: TextField(
+                                                      controller: _confirmCtl,
+                                                      style: TextStyle(
+                                                        fontSize: GetResponsiveSize
+                                                            .getResponsiveFontSize(
+                                                          context,
+                                                          mobile: 16,
+                                                          tablet: 20,
+                                                          largeTablet: 22,
+                                                          desktop: 26,
+                                                        ),
+                                                      ),
+                                                      decoration:
+                                                          InputDecoration(
+                                                        hintText: "DELETE",
+                                                        hintStyle: TextStyle(
+                                                          fontSize:
+                                                              GetResponsiveSize
+                                                                  .getResponsiveFontSize(
+                                                            context,
+                                                            mobile: 16,
+                                                            tablet: 20,
+                                                            largeTablet: 22,
+                                                            desktop: 26,
+                                                          ),
+                                                        ),
+                                                        errorText: _errorText,
+                                                        errorStyle: TextStyle(
+                                                          fontSize:
+                                                              GetResponsiveSize
+                                                                  .getResponsiveFontSize(
+                                                            context,
+                                                            mobile: 12,
+                                                            tablet: 16,
+                                                            largeTablet: 20,
+                                                            desktop: 24,
+                                                          ),
+                                                        ),
+                                                        border:
+                                                            OutlineInputBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                  GetResponsiveSize
+                                                                      .getResponsiveBorderRadius(
+                                                            context,
+                                                            mobile: 10,
+                                                            tablet: 14,
+                                                            largeTablet: 18,
+                                                            desktop: 22,
+                                                          )),
+                                                        ),
+                                                        contentPadding:
+                                                            EdgeInsets
+                                                                .symmetric(
+                                                          horizontal:
+                                                              GetResponsiveSize
+                                                                  .getResponsivePadding(
+                                                            context,
+                                                            mobile: 12,
+                                                            tablet: 18,
+                                                            largeTablet: 24,
+                                                            desktop: 30,
+                                                          ),
+                                                          vertical:
+                                                              GetResponsiveSize
+                                                                  .getResponsivePadding(
+                                                            context,
+                                                            mobile: 12,
+                                                            tablet: 16,
+                                                            largeTablet: 20,
+                                                            desktop: 24,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      onChanged: (_) {
+                                                        if (_errorText !=
+                                                            null) {
+                                                          setState(() =>
+                                                              _errorText =
+                                                                  null);
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            actionsAlignment:
+                                                MainAxisAlignment.center,
+                                            actionsPadding: EdgeInsets.only(
+                                              left: GetResponsiveSize
+                                                  .getResponsivePadding(
+                                                context,
+                                                mobile: 24,
+                                                tablet: 32,
+                                                largeTablet: 40,
+                                                desktop: 48,
+                                              ),
+                                              right: GetResponsiveSize
+                                                  .getResponsivePadding(
+                                                context,
+                                                mobile: 24,
+                                                tablet: 32,
+                                                largeTablet: 40,
+                                                desktop: 48,
+                                              ),
+                                              top: GetResponsiveSize
+                                                  .getResponsivePadding(
+                                                context,
+                                                mobile: 8,
+                                                tablet: 12,
+                                                largeTablet: 16,
+                                                desktop: 20,
+                                              ),
+                                              bottom: GetResponsiveSize
+                                                  .getResponsivePadding(
+                                                context,
+                                                mobile: 8,
+                                                tablet: 12,
+                                                largeTablet: 16,
+                                                desktop: 20,
+                                              ),
+                                            ),
+                                            actions: [
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Expanded(
+                                                    child: SizedBox(
+                                                      height: GetResponsiveSize
+                                                          .getResponsiveSize(
+                                                        context,
+                                                        mobile: 50,
+                                                        tablet: 65,
+                                                        largeTablet: 80,
+                                                        desktop: 90,
+                                                      ),
+                                                      child: TextButton(
+                                                        style: ButtonStyle(
+                                                          backgroundColor:
+                                                              WidgetStatePropertyAll(
+                                                                  AppColors
+                                                                      .whiteColor),
+                                                          side: WidgetStatePropertyAll(
+                                                              BorderSide(
+                                                                  color: Colors
+                                                                      .red,
+                                                                  width: GetResponsiveSize
+                                                                      .getResponsiveSize(
+                                                                    context,
+                                                                    mobile: 1.0,
+                                                                    tablet: 1.5,
+                                                                    largeTablet:
+                                                                        2.0,
+                                                                    desktop:
+                                                                        2.5,
+                                                                  ))),
+                                                          shape:
+                                                              WidgetStatePropertyAll(
+                                                            RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                      GetResponsiveSize
+                                                                          .getResponsiveBorderRadius(
+                                                                context,
+                                                                mobile: 10,
+                                                                tablet: 14,
+                                                                largeTablet: 18,
+                                                                desktop: 22,
+                                                              )),
+                                                            ),
+                                                          ),
+                                                          padding:
+                                                              WidgetStatePropertyAll(
+                                                            EdgeInsets
+                                                                .symmetric(
+                                                              vertical:
+                                                                  GetResponsiveSize
+                                                                      .getResponsivePadding(
+                                                                context,
+                                                                mobile: 14,
+                                                                tablet: 18,
+                                                                largeTablet: 22,
+                                                                desktop: 26,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        onPressed: () =>
+                                                            Navigator.pop(
+                                                                ctx, false),
+                                                        child: Text(
+                                                          "Cancel",
+                                                          style: TextStyle(
+                                                            color: Colors.red,
+                                                            fontSize:
+                                                                GetResponsiveSize
+                                                                    .getResponsiveFontSize(
+                                                              context,
+                                                              mobile: 14,
+                                                              tablet: 18,
+                                                              largeTablet: 22,
+                                                              desktop: 26,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    width: GetResponsiveSize
+                                                        .getResponsiveSize(
+                                                      context,
+                                                      mobile: 12,
+                                                      tablet: 18,
+                                                      largeTablet: 24,
+                                                      desktop: 30,
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    child: SizedBox(
+                                                      height: GetResponsiveSize
+                                                          .getResponsiveSize(
+                                                        context,
+                                                        mobile: 50,
+                                                        tablet: 65,
+                                                        largeTablet: 80,
+                                                        desktop: 90,
+                                                      ),
+                                                      child: TextButton(
+                                                        style: ButtonStyle(
+                                                          backgroundColor:
+                                                              WidgetStatePropertyAll(
+                                                                  AppColors
+                                                                      .redColor),
+                                                          shape:
+                                                              WidgetStatePropertyAll(
+                                                            RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                      GetResponsiveSize
+                                                                          .getResponsiveBorderRadius(
+                                                                context,
+                                                                mobile: 10,
+                                                                tablet: 14,
+                                                                largeTablet: 18,
+                                                                desktop: 22,
+                                                              )),
+                                                            ),
+                                                          ),
+                                                          padding:
+                                                              WidgetStatePropertyAll(
+                                                            EdgeInsets
+                                                                .symmetric(
+                                                              vertical:
+                                                                  GetResponsiveSize
+                                                                      .getResponsivePadding(
+                                                                context,
+                                                                mobile: 14,
+                                                                tablet: 18,
+                                                                largeTablet: 22,
+                                                                desktop: 26,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        onPressed: () {
+                                                          if (_confirmCtl.text
+                                                                  .trim() !=
+                                                              'DELETE') {
+                                                            setState(() =>
+                                                                _errorText =
+                                                                    'Please type DELETE');
+                                                            return;
+                                                          }
+                                                          Navigator.pop(
+                                                              ctx, true);
+                                                        },
+                                                        child: Text(
+                                                          "Delete My Data",
+                                                          style: TextStyle(
+                                                            color: AppColors
+                                                                .whiteColor,
+                                                            fontSize:
+                                                                GetResponsiveSize
+                                                                    .getResponsiveFontSize(
+                                                              context,
+                                                              mobile: 14,
+                                                              tablet: 18,
+                                                              largeTablet: 22,
+                                                              desktop: 26,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  }
+                                  if (confirm == true) {
+                                    try {
+                                      context
+                                          .read<profile_bloc.ProfileBloc>()
+                                          .add(const profile_bloc
+                                              .ProfileEvent.deleteMyData());
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              'Failed to delete my data: $e'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                              ),
                               SizedBox(
                                 height: GetResponsiveSize.getResponsiveSize(
                                   context,
@@ -2179,7 +3072,10 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        floatingActionButton: const BottomNavBar(),
+        floatingActionButton: SafeArea(
+          minimum: const EdgeInsets.only(bottom: 20),
+          child: const BottomNavBar(),
+        ),
       ),
     );
   }
