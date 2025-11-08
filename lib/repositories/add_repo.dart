@@ -103,24 +103,82 @@ class AddRepository {
   }
 
   Future<List<VehicleManufacturer>> fetchManufacturers() async {
-    final response = await _dio.get('/vehicle-inventory/manufacturers');
-    final List data = response.data['data'];
-    return data
-        .map((e) => VehicleManufacturer.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final List<VehicleManufacturer> allManufacturers = [];
+    int page = 1;
+    int limit = 100; // Fetch 100 items per page
+    bool hasMore = true;
+
+    while (hasMore) {
+      final response = await _dio.get(
+        '/vehicle-inventory/manufacturers',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+      );
+
+      final responseData = response.data;
+      final List data = responseData['data'] ?? [];
+
+      final manufacturers = data
+          .map((e) => VehicleManufacturer.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      allManufacturers.addAll(manufacturers);
+
+      // Check if there are more pages
+      final total = responseData['total'] ?? 0;
+      final currentCount = page * limit;
+      hasMore = currentCount < total && manufacturers.length == limit;
+
+      // If no total is provided, check if we got fewer items than the limit
+      if (total == 0 && manufacturers.length < limit) {
+        hasMore = false;
+      }
+
+      page++;
+    }
+
+    return allManufacturers;
   }
 
   Future<List<VehicleModel>> fetchModelsByManufacturer(
       String manufacturerId) async {
-    final response = await _dio.get(
-      '/vehicle-inventory/models',
-      queryParameters: {
-        'manufacturerId': manufacturerId,
-      },
-    );
+    final List<VehicleModel> allModels = [];
+    int page = 1;
+    int limit = 100; // Fetch 100 items per page
+    bool hasMore = true;
 
-    final List data = response.data['data'];
-    return data.map((e) => VehicleModel.fromJson(e)).toList();
+    while (hasMore) {
+      final response = await _dio.get(
+        '/vehicle-inventory/models',
+        queryParameters: {
+          'manufacturerId': manufacturerId,
+          'page': page,
+          'limit': limit,
+        },
+      );
+
+      final responseData = response.data;
+      final List data = responseData['data'] ?? [];
+
+      final models = data.map((e) => VehicleModel.fromJson(e)).toList();
+      allModels.addAll(models);
+
+      // Check if there are more pages
+      final total = responseData['total'] ?? 0;
+      final currentCount = page * limit;
+      hasMore = currentCount < total && models.length == limit;
+
+      // If no total is provided, check if we got fewer items than the limit
+      if (total == 0 && models.length < limit) {
+        hasMore = false;
+      }
+
+      page++;
+    }
+
+    return allModels;
   }
 
   Future<List<VehicleVariant>> fetchVariantsByModel(String modelId) async {
@@ -309,11 +367,43 @@ class AddRepository {
   }
 
   Future<List<VehicleModel>> fetchModals() async {
-    final response = await _dio.get('/vehicle-inventory/models');
-    final List data = response.data['data'];
-    return data
-        .map((e) => VehicleModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final List<VehicleModel> allModels = [];
+    int page = 1;
+    int limit = 100; // Fetch 100 items per page
+    bool hasMore = true;
+
+    while (hasMore) {
+      final response = await _dio.get(
+        '/vehicle-inventory/models',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+      );
+
+      final responseData = response.data;
+      final List data = responseData['data'] ?? [];
+
+      final models = data
+          .map((e) => VehicleModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      allModels.addAll(models);
+
+      // Check if there are more pages
+      final total = responseData['total'] ?? 0;
+      final currentCount = page * limit;
+      hasMore = currentCount < total && models.length == limit;
+
+      // If no total is provided, check if we got fewer items than the limit
+      if (total == 0 && models.length < limit) {
+        hasMore = false;
+      }
+
+      page++;
+    }
+
+    return allModels;
   }
 
   Future<AddModel> fetchAdDetail(String adId) async {

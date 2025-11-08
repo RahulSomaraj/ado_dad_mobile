@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:ado_dad_user/models/login_response_model.dart';
 import 'package:ado_dad_user/models/profile_model.dart';
+import 'package:ado_dad_user/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPrefs {
@@ -97,9 +98,16 @@ class SharedPrefs {
 Future<void> saveLoginResponse(LoginResponse loginResponse) async {
   final sharedPrefs = SharedPrefs();
   final now = DateTime.now().millisecondsSinceEpoch;
-  await sharedPrefs.setString('token', loginResponse.token);
+
+  // Remove "Bearer " prefix from token if present (API response may include it, but we store without it)
+  final cleanToken =
+      loginResponse.token.replaceFirst(RegExp(r'^Bearer\s+'), '');
+  final cleanRefreshToken =
+      loginResponse.refreshToken.replaceFirst(RegExp(r'^Bearer\s+'), '');
+
+  await sharedPrefs.setString('token', cleanToken);
   await sharedPrefs.setString('userName', loginResponse.name);
-  await sharedPrefs.setString('refreshToken', loginResponse.refreshToken);
+  await sharedPrefs.setString('refreshToken', cleanRefreshToken);
   await sharedPrefs.setString('userType', loginResponse.userType);
   await sharedPrefs.setString('email', loginResponse.email);
   await sharedPrefs.setString('user_id', loginResponse.id);
@@ -116,8 +124,18 @@ Future<void> saveLoginResponse(LoginResponse loginResponse) async {
   //   await sharedPrefs.saveUserId(loginResponse.id);
   // }
 
+  print("✅ Login response saved successfully:");
+  print("   User ID: ${loginResponse.id}");
+  print("   Name: ${loginResponse.name}");
   print(
-      "Login response saved. User ID: ${loginResponse.id}, Name: ${loginResponse.name}, ProfilePic: ${loginResponse.profilePic}");
+      "   Token saved: ${cleanToken.isNotEmpty ? 'YES (${cleanToken.length} chars)' : 'NO'}");
+  print(
+      "   Refresh Token saved: ${cleanRefreshToken.isNotEmpty ? 'YES (${cleanRefreshToken.length} chars)' : 'NO'}");
+  print("   ProfilePic: ${loginResponse.profilePic ?? 'N/A'}");
+
+  // Reset initial refresh flag - token from login should work directly
+  // Only refresh when token expires (401 error)
+  AuthService().resetInitialRefreshFlag();
 }
 
 /// Retrieve stored token

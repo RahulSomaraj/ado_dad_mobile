@@ -656,14 +656,19 @@ class _HomePageState extends State<HomePage> {
                 //   child: Image.asset('assets/images/notification.png'),
                 // ),
                 if (_userLocation != null)
-                  Expanded(
-                    child: Text(
-                      _userLocation!,
-                      style: TextStyle(
-                          color: AppColors.whiteColor, fontSize: locationFont),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.end,
+                  Flexible(
+                    child: Tooltip(
+                      message: _userLocation!,
+                      child: Text(
+                        _userLocation!,
+                        style: TextStyle(
+                            color: AppColors.whiteColor,
+                            fontSize: locationFont),
+                        maxLines: 2,
+                        overflow: TextOverflow.fade,
+                        textAlign: TextAlign.end,
+                        softWrap: true,
+                      ),
                     ),
                   ),
                 SizedBox(width: 10),
@@ -762,13 +767,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget buildCategories(BuildContext context) {
-    String categoryNameText(String text) {
-      return text.replaceAll(' ', '\n');
-    }
-
     final screenWidth = MediaQuery.of(context).size.width;
 
     // Calculate item width to show multiple items per row
+    // Increased mobile width to prevent word breaking (especially for "Commercial")
+    // With reduced padding and spacing, we can use more width
     final itemWidth = GetResponsiveSize.isTablet(context)
         ? GetResponsiveSize.getResponsiveSize(
             context,
@@ -777,7 +780,8 @@ class _HomePageState extends State<HomePage> {
             largeTablet: screenWidth * 0.26,
             desktop: screenWidth * 0.28,
           )
-        : screenWidth * 0.2;
+        : (screenWidth * 0.24).clamp(90.0,
+            double.infinity); // Increased to 24% with min 90px for better fit
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -789,11 +793,11 @@ class _HomePageState extends State<HomePage> {
                 largeTablet: 8.0,
                 desktop: 8.0,
               )
-            : 12.0, // Keep mobile padding unchanged
+            : 8.0, // Reduced from 12.0 to give more width to categories
         vertical: 10,
       ),
       child: Wrap(
-        spacing: 15, // Horizontal spacing between items
+        spacing: 10, // Reduced from 15 to give more width to each item
         runSpacing: GetResponsiveSize.getResponsiveSize(
           context,
           mobile: 15,
@@ -886,15 +890,20 @@ class _HomePageState extends State<HomePage> {
                         largeTablet: baseSize + 13,
                         desktop: baseSize + 13,
                       );
-                      return Text(
-                        categoryNameText(
+                      // Allow multi-line text but ensure words don't break
+                      // Text widget naturally wraps at word boundaries (not mid-word)
+                      // Use ConstrainedBox to limit width, allowing natural word wrapping
+                      return ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: itemWidth),
+                        child: Text(
                           category.name,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          softWrap: true, // Wraps at word boundaries only
+                          style: AppTextstyle.categoryLabelTextStyle
+                              .copyWith(fontSize: labelSize),
                         ),
-                        textAlign: TextAlign.center,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextstyle.categoryLabelTextStyle
-                            .copyWith(fontSize: labelSize),
                       );
                     },
                   ),
@@ -1083,11 +1092,51 @@ class _HomePageState extends State<HomePage> {
                   aspectRatio: GetResponsiveSize.isTablet(context)
                       ? (16 / 9)
                       : (16 / 10),
-                  child: Image.network(
-                    ad.images.first,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        const ColoredBox(color: Colors.black12),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(
+                        ad.images.first,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            const ColoredBox(color: Colors.black12),
+                      ),
+                      if (ad.manufacturer?.isPremium == true)
+                        Positioned(
+                          top: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 8,
+                            tablet: 10,
+                            largeTablet: 12,
+                            desktop: 14,
+                          ),
+                          right: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 8,
+                            tablet: 10,
+                            largeTablet: 12,
+                            desktop: 14,
+                          ),
+                          child: Image.asset(
+                            'assets/images/premium1.png',
+                            width: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 32,
+                              tablet: 40,
+                              largeTablet: 48,
+                              desktop: 56,
+                            ),
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 32,
+                              tablet: 40,
+                              largeTablet: 48,
+                              desktop: 56,
+                            ),
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),

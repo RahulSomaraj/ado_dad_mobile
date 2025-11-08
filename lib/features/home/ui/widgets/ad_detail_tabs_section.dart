@@ -1,0 +1,269 @@
+import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_card_shell.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_spec_tile.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_key_val_row.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_mark_as_sold_button.dart';
+import 'package:flutter/material.dart';
+
+String toTitleCase(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .split(' ')
+      .map((word) => word.isEmpty
+          ? word
+          : word[0].toUpperCase() + word.substring(1).toLowerCase())
+      .join(' ');
+}
+
+class AdDetailTabsSection extends StatelessWidget {
+  final AddModel ad;
+  final Future<bool> Function(AddModel) isCurrentUserOwner;
+
+  const AdDetailTabsSection({
+    super.key,
+    required this.ad,
+    required this.isCurrentUserOwner,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: GetResponsiveSize.getResponsivePadding(context,
+            mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+        vertical: GetResponsiveSize.getResponsivePadding(context,
+            mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+      ),
+      child: DefaultTabController(
+        length: 2,
+        child: Column(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFF4F6FA),
+                borderRadius: BorderRadius.circular(
+                  GetResponsiveSize.getResponsiveBorderRadius(context,
+                      mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+                ),
+              ),
+              padding: EdgeInsets.all(
+                GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 6, tablet: 8, largeTablet: 10, desktop: 12),
+              ),
+              child: TabBar(
+                indicatorSize: TabBarIndicatorSize.tab,
+                indicator: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(
+                    GetResponsiveSize.getResponsiveBorderRadius(context,
+                        mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+                  ),
+                ),
+                indicatorColor: Colors.transparent,
+                dividerColor: Colors.transparent,
+                labelColor: const Color(0xFF6366F1),
+                unselectedLabelColor: Colors.grey.shade600,
+                labelStyle: TextStyle(
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                      mobile: 14, tablet: 22, largeTablet: 25, desktop: 27),
+                ),
+                tabs: const [
+                  Tab(text: 'Specifications'),
+                  Tab(text: 'Other Details'),
+                ],
+              ),
+            ),
+            SizedBox(
+                height: GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 12, tablet: 16, largeTablet: 20, desktop: 24)),
+            SizedBox(
+              height: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 320, tablet: 450, largeTablet: 550, desktop: 650),
+              child: TabBarView(
+                children: [
+                  _SpecsCard(ad: ad),
+                  _OtherDetailsCard(
+                      ad: ad, isCurrentUserOwner: isCurrentUserOwner),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SpecsCard extends StatelessWidget {
+  final AddModel ad;
+
+  const _SpecsCard({required this.ad});
+
+  @override
+  Widget build(BuildContext context) {
+    if (ad.category == 'property') {
+      final items = <AdDetailSpec>[
+        AdDetailSpec('Property Type', ad.propertyType ?? '-',
+            icon: Icons.home_work),
+        AdDetailSpec('Bedrooms', ad.bedrooms?.toString() ?? '-',
+            icon: Icons.bed),
+        AdDetailSpec('Bathrooms', ad.bathrooms?.toString() ?? '-',
+            icon: Icons.bathtub),
+        AdDetailSpec('Area (sqft)', ad.areaSqft?.toString() ?? '-',
+            icon: Icons.square_foot),
+        AdDetailSpec('Floor', ad.floor?.toString() ?? '-',
+            icon: Icons.apartment),
+        AdDetailSpec('Furnished', ad.isFurnished == true ? 'Yes' : 'No',
+            icon: Icons.chair_alt),
+        AdDetailSpec('Parking', ad.hasParking == true ? 'Yes' : 'No',
+            icon: Icons.local_parking),
+        AdDetailSpec('Garden', ad.hasGarden == true ? 'Yes' : 'No',
+            icon: Icons.park),
+      ];
+
+      return AdDetailCardShell(
+        child: GridView.builder(
+          padding: EdgeInsets.all(
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+          ),
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisExtent: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 55, tablet: 90, largeTablet: 110, desktop: 130),
+            crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+            mainAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+          ),
+          itemCount: items.length,
+          itemBuilder: (_, i) => AdDetailSpecTile(spec: items[i]),
+        ),
+      );
+    }
+
+    final items = <AdDetailSpec>[
+      AdDetailSpec(
+          'Brand Name',
+          toTitleCase(
+              ad.manufacturer?.displayName ?? ad.manufacturer?.name ?? '-'),
+          icon: Icons.factory_outlined),
+      AdDetailSpec('Model Name',
+          toTitleCase(ad.model?.displayName ?? ad.model?.name ?? '-'),
+          icon: Icons.directions_car),
+      AdDetailSpec('Transmission', ad.transmission ?? '-',
+          icon: Icons.settings),
+      AdDetailSpec('Fuel Type', ad.fuelType ?? '-',
+          icon: Icons.local_gas_station),
+      AdDetailSpec('Registration Year', (ad.year ?? 0).toString(),
+          icon: Icons.calendar_today),
+      AdDetailSpec('Mileage', (ad.mileage != null) ? '${ad.mileage} Kmpl' : '-',
+          icon: Icons.speed),
+    ];
+
+    return AdDetailCardShell(
+      child: GridView.builder(
+        padding: EdgeInsets.all(
+          GetResponsiveSize.getResponsivePadding(context,
+              mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+        ),
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisExtent: GetResponsiveSize.getResponsiveSize(context,
+              mobile: 64, tablet: 95, largeTablet: 110, desktop: 125),
+          crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+              mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+          mainAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+              mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+        ),
+        itemCount: items.length,
+        itemBuilder: (_, i) => AdDetailSpecTile(spec: items[i]),
+      ),
+    );
+  }
+}
+
+class _OtherDetailsCard extends StatelessWidget {
+  final AddModel ad;
+  final Future<bool> Function(AddModel) isCurrentUserOwner;
+
+  const _OtherDetailsCard({
+    required this.ad,
+    required this.isCurrentUserOwner,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final sellerName = (ad.user?.name ?? '').trim();
+    final sellerEmail = (ad.user?.email ?? '').trim();
+    return AdDetailCardShell(
+      child: Padding(
+        padding: EdgeInsets.all(
+          GetResponsiveSize.getResponsivePadding(context,
+              mobile: 10, tablet: 20, largeTablet: 24, desktop: 28),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (sellerName.isNotEmpty) ...[
+              Text('Seller Information',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 16, tablet: 24, largeTablet: 28, desktop: 32),
+                  )),
+              SizedBox(
+                  height: GetResponsiveSize.getResponsiveSize(context,
+                      mobile: 10, tablet: 12, largeTablet: 14, desktop: 16)),
+              AdDetailKeyValRow(label: 'Name', value: sellerName),
+              if (sellerEmail.isNotEmpty) ...[
+                SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 8, tablet: 10, largeTablet: 12, desktop: 14)),
+                AdDetailKeyValRow(label: 'Email', value: sellerEmail),
+              ],
+              SizedBox(
+                  height: GetResponsiveSize.getResponsiveSize(context,
+                      mobile: 10, tablet: 20, largeTablet: 24, desktop: 28)),
+            ],
+            Text('Ad Details',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                      mobile: 16, tablet: 24, largeTablet: 28, desktop: 32),
+                )),
+            SizedBox(
+                height: GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 10, tablet: 12, largeTablet: 14, desktop: 16)),
+            AdDetailKeyValRow(label: 'Location', value: ad.location),
+            SizedBox(
+                height: GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 8, tablet: 10, largeTablet: 12, desktop: 14)),
+            AdDetailKeyValRow(
+                label: 'Category', value: toTitleCase(ad.category)),
+            SizedBox(
+                height: GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 8, tablet: 24, largeTablet: 32, desktop: 40)),
+            FutureBuilder<bool>(
+              future: isCurrentUserOwner(ad),
+              builder: (context, snapshot) {
+                final isOwner = snapshot.data ?? false;
+                if (isOwner) {
+                  return AdDetailMarkAsSoldButton(ad: ad);
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+            SizedBox(
+                height: GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 0, tablet: 8, largeTablet: 12, desktop: 16)),
+          ],
+        ),
+      ),
+    );
+  }
+}

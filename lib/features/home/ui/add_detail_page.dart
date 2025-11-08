@@ -9,6 +9,16 @@ import 'package:ado_dad_user/features/home/services/chat_service.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
 import 'package:ado_dad_user/features/home/ui/report_ad_dialog.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_title_price.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_description.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_seller_tile.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_tabs_section.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_bottom_buttons.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_action_buttons.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_report_button.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_carousel_dots.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_circle_icon_button.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_mark_as_sold_button.dart';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +28,8 @@ import 'package:go_router/go_router.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 import 'dart:async';
 
 class AdDetailPage extends StatefulWidget {
@@ -97,15 +109,14 @@ Download Ado Dad app to contact the seller and view more details!
     final isVideo = _hasVideo && _currentIndex == 0;
 
     if (isVideo) {
-      // For video, wait for it to complete (callback will handle next slide)
-      final videoUrl = ad.link;
-      if (videoUrl != null && _videoControllers.containsKey(videoUrl)) {
-        final controller = _videoControllers[videoUrl];
-        if (controller != null && controller.value.isInitialized) {
-          // Video will auto-advance via completion callback
-          return;
+      // For video in carousel, advance after a fixed duration (5 seconds)
+      // Since we disabled auto-play on video to prevent tap conflicts,
+      // we'll just advance after a delay
+      _autoPlayTimer = Timer(const Duration(seconds: 5), () {
+        if (mounted) {
+          _carouselController.nextPage();
         }
-      }
+      });
     } else {
       // For images, auto-advance after 3 seconds
       _autoPlayTimer = Timer(const Duration(seconds: 3), () {
@@ -128,7 +139,7 @@ Download Ado Dad app to contact the seller and view more details!
       backgroundColor: Colors.white,
       body: SafeArea(
         top: false,
-        minimum: const EdgeInsets.only(bottom: 40),
+        // minimum: const EdgeInsets.only(bottom: 80),
         child: BlocListener<AdDetailBloc, AdDetailState>(
           listener: (context, state) {
             state.when(
@@ -167,16 +178,31 @@ Download Ado Dad app to contact the seller and view more details!
                   slivers: [
                     SliverToBoxAdapter(child: _headerCarousel(ad)),
                     SliverToBoxAdapter(
-                        child: _dots(_getTotalCarouselItems(ad))),
+                        child: AdDetailCarouselDots(
+                      count: _getTotalCarouselItems(ad),
+                      currentIndex: _currentIndex,
+                    )),
                     // Share button for ad owners - positioned above price section
-                    SliverToBoxAdapter(child: _buildOwnerShareButton(ad)),
-                    SliverToBoxAdapter(child: _titlePriceMeta(ad)),
+                    SliverToBoxAdapter(
+                        child: AdDetailOwnerShareButton(
+                      ad: ad,
+                      isCurrentUserOwner: _isCurrentUserOwner,
+                    )),
+                    SliverToBoxAdapter(child: AdDetailTitlePrice(ad: ad)),
                     SliverToBoxAdapter(child: Divider()),
 
-                    SliverToBoxAdapter(child: _pillTabs(ad)),
-                    SliverToBoxAdapter(child: _description(ad)),
-                    SliverToBoxAdapter(child: _reportAdButton(ad)),
-                    SliverToBoxAdapter(child: _sellerTile(ad)),
+                    SliverToBoxAdapter(
+                        child: AdDetailTabsSection(
+                      ad: ad,
+                      isCurrentUserOwner: _isCurrentUserOwner,
+                    )),
+                    SliverToBoxAdapter(child: AdDetailDescription(ad: ad)),
+                    SliverToBoxAdapter(
+                        child: AdDetailReportButton(
+                      ad: ad,
+                      isCurrentUserOwner: _isCurrentUserOwner,
+                    )),
+                    SliverToBoxAdapter(child: AdDetailSellerTile(ad: ad)),
                     // SliverToBoxAdapter(child: _recommendationsSection()),
                     // const SliverPadding(padding: EdgeInsets.only(bottom: 90)),
                   ],
@@ -184,26 +210,51 @@ Download Ado Dad app to contact the seller and view more details!
                 markingAsSold: () => CustomScrollView(
                   slivers: [
                     SliverToBoxAdapter(child: _headerCarousel(widget.ad)),
-                    SliverToBoxAdapter(child: _dots(widget.ad.images.length)),
+                    SliverToBoxAdapter(
+                        child: AdDetailCarouselDots(
+                      count: _getTotalCarouselItems(widget.ad),
+                      currentIndex: _currentIndex,
+                    )),
                     // Share button for ad owners - positioned above price section
                     SliverToBoxAdapter(
-                        child: _buildOwnerShareButton(widget.ad)),
-                    SliverToBoxAdapter(child: _titlePriceMeta(widget.ad)),
+                        child: AdDetailOwnerShareButton(
+                      ad: widget.ad,
+                      isCurrentUserOwner: _isCurrentUserOwner,
+                    )),
+                    SliverToBoxAdapter(
+                        child: AdDetailTitlePrice(ad: widget.ad)),
                     SliverToBoxAdapter(child: Divider()),
-                    SliverToBoxAdapter(child: _pillTabs(widget.ad)),
-                    SliverToBoxAdapter(child: _description(widget.ad)),
-                    SliverToBoxAdapter(child: _reportAdButton(widget.ad)),
-                    SliverToBoxAdapter(child: _sellerTile(widget.ad)),
+                    SliverToBoxAdapter(
+                        child: AdDetailTabsSection(
+                      ad: widget.ad,
+                      isCurrentUserOwner: _isCurrentUserOwner,
+                    )),
+                    SliverToBoxAdapter(
+                        child: AdDetailDescription(ad: widget.ad)),
+                    SliverToBoxAdapter(
+                        child: AdDetailReportButton(
+                      ad: widget.ad,
+                      isCurrentUserOwner: _isCurrentUserOwner,
+                    )),
+                    SliverToBoxAdapter(
+                        child: AdDetailSellerTile(ad: widget.ad)),
                   ],
                 ),
                 markedAsSold: (ad) => CustomScrollView(
                   slivers: [
                     SliverToBoxAdapter(child: _headerCarousel(ad)),
                     SliverToBoxAdapter(
-                        child: _dots(_getTotalCarouselItems(ad))),
+                        child: AdDetailCarouselDots(
+                      count: _getTotalCarouselItems(ad),
+                      currentIndex: _currentIndex,
+                    )),
                     // Share button for ad owners - positioned above price section
-                    SliverToBoxAdapter(child: _buildOwnerShareButton(ad)),
-                    SliverToBoxAdapter(child: _titlePriceMeta(ad)),
+                    SliverToBoxAdapter(
+                        child: AdDetailOwnerShareButton(
+                      ad: ad,
+                      isCurrentUserOwner: _isCurrentUserOwner,
+                    )),
+                    SliverToBoxAdapter(child: AdDetailTitlePrice(ad: ad)),
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: EdgeInsets.symmetric(
@@ -224,10 +275,18 @@ Download Ado Dad app to contact the seller and view more details!
                         ),
                       ),
                     ),
-                    SliverToBoxAdapter(child: _pillTabs(ad)),
-                    SliverToBoxAdapter(child: _description(ad)),
-                    SliverToBoxAdapter(child: _reportAdButton(ad)),
-                    SliverToBoxAdapter(child: _sellerTile(ad)),
+                    SliverToBoxAdapter(
+                        child: AdDetailTabsSection(
+                      ad: ad,
+                      isCurrentUserOwner: _isCurrentUserOwner,
+                    )),
+                    SliverToBoxAdapter(child: AdDetailDescription(ad: ad)),
+                    SliverToBoxAdapter(
+                        child: AdDetailReportButton(
+                      ad: ad,
+                      isCurrentUserOwner: _isCurrentUserOwner,
+                    )),
+                    SliverToBoxAdapter(child: AdDetailSellerTile(ad: ad)),
                   ],
                 ),
               );
@@ -236,197 +295,35 @@ Download Ado Dad app to contact the seller and view more details!
         ),
       ),
       bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 65),
         child: BlocBuilder<AdDetailBloc, AdDetailState>(
           builder: (context, state) {
             return state.when(
               initial: () => const SizedBox.shrink(),
               loading: () => const SizedBox.shrink(),
               error: (e) => const SizedBox.shrink(),
-              loaded: (ad) => _buildBottomButtons(ad),
-              markingAsSold: () => _buildBottomButtons(widget.ad),
-              markedAsSold: (ad) => _buildBottomButtons(ad),
+              loaded: (ad) => AdDetailBottomButtons(
+                ad: ad,
+                isCurrentUserOwner: _isCurrentUserOwner,
+                onMakeOffer: () => _handleMakeOffer(context),
+                onChat: () => _handleChat(context),
+              ),
+              markingAsSold: () => AdDetailBottomButtons(
+                ad: widget.ad,
+                isCurrentUserOwner: _isCurrentUserOwner,
+                onMakeOffer: () => _handleMakeOffer(context),
+                onChat: () => _handleChat(context),
+              ),
+              markedAsSold: (ad) => AdDetailBottomButtons(
+                ad: ad,
+                isCurrentUserOwner: _isCurrentUserOwner,
+                onMakeOffer: () => _handleMakeOffer(context),
+                onChat: () => _handleChat(context),
+              ),
             );
           },
         ),
       ),
-    );
-  }
-
-  // Build bottom buttons based on user ownership
-  Widget _buildBottomButtons(AddModel ad) {
-    return FutureBuilder<bool>(
-      future: _isCurrentUserOwner(ad),
-      builder: (context, snapshot) {
-        final isOwner = snapshot.data ?? false;
-
-        // Hide buttons if current user is the owner of the ad
-        if (isOwner) {
-          return const SizedBox.shrink();
-        }
-
-        // Show both "Make Offer" and "Chat" buttons for non-owners
-        return Row(
-          children: [
-            Expanded(
-              child: _makeOfferBtn('Make an Offer',
-                  onTap: () => _handleMakeOffer(context)),
-            ),
-            SizedBox(
-                width: GetResponsiveSize.getResponsiveSize(context,
-                    mobile: 12, tablet: 16, largeTablet: 20, desktop: 24)),
-            Expanded(
-              child: _chatBtn('Chat', onTap: () => _handleChat(context)),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Mark as Sold button for Other Details section
-  Widget _markAsSoldButtonInDetails(AddModel ad) {
-    return BlocBuilder<AdDetailBloc, AdDetailState>(
-      builder: (context, state) {
-        final isLoading = state.when(
-          initial: () => false,
-          loading: () => false,
-          error: (e) => false,
-          loaded: (ad) => false,
-          markingAsSold: () => true,
-          markedAsSold: (ad) => false,
-        );
-        final isSold = ad.soldOut == true;
-
-        if (isSold) {
-          return Container(
-            width: double.infinity,
-            height: GetResponsiveSize.getResponsiveSize(context,
-                mobile: 48, tablet: 65, largeTablet: 75, desktop: 85),
-            decoration: BoxDecoration(
-              color: Colors.green,
-              borderRadius: BorderRadius.circular(
-                GetResponsiveSize.getResponsiveBorderRadius(context,
-                    mobile: 12, tablet: 14, largeTablet: 16, desktop: 18),
-              ),
-            ),
-            padding: EdgeInsets.symmetric(
-              horizontal: GetResponsiveSize.getResponsivePadding(context,
-                  mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
-            ),
-            child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    color: Colors.white,
-                    size: GetResponsiveSize.getResponsiveSize(context,
-                        mobile: 20, tablet: 26, largeTablet: 30, desktop: 34),
-                  ),
-                  SizedBox(
-                      width: GetResponsiveSize.getResponsiveSize(context,
-                          mobile: 8, tablet: 10, largeTablet: 12, desktop: 14)),
-                  Flexible(
-                    child: Text(
-                      'SOLD',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile: 16,
-                            tablet: 22,
-                            largeTablet: 26,
-                            desktop: 30),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        return SizedBox(
-          width: double.infinity,
-          height: GetResponsiveSize.getResponsiveSize(context,
-              mobile: 48, tablet: 65, largeTablet: 75, desktop: 85),
-          child: OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(
-                color: AppColors.primaryColor,
-                width: GetResponsiveSize.getResponsiveSize(context,
-                    mobile: 1, tablet: 1.5, largeTablet: 2, desktop: 2.5),
-              ),
-              padding: EdgeInsets.symmetric(
-                horizontal: GetResponsiveSize.getResponsivePadding(context,
-                    mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
-                vertical: GetResponsiveSize.getResponsivePadding(context,
-                    mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(context,
-                      mobile: 12, tablet: 14, largeTablet: 16, desktop: 18),
-                ),
-              ),
-            ),
-            onPressed: isLoading ? null : () => _handleMarkAsSold(context, ad),
-            child: isLoading
-                ? SizedBox(
-                    height: GetResponsiveSize.getResponsiveSize(context,
-                        mobile: 20, tablet: 26, largeTablet: 30, desktop: 34),
-                    width: GetResponsiveSize.getResponsiveSize(context,
-                        mobile: 20, tablet: 26, largeTablet: 30, desktop: 34),
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.sell,
-                        color: AppColors.primaryColor,
-                        size: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 20,
-                            tablet: 26,
-                            largeTablet: 30,
-                            desktop: 34),
-                      ),
-                      SizedBox(
-                          width: GetResponsiveSize.getResponsiveSize(context,
-                              mobile: 8,
-                              tablet: 10,
-                              largeTablet: 12,
-                              desktop: 14)),
-                      Flexible(
-                        child: Text(
-                          'Mark as Sold',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primaryColor,
-                            fontSize: GetResponsiveSize.getResponsiveFontSize(
-                                context,
-                                mobile: 16,
-                                tablet: 22,
-                                largeTablet: 26,
-                                desktop: 30),
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        );
-      },
     );
   }
 
@@ -579,8 +476,8 @@ Download Ado Dad app to contact the seller and view more details!
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _circleIconButton(
-                (!kIsWeb && Platform.isIOS)
+              AdDetailCircleIconButton(
+                icon: (!kIsWeb && Platform.isIOS)
                     ? Icons.arrow_back_ios
                     : Icons.arrow_back,
                 onTap: () => Navigator.of(context).maybePop(),
@@ -593,9 +490,12 @@ Download Ado Dad app to contact the seller and view more details!
                     builder: (context, snapshot) {
                       final isOwner = snapshot.data ?? false;
                       if (isOwner) {
-                        return _circleIconButton(Icons.edit, onTap: () {
-                          _goToEdit(context, ad);
-                        });
+                        return AdDetailCircleIconButton(
+                          icon: Icons.edit,
+                          onTap: () {
+                            _goToEdit(context, ad);
+                          },
+                        );
                       }
                       return const SizedBox.shrink();
                     },
@@ -616,9 +516,12 @@ Download Ado Dad app to contact the seller and view more details!
                     builder: (context, snapshot) {
                       final isOwner = snapshot.data ?? false;
                       if (!isOwner) {
-                        return _circleIconButton(Icons.share, onTap: () {
-                          _shareAd(ad);
-                        });
+                        return AdDetailCircleIconButton(
+                          icon: Icons.share,
+                          onTap: () {
+                            _shareAd(ad);
+                          },
+                        );
                       }
                       return const SizedBox.shrink();
                     },
@@ -633,7 +536,7 @@ Download Ado Dad app to contact the seller and view more details!
                           : const SizedBox.shrink();
                     },
                   ),
-                  _buildFavoriteButton(ad),
+                  AdDetailFavoriteButton(ad: ad),
                 ],
               ),
             ],
@@ -673,7 +576,7 @@ Download Ado Dad app to contact the seller and view more details!
     }
 
     // Add all images
-    items.addAll(ad.images.map((img) => _buildImageItem(img)));
+    items.addAll(ad.images.map((img) => _buildImageItem(img, ad)));
 
     print('🎥 Total carousel items: ${items.length}');
     print('🎥 Images count: ${ad.images.length}');
@@ -692,101 +595,206 @@ Download Ado Dad app to contact the seller and view more details!
     print('🎥 Building video item with URL: $videoUrl');
     // Store callback for video completion
     _onVideoCompleteCallbacks[videoUrl] = _onVideoComplete;
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Video player
-            _VideoPlayerWidget(
-              key: ValueKey(videoUrl),
-              videoUrl: videoUrl,
-              onVideoComplete: _onVideoCompleteCallbacks[videoUrl],
-            ),
-            // Subtle gradient overlay that doesn't interfere with controls
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 60,
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color(0x66000000),
-                      Color(0x00000000),
-                    ],
+    return GestureDetector(
+      onTap: () {
+        print('🎥 Video tapped, opening full screen...');
+        _openVideoFullScreen(context, videoUrl);
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(24),
+              bottomRight: Radius.circular(24)),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(24),
+              bottomRight: Radius.circular(24)),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Video player - wrapped to prevent it from intercepting taps
+              AbsorbPointer(
+                child: _VideoPlayerWidget(
+                  key: ValueKey(videoUrl),
+                  videoUrl: videoUrl,
+                  onVideoComplete: _onVideoCompleteCallbacks[videoUrl],
+                ),
+              ),
+              // Subtle gradient overlay that doesn't interfere with controls
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 60,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0x66000000),
+                        Color(0x00000000),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 60,
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [
-                      Color(0x66000000),
-                      Color(0x00000000),
-                    ],
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 60,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Color(0x66000000),
+                        Color(0x00000000),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+              // Play button overlay to indicate video is tappable
+              // This overlay is always on top and catches all taps
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: () {
+                    print('🎥 Video overlay tapped, opening full screen...');
+                    _openVideoFullScreen(context, videoUrl);
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    color: Colors.transparent,
+                    child: Center(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            print(
+                                '🎥 Play button tapped, opening full screen...');
+                            _openVideoFullScreen(context, videoUrl);
+                          },
+                          borderRadius: BorderRadius.circular(50),
+                          child: Container(
+                            padding: EdgeInsets.all(
+                              GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 12,
+                                tablet: 16,
+                                largeTablet: 18,
+                                desktop: 20,
+                              ),
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.6),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.play_arrow,
+                              color: Colors.white,
+                              size: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 40,
+                                tablet: 56,
+                                largeTablet: 64,
+                                desktop: 72,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildImageItem(String img) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Container(
-            decoration: BoxDecoration(
+  /// Opens a full-screen video player
+  void _openVideoFullScreen(BuildContext context, String videoUrl) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => _VideoFullScreenViewer(
+          videoUrl: videoUrl,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageItem(String img, AddModel ad) {
+    return GestureDetector(
+      onTap: () => _openImageGallery(context, ad, img),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(24),
+                    bottomRight: Radius.circular(24)),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(24),
+                    bottomRight: Radius.circular(24)),
+                child: Image.network(img, fit: BoxFit.cover),
+              )),
+          // dark gradient overlay (top+bottom)
+          Container(
+            decoration: const BoxDecoration(
               borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(24),
                   bottomRight: Radius.circular(24)),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24)),
-              child: Image.network(img, fit: BoxFit.cover),
-            )),
-        // dark gradient overlay (top+bottom)
-        Container(
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(24),
-                bottomRight: Radius.circular(24)),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0x99000000),
-                Color(0x00000000),
-                Color(0xAA000000),
-              ],
-              stops: [0.0, 0.55, 1.0],
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0x99000000),
+                  Color(0x00000000),
+                  Color(0xAA000000),
+                ],
+                stops: [0.0, 0.55, 1.0],
+              ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// Opens a full-screen image gallery with zoom capabilities
+  void _openImageGallery(
+      BuildContext context, AddModel ad, String initialImage) {
+    // Get all images (exclude video)
+    final List<String> images = List<String>.from(ad.images);
+
+    // Check if there are any images
+    if (images.isEmpty) {
+      return;
+    }
+
+    // Find the initial image index
+    int initialIndex = images.indexOf(initialImage);
+    if (initialIndex == -1) {
+      initialIndex = 0;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => _ImageGalleryViewer(
+          images: images,
+          initialIndex: initialIndex,
         ),
-      ],
+      ),
     );
   }
 
@@ -825,76 +833,6 @@ Download Ado Dad app to contact the seller and view more details!
     }
   }
 
-  // page indicators (small pills)
-  Widget _dots(int count) {
-    return Padding(
-      padding: EdgeInsets.only(
-        top: GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 8,
-          tablet: 10,
-          largeTablet: 12,
-          desktop: 14,
-        ),
-        bottom: GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 6,
-          tablet: 8,
-          largeTablet: 10,
-          desktop: 12,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(count, (i) {
-          final isActive = i == _currentIndex;
-          final dotHeight = GetResponsiveSize.getResponsiveSize(
-            context,
-            mobile: 6, // Keep mobile unchanged
-            tablet: 8,
-            largeTablet: 10,
-            desktop: 12,
-          );
-          final dotWidth = isActive
-              ? GetResponsiveSize.getResponsiveSize(
-                  context,
-                  mobile: 14, // Keep mobile unchanged
-                  tablet: 18,
-                  largeTablet: 22,
-                  desktop: 26,
-                )
-              : dotHeight;
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            margin: EdgeInsets.symmetric(
-              horizontal: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 3,
-                tablet: 4,
-                largeTablet: 5,
-                desktop: 6,
-              ),
-            ),
-            height: dotHeight,
-            width: dotWidth,
-            decoration: BoxDecoration(
-              color: isActive ? Colors.indigo : Colors.grey.shade400,
-              borderRadius: BorderRadius.circular(
-                GetResponsiveSize.getResponsiveBorderRadius(
-                  context,
-                  mobile: 4,
-                  tablet: 5,
-                  largeTablet: 6,
-                  desktop: 6,
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
   String _normalize(String s) => s
       .replaceAll(RegExp(r'[_\-]+'), ' ')
       .replaceAll(RegExp(r'\s+'), ' ')
@@ -915,158 +853,6 @@ Download Ado Dad app to contact the seller and view more details!
     final t = toTitleCase(input).replaceAll(' ', '');
     if (t.isEmpty) return '';
     return '${t[0].toLowerCase()}${t.substring(1)}';
-  }
-
-  // ======= Title / Price / Meta =======
-  Widget _titlePriceMeta(AddModel ad) {
-    String title;
-    if (ad.category == 'property') {
-      title =
-          '${ad.propertyType ?? ''} • ${ad.bedrooms ?? 0} BHK • ${ad.areaSqft ?? 0} sqft';
-    } else {
-      title =
-          '${ad.manufacturer?.displayName ?? ad.manufacturer?.name ?? ''} ${ad.model?.displayName ?? ad.model?.name ?? ''} (${ad.year ?? ''})';
-    }
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        GetResponsiveSize.getResponsivePadding(context,
-            mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
-        GetResponsiveSize.getResponsivePadding(context,
-            mobile: 6, tablet: 8, largeTablet: 10, desktop: 12),
-        GetResponsiveSize.getResponsivePadding(context,
-            mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
-        GetResponsiveSize.getResponsivePadding(context,
-            mobile: 10, tablet: 14, largeTablet: 18, desktop: 22),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  toTitleCase(title),
-                  style: TextStyle(
-                      fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                          mobile: 16, tablet: 25, largeTablet: 29, desktop: 33),
-                      fontWeight: FontWeight.bold),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(
-                    height: GetResponsiveSize.getResponsiveSize(context,
-                        mobile: 8, tablet: 10, largeTablet: 12, desktop: 14)),
-                Text(
-                  'Posted on ${_niceDate(ad.updatedAt)}',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                        mobile: 12, tablet: 20, largeTablet: 22, desktop: 24),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(
-              width: GetResponsiveSize.getResponsiveSize(context,
-                  mobile: 16, tablet: 20, largeTablet: 24, desktop: 28)),
-          Container(
-            height: GetResponsiveSize.getResponsiveSize(context,
-                mobile: 40, tablet: 60, largeTablet: 70, desktop: 80),
-            child: const VerticalDivider(
-              thickness: 1,
-              color: Colors.grey,
-            ),
-          ),
-          SizedBox(
-              width: GetResponsiveSize.getResponsiveSize(context,
-                  mobile: 16, tablet: 20, largeTablet: 24, desktop: 28)),
-          Expanded(
-            flex: 1,
-            child: Text(
-              '₹ ${(ad.price)}',
-              style: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                    mobile: 16, tablet: 25, largeTablet: 29, desktop: 33),
-                fontWeight: FontWeight.w800,
-              ),
-              textAlign: TextAlign.end,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ======= Tabs (Pill segmented) + content =======
-  Widget _pillTabs(AddModel ad) {
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: GetResponsiveSize.getResponsivePadding(context,
-            mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
-        vertical: GetResponsiveSize.getResponsivePadding(context,
-            mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
-      ),
-      child: DefaultTabController(
-        length: 2,
-        child: Column(
-          children: [
-            Container(
-              height: GetResponsiveSize.getResponsiveSize(context,
-                  mobile: 50, tablet: 70, largeTablet: 80, desktop: 90),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF2F3F6),
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(context,
-                      mobile: 28, tablet: 32, largeTablet: 36, desktop: 40),
-                ),
-              ),
-              padding: EdgeInsets.all(
-                GetResponsiveSize.getResponsivePadding(context,
-                    mobile: 6, tablet: 8, largeTablet: 10, desktop: 12),
-              ),
-              child: TabBar(
-                indicatorSize: TabBarIndicatorSize.tab,
-                indicator: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(
-                    GetResponsiveSize.getResponsiveBorderRadius(context,
-                        mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
-                  ),
-                ),
-                indicatorColor: Colors.transparent,
-                dividerColor: Colors.transparent,
-                labelColor: AppColors.primaryColor,
-                unselectedLabelColor: Colors.grey.shade600,
-                labelStyle: TextStyle(
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                      mobile: 14, tablet: 22, largeTablet: 25, desktop: 27),
-                ),
-                tabs: const [
-                  Tab(text: 'Specifications'),
-                  Tab(text: 'Other Details'),
-                ],
-              ),
-            ),
-            SizedBox(
-                height: GetResponsiveSize.getResponsiveSize(context,
-                    mobile: 12, tablet: 16, largeTablet: 20, desktop: 24)),
-            SizedBox(
-              height: GetResponsiveSize.getResponsiveSize(context,
-                  mobile: 320, tablet: 450, largeTablet: 550, desktop: 650),
-              child: TabBarView(
-                children: [
-                  _specsCard(ad),
-                  _otherDetailsCard(ad),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _specsCard(AddModel ad) {
@@ -1156,10 +942,11 @@ Download Ado Dad app to contact the seller and view more details!
       child: Padding(
         padding: EdgeInsets.all(
           GetResponsiveSize.getResponsivePadding(context,
-              mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+              mobile: 10, tablet: 20, largeTablet: 24, desktop: 28),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             if (sellerName.isNotEmpty) ...[
               Text('Seller Information',
@@ -1180,7 +967,7 @@ Download Ado Dad app to contact the seller and view more details!
               ],
               SizedBox(
                   height: GetResponsiveSize.getResponsiveSize(context,
-                      mobile: 16, tablet: 20, largeTablet: 24, desktop: 28)),
+                      mobile: 10, tablet: 20, largeTablet: 24, desktop: 28)),
             ],
             Text('Ad Details',
                 style: TextStyle(
@@ -1202,14 +989,14 @@ Download Ado Dad app to contact the seller and view more details!
             _KeyValRow(label: 'Posted On', value: _niceDate(ad.updatedAt)),
             SizedBox(
                 height: GetResponsiveSize.getResponsiveSize(context,
-                    mobile: 16, tablet: 24, largeTablet: 32, desktop: 40)),
+                    mobile: 8, tablet: 24, largeTablet: 32, desktop: 40)),
             // Mark as Sold button for ad owners
             FutureBuilder<bool>(
               future: _isCurrentUserOwner(ad),
               builder: (context, snapshot) {
                 final isOwner = snapshot.data ?? false;
                 if (isOwner) {
-                  return _markAsSoldButtonInDetails(ad);
+                  return AdDetailMarkAsSoldButton(ad: ad);
                 }
                 return const SizedBox.shrink();
               },
@@ -2012,14 +1799,16 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
           '🎥 Video aspect ratio: ${_videoPlayerController!.value.aspectRatio}');
 
       // Initialize Chewie controller with proper controls
+      // Disable auto-play in carousel - user will tap to open full screen
       _chewieController = ChewieController(
         videoPlayerController: _videoPlayerController!,
-        autoPlay: true, // Enable autoplay for video
+        autoPlay: false, // Disable autoplay - user taps to open full screen
         looping: false,
-        allowPlaybackSpeedChanging: true,
+        allowPlaybackSpeedChanging: false, // Disable in carousel
         allowMuting: false, // Disable sound controls
-        showControls: true,
-        showOptions: true, // Enable options for better control
+        showControls:
+            false, // Hide controls in carousel - show play button overlay instead
+        showOptions: false, // Disable options in carousel
         allowFullScreen: false, // Disable fullscreen
         startAt: Duration.zero, // Start from beginning
         materialProgressColors: ChewieProgressColors(
@@ -2034,9 +1823,9 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
           backgroundColor: Colors.grey.withOpacity(0.3),
           bufferedColor: Colors.lightBlueAccent.withOpacity(0.3),
         ),
-        // Ensure controls are always visible when needed
-        hideControlsTimer: const Duration(seconds: 3),
-        showControlsOnInitialize: true,
+        // Keep controls hidden in carousel
+        hideControlsTimer: const Duration(seconds: 0),
+        showControlsOnInitialize: false,
       );
 
       if (mounted) {
@@ -2321,12 +2110,371 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
       );
     }
 
-    return GestureDetector(
-      onTap: () {
-        print('🎥 Video player tapped - controls should be visible');
-        // Controls will automatically show/hide on tap
-      },
-      child: Chewie(controller: _chewieController!),
+    // Return Chewie - parent will use AbsorbPointer to prevent tap interception
+    return Chewie(controller: _chewieController!);
+  }
+}
+
+/// Full-screen image gallery viewer with zoom and pan capabilities
+class _ImageGalleryViewer extends StatefulWidget {
+  final List<String> images;
+  final int initialIndex;
+
+  const _ImageGalleryViewer({
+    required this.images,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_ImageGalleryViewer> createState() => _ImageGalleryViewerState();
+}
+
+class _ImageGalleryViewerState extends State<_ImageGalleryViewer> {
+  late PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onPageChanged(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            (!kIsWeb && Platform.isIOS)
+                ? Icons.arrow_back_ios
+                : Icons.arrow_back,
+            color: Colors.white,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          '${_currentIndex + 1} / ${widget.images.length}',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: PhotoViewGallery.builder(
+        scrollPhysics: const BouncingScrollPhysics(),
+        builder: (BuildContext context, int index) {
+          return PhotoViewGalleryPageOptions(
+            imageProvider: NetworkImage(widget.images[index]),
+            initialScale: PhotoViewComputedScale.contained,
+            minScale: PhotoViewComputedScale.contained,
+            maxScale: PhotoViewComputedScale.covered * 2,
+            heroAttributes: PhotoViewHeroAttributes(
+              tag: widget.images[index],
+            ),
+          );
+        },
+        itemCount: widget.images.length,
+        loadingBuilder: (context, event) => Center(
+          child: Container(
+            width: 40,
+            height: 40,
+            child: CircularProgressIndicator(
+              value: event == null
+                  ? 0
+                  : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ),
+        ),
+        pageController: _pageController,
+        onPageChanged: _onPageChanged,
+        backgroundDecoration: const BoxDecoration(
+          color: Colors.black,
+        ),
+      ),
+    );
+  }
+}
+
+/// Full-screen video player viewer
+class _VideoFullScreenViewer extends StatefulWidget {
+  final String videoUrl;
+
+  const _VideoFullScreenViewer({
+    required this.videoUrl,
+  });
+
+  @override
+  State<_VideoFullScreenViewer> createState() => _VideoFullScreenViewerState();
+}
+
+class _VideoFullScreenViewerState extends State<_VideoFullScreenViewer> {
+  VideoPlayerController? _videoPlayerController;
+  ChewieController? _chewieController;
+  bool _isInitialized = false;
+  bool _hasError = false;
+  String? _errorMessage;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeVideo();
+  }
+
+  Future<void> _initializeVideo() async {
+    try {
+      print('🎥 Initializing full-screen video: ${widget.videoUrl}');
+
+      // Validate URL
+      if (widget.videoUrl.isEmpty) {
+        throw Exception('Video URL is empty');
+      }
+
+      // Clean and validate URL
+      String cleanUrl = widget.videoUrl.trim();
+      if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+        cleanUrl = 'https://$cleanUrl';
+      }
+
+      final uri = Uri.parse(cleanUrl);
+      if (!uri.hasScheme || (!uri.scheme.startsWith('http'))) {
+        throw Exception('Invalid video URL format: $cleanUrl');
+      }
+
+      _videoPlayerController = VideoPlayerController.networkUrl(uri);
+
+      // Add listener to update UI when video state changes
+      _videoPlayerController!.addListener(_videoListener);
+
+      print('🎥 Starting full-screen video initialization...');
+
+      // Add timeout to video initialization
+      await _videoPlayerController!.initialize().timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          throw Exception('Video initialization timeout after 15 seconds');
+        },
+      );
+
+      print('🎥 Full-screen video initialized successfully');
+
+      // Initialize Chewie controller with full-screen enabled
+      _chewieController = ChewieController(
+        videoPlayerController: _videoPlayerController!,
+        autoPlay: true,
+        looping: false,
+        allowPlaybackSpeedChanging: true,
+        allowMuting: true,
+        showControls: true,
+        showOptions: true,
+        allowFullScreen: true, // Enable fullscreen in fullscreen viewer
+        startAt: Duration.zero,
+        materialProgressColors: ChewieProgressColors(
+          playedColor: AppColors.primaryColor,
+          handleColor: Colors.white,
+          backgroundColor: Colors.grey.withOpacity(0.3),
+          bufferedColor: Colors.lightBlueAccent.withOpacity(0.3),
+        ),
+        cupertinoProgressColors: ChewieProgressColors(
+          playedColor: AppColors.primaryColor,
+          handleColor: Colors.white,
+          backgroundColor: Colors.grey.withOpacity(0.3),
+          bufferedColor: Colors.lightBlueAccent.withOpacity(0.3),
+        ),
+        hideControlsTimer: const Duration(seconds: 3),
+        showControlsOnInitialize: true,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+          _isLoading = false;
+        });
+        print('🎥 Full-screen video state updated to initialized');
+      }
+    } catch (e) {
+      print('❌ Full-screen video initialization error: $e');
+      print('❌ Error type: ${e.runtimeType}');
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _isLoading = false;
+          _errorMessage = _getUserFriendlyErrorMessage(e);
+        });
+        print('🎥 Full-screen video state updated to error');
+      }
+    }
+  }
+
+  void _videoListener() {
+    if (mounted && _videoPlayerController != null) {
+      final value = _videoPlayerController!.value;
+
+      if (value.hasError && value.errorDescription != null) {
+        print('❌ Full-screen video player error: ${value.errorDescription}');
+        setState(() {
+          _hasError = true;
+          _isLoading = false;
+          _errorMessage =
+              _getUserFriendlyErrorMessage(Exception(value.errorDescription!));
+        });
+      } else if (value.isInitialized && _isLoading) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  String _getUserFriendlyErrorMessage(dynamic error) {
+    final errorString = error.toString().toLowerCase();
+
+    if (errorString.contains('timeout')) {
+      return 'Video loading timeout. Please check your internet connection.';
+    } else if (errorString.contains('network') ||
+        errorString.contains('connection')) {
+      return 'Network error. Please check your internet connection.';
+    } else if (errorString.contains('format') ||
+        errorString.contains('codec')) {
+      return 'Video format not supported.';
+    } else if (errorString.contains('not found') ||
+        errorString.contains('404')) {
+      return 'Video not found.';
+    } else if (errorString.contains('permission') ||
+        errorString.contains('access')) {
+      return 'Access denied to video.';
+    } else {
+      return 'Unable to load video. Please try again.';
+    }
+  }
+
+  @override
+  void dispose() {
+    _videoPlayerController?.removeListener(_videoListener);
+    _videoPlayerController?.dispose();
+    _chewieController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            (!kIsWeb && Platform.isIOS)
+                ? Icons.arrow_back_ios
+                : Icons.arrow_back,
+            color: Colors.white,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: _hasError
+          ? Container(
+              color: Colors.black,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.videocam_off,
+                        color: Colors.white,
+                        size: 48,
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Video not available',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          _errorMessage!,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _hasError = false;
+                            _isInitialized = false;
+                            _isLoading = true;
+                            _errorMessage = null;
+                          });
+                          _initializeVideo();
+                        },
+                        icon: const Icon(Icons.refresh, size: 18),
+                        label: const Text('Retry'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryColor,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            )
+          : _isLoading || !_isInitialized || _chewieController == null
+              ? Container(
+                  color: Colors.black,
+                  child: const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          'Loading video...',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : Center(
+                  child: Chewie(controller: _chewieController!),
+                ),
     );
   }
 }

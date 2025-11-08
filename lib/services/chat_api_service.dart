@@ -10,28 +10,58 @@ class ChatApiService {
   factory ChatApiService() => _instance;
   ChatApiService._internal();
 
+  /// Prepares the Authorization header with the token
+  /// Uses the same format as ApiService (with or without "Bearer " prefix)
+  static const bool _useBearerPrefix =
+      true; // Must match ApiService._useBearerPrefix
+
+  String _prepareAuthHeader(String token) {
+    // Remove "Bearer " prefix if present to get clean token
+    final cleanToken = token.replaceFirst(RegExp(r'^Bearer\s+'), '');
+
+    // Add "Bearer " prefix if configured to use it
+    if (_useBearerPrefix) {
+      return 'Bearer $cleanToken';
+    } else {
+      return cleanToken;
+    }
+  }
+
   /// Helper method to execute HTTP request with automatic token refresh on 401
   Future<http.Response> _executeRequest(
-    Future<http.Response> Function(String token) request,
+    Future<http.Response> Function(String authHeader) request,
   ) async {
     var token = await getToken();
     if (token == null || token.isEmpty) {
       throw Exception('No authentication token found. Please login first.');
     }
 
-    var response = await request(token);
+    // Prepare Authorization header with correct format (matching ApiService)
+    final authHeader = _prepareAuthHeader(token);
+    print('🔑 Chat API - Using token for request');
+    print(
+        '🔑 Chat API - Authorization header format: ${authHeader.substring(0, authHeader.length > 30 ? 30 : authHeader.length)}...');
+
+    var response = await request(authHeader);
 
     // Handle 401 Unauthorized - try to refresh token using centralized AuthService
     if (response.statusCode == 401) {
-      print('🔄 Received 401, attempting token refresh...');
+      print('🔄 Chat API - Received 401, attempting token refresh...');
+      print('📋 Chat API - 401 Response details:');
+      print('   Status Code: ${response.statusCode}');
+      print('   Response Body: ${response.body}');
+
       final authService = AuthService();
       final newToken = await authService.refreshAccessToken();
-      if (newToken != null) {
-        print('🔄 Retrying request with refreshed token...');
-        response = await request(newToken);
-        print('📡 Retry response status: ${response.statusCode}');
+      if (newToken != null && newToken.isNotEmpty) {
+        print('✅ Chat API - Token refreshed successfully, retrying request...');
+        // Prepare new Authorization header with refreshed token
+        final newAuthHeader = _prepareAuthHeader(newToken);
+        response = await request(newAuthHeader);
+        print('📡 Chat API - Retry response status: ${response.statusCode}');
       } else {
         // Refresh token expired, AuthService will handle automatic logout
+        print('⚠️ Chat API - Token refresh failed, user will be logged out');
         throw Exception('Session expired. Please login again.');
       }
     }
@@ -46,16 +76,13 @@ class ChatApiService {
       final url = '$baseUrl/chats/rooms';
 
       print('🌐 Fetching chat rooms from: $url');
-      final token = await getToken();
-      print(
-          '🔑 Using token: ${token != null && token.length > 20 ? token.substring(0, 20) + "..." : (token ?? "null")}');
 
-      final response = await _executeRequest((token) async {
+      final response = await _executeRequest((authHeader) async {
         return await http.get(
           Uri.parse(url),
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': token,
+            'Authorization': authHeader,
           },
         ).timeout(const Duration(seconds: 10));
       });
@@ -89,12 +116,12 @@ class ChatApiService {
       print('🌐 Fetching messages for room: $roomId');
       print('🔗 URL: $url');
 
-      final response = await _executeRequest((token) async {
+      final response = await _executeRequest((authHeader) async {
         return await http.get(
           Uri.parse(url),
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': token,
+            'Authorization': authHeader,
           },
         ).timeout(const Duration(seconds: 10));
       });
@@ -129,12 +156,12 @@ class ChatApiService {
           '🌐 Checking if room exists for ad: $adId and other user: $otherUserId');
       print('🔗 URL: $url');
 
-      final response = await _executeRequest((token) async {
+      final response = await _executeRequest((authHeader) async {
         return await http.get(
           Uri.parse(url),
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': token,
+            'Authorization': authHeader,
           },
         ).timeout(const Duration(seconds: 10));
       });
@@ -184,13 +211,13 @@ class ChatApiService {
         'type': type,
       };
 
-      final response = await _executeRequest((token) async {
+      final response = await _executeRequest((authHeader) async {
         return await http
             .post(
               Uri.parse(url),
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': token,
+                'Authorization': authHeader,
               },
               body: json.encode(requestBody),
             )

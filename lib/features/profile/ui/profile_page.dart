@@ -19,6 +19,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:ado_dad_user/features/profile/ui/widgets/profile_header.dart';
+import 'package:ado_dad_user/features/profile/ui/widgets/profile_card.dart';
+import 'package:ado_dad_user/features/profile/ui/widgets/profile_avatar.dart';
+import 'package:ado_dad_user/features/profile/ui/widgets/profile_menu_item.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -663,6 +667,22 @@ class _ProfilePageState extends State<ProfilePage> {
               child: BlocConsumer<ProfileBloc, ProfileState>(
                 listener: (context, state) {
                   if (state is profile_bloc.Error) {
+                    // Check if error is related to token expiration (silent logout)
+                    final isTokenExpirationError = state.message
+                            .toLowerCase()
+                            .contains('session_expired_silent') ||
+                        state.message.toLowerCase().contains('token expired') ||
+                        state.message
+                            .toLowerCase()
+                            .contains('automatic logout');
+
+                    // Don't show error UI for token expiration - logout is already in progress
+                    if (isTokenExpirationError) {
+                      print(
+                          '🔇 Suppressing token expiration error in ProfilePage - logout in progress');
+                      return; // Skip showing snackbar
+                    }
+
                     // Check if error is related to "Delete My Data"
                     final isDeleteMyDataError =
                         state.message.toLowerCase().contains('delete') &&
@@ -855,257 +875,24 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
 
                         // Header
-                        Positioned(
-                          top: 50,
-                          left: 16,
-                          child: Row(
-                            children: [
-                              IconButton(
-                                onPressed: () {
-                                  // Check if we can pop (has navigation history)
-                                  if (context.canPop()) {
-                                    context.pop();
-                                  } else {
-                                    // If no history, navigate to home
-                                    context.go('/home');
-                                  }
-                                },
-                                icon: Icon(
-                                  (!kIsWeb && Platform.isIOS)
-                                      ? Icons.arrow_back_ios
-                                      : Icons.arrow_back,
-                                  color: Colors.white,
-                                ),
-                                iconSize: GetResponsiveSize.getResponsiveSize(
-                                  context,
-                                  mobile: 28,
-                                  tablet: 36,
-                                  largeTablet: 40,
-                                  desktop: 42,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                "Profile",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize:
-                                      GetResponsiveSize.getResponsiveFontSize(
-                                    context,
-                                    mobile: 20,
-                                    tablet: 26,
-                                    largeTablet: 30,
-                                    desktop: 32,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        const ProfileHeader(),
 
                         // Profile card
-                        Positioned(
-                          top: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 120,
-                            tablet: 150,
-                            largeTablet: 180,
-                            desktop: 200,
-                          ),
-                          left: 20,
-                          right: 20,
-                          child: Container(
-                            padding: EdgeInsets.all(
-                              GetResponsiveSize.getResponsiveSize(
-                                context,
-                                mobile: 16,
-                                tablet: 20,
-                                largeTablet: 24,
-                                desktop: 26,
-                              ),
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: const [
-                                BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 10,
-                                    spreadRadius: 2),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Align(
-                                  alignment: Alignment.topRight,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      if (isEditing) {
-                                        saveProfile();
-                                      } else {
-                                        setState(() => isEditing = true);
-                                      }
-                                    },
-                                    child: isEditing
-                                        ? Container(
-                                            padding: EdgeInsets.all(
-                                              GetResponsiveSize
-                                                  .getResponsiveSize(
-                                                context,
-                                                mobile: 8,
-                                                tablet: 12,
-                                                largeTablet: 14,
-                                                desktop: 14,
-                                              ),
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.primaryColor,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: Icon(
-                                              Icons.check,
-                                              color: Colors.white,
-                                              size: GetResponsiveSize
-                                                  .getResponsiveSize(
-                                                context,
-                                                mobile: 20,
-                                                tablet: 28,
-                                                largeTablet: 32,
-                                                desktop: 34,
-                                              ),
-                                            ),
-                                          )
-                                        : SizedBox(
-                                            width: GetResponsiveSize
-                                                .getResponsiveSize(
-                                              context,
-                                              mobile: 24,
-                                              tablet: 36,
-                                              largeTablet: 42,
-                                              desktop: 44,
-                                            ),
-                                            height: GetResponsiveSize
-                                                .getResponsiveSize(
-                                              context,
-                                              mobile: 24,
-                                              tablet: 36,
-                                              largeTablet: 42,
-                                              desktop: 44,
-                                            ),
-                                            child: Image.asset(
-                                              'assets/images/profile-edit-icon.png',
-                                              fit: BoxFit.contain,
-                                            ),
-                                          ),
-                                  ),
-                                ),
-                                buildLabel("Full Name"),
-                                buildTextField(nameController, isEditing),
-                                buildLabel("Email"),
-                                buildTextField(emailController, isEditing),
-                                buildLabel("Phone Number"),
-                                buildTextField(phoneController, isEditing),
-                              ],
-                            ),
-                          ),
+                        ProfileCard(
+                          nameController: nameController,
+                          emailController: emailController,
+                          phoneController: phoneController,
+                          isEditing: isEditing,
+                          onEditTap: () => setState(() => isEditing = true),
+                          onSaveTap: saveProfile,
                         ),
 
-                        // Avatar (supports: existing URL, just-picked bytes, or empty)
-                        Positioned(
-                          top: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 75, // unchanged on phones
-                            tablet: 70,
-                            largeTablet: 80,
-                            desktop: 85,
-                          ),
-                          left: MediaQuery.of(context).size.width / 2 -
-                              GetResponsiveSize.getResponsiveSize(
-                                context,
-                                mobile: 50,
-                                tablet: 65,
-                                largeTablet: 80,
-                                desktop: 90,
-                              ),
-                          child: Stack(
-                            children: [
-                              CircleAvatar(
-                                radius: GetResponsiveSize.getResponsiveSize(
-                                  context,
-                                  mobile: 50,
-                                  tablet: 80,
-                                  largeTablet: 100,
-                                  desktop: 110,
-                                ),
-                                backgroundColor: AppColors.greyColor,
-                                backgroundImage: _pickedImageBytes != null
-                                    ? MemoryImage(_pickedImageBytes!)
-                                    : (_currentProfilePicUrl != null &&
-                                            _currentProfilePicUrl!.isNotEmpty &&
-                                            _currentProfilePicUrl !=
-                                                'default-profile-pic-url' &&
-                                            _currentProfilePicUrl!
-                                                .startsWith('http'))
-                                        ? NetworkImage(_currentProfilePicUrl!)
-                                            as ImageProvider
-                                        : null,
-                                child: (_pickedImageBytes == null &&
-                                        (_currentProfilePicUrl == null ||
-                                            _currentProfilePicUrl!.isEmpty ||
-                                            _currentProfilePicUrl ==
-                                                'default-profile-pic-url' ||
-                                            !_currentProfilePicUrl!
-                                                .startsWith('http')))
-                                    ? Icon(Icons.person,
-                                        size:
-                                            GetResponsiveSize.getResponsiveSize(
-                                          context,
-                                          mobile: 50,
-                                          tablet: 80,
-                                          largeTablet: 96,
-                                          desktop: 110,
-                                        ),
-                                        color: Colors.white)
-                                    : null,
-                              ),
-                              if (isEditing)
-                                Positioned(
-                                  right: 0,
-                                  bottom: 0,
-                                  child: InkWell(
-                                    onTap: _pickImage,
-                                    child: Container(
-                                      padding: EdgeInsets.all(
-                                        GetResponsiveSize.getResponsiveSize(
-                                          context,
-                                          mobile: 6,
-                                          tablet: 8,
-                                          largeTablet: 10,
-                                          desktop: 10,
-                                        ),
-                                      ),
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.white,
-                                      ),
-                                      child: Icon(
-                                        Icons.edit,
-                                        size:
-                                            GetResponsiveSize.getResponsiveSize(
-                                          context,
-                                          mobile: 18,
-                                          tablet: 26,
-                                          largeTablet: 30,
-                                          desktop: 32,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                )
-                            ],
-                          ),
+                        // Avatar
+                        ProfileAvatar(
+                          pickedImageBytes: _pickedImageBytes,
+                          currentProfilePicUrl: _currentProfilePicUrl,
+                          isEditing: isEditing,
+                          onPickImage: _pickImage,
                         ),
 
                         // Menu list
@@ -1121,25 +908,26 @@ class _ProfilePageState extends State<ProfilePage> {
                           right: 20,
                           child: Column(
                             children: [
-                              buildMenuItem(
-                                  'assets/images/wishlist-profile-icon.png',
-                                  "Wishlist",
+                              ProfileMenuItem(
+                                  image:
+                                      'assets/images/wishlist-profile-icon.png',
+                                  title: "Wishlist",
                                   onTap: () => context.push('/wishlist')),
-                              buildMenuItem(
-                                  'assets/images/add-profile-icon.png',
-                                  "My Ads",
+                              ProfileMenuItem(
+                                  image: 'assets/images/add-profile-icon.png',
+                                  title: "My Ads",
                                   onTap: () => context.push('/my-ads')),
-                              buildMenuItem(
-                                  'assets/images/help-profile-icon.png',
-                                  "Help and Support",
+                              ProfileMenuItem(
+                                  image: 'assets/images/help-profile-icon.png',
+                                  title: "Help and Support",
                                   onTap: () => context.push('/help')),
-                              buildMenuItem(
-                                  'assets/images/profile-edit-icon.png',
-                                  "Change Password",
+                              ProfileMenuItem(
+                                  image: 'assets/images/profile-edit-icon.png',
+                                  title: "Change Password",
                                   onTap: () => _showChangePasswordDialog()),
-                              buildMenuItem(
-                                'assets/images/logout-profile-icon.png',
-                                "Logout",
+                              ProfileMenuItem(
+                                image: 'assets/images/logout-profile-icon.png',
+                                title: "Logout",
                                 isLogout: true,
                                 onTap: () async {
                                   final bool? confirm;
@@ -1529,9 +1317,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                   }
                                 },
                               ),
-                              buildMenuItem(
-                                'assets/images/close.png',
-                                "Delete Account",
+                              ProfileMenuItem(
+                                image: 'assets/images/close.png',
+                                title: "Delete Account",
                                 isLogout: true,
                                 onTap: () async {
                                   final TextEditingController _confirmCtl =
@@ -2285,9 +2073,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                   }
                                 },
                               ),
-                              buildMenuItem(
-                                'assets/images/close.png',
-                                "Delete My Data",
+                              ProfileMenuItem(
+                                image: 'assets/images/close.png',
+                                title: "Delete My Data",
                                 isLogout: true,
                                 onTap: () async {
                                   final TextEditingController _confirmCtl =
@@ -3080,55 +2868,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 4),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: Colors.grey[600],
-          fontSize: GetResponsiveSize.getResponsiveFontSize(
-            context,
-            mobile: 14,
-            tablet: 22,
-            largeTablet: 24,
-            desktop: 24,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildTextField(TextEditingController controller, bool isEditable) {
-    // Check if this is the phone number field
-    final isPhoneField = controller == phoneController;
-
-    return TextFormField(
-      controller: controller,
-      enabled: isEditable,
-      style: TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: GetResponsiveSize.getResponsiveFontSize(
-          context,
-          mobile: 16,
-          tablet: 24,
-          largeTablet: 26,
-          desktop: 26,
-        ),
-      ),
-      keyboardType: isPhoneField ? TextInputType.phone : TextInputType.text,
-      inputFormatters: isPhoneField
-          ? [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(10),
-            ]
-          : null,
-      decoration: InputDecoration(
-        border: InputBorder.none,
-      ),
-    );
-  }
-
   Widget _buildPasswordField({
     required TextEditingController controller,
     required String label,
@@ -3336,109 +3075,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
       ],
-    );
-  }
-
-  Widget buildMenuItem(String image, String title,
-      {bool isLogout = false, VoidCallback? onTap}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.whiteColor,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 6,
-              spreadRadius: 1,
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            vertical: GetResponsiveSize.getResponsiveSize(
-              context,
-              mobile: 10,
-              tablet: 24,
-              largeTablet: 28,
-              desktop: 32,
-            ),
-          ),
-          child: ListTile(
-            leading: Builder(builder: (context) {
-              final double boxSize = GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 44,
-                tablet: 70,
-                largeTablet: 75,
-                desktop: 80,
-              );
-              return SizedBox(
-                width: boxSize,
-                height: boxSize,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: isLogout ? Colors.red[50] : Colors.grey[200],
-                  ),
-                  child: Center(
-                    child: SizedBox(
-                      width: GetResponsiveSize.getResponsiveSize(
-                        context,
-                        mobile: 24,
-                        tablet: 38,
-                        largeTablet: 42,
-                        desktop: 46,
-                      ),
-                      height: GetResponsiveSize.getResponsiveSize(
-                        context,
-                        mobile: 24,
-                        tablet: 38,
-                        largeTablet: 42,
-                        desktop: 46,
-                      ),
-                      child: Image.asset(
-                        image,
-                        color: isLogout
-                            ? AppColors.redColor
-                            : AppColors.primaryColor,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }),
-            title: Text(
-              title,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: isLogout ? Colors.red : Colors.black,
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16,
-                  tablet: 24,
-                  largeTablet: 26,
-                  desktop: 26,
-                ),
-              ),
-            ),
-            trailing: Icon(
-              Icons.arrow_forward_ios,
-              size: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 18,
-                tablet: 24,
-                largeTablet: 26,
-                desktop: 28,
-              ),
-              color: Colors.grey,
-            ),
-            onTap: onTap,
-          ),
-        ),
-      ),
     );
   }
 }

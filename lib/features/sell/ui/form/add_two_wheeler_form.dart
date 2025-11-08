@@ -371,7 +371,7 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                             ),
                           ),
                           buildDropdown<VehicleManufacturer>(
-                            labelText: 'Manufacturer *',
+                            labelText: 'Manufacturer',
                             items: _manufacturers,
                             selectedValue: _selectedManufacturer,
                             errorMsg: 'Please select a manufacturer',
@@ -401,7 +401,7 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                             ),
                           ),
                           buildDropdown<VehicleModel>(
-                            labelText: 'Model *',
+                            labelText: 'Model',
                             items: _models,
                             selectedValue: _selectedModel,
                             onChanged: (model) async {
@@ -1360,7 +1360,7 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
   Widget _buildVariantDropdown() {
     final dropdown = DropdownButtonFormField<VehicleVariant>(
       decoration:
-          CommonDecoration.textFieldDecoration(labelText: 'Variant *').copyWith(
+          CommonDecoration.textFieldDecoration(labelText: 'Variant').copyWith(
         labelStyle: TextStyle(
           fontSize: GetResponsiveSize.getResponsiveFontSize(
             context,

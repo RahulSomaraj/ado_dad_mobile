@@ -383,7 +383,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                             ),
                           ),
                           buildDropdown<String>(
-                            labelText: 'Commercial Vehicle Type *',
+                            labelText: 'Commercial Vehicle Type',
                             items: _commercialVehicleTypeMap.keys.toList(),
                             selectedValue: _selectedVehicleType,
                             errorMsg: 'Please select a vehicle type',
@@ -403,7 +403,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                             ),
                           ),
                           buildDropdown<String>(
-                            labelText: 'Body Type *',
+                            labelText: 'Body Type',
                             items: _bodyTypeMap.keys.toList(),
                             selectedValue: _selectedBodyType,
                             errorMsg: 'Please select a body type',
@@ -423,7 +423,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                             ),
                           ),
                           buildDropdown<VehicleManufacturer>(
-                            labelText: 'Manufacturer *',
+                            labelText: 'Manufacturer',
                             items: _manufacturers,
                             selectedValue: _selectedManufacturer,
                             errorMsg: 'Please select a manufacturer',
@@ -453,7 +453,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                             ),
                           ),
                           buildDropdown<VehicleModel>(
-                            labelText: 'Model *',
+                            labelText: 'Model',
                             items: _models,
                             selectedValue: _selectedModel,
                             onChanged: (model) async {
@@ -1494,7 +1494,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
   Widget _buildVariantDropdown() {
     final dropdown = DropdownButtonFormField<VehicleVariant>(
       decoration:
-          CommonDecoration.textFieldDecoration(labelText: 'Variant *').copyWith(
+          CommonDecoration.textFieldDecoration(labelText: 'Variant').copyWith(
         labelStyle: TextStyle(
           fontSize: GetResponsiveSize.getResponsiveFontSize(
             context,

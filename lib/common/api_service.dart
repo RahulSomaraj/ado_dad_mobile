@@ -25,28 +25,139 @@ class ApiService {
     return _dio;
   }
 
+  /// Prepares the Authorization header with the token
+  /// Set useBearerPrefix to true if API expects "Bearer <token>", false if it expects just the token
+  /// Most REST APIs use "Bearer " prefix, but some APIs don't
+  static const bool _useBearerPrefix =
+      true; // Set to false if API expects just the token without "Bearer "
+
+  String _prepareAuthHeader(String token) {
+    // Remove "Bearer " prefix if present to get clean token
+    final cleanToken = token.replaceFirst(RegExp(r'^Bearer\s+'), '');
+
+    // Add "Bearer " prefix if configured to use it
+    if (_useBearerPrefix) {
+      return 'Bearer $cleanToken';
+    } else {
+      return cleanToken;
+    }
+  }
+
   void _initializeInterceptors() {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          // Get token from SharedPreferences - if it exists, use it
+          // Token from login should work directly - only refresh when we get 401 (token expired)
+          // After token refresh, new token is saved and will be used for subsequent requests
           final token = await getToken();
-          if (token != null) {
-            options.headers['Authorization'] = token;
+          if (token != null && token.isNotEmpty) {
+            // API expects "Bearer <token>" format in Authorization header
+            final authHeader = _prepareAuthHeader(token);
+            options.headers['Authorization'] = authHeader;
+            print('🔑 Using token for request to: ${options.path}');
+            print('🔑 Token length: ${token.length} chars');
+            print(
+                '🔑 Token first 30 chars: ${token.substring(0, token.length > 30 ? 30 : token.length)}...');
+            print(
+                '🔑 Authorization header format: ${authHeader.substring(0, authHeader.length > 30 ? 30 : authHeader.length)}...');
+          } else {
+            print('⚠️ No token found for request to: ${options.path}');
           }
+          // If no token, proceed without Authorization header (some endpoints don't need it)
           return handler.next(options);
         },
         onError: (DioException e, handler) async {
           if (e.response?.statusCode == 401) {
-            // Try to refresh the token using centralized AuthService
+            // Token expired or invalid - try to refresh it
             final authService = AuthService();
+
+            print('🔄 Received 401 Unauthorized for: ${e.requestOptions.path}');
+            print('📋 401 Response details:');
+            print('   Status Code: ${e.response?.statusCode}');
+            print('   Response Data: ${e.response?.data}');
+            print('   Request Headers: ${e.requestOptions.headers}');
+            print(
+                '   Authorization header sent: ${e.requestOptions.headers['Authorization']?.toString().substring(0, 30) ?? 'NOT SET'}...');
+
+            // Check if token exists before attempting refresh
+            final currentToken = await getToken();
+            if (currentToken == null || currentToken.isEmpty) {
+              print('❌ No token found in storage - cannot refresh');
+              return handler.reject(e);
+            }
+
+            print('🔄 Token exists, attempting to refresh...');
+
+            // Try to refresh the token
             final newToken = await authService.refreshAccessToken();
-            if (newToken != null) {
+
+            if (newToken != null && newToken.isNotEmpty) {
               // Token refreshed successfully, retry the original request
-              e.requestOptions.headers['Authorization'] = newToken;
-              final retryResponse = await _dio.fetch(e.requestOptions);
-              return handler.resolve(retryResponse);
+              print(
+                  '✅ Token refreshed successfully, retrying original request...');
+
+              // Mark initial refresh as done if this is the first refresh after login
+              if (!authService.hasDoneInitialRefresh) {
+                authService.markInitialRefreshDone();
+              }
+
+              // Update the Authorization header with the new token
+              // API expects "Bearer <token>" format in Authorization header
+              e.requestOptions.headers['Authorization'] =
+                  _prepareAuthHeader(newToken);
+
+              // Verify the new token is being used for retry
+              print('🔄 Retrying request with new token...');
+              print('🔑 New token length: ${newToken.length} chars');
+              print(
+                  '🔑 New token first 30 chars: ${newToken.substring(0, newToken.length > 30 ? 30 : newToken.length)}...');
+
+              // Verify the token in storage matches what we're using
+              final storedToken = await getToken();
+              if (storedToken != null && storedToken == newToken) {
+                print(
+                    '✅ Confirmed: Stored token matches new token - will be used for all subsequent API calls');
+              } else {
+                print('⚠️ WARNING: Stored token does not match new token!');
+              }
+
+              try {
+                final retryResponse = await _dio.fetch(e.requestOptions);
+                print('✅ Request retry successful after token refresh');
+                print(
+                    '✅ New token is now active and will be used for all future API calls');
+                return handler.resolve(retryResponse);
+              } catch (retryError) {
+                print(
+                    '❌ Request retry failed after token refresh: $retryError');
+                return handler.reject(retryError is DioException
+                    ? retryError
+                    : DioException(
+                        requestOptions: e.requestOptions,
+                        type: DioExceptionType.unknown,
+                        error: retryError,
+                      ));
+              }
             } else {
-              // Refresh token expired, AuthService will handle logout automatically
+              // Refresh failed - refresh token expired or invalid
+              // AuthService will handle logout automatically
+              print(
+                  '⚠️ Token refresh failed - refresh token expired or invalid');
+              print('⚠️ User will be logged out automatically');
+
+              // If logout is in progress, suppress the error to avoid showing it in UI
+              if (authService.isLoggingOut) {
+                // Create a silent error that won't be shown to users
+                final silentError = DioException(
+                  requestOptions: e.requestOptions,
+                  type: DioExceptionType.badResponse,
+                  response: e.response,
+                  error: 'Token expired - automatic logout in progress',
+                );
+                return handler.reject(silentError);
+              }
+
               // Don't proceed with the original request
               return handler.reject(e);
             }

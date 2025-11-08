@@ -26,7 +26,25 @@ class ProfileRepo {
       } else {
         throw Exception("Failed to load profile data");
       }
+    } on DioException catch (e) {
+      // Check if this is a token expiration error that's being handled silently
+      final errorMessage = e.error?.toString() ?? '';
+      if (errorMessage
+          .contains('Token expired - automatic logout in progress')) {
+        // Don't throw error - logout is already in progress, just return silently
+        print('🔇 Suppressing token expiration error - logout in progress');
+        // Wait a bit for navigation to complete, then throw a silent exception
+        // that won't be shown in UI
+        throw Exception('SESSION_EXPIRED_SILENT');
+      }
+      print('errrrrrrooooooorrrrrrrrrrr:$e');
+      throw Exception("Error fetching profile: $e");
     } catch (e) {
+      // Check if this is the silent expiration error
+      if (e.toString().contains('SESSION_EXPIRED_SILENT')) {
+        // Re-throw as silent error - will be caught in bloc
+        rethrow;
+      }
       print('errrrrrrooooooorrrrrrrrrrr:$e');
       throw Exception("Error fetching profile: $e");
     }

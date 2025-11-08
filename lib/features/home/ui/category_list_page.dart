@@ -26,13 +26,24 @@ class _CategoryListPageState extends State<CategoryListPage> {
   Map<String, dynamic> _filters = {};
   final FilterStateService _filterStateService = FilterStateService();
 
+  // Helper method to check if this is Premium Vehicles category
+  bool get _isPremiumVehiclesCategory {
+    return widget.categoryTitle.toLowerCase().contains('premium');
+  }
+
+  // Helper method to get categoryId - returns null for Premium Vehicles to fetch all categories
+  String? get _effectiveCategoryId {
+    return _isPremiumVehiclesCategory ? null : widget.categoryId;
+  }
+
   @override
   void initState() {
     super.initState();
 
     // initial load: category with no filters
+    // For Premium Vehicles, pass null to fetch all ads (will filter by isPremium client-side)
     context.read<AdvertisementBloc>().add(
-          AdvertisementEvent.applyFilters(categoryId: widget.categoryId),
+          AdvertisementEvent.applyFilters(categoryId: _effectiveCategoryId),
         );
 
     _scrollController.addListener(() {
@@ -163,7 +174,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
                       _filters = result;
                       context.read<AdvertisementBloc>().add(
                             AdvertisementEvent.applyFilters(
-                              categoryId: widget.categoryId,
+                              // For Premium Vehicles, pass null to fetch all categories
+                              categoryId: _effectiveCategoryId,
                               minYear: result['minYear'] as int?,
                               maxYear: result['maxYear'] as int?,
                               manufacturerIds:
@@ -301,7 +313,98 @@ class _CategoryListPageState extends State<CategoryListPage> {
                 );
               }
               if (state is ListingsLoaded) {
-                final items = state.listings;
+                // Get the listings
+                List<AddModel> items = state.listings;
+                final isPremiumCategory =
+                    widget.categoryTitle.toLowerCase().contains('premium');
+
+                // For Premium Vehicles: Apply all filters client-side since we fetch all categories
+                // (categoryId is null), so server-side filters may not work correctly
+                if (isPremiumCategory) {
+                  // First filter by isPremium
+                  items = items
+                      .where((ad) => ad.manufacturer?.isPremium == true)
+                      .toList();
+
+                  // Then apply all other filters from _filters map
+                  // Manufacturer filter
+                  final manufacturerIdsList = _filters['manufacturerIds'];
+                  if (manufacturerIdsList != null &&
+                      manufacturerIdsList is List &&
+                      manufacturerIdsList.isNotEmpty) {
+                    final manufacturerIds = manufacturerIdsList.cast<String>();
+                    items = items
+                        .where((ad) =>
+                            ad.manufacturer?.id != null &&
+                            manufacturerIds.contains(ad.manufacturer!.id))
+                        .toList();
+                  }
+
+                  // Model filter
+                  final modelIdsList = _filters['modelIds'];
+                  if (modelIdsList != null &&
+                      modelIdsList is List &&
+                      modelIdsList.isNotEmpty) {
+                    final modelIds = modelIdsList.cast<String>();
+                    items = items
+                        .where((ad) =>
+                            ad.model?.id != null &&
+                            modelIds.contains(ad.model!.id))
+                        .toList();
+                  }
+
+                  // Fuel type filter
+                  final fuelTypeIdsList = _filters['fuelTypeIds'];
+                  if (fuelTypeIdsList != null &&
+                      fuelTypeIdsList is List &&
+                      fuelTypeIdsList.isNotEmpty) {
+                    final fuelTypeIds = fuelTypeIdsList.cast<String>();
+                    items = items
+                        .where((ad) =>
+                            ad.fuelTypeId != null &&
+                            fuelTypeIds.contains(ad.fuelTypeId))
+                        .toList();
+                  }
+
+                  // Transmission type filter
+                  final transmissionTypeIdsList =
+                      _filters['transmissionTypeIds'];
+                  if (transmissionTypeIdsList != null &&
+                      transmissionTypeIdsList is List &&
+                      transmissionTypeIdsList.isNotEmpty) {
+                    final transmissionTypeIds =
+                        transmissionTypeIdsList.cast<String>();
+                    items = items
+                        .where((ad) =>
+                            ad.transmissionId != null &&
+                            transmissionTypeIds.contains(ad.transmissionId))
+                        .toList();
+                  }
+
+                  // Year filter
+                  final minYear = _filters['minYear'] as int?;
+                  final maxYear = _filters['maxYear'] as int?;
+                  if (minYear != null || maxYear != null) {
+                    items = items.where((ad) {
+                      if (ad.year == null) return false;
+                      if (minYear != null && ad.year! < minYear) return false;
+                      if (maxYear != null && ad.year! > maxYear) return false;
+                      return true;
+                    }).toList();
+                  }
+
+                  // Price filter
+                  final minPrice = _filters['minPrice'] as int?;
+                  final maxPrice = _filters['maxPrice'] as int?;
+                  if (minPrice != null || maxPrice != null) {
+                    items = items.where((ad) {
+                      if (minPrice != null && ad.price < minPrice) return false;
+                      if (maxPrice != null && ad.price > maxPrice) return false;
+                      return true;
+                    }).toList();
+                  }
+                }
+
                 if (items.isEmpty) {
                   return Center(
                     child: Text(
@@ -342,9 +445,10 @@ class _CategoryListPageState extends State<CategoryListPage> {
                           );
                     } else {
                       // Vehicle filters
+                      // For Premium Vehicles, pass null to fetch all categories
                       context.read<AdvertisementBloc>().add(
                             AdvertisementEvent.applyFilters(
-                              categoryId: widget.categoryId,
+                              categoryId: _effectiveCategoryId,
                               minYear: _filters['minYear'] as int?,
                               maxYear: _filters['maxYear'] as int?,
                               manufacturerIds:
@@ -365,7 +469,10 @@ class _CategoryListPageState extends State<CategoryListPage> {
                   },
                   child: ListView.builder(
                     controller: _scrollController,
-                    itemCount: items.length + (state.hasMore ? 1 : 0),
+                    // For Premium Vehicles, don't show loading indicator once list is loaded
+                    // For other categories, show loading indicator if more pages are available
+                    itemCount: items.length +
+                        ((!isPremiumCategory && state.hasMore) ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index < items.length) {
                         final ad = items[index];
@@ -410,58 +517,40 @@ class _CategoryListPageState extends State<CategoryListPage> {
                                   ),
                                 ),
                               ),
-                              child: Padding(
-                                padding: EdgeInsets.all(
-                                  GetResponsiveSize.getResponsivePadding(
-                                    context,
-                                    mobile: 12,
-                                    tablet: 14,
-                                    largeTablet: 16,
-                                    desktop: 18,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(
-                                        GetResponsiveSize
-                                            .getResponsiveBorderRadius(
-                                          context,
-                                          mobile: 8, // Keep mobile unchanged
-                                          tablet: 12,
-                                          largeTablet: 14,
-                                          desktop: 14,
-                                        ),
+                              child: Stack(
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.all(
+                                      GetResponsiveSize.getResponsivePadding(
+                                        context,
+                                        mobile: 12,
+                                        tablet: 14,
+                                        largeTablet: 16,
+                                        desktop: 18,
                                       ),
-                                      child: ad.images.isNotEmpty
-                                          ? Image.network(
-                                              ad.images[0],
-                                              height: GetResponsiveSize
-                                                  .getResponsiveSize(
-                                                context,
-                                                mobile:
-                                                    60, // Keep mobile unchanged
-                                                tablet: 98,
-                                                largeTablet: 120,
-                                                desktop: 140,
-                                              ),
-                                              width: GetResponsiveSize
-                                                  .getResponsiveSize(
-                                                context,
-                                                mobile:
-                                                    60, // Keep mobile unchanged
-                                                tablet: 98,
-                                                largeTablet: 120,
-                                                desktop: 140,
-                                              ),
-                                              fit: BoxFit.cover,
-                                              errorBuilder:
-                                                  (context, error, stackTrace) {
-                                                return Container(
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            GetResponsiveSize
+                                                .getResponsiveBorderRadius(
+                                              context,
+                                              mobile:
+                                                  8, // Keep mobile unchanged
+                                              tablet: 12,
+                                              largeTablet: 14,
+                                              desktop: 14,
+                                            ),
+                                          ),
+                                          child: ad.images.isNotEmpty
+                                              ? Image.network(
+                                                  ad.images[0],
                                                   height: GetResponsiveSize
                                                       .getResponsiveSize(
                                                     context,
-                                                    mobile: 60,
+                                                    mobile:
+                                                        60, // Keep mobile unchanged
                                                     tablet: 98,
                                                     largeTablet: 120,
                                                     desktop: 140,
@@ -469,152 +558,215 @@ class _CategoryListPageState extends State<CategoryListPage> {
                                                   width: GetResponsiveSize
                                                       .getResponsiveSize(
                                                     context,
-                                                    mobile: 60,
+                                                    mobile:
+                                                        60, // Keep mobile unchanged
                                                     tablet: 98,
+                                                    largeTablet: 120,
+                                                    desktop: 140,
+                                                  ),
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (context, error,
+                                                      stackTrace) {
+                                                    return Container(
+                                                      height: GetResponsiveSize
+                                                          .getResponsiveSize(
+                                                        context,
+                                                        mobile: 60,
+                                                        tablet: 98,
+                                                        largeTablet: 120,
+                                                        desktop: 140,
+                                                      ),
+                                                      width: GetResponsiveSize
+                                                          .getResponsiveSize(
+                                                        context,
+                                                        mobile: 60,
+                                                        tablet: 98,
+                                                        largeTablet: 120,
+                                                        desktop: 140,
+                                                      ),
+                                                      color: Colors.grey[300],
+                                                      child: const Icon(Icons
+                                                          .image_not_supported),
+                                                    );
+                                                  },
+                                                )
+                                              : Container(
+                                                  height: GetResponsiveSize
+                                                      .getResponsiveSize(
+                                                    context,
+                                                    mobile: 60,
+                                                    tablet: 100,
+                                                    largeTablet: 120,
+                                                    desktop: 140,
+                                                  ),
+                                                  width: GetResponsiveSize
+                                                      .getResponsiveSize(
+                                                    context,
+                                                    mobile: 60,
+                                                    tablet: 100,
                                                     largeTablet: 120,
                                                     desktop: 140,
                                                   ),
                                                   color: Colors.grey[300],
                                                   child: const Icon(Icons
                                                       .image_not_supported),
-                                                );
-                                              },
-                                            )
-                                          : Container(
-                                              height: GetResponsiveSize
-                                                  .getResponsiveSize(
-                                                context,
-                                                mobile: 60,
-                                                tablet: 100,
-                                                largeTablet: 120,
-                                                desktop: 140,
-                                              ),
-                                              width: GetResponsiveSize
-                                                  .getResponsiveSize(
-                                                context,
-                                                mobile: 60,
-                                                tablet: 100,
-                                                largeTablet: 120,
-                                                desktop: 140,
-                                              ),
-                                              color: Colors.grey[300],
-                                              child: const Icon(
-                                                  Icons.image_not_supported),
-                                            ),
-                                    ),
-                                    SizedBox(
-                                      width:
-                                          GetResponsiveSize.getResponsiveSize(
-                                        context,
-                                        mobile: 15,
-                                        tablet: 18,
-                                        largeTablet: 20,
-                                        desktop: 22,
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
+                                                ),
+                                        ),
+                                        SizedBox(
+                                          width: GetResponsiveSize
+                                              .getResponsiveSize(
+                                            context,
+                                            mobile: 15,
+                                            tablet: 18,
+                                            largeTablet: 20,
+                                            desktop: 22,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
+                                              Row(
+                                                children: [
+                                                  Text(
+                                                    '₹ ${ad.price.toString()}',
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: GetResponsiveSize
+                                                          .getResponsiveFontSize(
+                                                        context,
+                                                        mobile:
+                                                            16.0, // Keep mobile unchanged
+                                                        tablet: 22.0,
+                                                        largeTablet: 26.0,
+                                                        desktop: 30.0,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const Spacer(),
+                                                ],
+                                              ),
+                                              SizedBox(
+                                                height: GetResponsiveSize
+                                                    .getResponsiveSize(
+                                                  context,
+                                                  mobile: 5,
+                                                  tablet: 6,
+                                                  largeTablet: 7,
+                                                  desktop: 8,
+                                                ),
+                                              ),
                                               Text(
-                                                '₹ ${ad.price.toString()}',
+                                                _getAdTitle(ad),
                                                 style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
                                                   fontSize: GetResponsiveSize
                                                       .getResponsiveFontSize(
                                                     context,
                                                     mobile:
                                                         16.0, // Keep mobile unchanged
-                                                    tablet: 22.0,
-                                                    largeTablet: 26.0,
-                                                    desktop: 30.0,
+                                                    tablet: 20.0,
+                                                    largeTablet: 22.0,
+                                                    desktop: 24.0,
+                                                  ),
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              Text(
+                                                ad.location,
+                                                style: AppTextstyle
+                                                    .categoryLabelTextStyle
+                                                    .copyWith(
+                                                  fontSize: GetResponsiveSize
+                                                      .getResponsiveFontSize(
+                                                    context,
+                                                    mobile:
+                                                        12.0, // Keep mobile unchanged
+                                                    tablet: 14.0,
+                                                    largeTablet: 16.0,
+                                                    desktop: 18.0,
                                                   ),
                                                 ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
-                                              const Spacer(),
+                                              SizedBox(
+                                                height: GetResponsiveSize
+                                                    .getResponsiveSize(
+                                                  context,
+                                                  mobile: 5,
+                                                  tablet: 6,
+                                                  largeTablet: 7,
+                                                  desktop: 8,
+                                                ),
+                                              ),
+                                              Text(
+                                                _getAdSubtitle(ad),
+                                                style: AppTextstyle
+                                                    .categoryLabelTextStyle
+                                                    .copyWith(
+                                                  fontSize: GetResponsiveSize
+                                                      .getResponsiveFontSize(
+                                                    context,
+                                                    mobile:
+                                                        12.0, // Keep mobile unchanged
+                                                    tablet: 14.0,
+                                                    largeTablet: 16.0,
+                                                    desktop: 18.0,
+                                                  ),
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ],
                                           ),
-                                          SizedBox(
-                                            height: GetResponsiveSize
-                                                .getResponsiveSize(
-                                              context,
-                                              mobile: 5,
-                                              tablet: 6,
-                                              largeTablet: 7,
-                                              desktop: 8,
-                                            ),
-                                          ),
-                                          Text(
-                                            _getAdTitle(ad),
-                                            style: TextStyle(
-                                              fontSize: GetResponsiveSize
-                                                  .getResponsiveFontSize(
-                                                context,
-                                                mobile:
-                                                    16.0, // Keep mobile unchanged
-                                                tablet: 20.0,
-                                                largeTablet: 22.0,
-                                                desktop: 24.0,
-                                              ),
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          Text(
-                                            ad.location,
-                                            style: AppTextstyle
-                                                .categoryLabelTextStyle
-                                                .copyWith(
-                                              fontSize: GetResponsiveSize
-                                                  .getResponsiveFontSize(
-                                                context,
-                                                mobile:
-                                                    12.0, // Keep mobile unchanged
-                                                tablet: 14.0,
-                                                largeTablet: 16.0,
-                                                desktop: 18.0,
-                                              ),
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          SizedBox(
-                                            height: GetResponsiveSize
-                                                .getResponsiveSize(
-                                              context,
-                                              mobile: 5,
-                                              tablet: 6,
-                                              largeTablet: 7,
-                                              desktop: 8,
-                                            ),
-                                          ),
-                                          Text(
-                                            _getAdSubtitle(ad),
-                                            style: AppTextstyle
-                                                .categoryLabelTextStyle
-                                                .copyWith(
-                                              fontSize: GetResponsiveSize
-                                                  .getResponsiveFontSize(
-                                                context,
-                                                mobile:
-                                                    12.0, // Keep mobile unchanged
-                                                tablet: 14.0,
-                                                largeTablet: 16.0,
-                                                desktop: 18.0,
-                                              ),
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                  // Premium badge in top right corner
+                                  if (ad.manufacturer?.isPremium == true)
+                                    Positioned(
+                                      top: GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 8,
+                                        tablet: 10,
+                                        largeTablet: 12,
+                                        desktop: 14,
                                       ),
-                                    )
-                                  ],
-                                ),
+                                      right:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 8,
+                                        tablet: 10,
+                                        largeTablet: 12,
+                                        desktop: 14,
+                                      ),
+                                      child: Image.asset(
+                                        'assets/images/premium1.png',
+                                        width:
+                                            GetResponsiveSize.getResponsiveSize(
+                                          context,
+                                          mobile: 32,
+                                          tablet: 40,
+                                          largeTablet: 48,
+                                          desktop: 56,
+                                        ),
+                                        height:
+                                            GetResponsiveSize.getResponsiveSize(
+                                          context,
+                                          mobile: 32,
+                                          tablet: 40,
+                                          largeTablet: 48,
+                                          desktop: 56,
+                                        ),
+                                        fit: BoxFit.contain,
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                           ),

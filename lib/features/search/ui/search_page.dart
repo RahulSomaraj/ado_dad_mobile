@@ -739,12 +739,14 @@ class _SearchPageState extends State<SearchPage> {
               ),
             ),
           ),
-          child: Padding(
-            padding: EdgeInsets.all(
-              GetResponsiveSize.getResponsivePadding(context,
-                  mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
-            ),
-            child: Row(
+          child: Stack(
+            children: [
+              Padding(
+                padding: EdgeInsets.all(
+                  GetResponsiveSize.getResponsivePadding(context,
+                      mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+                ),
+                child: Row(
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(
@@ -920,7 +922,45 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                 )
               ],
-            ),
+                ),
+              ),
+              // Premium badge in top right corner
+              if (ad.manufacturer?.isPremium == true)
+                Positioned(
+                  top: GetResponsiveSize.getResponsiveSize(
+                    context,
+                    mobile: 8,
+                    tablet: 10,
+                    largeTablet: 12,
+                    desktop: 14,
+                  ),
+                  right: GetResponsiveSize.getResponsiveSize(
+                    context,
+                    mobile: 8,
+                    tablet: 10,
+                    largeTablet: 12,
+                    desktop: 14,
+                  ),
+                  child: Image.asset(
+                    'assets/images/premium1.png',
+                    width: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 32,
+                      tablet: 40,
+                      largeTablet: 48,
+                      desktop: 56,
+                    ),
+                    height: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 32,
+                      tablet: 40,
+                      largeTablet: 48,
+                      desktop: 56,
+                    ),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+            ],
           ),
         ),
       ),

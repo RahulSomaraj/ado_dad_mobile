@@ -347,7 +347,7 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
                             ),
                           ),
                           buildDropdown<String>(
-                            labelText: 'Vehicle Type *',
+                            labelText: 'Vehicle Type',
                             items: _vehicleTypeMap.keys.toList(),
                             selectedValue: _selectedVehicleType,
                             errorMsg: 'Please select a vehicle type',
@@ -367,7 +367,7 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
                             ),
                           ),
                           buildDropdown<VehicleManufacturer>(
-                            labelText: 'Manufacturer *',
+                            labelText: 'Manufacturer',
                             items: _manufacturers,
                             selectedValue: _selectedManufacturer,
                             errorMsg: 'Please select a manufacturer',
@@ -397,7 +397,7 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
                             ),
                           ),
                           buildDropdown<VehicleModel>(
-                            labelText: 'Model *',
+                            labelText: 'Model',
                             items: _models,
                             selectedValue: _selectedModel,
                             onChanged: (model) async {
@@ -1308,7 +1308,7 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
   Widget _buildVariantDropdown() {
     final dropdown = DropdownButtonFormField<VehicleVariant>(
       decoration:
-          CommonDecoration.textFieldDecoration(labelText: 'Variant *').copyWith(
+          CommonDecoration.textFieldDecoration(labelText: 'Variant').copyWith(
         labelStyle: TextStyle(
           fontSize: GetResponsiveSize.getResponsiveFontSize(
             context,

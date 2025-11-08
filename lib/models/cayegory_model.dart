@@ -22,7 +22,7 @@ final List<CategoryModel> categories = [
   CategoryModel(
     id: 2,
     name: 'Car',
-    image: 'assets/images/car.png',
+    image: 'assets/images/car_cat.png',
     categoryId: 'private_vehicle',
   ),
   CategoryModel(
@@ -34,7 +34,7 @@ final List<CategoryModel> categories = [
   CategoryModel(
     id: 4,
     name: 'Commercial Vehicles',
-    image: 'assets/images/showroom.png',
+    image: 'assets/images/commercial.png',
     categoryId: 'commercial_vehicle',
   ),
   CategoryModel(

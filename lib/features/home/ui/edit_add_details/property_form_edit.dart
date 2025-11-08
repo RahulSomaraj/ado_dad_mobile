@@ -6,6 +6,12 @@ import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/widgets/dropdown_widget.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/features/home/ad_edit/bloc/ad_edit_bloc.dart';
+import 'package:ado_dad_user/features/home/ui/edit_add_details/widgets/checkbox_toggle_widget.dart';
+import 'package:ado_dad_user/features/home/ui/edit_add_details/widgets/features_selection_widget.dart';
+import 'package:ado_dad_user/features/home/ui/edit_add_details/widgets/image_picker_widget.dart';
+import 'package:ado_dad_user/features/home/ui/edit_add_details/widgets/save_button_widget.dart';
+import 'package:ado_dad_user/features/home/ui/edit_add_details/widgets/section_title_widget.dart';
+import 'package:ado_dad_user/features/home/ui/edit_add_details/widgets/video_upload_section_widget.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:flutter/material.dart';
@@ -253,19 +259,7 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
                 ),
                 children: [
                   // ===== Essential Details =====
-                  Text(
-                    'Essential Details',
-                    style: AppTextstyle.sectionTitleTextStyle.copyWith(
-                      fontSize: GetResponsiveSize.getResponsiveFontSize(
-                        context,
-                        mobile:
-                            AppTextstyle.sectionTitleTextStyle.fontSize ?? 18,
-                        tablet: 22,
-                        largeTablet: 26,
-                        desktop: 30,
-                      ),
-                    ),
-                  ),
+                  const SectionTitleWidget(title: 'Essential Details'),
                   SizedBox(
                       height: GetResponsiveSize.getResponsiveSize(context,
                           mobile: 12,
@@ -341,56 +335,20 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
                   ),
                   const SizedBox(height: 10),
 
-                  CheckboxListTile(
+                  CheckboxToggleWidget(
                     value: _isFurnished,
-                    title: Text(
-                      'Is Furnished?',
-                      style: TextStyle(
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: 16,
-                          tablet: 20,
-                          largeTablet: 24,
-                          desktop: 28,
-                        ),
-                      ),
-                    ),
+                    title: 'Is Furnished?',
                     onChanged: (v) => setState(() => _isFurnished = v ?? false),
-                    contentPadding: EdgeInsets.zero,
                   ),
-                  CheckboxListTile(
+                  CheckboxToggleWidget(
                     value: _hasParking,
-                    title: Text(
-                      'Has Parking?',
-                      style: TextStyle(
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: 16,
-                          tablet: 20,
-                          largeTablet: 24,
-                          desktop: 28,
-                        ),
-                      ),
-                    ),
+                    title: 'Has Parking?',
                     onChanged: (v) => setState(() => _hasParking = v ?? false),
-                    contentPadding: EdgeInsets.zero,
                   ),
-                  CheckboxListTile(
+                  CheckboxToggleWidget(
                     value: _hasGarden,
-                    title: Text(
-                      'Has Garden?',
-                      style: TextStyle(
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: 16,
-                          tablet: 20,
-                          largeTablet: 24,
-                          desktop: 28,
-                        ),
-                      ),
-                    ),
+                    title: 'Has Garden?',
                     onChanged: (v) => setState(() => _hasGarden = v ?? false),
-                    contentPadding: EdgeInsets.zero,
                   ),
                   SizedBox(
                       height: GetResponsiveSize.getResponsiveSize(context,
@@ -428,29 +386,14 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
                           desktop: 36)),
 
                   // ===== Amenities =====
-                  Text(
-                    'Amenities',
-                    style: AppTextstyle.sectionTitleTextStyle.copyWith(
-                      fontSize: GetResponsiveSize.getResponsiveFontSize(
-                        context,
-                        mobile:
-                            AppTextstyle.sectionTitleTextStyle.fontSize ?? 18,
-                        tablet: 22,
-                        largeTablet: 26,
-                        desktop: 30,
-                      ),
-                    ),
-                  ),
+                  const SectionTitleWidget(title: 'Amenities'),
                   SizedBox(
                       height: GetResponsiveSize.getResponsiveSize(context,
-                          mobile: 10,
-                          tablet: 14,
-                          largeTablet: 18,
-                          desktop: 22)),
-                  _buildAmenitiesCheckboxList(
-                    all: _allAmenities,
-                    selected: _selectedAmenities,
-                    onChanged: (updated) =>
+                          mobile: 8, tablet: 12, largeTablet: 16, desktop: 20)),
+                  FeaturesSelectionWidget(
+                    allFeatures: _allAmenities,
+                    selectedFeatures: _selectedAmenities,
+                    onFeaturesChanged: (updated) =>
                         setState(() => _selectedAmenities = updated),
                   ),
                   SizedBox(
@@ -461,124 +404,19 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
                           desktop: 36)),
 
                   // ===== Images =====
-                  Text(
-                    'Images',
-                    style: AppTextstyle.sectionTitleTextStyle.copyWith(
-                      fontSize: GetResponsiveSize.getResponsiveFontSize(
-                        context,
-                        mobile:
-                            AppTextstyle.sectionTitleTextStyle.fontSize ?? 18,
-                        tablet: 22,
-                        largeTablet: 26,
-                        desktop: 30,
-                      ),
-                    ),
-                  ),
+                  const SectionTitleWidget(title: 'Images'),
                   SizedBox(
                       height: GetResponsiveSize.getResponsiveSize(context,
                           mobile: 10,
                           tablet: 14,
                           largeTablet: 18,
                           desktop: 22)),
-                  Wrap(
-                    spacing: GetResponsiveSize.getResponsiveSize(context,
-                        mobile: 10, tablet: 14, largeTablet: 18, desktop: 22),
-                    runSpacing: GetResponsiveSize.getResponsiveSize(context,
-                        mobile: 10, tablet: 14, largeTablet: 18, desktop: 22),
-                    children: [
-                      // existing
-                      ..._imageUrls.map(
-                        (url) => Stack(
-                          children: [
-                            Image.network(
-                              url,
-                              width: GetResponsiveSize.getResponsiveSize(
-                                  context,
-                                  mobile: 100,
-                                  tablet: 130,
-                                  largeTablet: 160,
-                                  desktop: 190),
-                              height: GetResponsiveSize.getResponsiveSize(
-                                  context,
-                                  mobile: 100,
-                                  tablet: 130,
-                                  largeTablet: 160,
-                                  desktop: 190),
-                              fit: BoxFit.cover,
-                            ),
-                            Positioned(
-                              right: 0,
-                              top: 0,
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() => _imageUrls.remove(url));
-                                },
-                                child: Container(
-                                  color: Colors.black54,
-                                  padding: EdgeInsets.all(
-                                      GetResponsiveSize.getResponsivePadding(
-                                          context,
-                                          mobile: 2,
-                                          tablet: 4,
-                                          largeTablet: 6,
-                                          desktop: 8)),
-                                  child: Icon(Icons.close,
-                                      size: GetResponsiveSize.getResponsiveSize(
-                                          context,
-                                          mobile: 14,
-                                          tablet: 18,
-                                          largeTablet: 22,
-                                          desktop: 26),
-                                      color: Colors.white),
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                      // newly picked (not uploaded yet)
-                      ..._newImageFiles.map(
-                        (bytes) => Image.memory(
-                          bytes,
-                          width: GetResponsiveSize.getResponsiveSize(context,
-                              mobile: 100,
-                              tablet: 130,
-                              largeTablet: 160,
-                              desktop: 190),
-                          height: GetResponsiveSize.getResponsiveSize(context,
-                              mobile: 100,
-                              tablet: 130,
-                              largeTablet: 160,
-                              desktop: 190),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      // add button
-                      GestureDetector(
-                        onTap: _pickImages,
-                        child: Container(
-                          width: GetResponsiveSize.getResponsiveSize(context,
-                              mobile: 100,
-                              tablet: 130,
-                              largeTablet: 160,
-                              desktop: 190),
-                          height: GetResponsiveSize.getResponsiveSize(context,
-                              mobile: 100,
-                              tablet: 130,
-                              largeTablet: 160,
-                              desktop: 190),
-                          color: Colors.grey.shade300,
-                          child: Icon(
-                            Icons.add,
-                            size: GetResponsiveSize.getResponsiveSize(context,
-                                mobile: 24,
-                                tablet: 32,
-                                largeTablet: 40,
-                                desktop: 48),
-                          ),
-                        ),
-                      ),
-                    ],
+                  ImagePickerWidget(
+                    imageUrls: _imageUrls,
+                    newImageFiles: _newImageFiles,
+                    onPickImages: _pickImages,
+                    onRemoveImage: (url) =>
+                        setState(() => _imageUrls.remove(url)),
                   ),
                   SizedBox(
                       height: GetResponsiveSize.getResponsiveSize(context,
@@ -588,76 +426,10 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
                           desktop: 48)),
 
                   // Video Upload Section
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.whiteColor,
-                      borderRadius: BorderRadius.circular(
-                        GetResponsiveSize.getResponsiveBorderRadius(context,
-                            mobile: 12,
-                            tablet: 16,
-                            largeTablet: 20,
-                            desktop: 24),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 5,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: GetResponsiveSize.getResponsivePadding(
-                            context,
-                            mobile: 16,
-                            tablet: 24,
-                            largeTablet: 32,
-                            desktop: 40),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                              height: GetResponsiveSize.getResponsiveSize(
-                                  context,
-                                  mobile: 10,
-                                  tablet: 14,
-                                  largeTablet: 18,
-                                  desktop: 22)),
-                          Text(
-                            'Upload Video',
-                            style: AppTextstyle.sectionTitleTextStyle.copyWith(
-                              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                                context,
-                                mobile: AppTextstyle
-                                        .sectionTitleTextStyle.fontSize ??
-                                    18,
-                                tablet: 22,
-                                largeTablet: 26,
-                                desktop: 30,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                              height: GetResponsiveSize.getResponsiveSize(
-                                  context,
-                                  mobile: 20,
-                                  tablet: 28,
-                                  largeTablet: 36,
-                                  desktop: 44)),
-                          _buildVideoPicker(),
-                          SizedBox(
-                              height: GetResponsiveSize.getResponsiveSize(
-                                  context,
-                                  mobile: 20,
-                                  tablet: 28,
-                                  largeTablet: 36,
-                                  desktop: 44)),
-                        ],
-                      ),
-                    ),
+                  VideoUploadSectionWidget(
+                    videoFileName: _videoFileName,
+                    existingVideoUrl: _existingVideoUrl,
+                    onPickVideo: _pickVideo,
                   ),
                   SizedBox(
                       height: GetResponsiveSize.getResponsiveSize(context,
@@ -666,84 +438,9 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
                           largeTablet: 40,
                           desktop: 48)),
 
-                  SafeArea(
-                    top: false,
-                    minimum: const EdgeInsets.only(bottom: 20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          height: GetResponsiveSize.getResponsiveSize(context,
-                              mobile: 50,
-                              tablet: 65,
-                              largeTablet: 75,
-                              desktop: 85),
-                          child: ElevatedButton(
-                            onPressed: isSaving ? null : () => _submit(context),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryColor,
-                              foregroundColor: AppColors.whiteColor,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  GetResponsiveSize.getResponsiveBorderRadius(
-                                      context,
-                                      mobile: 14,
-                                      tablet: 16,
-                                      largeTablet: 18,
-                                      desktop: 20),
-                                ),
-                              ),
-                            ),
-                            child: isSaving
-                                ? SizedBox(
-                                    width: GetResponsiveSize.getResponsiveSize(
-                                        context,
-                                        mobile: 18,
-                                        tablet: 24,
-                                        largeTablet: 30,
-                                        desktop: 36),
-                                    height: GetResponsiveSize.getResponsiveSize(
-                                        context,
-                                        mobile: 18,
-                                        tablet: 24,
-                                        largeTablet: 30,
-                                        desktop: 36),
-                                    child: CircularProgressIndicator(
-                                      strokeWidth:
-                                          GetResponsiveSize.getResponsiveSize(
-                                              context,
-                                              mobile: 2,
-                                              tablet: 2.5,
-                                              largeTablet: 3,
-                                              desktop: 3.5),
-                                    ),
-                                  )
-                                : Text(
-                                    'Save Changes',
-                                    style: AppTextstyle.buttonText.copyWith(
-                                      fontSize: GetResponsiveSize
-                                          .getResponsiveFontSize(
-                                        context,
-                                        mobile:
-                                            AppTextstyle.buttonText.fontSize ??
-                                                16,
-                                        tablet: 20,
-                                        largeTablet: 24,
-                                        desktop: 28,
-                                      ),
-                                    ),
-                                  ),
-                          ),
-                        ),
-                        SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(context,
-                                mobile: 16,
-                                tablet: 20,
-                                largeTablet: 24,
-                                desktop: 28)),
-                      ],
-                    ),
+                  SaveButtonWidget(
+                    isSaving: isSaving,
+                    onSave: () => _submit(context),
                   ),
                 ],
               ),
@@ -751,171 +448,6 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
           },
         ),
       ),
-    );
-  }
-
-  Widget _buildVideoPicker() {
-    // Show existing video if available, otherwise show new video selection
-    final displayText = _videoFileName ??
-        (_existingVideoUrl != null ? _existingVideoUrl! : 'No video selected');
-    final hasVideo = _videoFileName != null || _existingVideoUrl != null;
-
-    return Container(
-      height: GetResponsiveSize.getResponsiveSize(context,
-          mobile: 56, tablet: 70, largeTablet: 84, desktop: 98),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(
-          GetResponsiveSize.getResponsiveBorderRadius(context,
-              mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
-        ),
-        color: Colors.white,
-      ),
-      child: Row(
-        children: [
-          // Text field showing filename
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: GetResponsiveSize.getResponsivePadding(context,
-                    mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
-              ),
-              child: Text(
-                displayText,
-                style: TextStyle(
-                  color: hasVideo ? Colors.black87 : Colors.grey.shade500,
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(
-                    context,
-                    mobile: 16,
-                    tablet: 20,
-                    largeTablet: 24,
-                    desktop: 28,
-                  ),
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
-          // Choose File button
-          Container(
-            height: GetResponsiveSize.getResponsiveSize(context,
-                mobile: 56, tablet: 70, largeTablet: 84, desktop: 98),
-            width: GetResponsiveSize.getResponsiveSize(context,
-                mobile: 120, tablet: 150, largeTablet: 180, desktop: 210),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(context,
-                      mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
-                ),
-                bottomRight: Radius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(context,
-                      mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
-                ),
-              ),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: _pickVideo,
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(
-                    GetResponsiveSize.getResponsiveBorderRadius(context,
-                        mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
-                  ),
-                  bottomRight: Radius.circular(
-                    GetResponsiveSize.getResponsiveBorderRadius(context,
-                        mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
-                  ),
-                ),
-                child: Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        _existingVideoUrl != null
-                            ? Icons.edit
-                            : Icons.upload_file,
-                        color: Colors.black,
-                        size: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 18,
-                            tablet: 24,
-                            largeTablet: 30,
-                            desktop: 36),
-                      ),
-                      SizedBox(
-                          width: GetResponsiveSize.getResponsiveSize(context,
-                              mobile: 4,
-                              tablet: 6,
-                              largeTablet: 8,
-                              desktop: 10)),
-                      Text(
-                        _existingVideoUrl != null ? 'Change' : 'Choose File',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile: 14,
-                            tablet: 18,
-                            largeTablet: 22,
-                            desktop: 26,
-                          ),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAmenitiesCheckboxList({
-    required List<String> all,
-    required List<String> selected,
-    required ValueChanged<List<String>> onChanged,
-  }) {
-    return Wrap(
-      spacing: GetResponsiveSize.getResponsiveSize(context,
-          mobile: 10, tablet: 14, largeTablet: 18, desktop: 22),
-      runSpacing: GetResponsiveSize.getResponsiveSize(context,
-          mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
-      children: all.map((feature) {
-        final isSelected = selected.contains(feature);
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Checkbox(
-              value: isSelected,
-              onChanged: (bool? v) {
-                final updated = List<String>.from(selected);
-                if (v == true) {
-                  if (!updated.contains(feature)) updated.add(feature);
-                } else {
-                  updated.remove(feature);
-                }
-                onChanged(updated);
-              },
-            ),
-            Text(
-              feature,
-              style: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16,
-                  tablet: 20,
-                  largeTablet: 24,
-                  desktop: 28,
-                ),
-              ),
-            ),
-          ],
-        );
-      }).toList(),
     );
   }
 }
