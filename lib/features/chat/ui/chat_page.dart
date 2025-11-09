@@ -53,6 +53,15 @@ class _ChatPageState extends State<ChatPage> {
     // Join the room and load messages when page loads
     print('🚪 Dispatching JoinChatRoom event...');
     context.read<ChatBloc>().add(JoinChatRoom(widget.roomId));
+
+    // Also directly load messages to ensure they refresh when room opens
+    // This ensures messages are always loaded even if room was already joined
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        print('🔄 Silently refreshing messages for room: ${widget.roomId}');
+        context.read<ChatBloc>().add(LoadRoomMessages(widget.roomId));
+      }
+    });
   }
 
   Future<void> _getCurrentUserId() async {
@@ -231,7 +240,9 @@ class _ChatPageState extends State<ChatPage> {
         },
         child: BlocBuilder<ChatBloc, ChatState>(
           builder: (context, state) {
-            if (state is ChatLoading) {
+            // Only show loading indicator if messages are empty (initial load)
+            // Don't show loading during refreshes when messages already exist
+            if (state is ChatLoading && _messages.isEmpty) {
               return const Center(
                 child: CircularProgressIndicator(),
               );

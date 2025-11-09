@@ -290,7 +290,6 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
     final timestamp = room['timestamp'] as DateTime;
     final otherUser = room['otherUser'] as Map<String, dynamic>?;
     final lastMessage = room['lastMessage'] as String;
-    final adId = room['adId'] as String?;
 
     return Container(
       decoration: const BoxDecoration(
@@ -350,7 +349,7 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
           children: [
             Expanded(
               child: Text(
-                room['adTitle'] ?? 'Ad #${adId ?? 'Unknown'}',
+                otherUser?['name'] ?? 'Unknown User',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: GetResponsiveSize.getResponsiveFontSize(

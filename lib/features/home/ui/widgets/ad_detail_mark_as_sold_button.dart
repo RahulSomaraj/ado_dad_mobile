@@ -1,8 +1,11 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/features/home/ad_detail/ad_detail_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AdDetailMarkAsSoldButton extends StatelessWidget {
@@ -12,110 +15,168 @@ class AdDetailMarkAsSoldButton extends StatelessWidget {
 
   void _handleMarkAsSold(BuildContext context) {
     final adDetailBloc = context.read<AdDetailBloc>();
+    final isIOS = !kIsWeb && Platform.isIOS;
 
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          titlePadding: EdgeInsets.fromLTRB(
-            GetResponsiveSize.getResponsivePadding(context,
-                mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
-            GetResponsiveSize.getResponsivePadding(context,
-                mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
-            GetResponsiveSize.getResponsivePadding(context,
-                mobile: 0, tablet: 4, largeTablet: 8, desktop: 12),
-            GetResponsiveSize.getResponsivePadding(context,
-                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
-          ),
-          contentPadding: EdgeInsets.fromLTRB(
-            GetResponsiveSize.getResponsivePadding(context,
-                mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
-            0,
-            GetResponsiveSize.getResponsivePadding(context,
-                mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
-            GetResponsiveSize.getResponsivePadding(context,
-                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
-          ),
-          actionsPadding: EdgeInsets.fromLTRB(
-            GetResponsiveSize.getResponsivePadding(context,
-                mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
-            0,
-            GetResponsiveSize.getResponsivePadding(context,
-                mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
-            GetResponsiveSize.getResponsivePadding(context,
-                mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
-          ),
-          title: Text(
-            'Mark as Sold',
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                  mobile: 20, tablet: 26, largeTablet: 30, desktop: 34),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          content: Text(
-            'Are you sure you want to mark this ad as sold? This action cannot be undone.',
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                  mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.symmetric(
-                  horizontal: GetResponsiveSize.getResponsivePadding(context,
-                      mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
-                  vertical: GetResponsiveSize.getResponsivePadding(context,
-                      mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
-                ),
-              ),
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                      mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
-                ),
+    if (isIOS) {
+      // iOS-friendly Cupertino dialog
+      showCupertinoDialog(
+        context: context,
+        builder: (BuildContext dialogContext) {
+          return CupertinoAlertDialog(
+            title: Text(
+              'Mark as Sold',
+              style: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                    mobile: 20, tablet: 26, largeTablet: 30, desktop: 34),
+                fontWeight: FontWeight.w700,
               ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                adDetailBloc.add(
-                  AdDetailEvent.markAsSold(ad.id),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryColor,
-                padding: EdgeInsets.symmetric(
-                  horizontal: GetResponsiveSize.getResponsivePadding(context,
-                      mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
-                  vertical: GetResponsiveSize.getResponsivePadding(context,
-                      mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    GetResponsiveSize.getResponsiveBorderRadius(context,
-                        mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
+            content: Text(
+              'Are you sure you want to mark this ad as sold? This action cannot be undone.',
+              style: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                    mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
+              ),
+            ),
+            actions: [
+              CupertinoDialogAction(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
                   ),
                 ),
-                elevation: 0,
               ),
-              child: Text(
-                'Mark as Sold',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                      mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
+              CupertinoDialogAction(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  adDetailBloc.add(
+                    AdDetailEvent.markAsSold(ad.id),
+                  );
+                },
+                isDestructiveAction: false,
+                child: Text(
+                  'Mark as Sold',
+                  style: TextStyle(
+                    color: AppColors.primaryColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
+                  ),
                 ),
               ),
+            ],
+          );
+        },
+      );
+    } else {
+      // Material Design dialog for Android/Web
+      showDialog(
+        context: context,
+        builder: (BuildContext dialogContext) {
+          return AlertDialog(
+            titlePadding: EdgeInsets.fromLTRB(
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 0, tablet: 4, largeTablet: 8, desktop: 12),
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
             ),
-          ],
-        );
-      },
-    );
+            contentPadding: EdgeInsets.fromLTRB(
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+              0,
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+            ),
+            actionsPadding: EdgeInsets.fromLTRB(
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+              0,
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+            ),
+            title: Text(
+              'Mark as Sold',
+              style: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                    mobile: 20, tablet: 26, largeTablet: 30, desktop: 34),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            content: Text(
+              'Are you sure you want to mark this ad as sold? This action cannot be undone.',
+              style: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                    mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: GetResponsiveSize.getResponsivePadding(context,
+                        mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+                    vertical: GetResponsiveSize.getResponsivePadding(context,
+                        mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+                  ),
+                ),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  adDetailBloc.add(
+                    AdDetailEvent.markAsSold(ad.id),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryColor,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: GetResponsiveSize.getResponsivePadding(context,
+                        mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+                    vertical: GetResponsiveSize.getResponsivePadding(context,
+                        mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(
+                      GetResponsiveSize.getResponsiveBorderRadius(context,
+                          mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
+                    ),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Mark as Sold',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   @override

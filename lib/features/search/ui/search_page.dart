@@ -747,37 +747,20 @@ class _SearchPageState extends State<SearchPage> {
                       mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
                 ),
                 child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(
-                    GetResponsiveSize.getResponsiveBorderRadius(
-                      context,
-                      mobile: 12,
-                      tablet: 14,
-                      largeTablet: 16,
-                      desktop: 18,
-                    ),
-                  ),
-                  child: ad.images.isNotEmpty
-                      ? Image.network(
-                          ad.images[0],
-                          height: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 98,
-                            tablet: 140,
-                            largeTablet: 180,
-                            desktop: 220,
-                          ),
-                          width: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 98,
-                            tablet: 140,
-                            largeTablet: 180,
-                            desktop: 220,
-                          ),
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                        GetResponsiveSize.getResponsiveBorderRadius(
+                          context,
+                          mobile: 12,
+                          tablet: 14,
+                          largeTablet: 16,
+                          desktop: 18,
+                        ),
+                      ),
+                      child: ad.images.isNotEmpty
+                          ? Image.network(
+                              ad.images[0],
                               height: GetResponsiveSize.getResponsiveSize(
                                 context,
                                 mobile: 98,
@@ -788,6 +771,52 @@ class _SearchPageState extends State<SearchPage> {
                               width: GetResponsiveSize.getResponsiveSize(
                                 context,
                                 mobile: 98,
+                                tablet: 140,
+                                largeTablet: 180,
+                                desktop: 220,
+                              ),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  height: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 98,
+                                    tablet: 140,
+                                    largeTablet: 180,
+                                    desktop: 220,
+                                  ),
+                                  width: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 98,
+                                    tablet: 140,
+                                    largeTablet: 180,
+                                    desktop: 220,
+                                  ),
+                                  color: Colors.grey[300],
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    size: GetResponsiveSize.getResponsiveSize(
+                                      context,
+                                      mobile: 24,
+                                      tablet: 32,
+                                      largeTablet: 40,
+                                      desktop: 48,
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
+                          : Container(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 100,
+                                tablet: 140,
+                                largeTablet: 180,
+                                desktop: 220,
+                              ),
+                              width: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 100,
                                 tablet: 140,
                                 largeTablet: 180,
                                 desktop: 220,
@@ -803,50 +832,47 @@ class _SearchPageState extends State<SearchPage> {
                                   desktop: 48,
                                 ),
                               ),
-                            );
-                          },
-                        )
-                      : Container(
-                          height: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 100,
-                            tablet: 140,
-                            largeTablet: 180,
-                            desktop: 220,
-                          ),
-                          width: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 100,
-                            tablet: 140,
-                            largeTablet: 180,
-                            desktop: 220,
-                          ),
-                          color: Colors.grey[300],
-                          child: Icon(
-                            Icons.image_not_supported,
-                            size: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 24,
-                              tablet: 32,
-                              largeTablet: 40,
-                              desktop: 48,
                             ),
-                          ),
-                        ),
-                ),
-                SizedBox(
-                    width: GetResponsiveSize.getResponsiveSize(context,
-                        mobile: 15, tablet: 20, largeTablet: 26, desktop: 32)),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                    ),
+                    SizedBox(
+                        width: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 15,
+                            tablet: 20,
+                            largeTablet: 26,
+                            desktop: 32)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Row(
+                            children: [
+                              Text(
+                                '₹ ${ad.price.toString()}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                    context,
+                                    mobile: 16,
+                                    tablet: 22,
+                                    largeTablet: 28,
+                                    desktop: 34,
+                                  ),
+                                ),
+                              ),
+                              const Spacer(),
+                            ],
+                          ),
+                          SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 5,
+                                  tablet: 8,
+                                  largeTablet: 12,
+                                  desktop: 16)),
                           Text(
-                            '₹ ${ad.price.toString()}',
+                            _getAdTitle(ad),
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
                               fontSize: GetResponsiveSize.getResponsiveFontSize(
                                 context,
                                 mobile: 16,
@@ -854,74 +880,54 @@ class _SearchPageState extends State<SearchPage> {
                                 largeTablet: 28,
                                 desktop: 34,
                               ),
+                              fontWeight: FontWeight.bold,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const Spacer(),
+                          Text(
+                            ad.location,
+                            style: AppTextstyle.categoryLabelTextStyle.copyWith(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: AppTextstyle
+                                        .categoryLabelTextStyle.fontSize ??
+                                    14,
+                                tablet: 18,
+                                largeTablet: 22,
+                                desktop: 26,
+                              ),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 5,
+                                  tablet: 8,
+                                  largeTablet: 12,
+                                  desktop: 16)),
+                          Text(
+                            _getAdSubtitle(ad),
+                            style: AppTextstyle.categoryLabelTextStyle.copyWith(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: AppTextstyle
+                                        .categoryLabelTextStyle.fontSize ??
+                                    14,
+                                tablet: 18,
+                                largeTablet: 22,
+                                desktop: 26,
+                              ),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ],
                       ),
-                      SizedBox(
-                          height: GetResponsiveSize.getResponsiveSize(context,
-                              mobile: 5,
-                              tablet: 8,
-                              largeTablet: 12,
-                              desktop: 16)),
-                      Text(
-                        _getAdTitle(ad),
-                        style: TextStyle(
-                          fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile: 16,
-                            tablet: 22,
-                            largeTablet: 28,
-                            desktop: 34,
-                          ),
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        ad.location,
-                        style: AppTextstyle.categoryLabelTextStyle.copyWith(
-                          fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile:
-                                AppTextstyle.categoryLabelTextStyle.fontSize ??
-                                    14,
-                            tablet: 18,
-                            largeTablet: 22,
-                            desktop: 26,
-                          ),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(
-                          height: GetResponsiveSize.getResponsiveSize(context,
-                              mobile: 5,
-                              tablet: 8,
-                              largeTablet: 12,
-                              desktop: 16)),
-                      Text(
-                        _getAdSubtitle(ad),
-                        style: AppTextstyle.categoryLabelTextStyle.copyWith(
-                          fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile:
-                                AppTextstyle.categoryLabelTextStyle.fontSize ??
-                                    14,
-                            tablet: 18,
-                            largeTablet: 22,
-                            desktop: 26,
-                          ),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                )
-              ],
+                    )
+                  ],
                 ),
               ),
               // Premium badge in top right corner
@@ -941,8 +947,7 @@ class _SearchPageState extends State<SearchPage> {
                     largeTablet: 12,
                     desktop: 14,
                   ),
-                  child: Image.asset(
-                    'assets/images/premium1.png',
+                  child: Container(
                     width: GetResponsiveSize.getResponsiveSize(
                       context,
                       mobile: 32,
@@ -957,7 +962,23 @@ class _SearchPageState extends State<SearchPage> {
                       largeTablet: 48,
                       desktop: 56,
                     ),
-                    fit: BoxFit.contain,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: EdgeInsets.all(
+                      GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 6,
+                        tablet: 8,
+                        largeTablet: 10,
+                        desktop: 12,
+                      ),
+                    ),
+                    child: Image.asset(
+                      'assets/images/vip-crown-2-line.png',
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
             ],

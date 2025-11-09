@@ -1117,8 +1117,7 @@ class _HomePageState extends State<HomePage> {
                             largeTablet: 12,
                             desktop: 14,
                           ),
-                          child: Image.asset(
-                            'assets/images/premium1.png',
+                          child: Container(
                             width: GetResponsiveSize.getResponsiveSize(
                               context,
                               mobile: 32,
@@ -1133,7 +1132,23 @@ class _HomePageState extends State<HomePage> {
                               largeTablet: 48,
                               desktop: 56,
                             ),
-                            fit: BoxFit.contain,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            padding: EdgeInsets.all(
+                              GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 6,
+                                tablet: 8,
+                                largeTablet: 10,
+                                desktop: 12,
+                              ),
+                            ),
+                            child: Image.asset(
+                              'assets/images/vip-crown-2-line.png',
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
                     ],
