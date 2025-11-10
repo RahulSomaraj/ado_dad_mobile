@@ -101,23 +101,23 @@ class AdDetailFavoriteButton extends StatelessWidget {
               desktop: 64,
             ),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.35),
+              // color: Colors.black.withOpacity(0.35),
               shape: BoxShape.circle,
             ),
             child: Image.asset(
               isFavorited
-                  ? 'assets/images/favorite_icon_filled.png'
-                  : 'assets/images/favorite_icon_unfilled.png',
+                  ? 'assets/images/heart-3-fill.png'
+                  : 'assets/images/heart-3-line.png',
               width: GetResponsiveSize.getResponsiveSize(
                 context,
-                mobile: 20,
+                mobile: 15,
                 tablet: 26,
                 largeTablet: 30,
                 desktop: 34,
               ),
               height: GetResponsiveSize.getResponsiveSize(
                 context,
-                mobile: 20,
+                mobile: 15,
                 tablet: 26,
                 largeTablet: 30,
                 desktop: 34,

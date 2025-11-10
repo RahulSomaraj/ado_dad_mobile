@@ -615,7 +615,7 @@ class _ProductTile extends StatelessWidget {
                     ),
                   ),
                   child: Image.asset(
-                    'assets/images/vip-crown-2-line.png',
+                    'assets/images/vip-crown-2-line copy.png',
                     fit: BoxFit.contain,
                   ),
                 ),

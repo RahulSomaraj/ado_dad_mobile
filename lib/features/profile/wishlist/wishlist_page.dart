@@ -543,7 +543,7 @@ class _WishlistPageState extends State<WishlistPage> {
                                       );
                                 },
                                 child: Image.asset(
-                                  'assets/images/favorite_icon_filled.png',
+                                  'assets/images/heart-3-fill.png',
                                   width: GetResponsiveSize.getResponsiveSize(
                                     context,
                                     mobile: 24,

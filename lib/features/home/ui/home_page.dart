@@ -1146,7 +1146,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             child: Image.asset(
-                              'assets/images/vip-crown-2-line.png',
+                              'assets/images/vip-crown-2-line copy.png',
                               fit: BoxFit.contain,
                             ),
                           ),
@@ -1222,21 +1222,21 @@ class _HomePageState extends State<HomePage> {
                               },
                               child: Image.asset(
                                 isFavorited
-                                    ? 'assets/images/favorite_icon_filled.png'
-                                    : 'assets/images/favorite_icon_unfilled.png',
+                                    ? 'assets/images/heart-3-fill.png'
+                                    : 'assets/images/heart-3-line.png',
                                 width: GetResponsiveSize.getResponsiveSize(
                                   context,
-                                  mobile: 24,
-                                  tablet: 30,
-                                  largeTablet: 34,
-                                  desktop: 34,
+                                  mobile: 20,
+                                  tablet: 20,
+                                  largeTablet: 30,
+                                  desktop: 30,
                                 ),
                                 height: GetResponsiveSize.getResponsiveSize(
                                   context,
-                                  mobile: 24,
-                                  tablet: 30,
-                                  largeTablet: 34,
-                                  desktop: 34,
+                                  mobile: 20,
+                                  tablet: 20,
+                                  largeTablet: 30,
+                                  desktop: 30,
                                 ),
                               ),
                             );
