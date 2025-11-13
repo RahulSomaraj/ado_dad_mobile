@@ -23,8 +23,19 @@ class AdDetailTitlePrice extends StatelessWidget {
   Widget build(BuildContext context) {
     String title;
     if (ad.category == 'property') {
-      title =
-          '${ad.propertyType ?? ''} • ${ad.bedrooms ?? 0} BHK • ${ad.areaSqft ?? 0} sqft';
+      // Show BHK only for apartment, house, and villa
+      final shouldShowBHK = ad.propertyType == 'apartment' ||
+          ad.propertyType == 'house' ||
+          ad.propertyType == 'villa';
+      
+      if (shouldShowBHK) {
+        title =
+            '${ad.propertyType ?? ''} • ${ad.bedrooms ?? 0} BHK • ${ad.areaSqft ?? 0} sqft';
+      } else {
+        // For other property types, show only property type and area
+        title =
+            '${ad.propertyType ?? ''} • ${ad.areaSqft ?? 0} sqft';
+      }
     } else {
       title =
           '${ad.manufacturer?.displayName ?? ad.manufacturer?.name ?? ''} ${ad.model?.displayName ?? ad.model?.name ?? ''} (${ad.year ?? ''})';

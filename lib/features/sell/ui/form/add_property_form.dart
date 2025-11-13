@@ -32,6 +32,15 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
   final List<Uint8List> _imageFiles = [];
   final List<String> _uploadedUrls = [];
 
+  // Helper method to check if property type requires only basic fields
+  bool _isRestrictedPropertyType() {
+    return _selectedPropertyType == 'plot' ||
+        _selectedPropertyType == 'commercial' ||
+        _selectedPropertyType == 'office' ||
+        _selectedPropertyType == 'shop' ||
+        _selectedPropertyType == 'warehouse';
+  }
+
   // Video upload variables
   Uint8List? _videoFile;
   String? _uploadedVideoUrl;
@@ -113,22 +122,40 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
     await _uploadImages(); // S3 Upload
     await _uploadVideo(); // S3 Video Upload
 
-    final ad = {
+    final ad = <String, dynamic>{
       "description": _description,
       "price": _price,
       "location": _location,
       "images": _uploadedUrls,
       "link": _uploadedVideoUrl, // Video URL
       "propertyType": _selectedPropertyType,
-      "bedrooms": _bedrooms,
-      "bathrooms": _bathrooms,
       "areaSqft": _areasqft,
-      "floor": _floor,
-      "isFurnished": _isFurnished,
-      "hasParking": _hasParking,
-      "hasGarden": _hasGarden,
-      "amenities": _selectedAmenities,
     };
+
+    // Only include bedrooms and bathrooms for non-restricted property types
+    if (!_isRestrictedPropertyType()) {
+      ad["bedrooms"] = _bedrooms;
+      ad["bathrooms"] = _bathrooms;
+    }
+
+    // Only include floor, isFurnished, hasGarden for non-restricted property types
+    // (plot and warehouse don't need these)
+    if (_selectedPropertyType != 'plot' &&
+        _selectedPropertyType != 'warehouse') {
+      ad["floor"] = _floor;
+      ad["isFurnished"] = _isFurnished;
+      ad["hasGarden"] = _hasGarden;
+    }
+
+    // hasParking is shown for all except plot
+    if (_selectedPropertyType != 'plot') {
+      ad["hasParking"] = _hasParking;
+    }
+
+    // Amenities are only for non-plot property types
+    if (_selectedPropertyType != 'plot') {
+      ad["amenities"] = _selectedAmenities;
+    }
 
     context.read<AddPostBloc>().add(
           AddPostEvent.postAd(
@@ -309,27 +336,35 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
                               desktop: 28,
                             ),
                           ),
-                          GetInput(
-                            label: 'Bedrooms',
-                            isNumberField: true,
-                            onSaved: (val) =>
-                                _bedrooms = int.tryParse(val ?? '0') ?? 0,
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
+                          if (_selectedPropertyType != 'plot' &&
+                              _selectedPropertyType != 'commercial' &&
+                              _selectedPropertyType != 'office' &&
+                              _selectedPropertyType != 'shop' &&
+                              _selectedPropertyType != 'warehouse') ...[
+                            GetInput(
+                              label: 'Bedrooms',
+                              isNumberField: true,
+                              required: !_isRestrictedPropertyType(),
+                              onSaved: (val) =>
+                                  _bedrooms = int.tryParse(val ?? '0') ?? 0,
                             ),
-                          ),
-                          GetInput(
-                            label: 'Bathrooms',
-                            isNumberField: true,
-                            onSaved: (val) =>
-                                _bathrooms = int.tryParse(val ?? '0') ?? 0,
-                          ),
+                            SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 10,
+                                tablet: 16,
+                                largeTablet: 22,
+                                desktop: 28,
+                              ),
+                            ),
+                            GetInput(
+                              label: 'Bathrooms',
+                              isNumberField: true,
+                              required: !_isRestrictedPropertyType(),
+                              onSaved: (val) =>
+                                  _bathrooms = int.tryParse(val ?? '0') ?? 0,
+                            ),
+                          ],
                           SizedBox(
                             height: GetResponsiveSize.getResponsiveSize(
                               context,
@@ -354,102 +389,111 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
                               desktop: 28,
                             ),
                           ),
-                          GetInput(
-                            label: 'Floor',
-                            isNumberField: true,
-                            onSaved: (val) =>
-                                _floor = int.tryParse(val ?? '0') ?? 0,
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
+                          if (_selectedPropertyType != 'plot' &&
+                              _selectedPropertyType != 'warehouse') ...[
+                            GetInput(
+                              label: 'Floor',
+                              isNumberField: true,
+                              required: !_isRestrictedPropertyType(),
+                              onSaved: (val) =>
+                                  _floor = int.tryParse(val ?? '0') ?? 0,
                             ),
-                          ),
-                          CheckboxListTile(
-                            value: _isFurnished,
-                            title: Text(
-                              'Is Furnished?',
-                              style: TextStyle(
-                                fontSize:
-                                    GetResponsiveSize.getResponsiveFontSize(
-                                  context,
-                                  mobile: 16,
-                                  tablet: 20,
-                                  largeTablet: 24,
-                                  desktop: 28,
-                                ),
+                            SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 10,
+                                tablet: 16,
+                                largeTablet: 22,
+                                desktop: 28,
                               ),
                             ),
-                            onChanged: (val) {
-                              setState(() {
-                                _isFurnished = val ?? false;
-                              });
-                            },
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          CheckboxListTile(
-                            value: _hasParking,
-                            title: Text(
-                              'Has Parking?',
-                              style: TextStyle(
-                                fontSize:
-                                    GetResponsiveSize.getResponsiveFontSize(
-                                  context,
-                                  mobile: 16,
-                                  tablet: 20,
-                                  largeTablet: 24,
-                                  desktop: 28,
+                            CheckboxListTile(
+                              value: _isFurnished,
+                              title: Text(
+                                'Is Furnished?',
+                                style: TextStyle(
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                    context,
+                                    mobile: 16,
+                                    tablet: 20,
+                                    largeTablet: 24,
+                                    desktop: 28,
+                                  ),
                                 ),
                               ),
+                              onChanged: (val) {
+                                setState(() {
+                                  _isFurnished = val ?? false;
+                                });
+                              },
                             ),
-                            onChanged: (val) {
-                              setState(() {
-                                _hasParking = val ?? false;
-                              });
-                            },
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          CheckboxListTile(
-                            value: _hasGarden,
-                            title: Text(
-                              'Has Garden?',
-                              style: TextStyle(
-                                fontSize:
-                                    GetResponsiveSize.getResponsiveFontSize(
-                                  context,
-                                  mobile: 16,
-                                  tablet: 20,
-                                  largeTablet: 24,
-                                  desktop: 28,
-                                ),
+                            SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 10,
+                                tablet: 16,
+                                largeTablet: 22,
+                                desktop: 28,
                               ),
                             ),
-                            onChanged: (val) {
-                              setState(() {
-                                _hasGarden = val ?? false;
-                              });
-                            },
-                          ),
+                          ],
+                          if (_selectedPropertyType != 'plot') ...[
+                            CheckboxListTile(
+                              value: _hasParking,
+                              title: Text(
+                                'Has Parking?',
+                                style: TextStyle(
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                    context,
+                                    mobile: 16,
+                                    tablet: 20,
+                                    largeTablet: 24,
+                                    desktop: 28,
+                                  ),
+                                ),
+                              ),
+                              onChanged: (val) {
+                                setState(() {
+                                  _hasParking = val ?? false;
+                                });
+                              },
+                            ),
+                            SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 10,
+                                tablet: 16,
+                                largeTablet: 22,
+                                desktop: 28,
+                              ),
+                            ),
+                          ],
+                          if (_selectedPropertyType != 'plot' &&
+                              _selectedPropertyType != 'warehouse') ...[
+                            CheckboxListTile(
+                              value: _hasGarden,
+                              title: Text(
+                                'Has Garden?',
+                                style: TextStyle(
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                    context,
+                                    mobile: 16,
+                                    tablet: 20,
+                                    largeTablet: 24,
+                                    desktop: 28,
+                                  ),
+                                ),
+                              ),
+                              onChanged: (val) {
+                                setState(() {
+                                  _hasGarden = val ?? false;
+                                });
+                              },
+                            ),
+                          ],
                           SizedBox(
                             height: GetResponsiveSize.getResponsiveSize(
                               context,
@@ -492,67 +536,73 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
                       desktop: 32,
                     ),
                   ),
-                  Divider(),
-                  Container(
-                    width: double.infinity,
-                    color: AppColors.whiteColor,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: GetResponsiveSize.getResponsivePadding(
-                          context,
-                          mobile: 16,
-                          tablet: 24,
-                          largeTablet: 32,
-                          desktop: 40,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
+                  if (_selectedPropertyType != 'plot') ...[
+                    Divider(),
+                    Container(
+                      width: double.infinity,
+                      color: AppColors.whiteColor,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: GetResponsiveSize.getResponsivePadding(
+                            context,
+                            mobile: 16,
+                            tablet: 24,
+                            largeTablet: 32,
+                            desktop: 40,
                           ),
-                          Text(
-                            'Amenities',
-                            style: AppTextstyle.sectionTitleTextStyle.copyWith(
-                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
                                 context,
-                                mobile: AppTextstyle
-                                        .sectionTitleTextStyle.fontSize ??
-                                    18,
-                                tablet: 24,
-                                largeTablet: 30,
-                                desktop: 36,
+                                mobile: 10,
+                                tablet: 16,
+                                largeTablet: 22,
+                                desktop: 28,
                               ),
                             ),
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
+                            Text(
+                              'Amenities',
+                              style:
+                                  AppTextstyle.sectionTitleTextStyle.copyWith(
+                                fontSize:
+                                    GetResponsiveSize.getResponsiveFontSize(
+                                  context,
+                                  mobile: AppTextstyle
+                                          .sectionTitleTextStyle.fontSize ??
+                                      18,
+                                  tablet: 24,
+                                  largeTablet: 30,
+                                  desktop: 36,
+                                ),
+                              ),
                             ),
-                          ),
-                          buildAmenitiesCheckboxList(
-                            allFeatures: _allAmenities,
-                            selectedFeatures: _selectedAmenities,
-                            onChanged: (updated) {
-                              setState(() => _selectedAmenities = updated);
-                            },
-                          ),
-                        ],
+                            SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 10,
+                                tablet: 16,
+                                largeTablet: 22,
+                                desktop: 28,
+                              ),
+                            ),
+                            buildAmenitiesCheckboxList(
+                              allFeatures: _selectedPropertyType == 'warehouse'
+                                  ? ['Security', 'Lift', '24/7 Water Supply']
+                                  : _allAmenities,
+                              selectedFeatures: _selectedAmenities,
+                              onChanged: (updated) {
+                                setState(() => _selectedAmenities = updated);
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  Divider(),
+                    Divider(),
+                  ],
                   Container(
                     width: double.infinity,
                     color: AppColors.whiteColor,

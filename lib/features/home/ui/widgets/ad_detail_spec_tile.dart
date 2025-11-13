@@ -15,8 +15,12 @@ class AdDetailSpecTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // For Description, align to top to allow proper text wrapping
+    final isDescription = spec.label == 'Description';
+
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment:
+          isDescription ? CrossAxisAlignment.start : CrossAxisAlignment.center,
       children: [
         Container(
           height: GetResponsiveSize.getResponsiveSize(context,
@@ -42,7 +46,9 @@ class AdDetailSpecTile extends StatelessWidget {
                 mobile: 10, tablet: 14, largeTablet: 16, desktop: 18)),
         Expanded(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: isDescription
+                ? MainAxisAlignment.start
+                : MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -58,8 +64,15 @@ class AdDetailSpecTile extends StatelessWidget {
                       mobile: 2, tablet: 4, largeTablet: 5, desktop: 6)),
               Text(
                 spec.value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                maxLines:
+                    (spec.label == 'Amenities' || spec.label == 'Description')
+                        ? null
+                        : 1,
+                overflow:
+                    (spec.label == 'Amenities' || spec.label == 'Description')
+                        ? null
+                        : TextOverflow.ellipsis,
+                softWrap: true,
                 style: TextStyle(
                   fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                       mobile: 13, tablet: 20, largeTablet: 24, desktop: 28),

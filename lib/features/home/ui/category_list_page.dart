@@ -762,22 +762,31 @@ class _CategoryListPageState extends State<CategoryListPage> {
                                           largeTablet: 48,
                                           desktop: 56,
                                         ),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.white,
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.35),
                                           shape: BoxShape.circle,
                                         ),
-                                        padding: EdgeInsets.all(
-                                          GetResponsiveSize.getResponsiveSize(
-                                            context,
-                                            mobile: 6,
-                                            tablet: 8,
-                                            largeTablet: 10,
-                                            desktop: 12,
+                                        child: Center(
+                                          child: SizedBox(
+                                            width: GetResponsiveSize.getResponsiveSize(
+                                              context,
+                                              mobile: 18,
+                                              tablet: 22,
+                                              largeTablet: 26,
+                                              desktop: 30,
+                                            ),
+                                            height: GetResponsiveSize.getResponsiveSize(
+                                              context,
+                                              mobile: 18,
+                                              tablet: 22,
+                                              largeTablet: 26,
+                                              desktop: 30,
+                                            ),
+                                            child: Image.asset(
+                                              'assets/images/vip-crown-2-line copy.png',
+                                              fit: BoxFit.contain,
+                                            ),
                                           ),
-                                        ),
-                                        child: Image.asset(
-                                          'assets/images/vip-crown-2-line copy.png',
-                                          fit: BoxFit.contain,
                                         ),
                                       ),
                                     ),

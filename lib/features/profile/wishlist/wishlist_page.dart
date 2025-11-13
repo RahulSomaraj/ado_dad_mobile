@@ -476,20 +476,24 @@ class _WishlistPageState extends State<WishlistPage> {
 
                               if (state is FavoriteToggleLoading &&
                                   state.adId == favorite.id) {
-                                return SizedBox(
+                                return Container(
                                   width: GetResponsiveSize.getResponsiveSize(
                                     context,
-                                    mobile: 24,
-                                    tablet: 32,
-                                    largeTablet: 38,
-                                    desktop: 44,
+                                    mobile: 36,
+                                    tablet: 48,
+                                    largeTablet: 56,
+                                    desktop: 64,
                                   ),
                                   height: GetResponsiveSize.getResponsiveSize(
                                     context,
-                                    mobile: 24,
-                                    tablet: 32,
-                                    largeTablet: 38,
-                                    desktop: 44,
+                                    mobile: 36,
+                                    tablet: 48,
+                                    largeTablet: 56,
+                                    desktop: 64,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.35),
+                                    shape: BoxShape.circle,
                                   ),
                                   child: Center(
                                     child: SizedBox(
@@ -497,30 +501,23 @@ class _WishlistPageState extends State<WishlistPage> {
                                           GetResponsiveSize.getResponsiveSize(
                                         context,
                                         mobile: 16,
-                                        tablet: 22,
-                                        largeTablet: 26,
-                                        desktop: 30,
+                                        tablet: 20,
+                                        largeTablet: 24,
+                                        desktop: 28,
                                       ),
                                       height:
                                           GetResponsiveSize.getResponsiveSize(
                                         context,
                                         mobile: 16,
-                                        tablet: 22,
-                                        largeTablet: 26,
-                                        desktop: 30,
+                                        tablet: 20,
+                                        largeTablet: 24,
+                                        desktop: 28,
                                       ),
-                                      child: CircularProgressIndicator(
-                                        strokeWidth:
-                                            GetResponsiveSize.getResponsiveSize(
-                                          context,
-                                          mobile: 2,
-                                          tablet: 2.5,
-                                          largeTablet: 3,
-                                          desktop: 3.5,
-                                        ),
+                                      child: const CircularProgressIndicator(
+                                        strokeWidth: 2,
                                         valueColor:
-                                            const AlwaysStoppedAnimation<Color>(
-                                                Colors.grey),
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.white),
                                       ),
                                     ),
                                   ),
@@ -542,21 +539,48 @@ class _WishlistPageState extends State<WishlistPage> {
                                         ),
                                       );
                                 },
-                                child: Image.asset(
-                                  'assets/images/heart-3-fill.png',
+                                child: Container(
                                   width: GetResponsiveSize.getResponsiveSize(
                                     context,
-                                    mobile: 24,
-                                    tablet: 32,
-                                    largeTablet: 38,
-                                    desktop: 44,
+                                    mobile: 36,
+                                    tablet: 48,
+                                    largeTablet: 56,
+                                    desktop: 64,
                                   ),
                                   height: GetResponsiveSize.getResponsiveSize(
                                     context,
-                                    mobile: 24,
-                                    tablet: 32,
-                                    largeTablet: 38,
-                                    desktop: 44,
+                                    mobile: 36,
+                                    tablet: 48,
+                                    largeTablet: 56,
+                                    desktop: 64,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.whiteColor,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: SizedBox(
+                                      width:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 20,
+                                        tablet: 20,
+                                        largeTablet: 24,
+                                        desktop: 28,
+                                      ),
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 20,
+                                        tablet: 20,
+                                        largeTablet: 24,
+                                        desktop: 28,
+                                      ),
+                                      child: Image.asset(
+                                        'assets/images/heart-3-fill.png',
+                                        fit: BoxFit.contain,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               );

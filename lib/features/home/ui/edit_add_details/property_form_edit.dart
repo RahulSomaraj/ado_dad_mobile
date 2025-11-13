@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
-import 'package:ado_dad_user/common/widgets/dropdown_widget.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/features/home/ad_edit/bloc/ad_edit_bloc.dart';
 import 'package:ado_dad_user/features/home/ui/edit_add_details/widgets/checkbox_toggle_widget.dart';
@@ -45,17 +44,7 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
   bool _hasParking = false;
   bool _hasGarden = false;
 
-  // dropdowns & chips
-  final Map<String, String> _propertyTypeMap = const {
-    'apartment': 'apartment',
-    'house': 'house',
-    'villa': 'villa',
-    'plot': 'plot',
-    'commercial': 'commercial',
-    'office': 'office',
-    'shop': 'shop',
-    'warehouse': 'warehouse',
-  };
+  // Property type (read-only in edit form)
   String? _selectedPropertyType;
 
   final List<String> _allAmenities = const [
@@ -85,22 +74,48 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
     // Prefill from ad
     _priceCtrl = TextEditingController(text: widget.ad.price.toString());
     _locationCtrl = TextEditingController(text: widget.ad.location);
+
+    // Ensure description is correctly assigned
     _descCtrl = TextEditingController(text: widget.ad.description);
 
     _selectedPropertyType = widget.ad.propertyType;
-    _bedroomsCtrl =
-        TextEditingController(text: (widget.ad.bedrooms ?? 0).toString());
-    _bathroomsCtrl =
-        TextEditingController(text: (widget.ad.bathrooms ?? 0).toString());
-    _areaCtrl =
-        TextEditingController(text: (widget.ad.areaSqft ?? 0).toString());
-    _floorCtrl = TextEditingController(text: (widget.ad.floor ?? 0).toString());
+    _bedroomsCtrl = TextEditingController(
+        text: widget.ad.bedrooms != null ? widget.ad.bedrooms.toString() : '');
+    _bathroomsCtrl = TextEditingController(
+        text:
+            widget.ad.bathrooms != null ? widget.ad.bathrooms.toString() : '');
+
+    // Ensure areaSqft is correctly assigned from the right field
+    final areaSqftValue =
+        widget.ad.areaSqft != null ? widget.ad.areaSqft.toString() : '';
+    _areaCtrl = TextEditingController(text: areaSqftValue);
+    _floorCtrl = TextEditingController(
+        text: widget.ad.floor != null ? widget.ad.floor.toString() : '');
+
+    // Debug: Verify values are correctly assigned
+    debugPrint('PropertyFormEdit - Description: ${widget.ad.description}');
+    debugPrint('PropertyFormEdit - AreaSqft: ${widget.ad.areaSqft}');
+    debugPrint('PropertyFormEdit - AreaCtrl text: ${_areaCtrl.text}');
+    debugPrint('PropertyFormEdit - DescCtrl text: ${_descCtrl.text}');
 
     _isFurnished = widget.ad.isFurnished ?? false;
     _hasParking = widget.ad.hasParking ?? false;
     _hasGarden = widget.ad.hasGarden ?? false;
 
-    _selectedAmenities = List<String>.from(widget.ad.additionalFeatures ?? []);
+    // For properties, amenities are stored in 'amenities' field, not 'additionalFeatures'
+    _selectedAmenities = List<String>.from(widget.ad.amenities ?? []);
+    // Filter amenities if property type is warehouse
+    if (_selectedPropertyType == 'warehouse') {
+      const warehouseAmenities = ['Security', 'Lift', '24/7 Water Supply'];
+      _selectedAmenities = _selectedAmenities
+          .where((amenity) => warehouseAmenities.contains(amenity))
+          .toList();
+    }
+
+    // Debug: Verify amenities are correctly loaded
+    debugPrint(
+        'PropertyFormEdit - Amenities from backend: ${widget.ad.amenities}');
+    debugPrint('PropertyFormEdit - Selected amenities: $_selectedAmenities');
     _imageUrls = List<String>.from(widget.ad.images);
     _existingVideoUrl = widget.ad.link?.isNotEmpty == true
         ? widget.ad.link
@@ -175,16 +190,46 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
       "description": _descCtrl.text.trim(),
       "images": _imageUrls,
       "propertyType": _selectedPropertyType,
-      "bedrooms": int.tryParse(_bedroomsCtrl.text.trim()) ?? 0,
-      "bathrooms": int.tryParse(_bathroomsCtrl.text.trim()) ?? 0,
-      "areaSqft": int.tryParse(_areaCtrl.text.trim()) ?? 0,
-      "floor": int.tryParse(_floorCtrl.text.trim()) ?? 0,
-      "isFurnished": _isFurnished,
-      "hasParking": _hasParking,
-      "hasGarden": _hasGarden,
-      "amenities": _selectedAmenities,
+      "areaSqft": _areaCtrl.text.trim().isNotEmpty
+          ? int.tryParse(_areaCtrl.text.trim())
+          : null,
       "link": _uploadedVideoUrl ?? _existingVideoUrl, // Video URL
     };
+
+    // Only include bedrooms and bathrooms for non-restricted property types
+    if (_selectedPropertyType != 'warehouse' &&
+        _selectedPropertyType != 'plot' &&
+        _selectedPropertyType != 'commercial' &&
+        _selectedPropertyType != 'office' &&
+        _selectedPropertyType != 'shop') {
+      payload["bedrooms"] = _bedroomsCtrl.text.trim().isNotEmpty
+          ? int.tryParse(_bedroomsCtrl.text.trim())
+          : null;
+      payload["bathrooms"] = _bathroomsCtrl.text.trim().isNotEmpty
+          ? int.tryParse(_bathroomsCtrl.text.trim())
+          : null;
+    }
+
+    // Only include floor, isFurnished, hasGarden for non-restricted property types
+    // (plot and warehouse don't need these)
+    if (_selectedPropertyType != 'warehouse' &&
+        _selectedPropertyType != 'plot') {
+      payload["floor"] = _floorCtrl.text.trim().isNotEmpty
+          ? int.tryParse(_floorCtrl.text.trim())
+          : null;
+      payload["isFurnished"] = _isFurnished;
+      payload["hasGarden"] = _hasGarden;
+    }
+
+    // hasParking is shown for all except plot
+    if (_selectedPropertyType != 'plot') {
+      payload["hasParking"] = _hasParking;
+    }
+
+    // Amenities are only for non-plot property types
+    if (_selectedPropertyType != 'plot') {
+      payload["amenities"] = _selectedAmenities;
+    }
 
     // Optional: drop null/empty string keys to avoid blank-overwrites
     payload.removeWhere(
@@ -294,32 +339,38 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
                           largeTablet: 18,
                           desktop: 22)),
 
-                  buildDropdown<String>(
-                    labelText: 'Property Type',
-                    items: _propertyTypeMap.keys.toList(),
-                    selectedValue: _selectedPropertyType,
-                    errorMsg: 'Please select a property type',
-                    onChanged: (val) {
-                      setState(() {
-                        _selectedPropertyType = val;
-                      });
-                    },
+                  // Property Type is read-only in edit form (greyed out)
+                  Opacity(
+                    opacity: 0.6,
+                    child: IgnorePointer(
+                      child: GetInput(
+                        label: 'Property Type',
+                        readOnly: true,
+                        initialValue: _selectedPropertyType ?? '',
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 10),
 
-                  GetInput(
-                    label: 'Bedrooms',
-                    isNumberField: true,
-                    controller: _bedroomsCtrl,
-                  ),
-                  const SizedBox(height: 10),
-
-                  GetInput(
-                    label: 'Bathrooms',
-                    isNumberField: true,
-                    controller: _bathroomsCtrl,
-                  ),
-                  const SizedBox(height: 10),
+                  // Hide Bedrooms and Bathrooms for warehouse, plot, commercial, office, shop
+                  if (_selectedPropertyType != 'warehouse' &&
+                      _selectedPropertyType != 'plot' &&
+                      _selectedPropertyType != 'commercial' &&
+                      _selectedPropertyType != 'office' &&
+                      _selectedPropertyType != 'shop') ...[
+                    GetInput(
+                      label: 'Bedrooms',
+                      isNumberField: true,
+                      controller: _bedroomsCtrl,
+                    ),
+                    const SizedBox(height: 10),
+                    GetInput(
+                      label: 'Bathrooms',
+                      isNumberField: true,
+                      controller: _bathroomsCtrl,
+                    ),
+                    const SizedBox(height: 10),
+                  ],
 
                   GetInput(
                     label: 'Area Sqft',
@@ -328,28 +379,37 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
                   ),
                   const SizedBox(height: 10),
 
-                  GetInput(
-                    label: 'Floor',
-                    isNumberField: true,
-                    controller: _floorCtrl,
-                  ),
-                  const SizedBox(height: 10),
+                  // Hide Floor, isFurnished, hasGarden for warehouse and plot
+                  if (_selectedPropertyType != 'warehouse' &&
+                      _selectedPropertyType != 'plot') ...[
+                    GetInput(
+                      label: 'Floor',
+                      isNumberField: true,
+                      controller: _floorCtrl,
+                    ),
+                    const SizedBox(height: 10),
+                    CheckboxToggleWidget(
+                      value: _isFurnished,
+                      title: 'Is Furnished?',
+                      onChanged: (v) =>
+                          setState(() => _isFurnished = v ?? false),
+                    ),
+                    CheckboxToggleWidget(
+                      value: _hasGarden,
+                      title: 'Has Garden?',
+                      onChanged: (v) => setState(() => _hasGarden = v ?? false),
+                    ),
+                  ],
 
-                  CheckboxToggleWidget(
-                    value: _isFurnished,
-                    title: 'Is Furnished?',
-                    onChanged: (v) => setState(() => _isFurnished = v ?? false),
-                  ),
-                  CheckboxToggleWidget(
-                    value: _hasParking,
-                    title: 'Has Parking?',
-                    onChanged: (v) => setState(() => _hasParking = v ?? false),
-                  ),
-                  CheckboxToggleWidget(
-                    value: _hasGarden,
-                    title: 'Has Garden?',
-                    onChanged: (v) => setState(() => _hasGarden = v ?? false),
-                  ),
+                  // Show hasParking for all except plot
+                  if (_selectedPropertyType != 'plot') ...[
+                    CheckboxToggleWidget(
+                      value: _hasParking,
+                      title: 'Has Parking?',
+                      onChanged: (v) =>
+                          setState(() => _hasParking = v ?? false),
+                    ),
+                  ],
                   SizedBox(
                       height: GetResponsiveSize.getResponsiveSize(context,
                           mobile: 10,
@@ -386,16 +446,24 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
                           desktop: 36)),
 
                   // ===== Amenities =====
-                  const SectionTitleWidget(title: 'Amenities'),
-                  SizedBox(
-                      height: GetResponsiveSize.getResponsiveSize(context,
-                          mobile: 8, tablet: 12, largeTablet: 16, desktop: 20)),
-                  FeaturesSelectionWidget(
-                    allFeatures: _allAmenities,
-                    selectedFeatures: _selectedAmenities,
-                    onFeaturesChanged: (updated) =>
-                        setState(() => _selectedAmenities = updated),
-                  ),
+                  // Hide amenities for plot, show filtered for warehouse
+                  if (_selectedPropertyType != 'plot') ...[
+                    const SectionTitleWidget(title: 'Amenities'),
+                    SizedBox(
+                        height: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 8,
+                            tablet: 12,
+                            largeTablet: 16,
+                            desktop: 20)),
+                    FeaturesSelectionWidget(
+                      allFeatures: _selectedPropertyType == 'warehouse'
+                          ? const ['Security', 'Lift', '24/7 Water Supply']
+                          : _allAmenities,
+                      selectedFeatures: _selectedAmenities,
+                      onFeaturesChanged: (updated) =>
+                          setState(() => _selectedAmenities = updated),
+                    ),
+                  ],
                   SizedBox(
                       height: GetResponsiveSize.getResponsiveSize(context,
                           mobile: 18,

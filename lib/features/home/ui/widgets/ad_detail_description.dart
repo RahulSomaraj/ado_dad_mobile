@@ -10,6 +10,11 @@ class AdDetailDescription extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Hide description section for plot (description is shown in spec area)
+    if (ad.category == 'property' && ad.propertyType == 'plot') {
+      return const SizedBox.shrink();
+    }
+
     return Padding(
       padding: EdgeInsets.fromLTRB(
         GetResponsiveSize.getResponsivePadding(context,

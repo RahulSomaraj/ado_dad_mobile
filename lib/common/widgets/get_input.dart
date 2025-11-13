@@ -18,6 +18,7 @@ class GetInput extends StatefulWidget {
   final VoidCallback? onTap;
   final bool readOnly;
   final int maxLines;
+  final bool required;
 
   const GetInput({
     super.key,
@@ -35,6 +36,7 @@ class GetInput extends StatefulWidget {
     this.isNumberField = false,
     this.isPrice = false,
     this.maxLines = 1,
+    this.required = true,
   });
 
   @override
@@ -179,8 +181,12 @@ class _GetInputState extends State<GetInput> {
 
   /// *📌 Validator Function for Input Validation*
   String? _validateInput(String? value) {
-    if (value == null || value.trim().isEmpty) {
+    if (widget.required && (value == null || value.trim().isEmpty)) {
       return "${widget.label} is required";
+    }
+    // If value is empty and not required, skip other validations
+    if (value == null || value.trim().isEmpty) {
+      return null;
     }
     if (widget.isEmail &&
         !RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")

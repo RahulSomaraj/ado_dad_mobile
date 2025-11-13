@@ -35,7 +35,17 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
       print('responseMessage:.......$responseMessage');
       emit(SignupState.signupSuccess(responseMessage));
     } catch (e) {
-      emit(SignupState.error(e.toString()));
+      // Extract message from exception, removing "Exception: " prefix if present
+      String errorMessage = e.toString();
+      if (errorMessage.startsWith('Exception: ')) {
+        errorMessage = errorMessage.substring('Exception: '.length);
+      }
+      // Remove '[' characters from both sides of the message
+      errorMessage = errorMessage.trim();
+      if (errorMessage.startsWith('[') && errorMessage.endsWith(']')) {
+        errorMessage = errorMessage.substring(1, errorMessage.length - 1);
+      }
+      emit(SignupState.error(errorMessage));
     }
   }
 }

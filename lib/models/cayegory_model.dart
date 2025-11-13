@@ -16,35 +16,35 @@ final List<CategoryModel> categories = [
   CategoryModel(
     id: 1,
     name: 'Bike',
-    image: 'assets/images/motorbike-fill.png',
+    image: 'assets/images/bike copy.png',
     categoryId: 'two_wheeler',
   ),
   CategoryModel(
     id: 2,
     name: 'Car',
-    image: 'assets/images/car-fill.png',
+    image: 'assets/images/car copy.png',
     categoryId: 'private_vehicle',
   ),
   CategoryModel(
     id: 3,
     name: 'Premium Vehicles',
-    image: 'assets/images/vip-crown-2-fill copy.png',
+    image: 'assets/images/premium.png',
     categoryId: 'private_vehicle',
   ),
   CategoryModel(
     id: 4,
     name: 'Commercial Vehicles',
-    image: 'assets/images/truck-fill copy.png',
+    image: 'assets/images/truck.png',
     categoryId: 'commercial_vehicle',
   ),
   CategoryModel(
       id: 5,
       name: 'Real Estate',
-      image: 'assets/images/community-fill.png',
+      image: 'assets/images/building.png',
       categoryId: 'property'),
   CategoryModel(
       id: 6,
       name: 'Showroom',
-      image: 'assets/images/building-2-fill.png',
+      image: 'assets/images/showroom copy.png',
       categoryId: 'showroom'),
 ];

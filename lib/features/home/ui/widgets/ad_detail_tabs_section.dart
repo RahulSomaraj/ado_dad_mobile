@@ -100,9 +100,426 @@ class _SpecsCard extends StatelessWidget {
 
   const _SpecsCard({required this.ad});
 
+  // Helper to check if amenities exist and need more space
+  bool _hasAmenities() {
+    return ad.amenities != null && ad.amenities!.isNotEmpty;
+  }
+
+  // Helper to get base grid item height
+  double _getBaseGridItemHeight(BuildContext context) {
+    return GetResponsiveSize.getResponsiveSize(context,
+        mobile: 55, tablet: 90, largeTablet: 110, desktop: 130);
+  }
+
+  // Helper to get grid item height - taller when amenities exist
+  double _getGridItemHeight(BuildContext context) {
+    if (_hasAmenities()) {
+      // Increased height when amenities are present to allow wrapping
+      return GetResponsiveSize.getResponsiveSize(context,
+          mobile: 80, tablet: 120, largeTablet: 140, desktop: 160);
+    }
+    return _getBaseGridItemHeight(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (ad.category == 'property') {
+      // For plot, show: Property Type, Area, Description
+      if (ad.propertyType == 'plot') {
+        final plotItemHeight = _getBaseGridItemHeight(context);
+        final plotPadding = GetResponsiveSize.getResponsivePadding(context,
+            mobile: 12, tablet: 16, largeTablet: 20, desktop: 24);
+        final plotMainAxisSpacing = GetResponsiveSize.getResponsiveSize(context,
+            mobile: 8, tablet: 12, largeTablet: 16, desktop: 20);
+        final plotCrossAxisSpacing = GetResponsiveSize.getResponsiveSize(
+            context,
+            mobile: 8,
+            tablet: 12,
+            largeTablet: 16,
+            desktop: 20);
+
+        // Use larger height for description to accommodate long text
+        final descriptionItemHeight = GetResponsiveSize.getResponsiveSize(
+            context,
+            mobile: 120,
+            tablet: 180,
+            largeTablet: 220,
+            desktop: 260);
+
+        // Calculate total height: first row (2 items) + spacing + second row (description with larger height) + padding
+        final plotTotalHeight = plotItemHeight +
+            plotMainAxisSpacing +
+            descriptionItemHeight +
+            (plotPadding * 2);
+
+        return AdDetailCardShell(
+          child: SizedBox(
+            height: plotTotalHeight,
+            child: Padding(
+              padding: EdgeInsets.all(plotPadding),
+              child: Column(
+                children: [
+                  // First row: Property Type and Area
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: plotItemHeight,
+                          child: AdDetailSpecTile(
+                            spec: AdDetailSpec(
+                                'Property Type', ad.propertyType ?? '-',
+                                icon: Icons.home_work),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: plotCrossAxisSpacing),
+                      Expanded(
+                        child: SizedBox(
+                          height: plotItemHeight,
+                          child: AdDetailSpecTile(
+                            spec: AdDetailSpec(
+                                'Area (sqft)', ad.areaSqft?.toString() ?? '-',
+                                icon: Icons.square_foot),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: plotMainAxisSpacing),
+                  // Second row: Description (spans full width with larger height, scrollable if needed)
+                  SizedBox(
+                    height: descriptionItemHeight,
+                    child: SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      child: AdDetailSpecTile(
+                        spec: AdDetailSpec('Description',
+                            ad.description.isNotEmpty ? ad.description : '-',
+                            icon: Icons.description),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+
+      // For warehouse, show only: Property Type, Area, Parking, Amenities
+      if (ad.propertyType == 'warehouse') {
+        final amenitiesText = (ad.amenities != null && ad.amenities!.isNotEmpty)
+            ? ad.amenities!.join(', ')
+            : '-';
+
+        final items = <AdDetailSpec>[
+          AdDetailSpec('Property Type', ad.propertyType ?? '-',
+              icon: Icons.home_work),
+          AdDetailSpec('Area (sqft)', ad.areaSqft?.toString() ?? '-',
+              icon: Icons.square_foot),
+          AdDetailSpec('Parking', ad.hasParking == true ? 'Yes' : 'No',
+              icon: Icons.local_parking),
+          AdDetailSpec('Amenities', amenitiesText,
+              icon: Icons.room_preferences),
+        ];
+
+        return AdDetailCardShell(
+          child: GridView.builder(
+            padding: EdgeInsets.all(
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+            ),
+            physics: const ClampingScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisExtent: _getGridItemHeight(context),
+              crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+              mainAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+            ),
+            itemCount: items.length,
+            itemBuilder: (_, i) => AdDetailSpecTile(spec: items[i]),
+          ),
+        );
+      }
+
+      // For shop, show only: Property Type, Area, Floor, Furnished, Parking, Garden, Amenities
+      if (ad.propertyType == 'shop') {
+        final amenitiesText = (ad.amenities != null && ad.amenities!.isNotEmpty)
+            ? ad.amenities!.join(', ')
+            : '-';
+
+        final items = <AdDetailSpec>[
+          AdDetailSpec('Property Type', ad.propertyType ?? '-',
+              icon: Icons.home_work),
+          AdDetailSpec('Area (sqft)', ad.areaSqft?.toString() ?? '-',
+              icon: Icons.square_foot),
+          AdDetailSpec('Floor', ad.floor?.toString() ?? '-',
+              icon: Icons.apartment),
+          AdDetailSpec('Furnished', ad.isFurnished == true ? 'Yes' : 'No',
+              icon: Icons.chair_alt),
+          AdDetailSpec('Parking', ad.hasParking == true ? 'Yes' : 'No',
+              icon: Icons.local_parking),
+          AdDetailSpec('Garden', ad.hasGarden == true ? 'Yes' : 'No',
+              icon: Icons.park),
+          AdDetailSpec('Amenities', amenitiesText,
+              icon: Icons.room_preferences),
+        ];
+
+        return AdDetailCardShell(
+          child: GridView.builder(
+            padding: EdgeInsets.all(
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+            ),
+            physics: const ClampingScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisExtent: _getGridItemHeight(context),
+              crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+              mainAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+            ),
+            itemCount: items.length,
+            itemBuilder: (_, i) => AdDetailSpecTile(spec: items[i]),
+          ),
+        );
+      }
+
+      // For office, show only: Property Type, Area, Floor, Furnished, Parking, Garden, Amenities
+      if (ad.propertyType == 'office') {
+        final amenitiesText = (ad.amenities != null && ad.amenities!.isNotEmpty)
+            ? ad.amenities!.join(', ')
+            : '-';
+
+        final items = <AdDetailSpec>[
+          AdDetailSpec('Property Type', ad.propertyType ?? '-',
+              icon: Icons.home_work),
+          AdDetailSpec('Area (sqft)', ad.areaSqft?.toString() ?? '-',
+              icon: Icons.square_foot),
+          AdDetailSpec('Floor', ad.floor?.toString() ?? '-',
+              icon: Icons.apartment),
+          AdDetailSpec('Furnished', ad.isFurnished == true ? 'Yes' : 'No',
+              icon: Icons.chair_alt),
+          AdDetailSpec('Parking', ad.hasParking == true ? 'Yes' : 'No',
+              icon: Icons.local_parking),
+          AdDetailSpec('Garden', ad.hasGarden == true ? 'Yes' : 'No',
+              icon: Icons.park),
+          AdDetailSpec('Amenities', amenitiesText,
+              icon: Icons.room_preferences),
+        ];
+
+        return AdDetailCardShell(
+          child: GridView.builder(
+            padding: EdgeInsets.all(
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+            ),
+            physics: const ClampingScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisExtent: _getGridItemHeight(context),
+              crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+              mainAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+            ),
+            itemCount: items.length,
+            itemBuilder: (_, i) => AdDetailSpecTile(spec: items[i]),
+          ),
+        );
+      }
+
+      // For commercial, show only: Property Type, Area, Floor, Furnished, Parking, Garden, Amenities
+      if (ad.propertyType == 'commercial') {
+        final amenitiesText = (ad.amenities != null && ad.amenities!.isNotEmpty)
+            ? ad.amenities!.join(', ')
+            : '-';
+
+        final items = <AdDetailSpec>[
+          AdDetailSpec('Property Type', ad.propertyType ?? '-',
+              icon: Icons.home_work),
+          AdDetailSpec('Area (sqft)', ad.areaSqft?.toString() ?? '-',
+              icon: Icons.square_foot),
+          AdDetailSpec('Floor', ad.floor?.toString() ?? '-',
+              icon: Icons.apartment),
+          AdDetailSpec('Furnished', ad.isFurnished == true ? 'Yes' : 'No',
+              icon: Icons.chair_alt),
+          AdDetailSpec('Parking', ad.hasParking == true ? 'Yes' : 'No',
+              icon: Icons.local_parking),
+          AdDetailSpec('Garden', ad.hasGarden == true ? 'Yes' : 'No',
+              icon: Icons.park),
+          AdDetailSpec('Amenities', amenitiesText,
+              icon: Icons.room_preferences),
+        ];
+
+        return AdDetailCardShell(
+          child: GridView.builder(
+            padding: EdgeInsets.all(
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+            ),
+            physics: const ClampingScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisExtent: _getGridItemHeight(context),
+              crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+              mainAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+            ),
+            itemCount: items.length,
+            itemBuilder: (_, i) => AdDetailSpecTile(spec: items[i]),
+          ),
+        );
+      }
+
+      // For villa, show all fields plus amenities
+      if (ad.propertyType == 'villa') {
+        final amenitiesText = (ad.amenities != null && ad.amenities!.isNotEmpty)
+            ? ad.amenities!.join(', ')
+            : '-';
+
+        final items = <AdDetailSpec>[
+          AdDetailSpec('Property Type', ad.propertyType ?? '-',
+              icon: Icons.home_work),
+          AdDetailSpec('Bedrooms', ad.bedrooms?.toString() ?? '-',
+              icon: Icons.bed),
+          AdDetailSpec('Bathrooms', ad.bathrooms?.toString() ?? '-',
+              icon: Icons.bathtub),
+          AdDetailSpec('Area (sqft)', ad.areaSqft?.toString() ?? '-',
+              icon: Icons.square_foot),
+          AdDetailSpec('Floor', ad.floor?.toString() ?? '-',
+              icon: Icons.apartment),
+          AdDetailSpec('Furnished', ad.isFurnished == true ? 'Yes' : 'No',
+              icon: Icons.chair_alt),
+          AdDetailSpec('Parking', ad.hasParking == true ? 'Yes' : 'No',
+              icon: Icons.local_parking),
+          AdDetailSpec('Garden', ad.hasGarden == true ? 'Yes' : 'No',
+              icon: Icons.park),
+          AdDetailSpec('Amenities', amenitiesText,
+              icon: Icons.room_preferences),
+        ];
+
+        return AdDetailCardShell(
+          child: GridView.builder(
+            padding: EdgeInsets.all(
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+            ),
+            physics: const ClampingScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisExtent: _getGridItemHeight(context),
+              crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+              mainAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+            ),
+            itemCount: items.length,
+            itemBuilder: (_, i) => AdDetailSpecTile(spec: items[i]),
+          ),
+        );
+      }
+
+      // For house, show all fields plus amenities
+      if (ad.propertyType == 'house') {
+        final amenitiesText = (ad.amenities != null && ad.amenities!.isNotEmpty)
+            ? ad.amenities!.join(', ')
+            : '-';
+
+        final items = <AdDetailSpec>[
+          AdDetailSpec('Property Type', ad.propertyType ?? '-',
+              icon: Icons.home_work),
+          AdDetailSpec('Bedrooms', ad.bedrooms?.toString() ?? '-',
+              icon: Icons.bed),
+          AdDetailSpec('Bathrooms', ad.bathrooms?.toString() ?? '-',
+              icon: Icons.bathtub),
+          AdDetailSpec('Area (sqft)', ad.areaSqft?.toString() ?? '-',
+              icon: Icons.square_foot),
+          AdDetailSpec('Floor', ad.floor?.toString() ?? '-',
+              icon: Icons.apartment),
+          AdDetailSpec('Furnished', ad.isFurnished == true ? 'Yes' : 'No',
+              icon: Icons.chair_alt),
+          AdDetailSpec('Parking', ad.hasParking == true ? 'Yes' : 'No',
+              icon: Icons.local_parking),
+          AdDetailSpec('Garden', ad.hasGarden == true ? 'Yes' : 'No',
+              icon: Icons.park),
+          AdDetailSpec('Amenities', amenitiesText,
+              icon: Icons.room_preferences),
+        ];
+
+        return AdDetailCardShell(
+          child: GridView.builder(
+            padding: EdgeInsets.all(
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+            ),
+            physics: const ClampingScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisExtent: _getGridItemHeight(context),
+              crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+              mainAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+            ),
+            itemCount: items.length,
+            itemBuilder: (_, i) => AdDetailSpecTile(spec: items[i]),
+          ),
+        );
+      }
+
+      // For apartment, show all fields plus amenities
+      if (ad.propertyType == 'apartment') {
+        final amenitiesText = (ad.amenities != null && ad.amenities!.isNotEmpty)
+            ? ad.amenities!.join(', ')
+            : '-';
+
+        final items = <AdDetailSpec>[
+          AdDetailSpec('Property Type', ad.propertyType ?? '-',
+              icon: Icons.home_work),
+          AdDetailSpec('Bedrooms', ad.bedrooms?.toString() ?? '-',
+              icon: Icons.bed),
+          AdDetailSpec('Bathrooms', ad.bathrooms?.toString() ?? '-',
+              icon: Icons.bathtub),
+          AdDetailSpec('Area (sqft)', ad.areaSqft?.toString() ?? '-',
+              icon: Icons.square_foot),
+          AdDetailSpec('Floor', ad.floor?.toString() ?? '-',
+              icon: Icons.apartment),
+          AdDetailSpec('Furnished', ad.isFurnished == true ? 'Yes' : 'No',
+              icon: Icons.chair_alt),
+          AdDetailSpec('Parking', ad.hasParking == true ? 'Yes' : 'No',
+              icon: Icons.local_parking),
+          AdDetailSpec('Garden', ad.hasGarden == true ? 'Yes' : 'No',
+              icon: Icons.park),
+          AdDetailSpec('Amenities', amenitiesText,
+              icon: Icons.room_preferences),
+        ];
+
+        return AdDetailCardShell(
+          child: GridView.builder(
+            padding: EdgeInsets.all(
+              GetResponsiveSize.getResponsivePadding(context,
+                  mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+            ),
+            physics: const ClampingScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisExtent: _getGridItemHeight(context),
+              crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+              mainAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+            ),
+            itemCount: items.length,
+            itemBuilder: (_, i) => AdDetailSpecTile(spec: items[i]),
+          ),
+        );
+      }
+
+      // For other property types, show all fields
       final items = <AdDetailSpec>[
         AdDetailSpec('Property Type', ad.propertyType ?? '-',
             icon: Icons.home_work),

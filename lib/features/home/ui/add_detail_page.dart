@@ -1341,14 +1341,14 @@ Download Ado Dad app to contact the seller and view more details!
           return Container(
             height: GetResponsiveSize.getResponsiveSize(
               context,
-              mobile: 36, // Keep mobile unchanged
+              mobile: 36,
               tablet: 48,
               largeTablet: 56,
               desktop: 64,
             ),
             width: GetResponsiveSize.getResponsiveSize(
               context,
-              mobile: 36, // Keep mobile unchanged
+              mobile: 36,
               tablet: 48,
               largeTablet: 56,
               desktop: 64,
@@ -1399,40 +1399,43 @@ Download Ado Dad app to contact the seller and view more details!
           child: Container(
             height: GetResponsiveSize.getResponsiveSize(
               context,
-              mobile: 36, // Keep mobile unchanged
+              mobile: 36,
               tablet: 48,
               largeTablet: 56,
               desktop: 64,
             ),
             width: GetResponsiveSize.getResponsiveSize(
               context,
-              mobile: 36, // Keep mobile unchanged
+              mobile: 36,
               tablet: 48,
               largeTablet: 56,
               desktop: 64,
             ),
             decoration: BoxDecoration(
-              // color: Colors.black.withOpacity(0.35),
+              color: Colors.black.withOpacity(0.35),
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Image.asset(
-                isFavorited
-                    ? 'assets/images/heart-3-fill.png'
-                    : 'assets/images/heart-3-line.png',
+              child: SizedBox(
                 width: GetResponsiveSize.getResponsiveSize(
                   context,
-                  mobile: 10, // Keep mobile unchanged
-                  tablet: 26,
-                  largeTablet: 30,
-                  desktop: 34,
+                  mobile: 18,
+                  tablet: 20,
+                  largeTablet: 24,
+                  desktop: 28,
                 ),
                 height: GetResponsiveSize.getResponsiveSize(
                   context,
-                  mobile: 10, // Keep mobile unchanged
-                  tablet: 26,
-                  largeTablet: 30,
-                  desktop: 34,
+                  mobile: 18,
+                  tablet: 20,
+                  largeTablet: 24,
+                  desktop: 28,
+                ),
+                child: Image.asset(
+                  isFavorited
+                      ? 'assets/images/heart-3-fill.png'
+                      : 'assets/images/heart-3-line.png',
+                  fit: BoxFit.contain,
                 ),
               ),
             ),

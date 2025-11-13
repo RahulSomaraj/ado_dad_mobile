@@ -94,26 +94,26 @@ class _SplashScreenState extends State<SplashScreen>
           children: [
             // Logo image with responsive sizing
             Image.asset(
-              'assets/images/d-vector.png',
+              'assets/images/ado-d.png',
               height: GetResponsiveSize.getResponsiveSize(
                 context,
-                mobile: 50,
-                tablet: 80,
-                largeTablet: 90,
-                desktop: 110,
+                mobile: 80,
+                tablet: 120,
+                largeTablet: 140,
+                desktop: 160,
               ),
               width: GetResponsiveSize.getResponsiveSize(
                 context,
-                mobile: 50,
-                tablet: 80,
-                largeTablet: 90,
-                desktop: 110,
+                mobile: 80,
+                tablet: 120,
+                largeTablet: 140,
+                desktop: 160,
               ),
             ),
             SizedBox(
               height: GetResponsiveSize.getResponsiveSize(
                 context,
-                mobile: 20,
+                mobile: 30,
                 tablet: 30,
                 largeTablet: 40,
                 desktop: 50,
@@ -131,13 +131,22 @@ class _SplashScreenState extends State<SplashScreen>
                         desktop: 120,
                       ),
                       child: Image.asset(
-                        'assets/images/Ado Dad SplashTitle.png',
+                        'assets/images/adodad-v1.png',
                         fit: BoxFit.contain,
                       ),
                     )
-                  : Image.asset(
-                      'assets/images/Ado Dad SplashTitle.png',
-                      fit: BoxFit.contain,
+                  : SizedBox(
+                      width: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 250,
+                        tablet: 300,
+                        largeTablet: 350,
+                        desktop: 400,
+                      ),
+                      child: Image.asset(
+                        'assets/images/adodad-v1.png',
+                        fit: BoxFit.contain,
+                      ),
                     ),
             ),
           ],

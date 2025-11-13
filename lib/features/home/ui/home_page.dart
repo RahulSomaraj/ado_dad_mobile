@@ -1194,17 +1194,45 @@ class _HomePageState extends State<HomePage> {
                             // Check if this ad is currently being toggled
                             if (state is FavoriteToggleLoading &&
                                 state.adId == ad.id) {
-                              return const SizedBox(
-                                width: 24,
-                                height: 24,
+                              return Container(
+                                width: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 28,
+                                  tablet: 48,
+                                  largeTablet: 56,
+                                  desktop: 64,
+                                ),
+                                height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 28,
+                                  tablet: 48,
+                                  largeTablet: 56,
+                                  desktop: 64,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.35),
+                                  shape: BoxShape.circle,
+                                ),
                                 child: Center(
                                   child: SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
+                                    width: GetResponsiveSize.getResponsiveSize(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28,
+                                    ),
+                                    height: GetResponsiveSize.getResponsiveSize(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28,
+                                    ),
+                                    child: const CircularProgressIndicator(
                                       strokeWidth: 2,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.grey),
+                                          Colors.white),
                                     ),
                                   ),
                                 ),
@@ -1220,23 +1248,48 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     );
                               },
-                              child: Image.asset(
-                                isFavorited
-                                    ? 'assets/images/heart-3-fill.png'
-                                    : 'assets/images/heart-3-line.png',
+                              child: Container(
                                 width: GetResponsiveSize.getResponsiveSize(
                                   context,
-                                  mobile: 20,
-                                  tablet: 20,
-                                  largeTablet: 30,
-                                  desktop: 30,
+                                  mobile: 28,
+                                  tablet: 48,
+                                  largeTablet: 56,
+                                  desktop: 64,
                                 ),
                                 height: GetResponsiveSize.getResponsiveSize(
                                   context,
-                                  mobile: 20,
-                                  tablet: 20,
-                                  largeTablet: 30,
-                                  desktop: 30,
+                                  mobile: 28,
+                                  tablet: 48,
+                                  largeTablet: 56,
+                                  desktop: 64,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.whiteColor,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: GetResponsiveSize.getResponsiveSize(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 18,
+                                      largeTablet: 20,
+                                      desktop: 24,
+                                    ),
+                                    height: GetResponsiveSize.getResponsiveSize(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 18,
+                                      largeTablet: 20,
+                                      desktop: 24,
+                                    ),
+                                    child: Image.asset(
+                                      isFavorited
+                                          ? 'assets/images/heart-3-fill.png'
+                                          : 'assets/images/heart-3-line.png',
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
                                 ),
                               ),
                             );
