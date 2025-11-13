@@ -474,16 +474,22 @@ class Manufacturer {
   final String id;
   final String? name;
   final String? displayName;
-  Manufacturer({required this.id, this.name, this.displayName});
+  final bool? isPremium;
+  Manufacturer({required this.id, this.name, this.displayName, this.isPremium});
 
   factory Manufacturer.fromJson(Map<String, dynamic> json) => Manufacturer(
         id: (json['_id'] ?? json['id'] ?? '').toString(),
         name: (json['name'] ?? '').toString(),
         displayName: (json['displayName'] as String?)?.toString(),
+        isPremium: json['isPremium'] as bool?,
       );
 
-  Map<String, dynamic> toJson() =>
-      {'id': id, 'name': name, 'displayName': displayName};
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'displayName': displayName,
+        'isPremium': isPremium
+      };
 }
 
 class Model {

@@ -49,6 +49,10 @@ void main() async {
   );
 
   await SharedPrefs().init();
+
+  // Token refresh will happen automatically when bearer token expires (401 error)
+  // No need to refresh proactively on app startup
+
   runApp(const MyApp());
 }
 

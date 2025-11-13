@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/config/app_config.dart';
+import 'package:ado_dad_user/services/auth_service.dart';
 
 /// HTTP API service for chat functionality
 class ChatApiService {
@@ -9,30 +10,82 @@ class ChatApiService {
   factory ChatApiService() => _instance;
   ChatApiService._internal();
 
-  /// Get user's chat rooms from API
+  /// Prepares the Authorization header with the token
+  /// Uses the same format as ApiService (with or without "Bearer " prefix)
+  static const bool _useBearerPrefix =
+      true; // Must match ApiService._useBearerPrefix
+
+  String _prepareAuthHeader(String token) {
+    // Remove "Bearer " prefix if present to get clean token
+    final cleanToken = token.replaceFirst(RegExp(r'^Bearer\s+'), '');
+
+    // Add "Bearer " prefix if configured to use it
+    if (_useBearerPrefix) {
+      return 'Bearer $cleanToken';
+    } else {
+      return cleanToken;
+    }
+  }
+
+  /// Helper method to execute HTTP request with automatic token refresh on 401
+  Future<http.Response> _executeRequest(
+    Future<http.Response> Function(String authHeader) request,
+  ) async {
+    var token = await getToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('No authentication token found. Please login first.');
+    }
+
+    // Prepare Authorization header with correct format (matching ApiService)
+    final authHeader = _prepareAuthHeader(token);
+    print('🔑 Chat API - Using token for request');
+    print(
+        '🔑 Chat API - Authorization header format: ${authHeader.substring(0, authHeader.length > 30 ? 30 : authHeader.length)}...');
+
+    var response = await request(authHeader);
+
+    // Handle 401 Unauthorized - try to refresh token using centralized AuthService
+    if (response.statusCode == 401) {
+      print('🔄 Chat API - Received 401, attempting token refresh...');
+      print('📋 Chat API - 401 Response details:');
+      print('   Status Code: ${response.statusCode}');
+      print('   Response Body: ${response.body}');
+
+      final authService = AuthService();
+      final newToken = await authService.refreshAccessToken();
+      if (newToken != null && newToken.isNotEmpty) {
+        print('✅ Chat API - Token refreshed successfully, retrying request...');
+        // Prepare new Authorization header with refreshed token
+        final newAuthHeader = _prepareAuthHeader(newToken);
+        response = await request(newAuthHeader);
+        print('📡 Chat API - Retry response status: ${response.statusCode}');
+      } else {
+        // Refresh token expired, AuthService will handle automatic logout
+        print('⚠️ Chat API - Token refresh failed, user will be logged out');
+        throw Exception('Session expired. Please login again.');
+      }
+    }
+
+    return response;
+  }
+
+  /// Get user's chat rooms from API with automatic token refresh on 401
   Future<Map<String, dynamic>> getUserChatRooms() async {
     try {
-      // Get authentication token
-      final token = await getToken();
-      if (token == null || token.isEmpty) {
-        throw Exception('No authentication token found. Please login first.');
-      }
-
-      // Get base URL
       final baseUrl = AppConfig.baseUrl;
       final url = '$baseUrl/chats/rooms';
 
       print('🌐 Fetching chat rooms from: $url');
-      print('🔑 Using token: ${token.substring(0, 20)}...');
 
-      // Make HTTP request
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
-      ).timeout(const Duration(seconds: 10));
+      final response = await _executeRequest((authHeader) async {
+        return await http.get(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': authHeader,
+          },
+        ).timeout(const Duration(seconds: 10));
+      });
 
       print('📡 Response status: ${response.statusCode}');
       print('📄 Response body: ${response.body}');
@@ -43,8 +96,10 @@ class ChatApiService {
         return data;
       } else {
         final errorData = json.decode(response.body);
-        throw Exception(
-            'Failed to fetch chat rooms: ${errorData['message'] ?? 'Unknown error'}');
+        final errorMessage = errorData is Map<String, dynamic>
+            ? (errorData['message'] ?? 'Unknown error')
+            : 'Unknown error';
+        throw Exception('Failed to fetch chat rooms: $errorMessage');
       }
     } catch (e) {
       print('❌ Error fetching chat rooms: $e');
@@ -55,27 +110,21 @@ class ChatApiService {
   /// Get room messages from API
   Future<Map<String, dynamic>> getRoomMessages(String roomId) async {
     try {
-      // Get authentication token
-      final token = await getToken();
-      if (token == null || token.isEmpty) {
-        throw Exception('No authentication token found. Please login first.');
-      }
-
-      // Get base URL
       final baseUrl = AppConfig.baseUrl;
       final url = '$baseUrl/chats/rooms/$roomId/messages';
 
       print('🌐 Fetching messages for room: $roomId');
       print('🔗 URL: $url');
 
-      // Make HTTP request
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
-      ).timeout(const Duration(seconds: 10));
+      final response = await _executeRequest((authHeader) async {
+        return await http.get(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': authHeader,
+          },
+        ).timeout(const Duration(seconds: 10));
+      });
 
       print('📡 Response status: ${response.statusCode}');
 
@@ -85,8 +134,10 @@ class ChatApiService {
         return data;
       } else {
         final errorData = json.decode(response.body);
-        throw Exception(
-            'Failed to fetch messages: ${errorData['message'] ?? 'Unknown error'}');
+        final errorMessage = errorData is Map<String, dynamic>
+            ? (errorData['message'] ?? 'Unknown error')
+            : 'Unknown error';
+        throw Exception('Failed to fetch messages: $errorMessage');
       }
     } catch (e) {
       print('❌ Error fetching messages: $e');
@@ -98,13 +149,6 @@ class ChatApiService {
   Future<Map<String, dynamic>> checkRoomExists(
       String adId, String otherUserId) async {
     try {
-      // Get authentication token
-      final token = await getToken();
-      if (token == null || token.isEmpty) {
-        throw Exception('No authentication token found. Please login first.');
-      }
-
-      // Get base URL
       final baseUrl = AppConfig.baseUrl;
       final url = '$baseUrl/chats/rooms/check/$adId/$otherUserId';
 
@@ -112,14 +156,15 @@ class ChatApiService {
           '🌐 Checking if room exists for ad: $adId and other user: $otherUserId');
       print('🔗 URL: $url');
 
-      // Make HTTP request
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
-      ).timeout(const Duration(seconds: 10));
+      final response = await _executeRequest((authHeader) async {
+        return await http.get(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': authHeader,
+          },
+        ).timeout(const Duration(seconds: 10));
+      });
 
       print('📡 Response status: ${response.statusCode}');
       print('📄 Response body: ${response.body}');
@@ -137,8 +182,10 @@ class ChatApiService {
         };
       } else {
         final errorData = json.decode(response.body);
-        throw Exception(
-            'Failed to check room: ${errorData['message'] ?? 'Unknown error'}');
+        final errorMessage = errorData is Map<String, dynamic>
+            ? (errorData['message'] ?? 'Unknown error')
+            : 'Unknown error';
+        throw Exception('Failed to check room: $errorMessage');
       }
     } catch (e) {
       print('❌ Error checking room: $e');
@@ -150,13 +197,6 @@ class ChatApiService {
   Future<Map<String, dynamic>> sendMessage(String roomId, String content,
       {String type = 'text'}) async {
     try {
-      // Get authentication token
-      final token = await getToken();
-      if (token == null || token.isEmpty) {
-        throw Exception('No authentication token found. Please login first.');
-      }
-
-      // Get base URL
       final baseUrl = AppConfig.baseUrl;
       final url = '$baseUrl/chats/rooms/$roomId/messages';
 
@@ -171,17 +211,18 @@ class ChatApiService {
         'type': type,
       };
 
-      // Make HTTP request
-      final response = await http
-          .post(
-            Uri.parse(url),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': token,
-            },
-            body: json.encode(requestBody),
-          )
-          .timeout(const Duration(seconds: 10));
+      final response = await _executeRequest((authHeader) async {
+        return await http
+            .post(
+              Uri.parse(url),
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': authHeader,
+              },
+              body: json.encode(requestBody),
+            )
+            .timeout(const Duration(seconds: 10));
+      });
 
       print('📡 Response status: ${response.statusCode}');
       print('📄 Response body: ${response.body}');
@@ -192,8 +233,10 @@ class ChatApiService {
         return data;
       } else {
         final errorData = json.decode(response.body);
-        throw Exception(
-            'Failed to send message: ${errorData['message'] ?? 'Unknown error'}');
+        final errorMessage = errorData is Map<String, dynamic>
+            ? (errorData['message'] ?? 'Unknown error')
+            : 'Unknown error';
+        throw Exception('Failed to send message: $errorMessage');
       }
     } catch (e) {
       print('❌ Error sending message via API: $e');

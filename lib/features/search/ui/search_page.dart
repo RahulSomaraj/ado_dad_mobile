@@ -510,121 +510,132 @@ class _SearchPageState extends State<SearchPage> {
           ],
         ),
       ),
-      body: GestureDetector(
-        onTap: () {
-          // Hide suggestions when tapping outside
-          if (_showSuggestions) {
-            setState(() {
-              _showSuggestions = false;
-            });
-          }
-        },
-        child: Stack(
-          children: [
-            BlocConsumer<AdvertisementBloc, AdvertisementState>(
-              listener: (context, state) {
-                state.when(
-                  initial: () {},
-                  loading: () {},
-                  listingsLoaded: (listings, hasMore) {
-                    setState(() {
-                      allAds = listings;
-                      // Always update filteredAds when new listings are loaded
-                      // If not currently searching, show all ads
-                      if (!_isSearching || _searchController.text.isEmpty) {
-                        filteredAds = listings;
-                      }
-                    });
-                  },
-                  error: (message) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(message)),
-                    );
-                  },
-                );
-              },
-              builder: (context, state) {
-                return state.when(
-                  initial: () => _buildLoadingState(),
-                  loading: () => _buildLoadingState(),
-                  listingsLoaded: (listings, hasMore) => _buildAdsList(),
-                  error: (message) => _buildErrorState(message),
-                );
-              },
-            ),
-            // Address suggestions overlay
-            if (_showSuggestions && _isLocationSearchMode)
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  margin: EdgeInsets.symmetric(
-                    horizontal: GetResponsiveSize.getResponsivePadding(context,
-                        mobile: 16, tablet: 24, largeTablet: 32, desktop: 40),
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(
-                      GetResponsiveSize.getResponsiveBorderRadius(context,
-                          mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+      body: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.only(bottom: 30),
+        child: GestureDetector(
+          onTap: () {
+            // Hide suggestions when tapping outside
+            if (_showSuggestions) {
+              setState(() {
+                _showSuggestions = false;
+              });
+            }
+          },
+          child: Stack(
+            children: [
+              BlocConsumer<AdvertisementBloc, AdvertisementState>(
+                listener: (context, state) {
+                  state.when(
+                    initial: () {},
+                    loading: () {},
+                    listingsLoaded: (listings, hasMore) {
+                      setState(() {
+                        allAds = listings;
+                        // Always update filteredAds when new listings are loaded
+                        // If not currently searching, show all ads
+                        if (!_isSearching || _searchController.text.isEmpty) {
+                          filteredAds = listings;
+                        }
+                      });
+                    },
+                    error: (message) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(message)),
+                      );
+                    },
+                  );
+                },
+                builder: (context, state) {
+                  return state.when(
+                    initial: () => _buildLoadingState(),
+                    loading: () => _buildLoadingState(),
+                    listingsLoaded: (listings, hasMore) => _buildAdsList(),
+                    error: (message) => _buildErrorState(message),
+                  );
+                },
+              ),
+              // Address suggestions overlay
+              if (_showSuggestions && _isLocationSearchMode)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    margin: EdgeInsets.symmetric(
+                      horizontal: GetResponsiveSize.getResponsivePadding(
+                          context,
+                          mobile: 16,
+                          tablet: 24,
+                          largeTablet: 32,
+                          desktop: 40),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(
+                        GetResponsiveSize.getResponsiveBorderRadius(context,
+                            mobile: 8,
+                            tablet: 10,
+                            largeTablet: 12,
+                            desktop: 14),
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    children: _addressSuggestions.map((suggestion) {
-                      return ListTile(
-                        leading: Icon(
-                          Icons.location_on,
-                          color: AppColors.primaryColor,
-                          size: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 24,
-                            tablet: 28,
-                            largeTablet: 32,
-                            desktop: 36,
-                          ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         ),
-                        title: Text(
-                          suggestion,
-                          style: TextStyle(
-                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                      ],
+                    ),
+                    child: Column(
+                      children: _addressSuggestions.map((suggestion) {
+                        return ListTile(
+                          leading: Icon(
+                            Icons.location_on,
+                            color: AppColors.primaryColor,
+                            size: GetResponsiveSize.getResponsiveSize(
                               context,
-                              mobile: 16,
-                              tablet: 20,
-                              largeTablet: 24,
-                              desktop: 28,
+                              mobile: 24,
+                              tablet: 28,
+                              largeTablet: 32,
+                              desktop: 36,
                             ),
                           ),
-                        ),
-                        onTap: () => _selectAddressSuggestion(suggestion),
-                        dense: true,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: GetResponsiveSize.getResponsivePadding(
-                              context,
-                              mobile: 16,
-                              tablet: 20,
-                              largeTablet: 24,
-                              desktop: 28),
-                          vertical: GetResponsiveSize.getResponsivePadding(
-                              context,
-                              mobile: 8,
-                              tablet: 12,
-                              largeTablet: 16,
-                              desktop: 20),
-                        ),
-                      );
-                    }).toList(),
+                          title: Text(
+                            suggestion,
+                            style: TextStyle(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: 16,
+                                tablet: 20,
+                                largeTablet: 24,
+                                desktop: 28,
+                              ),
+                            ),
+                          ),
+                          onTap: () => _selectAddressSuggestion(suggestion),
+                          dense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: GetResponsiveSize.getResponsivePadding(
+                                context,
+                                mobile: 16,
+                                tablet: 20,
+                                largeTablet: 24,
+                                desktop: 28),
+                            vertical: GetResponsiveSize.getResponsivePadding(
+                                context,
+                                mobile: 8,
+                                tablet: 12,
+                                largeTablet: 16,
+                                desktop: 20),
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -728,43 +739,28 @@ class _SearchPageState extends State<SearchPage> {
               ),
             ),
           ),
-          child: Padding(
-            padding: EdgeInsets.all(
-              GetResponsiveSize.getResponsivePadding(context,
-                  mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
-            ),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(
-                    GetResponsiveSize.getResponsiveBorderRadius(
-                      context,
-                      mobile: 12,
-                      tablet: 14,
-                      largeTablet: 16,
-                      desktop: 18,
-                    ),
-                  ),
-                  child: ad.images.isNotEmpty
-                      ? Image.network(
-                          ad.images[0],
-                          height: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 98,
-                            tablet: 140,
-                            largeTablet: 180,
-                            desktop: 220,
-                          ),
-                          width: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 98,
-                            tablet: 140,
-                            largeTablet: 180,
-                            desktop: 220,
-                          ),
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
+          child: Stack(
+            children: [
+              Padding(
+                padding: EdgeInsets.all(
+                  GetResponsiveSize.getResponsivePadding(context,
+                      mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+                ),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                        GetResponsiveSize.getResponsiveBorderRadius(
+                          context,
+                          mobile: 12,
+                          tablet: 14,
+                          largeTablet: 16,
+                          desktop: 18,
+                        ),
+                      ),
+                      child: ad.images.isNotEmpty
+                          ? Image.network(
+                              ad.images[0],
                               height: GetResponsiveSize.getResponsiveSize(
                                 context,
                                 mobile: 98,
@@ -775,6 +771,52 @@ class _SearchPageState extends State<SearchPage> {
                               width: GetResponsiveSize.getResponsiveSize(
                                 context,
                                 mobile: 98,
+                                tablet: 140,
+                                largeTablet: 180,
+                                desktop: 220,
+                              ),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  height: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 98,
+                                    tablet: 140,
+                                    largeTablet: 180,
+                                    desktop: 220,
+                                  ),
+                                  width: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 98,
+                                    tablet: 140,
+                                    largeTablet: 180,
+                                    desktop: 220,
+                                  ),
+                                  color: Colors.grey[300],
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    size: GetResponsiveSize.getResponsiveSize(
+                                      context,
+                                      mobile: 24,
+                                      tablet: 32,
+                                      largeTablet: 40,
+                                      desktop: 48,
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
+                          : Container(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 100,
+                                tablet: 140,
+                                largeTablet: 180,
+                                desktop: 220,
+                              ),
+                              width: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 100,
                                 tablet: 140,
                                 largeTablet: 180,
                                 desktop: 220,
@@ -790,50 +832,47 @@ class _SearchPageState extends State<SearchPage> {
                                   desktop: 48,
                                 ),
                               ),
-                            );
-                          },
-                        )
-                      : Container(
-                          height: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 100,
-                            tablet: 140,
-                            largeTablet: 180,
-                            desktop: 220,
-                          ),
-                          width: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 100,
-                            tablet: 140,
-                            largeTablet: 180,
-                            desktop: 220,
-                          ),
-                          color: Colors.grey[300],
-                          child: Icon(
-                            Icons.image_not_supported,
-                            size: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 24,
-                              tablet: 32,
-                              largeTablet: 40,
-                              desktop: 48,
                             ),
-                          ),
-                        ),
-                ),
-                SizedBox(
-                    width: GetResponsiveSize.getResponsiveSize(context,
-                        mobile: 15, tablet: 20, largeTablet: 26, desktop: 32)),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                    ),
+                    SizedBox(
+                        width: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 15,
+                            tablet: 20,
+                            largeTablet: 26,
+                            desktop: 32)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Row(
+                            children: [
+                              Text(
+                                '₹ ${ad.price.toString()}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                    context,
+                                    mobile: 16,
+                                    tablet: 22,
+                                    largeTablet: 28,
+                                    desktop: 34,
+                                  ),
+                                ),
+                              ),
+                              const Spacer(),
+                            ],
+                          ),
+                          SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 5,
+                                  tablet: 8,
+                                  largeTablet: 12,
+                                  desktop: 16)),
                           Text(
-                            '₹ ${ad.price.toString()}',
+                            _getAdTitle(ad),
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
                               fontSize: GetResponsiveSize.getResponsiveFontSize(
                                 context,
                                 mobile: 16,
@@ -841,75 +880,108 @@ class _SearchPageState extends State<SearchPage> {
                                 largeTablet: 28,
                                 desktop: 34,
                               ),
+                              fontWeight: FontWeight.bold,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const Spacer(),
+                          Text(
+                            ad.location,
+                            style: AppTextstyle.categoryLabelTextStyle.copyWith(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: AppTextstyle
+                                        .categoryLabelTextStyle.fontSize ??
+                                    14,
+                                tablet: 18,
+                                largeTablet: 22,
+                                desktop: 26,
+                              ),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 5,
+                                  tablet: 8,
+                                  largeTablet: 12,
+                                  desktop: 16)),
+                          Text(
+                            _getAdSubtitle(ad),
+                            style: AppTextstyle.categoryLabelTextStyle.copyWith(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: AppTextstyle
+                                        .categoryLabelTextStyle.fontSize ??
+                                    14,
+                                tablet: 18,
+                                largeTablet: 22,
+                                desktop: 26,
+                              ),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ],
                       ),
-                      SizedBox(
-                          height: GetResponsiveSize.getResponsiveSize(context,
-                              mobile: 5,
-                              tablet: 8,
-                              largeTablet: 12,
-                              desktop: 16)),
-                      Text(
-                        _getAdTitle(ad),
-                        style: TextStyle(
-                          fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile: 16,
-                            tablet: 22,
-                            largeTablet: 28,
-                            desktop: 34,
-                          ),
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        ad.location,
-                        style: AppTextstyle.categoryLabelTextStyle.copyWith(
-                          fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile:
-                                AppTextstyle.categoryLabelTextStyle.fontSize ??
-                                    14,
-                            tablet: 18,
-                            largeTablet: 22,
-                            desktop: 26,
-                          ),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(
-                          height: GetResponsiveSize.getResponsiveSize(context,
-                              mobile: 5,
-                              tablet: 8,
-                              largeTablet: 12,
-                              desktop: 16)),
-                      Text(
-                        _getAdSubtitle(ad),
-                        style: AppTextstyle.categoryLabelTextStyle.copyWith(
-                          fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile:
-                                AppTextstyle.categoryLabelTextStyle.fontSize ??
-                                    14,
-                            tablet: 18,
-                            largeTablet: 22,
-                            desktop: 26,
-                          ),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                    )
+                  ],
+                ),
+              ),
+              // Premium badge in top right corner
+              if (ad.manufacturer?.isPremium == true)
+                Positioned(
+                  top: GetResponsiveSize.getResponsiveSize(
+                    context,
+                    mobile: 8,
+                    tablet: 10,
+                    largeTablet: 12,
+                    desktop: 14,
                   ),
-                )
-              ],
-            ),
+                  right: GetResponsiveSize.getResponsiveSize(
+                    context,
+                    mobile: 8,
+                    tablet: 10,
+                    largeTablet: 12,
+                    desktop: 14,
+                  ),
+                  child: Container(
+                    width: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 32,
+                      tablet: 40,
+                      largeTablet: 48,
+                      desktop: 56,
+                    ),
+                    height: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 32,
+                      tablet: 40,
+                      largeTablet: 48,
+                      desktop: 56,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: EdgeInsets.all(
+                      GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 6,
+                        tablet: 8,
+                        largeTablet: 10,
+                        desktop: 12,
+                      ),
+                    ),
+                    child: Image.asset(
+                      'assets/images/vip-crown-2-line copy.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),

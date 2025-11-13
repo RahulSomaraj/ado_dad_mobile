@@ -18,6 +18,15 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         final profile = await repository.fetchUserProfile();
         emit(ProfileState.loaded(profile));
       } catch (e) {
+        // Check if this is a silent token expiration error
+        // If so, don't emit error state - logout is already in progress
+        if (e.toString().contains('SESSION_EXPIRED_SILENT')) {
+          print(
+              '🔇 Suppressing token expiration error in ProfileBloc - logout in progress');
+          // Don't emit error state - just keep loading or initial state
+          // The navigation to login will happen automatically via AuthService
+          return;
+        }
         emit(ProfileState.error(e.toString()));
       }
     });
@@ -40,6 +49,17 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       try {
         await repository.changePassword(event.newPassword);
         emit(const ProfileState.passwordChanged());
+      } catch (e) {
+        emit(ProfileState.error(e.toString()));
+      }
+    });
+
+    // 🔹 Handle Delete My Data Event
+    on<DeleteMyData>((event, emit) async {
+      emit(const ProfileState.deletingData());
+      try {
+        await repository.deleteMyData();
+        emit(const ProfileState.dataDeleted());
       } catch (e) {
         emit(ProfileState.error(e.toString()));
       }

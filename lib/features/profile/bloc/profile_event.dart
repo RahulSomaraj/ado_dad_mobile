@@ -7,4 +7,5 @@ class ProfileEvent with _$ProfileEvent {
   const factory ProfileEvent.updateProfile(UserProfile profile) = UpdateProfile;
   const factory ProfileEvent.changePassword(String newPassword) =
       ChangePassword;
+  const factory ProfileEvent.deleteMyData() = DeleteMyData;
 }

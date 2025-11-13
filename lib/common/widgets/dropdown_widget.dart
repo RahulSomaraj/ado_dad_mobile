@@ -59,6 +59,9 @@ class DropdownWidget<T> extends StatelessWidget {
         largeTablet: 32,
         desktop: 36,
       ),
+      style: TextStyle(
+        color: Colors.black,
+      ),
       items: items.map((T value) {
         return DropdownMenuItem<T>(
           value: value,
@@ -67,6 +70,7 @@ class DropdownWidget<T> extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
             style: TextStyle(
+              color: Colors.black,
               fontSize: GetResponsiveSize.getResponsiveFontSize(
                 context,
                 mobile: 16,

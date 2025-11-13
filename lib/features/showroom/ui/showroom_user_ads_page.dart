@@ -362,34 +362,63 @@ class _ProductTile extends StatelessWidget {
               mobile: 20, tablet: 24, largeTablet: 28, desktop: 32),
         ),
         onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.all(
-            GetResponsiveSize.getResponsivePadding(context,
-                mobile: 10, tablet: 16, largeTablet: 22, desktop: 28),
-          ),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(context,
-                      mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
-                ),
-                child: ad.images.isNotEmpty
-                    ? Image.network(
-                        ad.images.first,
-                        width: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 80,
-                            tablet: 140,
-                            largeTablet: 180,
-                            desktop: 220),
-                        height: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 80,
-                            tablet: 140,
-                            largeTablet: 180,
-                            desktop: 220),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
+        child: Stack(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(
+                GetResponsiveSize.getResponsivePadding(context,
+                    mobile: 10, tablet: 16, largeTablet: 22, desktop: 28),
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(
+                      GetResponsiveSize.getResponsiveBorderRadius(context,
+                          mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
+                    ),
+                    child: ad.images.isNotEmpty
+                        ? Image.network(
+                            ad.images.first,
+                            width: GetResponsiveSize.getResponsiveSize(context,
+                                mobile: 80,
+                                tablet: 140,
+                                largeTablet: 180,
+                                desktop: 220),
+                            height: GetResponsiveSize.getResponsiveSize(context,
+                                mobile: 80,
+                                tablet: 140,
+                                largeTablet: 180,
+                                desktop: 220),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 80,
+                                    tablet: 140,
+                                    largeTablet: 180,
+                                    desktop: 220),
+                                height: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 80,
+                                    tablet: 140,
+                                    largeTablet: 180,
+                                    desktop: 220),
+                                color: Colors.grey.shade200,
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  size: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 24,
+                                    tablet: 32,
+                                    largeTablet: 40,
+                                    desktop: 48,
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        : Container(
                             width: GetResponsiveSize.getResponsiveSize(context,
                                 mobile: 80,
                                 tablet: 140,
@@ -411,150 +440,187 @@ class _ProductTile extends StatelessWidget {
                                 desktop: 48,
                               ),
                             ),
-                          );
-                        },
-                      )
-                    : Container(
-                        width: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 80,
-                            tablet: 140,
-                            largeTablet: 180,
-                            desktop: 220),
-                        height: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 80,
-                            tablet: 140,
-                            largeTablet: 180,
-                            desktop: 220),
-                        color: Colors.grey.shade200,
-                        child: Icon(
-                          Icons.image_not_supported,
-                          size: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 24,
-                            tablet: 32,
-                            largeTablet: 40,
-                            desktop: 48,
                           ),
-                        ),
-                      ),
-              ),
-              SizedBox(
-                  width: GetResponsiveSize.getResponsiveSize(context,
-                      mobile: 12, tablet: 20, largeTablet: 26, desktop: 32)),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Showroom label for SR users
-                    Image.asset(
-                      'assets/images/showroom_label.png',
-                      height: GetResponsiveSize.getResponsiveSize(context,
-                          mobile: 16, tablet: 24, largeTablet: 30, desktop: 36),
+                  ),
+                  SizedBox(
                       width: GetResponsiveSize.getResponsiveSize(context,
-                          mobile: 80,
-                          tablet: 140,
-                          largeTablet: 180,
-                          desktop: 220),
-                      fit: BoxFit.contain,
-                    ),
-                    SizedBox(
-                        height: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 4,
-                            tablet: 8,
-                            largeTablet: 12,
-                            desktop: 16)),
-                    Text(
-                      '₹ ${_formatINR(ad.price)}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: theme.textTheme.titleMedium?.fontSize ?? 16,
-                          tablet: 22,
-                          largeTablet: 28,
-                          desktop: 34,
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                        height: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 2,
-                            tablet: 6,
-                            largeTablet: 10,
-                            desktop: 14)),
-                    Text(
-                      title.trim().isNotEmpty ? title : 'Ad',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: theme.textTheme.bodyLarge?.fontSize ?? 16,
-                          tablet: 22,
-                          largeTablet: 28,
-                          desktop: 34,
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                        height: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 2,
-                            tablet: 6,
-                            largeTablet: 10,
-                            desktop: 14)),
-                    Text(
-                      ad.location,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: const Color(0xFF6B7280),
-                        fontWeight: FontWeight.w600,
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: theme.textTheme.bodySmall?.fontSize ?? 14,
-                          tablet: 18,
-                          largeTablet: 22,
-                          desktop: 26,
-                        ),
-                      ),
-                    ),
-                    if (subtitle.isNotEmpty) ...[
-                      SizedBox(
+                          mobile: 12,
+                          tablet: 20,
+                          largeTablet: 26,
+                          desktop: 32)),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Showroom label for SR users
+                        Image.asset(
+                          'assets/images/showroom_label.png',
                           height: GetResponsiveSize.getResponsiveSize(context,
-                              mobile: 2,
-                              tablet: 6,
-                              largeTablet: 10,
-                              desktop: 14)),
-                      Text(
-                        subtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF6B7280),
-                          fontWeight: FontWeight.w600,
-                          fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile: theme.textTheme.bodySmall?.fontSize ?? 14,
-                            tablet: 18,
-                            largeTablet: 22,
-                            desktop: 26,
+                              mobile: 16,
+                              tablet: 24,
+                              largeTablet: 30,
+                              desktop: 36),
+                          width: GetResponsiveSize.getResponsiveSize(context,
+                              mobile: 80,
+                              tablet: 140,
+                              largeTablet: 180,
+                              desktop: 220),
+                          fit: BoxFit.contain,
+                        ),
+                        SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(context,
+                                mobile: 4,
+                                tablet: 8,
+                                largeTablet: 12,
+                                desktop: 16)),
+                        Text(
+                          '₹ ${_formatINR(ad.price)}',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile:
+                                  theme.textTheme.titleMedium?.fontSize ?? 16,
+                              tablet: 22,
+                              largeTablet: 28,
+                              desktop: 34,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ],
-                ),
+                        SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(context,
+                                mobile: 2,
+                                tablet: 6,
+                                largeTablet: 10,
+                                desktop: 14)),
+                        Text(
+                          title.trim().isNotEmpty ? title : 'Ad',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: theme.textTheme.bodyLarge?.fontSize ?? 16,
+                              tablet: 22,
+                              largeTablet: 28,
+                              desktop: 34,
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(context,
+                                mobile: 2,
+                                tablet: 6,
+                                largeTablet: 10,
+                                desktop: 14)),
+                        Text(
+                          ad.location,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: const Color(0xFF6B7280),
+                            fontWeight: FontWeight.w600,
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: theme.textTheme.bodySmall?.fontSize ?? 14,
+                              tablet: 18,
+                              largeTablet: 22,
+                              desktop: 26,
+                            ),
+                          ),
+                        ),
+                        if (subtitle.isNotEmpty) ...[
+                          SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                  context,
+                                  mobile: 2,
+                                  tablet: 6,
+                                  largeTablet: 10,
+                                  desktop: 14)),
+                          Text(
+                            subtitle,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: const Color(0xFF6B7280),
+                              fontWeight: FontWeight.w600,
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile:
+                                    theme.textTheme.bodySmall?.fontSize ?? 14,
+                                tablet: 18,
+                                largeTablet: 22,
+                                desktop: 26,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: const Color(0xFF9CA3AF),
+                    size: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 24,
+                      tablet: 30,
+                      largeTablet: 36,
+                      desktop: 42,
+                    ),
+                  ),
+                ],
               ),
-              Icon(
-                Icons.chevron_right,
-                color: const Color(0xFF9CA3AF),
-                size: GetResponsiveSize.getResponsiveSize(
+            ),
+            // Premium badge in top right corner
+            if (ad.manufacturer?.isPremium == true)
+              Positioned(
+                top: GetResponsiveSize.getResponsiveSize(
                   context,
-                  mobile: 24,
-                  tablet: 30,
-                  largeTablet: 36,
-                  desktop: 42,
+                  mobile: 8,
+                  tablet: 10,
+                  largeTablet: 12,
+                  desktop: 14,
+                ),
+                right: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 8,
+                  tablet: 10,
+                  largeTablet: 12,
+                  desktop: 14,
+                ),
+                child: Container(
+                  width: GetResponsiveSize.getResponsiveSize(
+                    context,
+                    mobile: 32,
+                    tablet: 40,
+                    largeTablet: 48,
+                    desktop: 56,
+                  ),
+                  height: GetResponsiveSize.getResponsiveSize(
+                    context,
+                    mobile: 32,
+                    tablet: 40,
+                    largeTablet: 48,
+                    desktop: 56,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  padding: EdgeInsets.all(
+                    GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 6,
+                      tablet: 8,
+                      largeTablet: 10,
+                      desktop: 12,
+                    ),
+                  ),
+                  child: Image.asset(
+                    'assets/images/vip-crown-2-line copy.png',
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );

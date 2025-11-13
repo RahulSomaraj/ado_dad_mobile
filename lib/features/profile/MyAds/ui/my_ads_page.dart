@@ -90,115 +90,73 @@ class _MyAdsPageState extends State<MyAdsPage> {
         ),
         centerTitle: false,
       ),
-      body: BlocBuilder<MyAdsBloc, MyAdsState>(
-        builder: (context, state) {
-          return state.maybeMap(
-            loading: (_) => const Center(child: CircularProgressIndicator()),
-            initial: (_) => const Center(child: CircularProgressIndicator()),
-            error: (e) => Center(
-              child: Padding(
-                padding: EdgeInsets.all(
-                  GetResponsiveSize.getResponsivePadding(
-                    context,
-                    mobile: 16,
-                    tablet: 24,
-                    largeTablet: 32,
-                    desktop: 40,
+      body: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.only(bottom: 20),
+        child: BlocBuilder<MyAdsBloc, MyAdsState>(
+          builder: (context, state) {
+            return state.maybeMap(
+              loading: (_) => const Center(child: CircularProgressIndicator()),
+              initial: (_) => const Center(child: CircularProgressIndicator()),
+              error: (e) => Center(
+                child: Padding(
+                  padding: EdgeInsets.all(
+                    GetResponsiveSize.getResponsivePadding(
+                      context,
+                      mobile: 16,
+                      tablet: 24,
+                      largeTablet: 32,
+                      desktop: 40,
+                    ),
                   ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: GetResponsiveSize.getResponsiveSize(
-                        context,
-                        mobile: 64,
-                        tablet: 80,
-                        largeTablet: 96,
-                        desktop: 112,
-                      ),
-                      color: Colors.red.shade300,
-                    ),
-                    SizedBox(
-                      height: GetResponsiveSize.getResponsiveSize(
-                        context,
-                        mobile: 16,
-                        tablet: 20,
-                        largeTablet: 24,
-                        desktop: 28,
-                      ),
-                    ),
-                    Text(
-                      'Error loading your ads',
-                      style: TextStyle(
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: GetResponsiveSize.getResponsiveSize(
                           context,
-                          mobile: 18,
-                          tablet: 22,
-                          largeTablet: 26,
-                          desktop: 30,
+                          mobile: 64,
+                          tablet: 80,
+                          largeTablet: 96,
+                          desktop: 112,
                         ),
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade700,
+                        color: Colors.red.shade300,
                       ),
-                    ),
-                    SizedBox(
-                      height: GetResponsiveSize.getResponsiveSize(
-                        context,
-                        mobile: 8,
-                        tablet: 12,
-                        largeTablet: 16,
-                        desktop: 20,
-                      ),
-                    ),
-                    Text(
-                      e.message,
-                      style: TextStyle(
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                      SizedBox(
+                        height: GetResponsiveSize.getResponsiveSize(
                           context,
-                          mobile: 14,
-                          tablet: 18,
-                          largeTablet: 20,
-                          desktop: 24,
-                        ),
-                        color: Colors.grey.shade600,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(
-                      height: GetResponsiveSize.getResponsiveSize(
-                        context,
-                        mobile: 16,
-                        tablet: 24,
-                        largeTablet: 32,
-                        desktop: 40,
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        context.read<MyAdsBloc>().add(const MyAdsEvent.load());
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: GetResponsiveSize.getResponsivePadding(
-                            context,
-                            mobile: 16,
-                            tablet: 24,
-                            largeTablet: 32,
-                            desktop: 40,
-                          ),
-                          vertical: GetResponsiveSize.getResponsivePadding(
-                            context,
-                            mobile: 12,
-                            tablet: 16,
-                            largeTablet: 20,
-                            desktop: 24,
-                          ),
+                          mobile: 16,
+                          tablet: 20,
+                          largeTablet: 24,
+                          desktop: 28,
                         ),
                       ),
-                      child: Text(
-                        'Retry',
+                      Text(
+                        'Error loading your ads',
+                        style: TextStyle(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 18,
+                            tablet: 22,
+                            largeTablet: 26,
+                            desktop: 30,
+                          ),
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      SizedBox(
+                        height: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 8,
+                          tablet: 12,
+                          largeTablet: 16,
+                          desktop: 20,
+                        ),
+                      ),
+                      Text(
+                        e.message,
                         style: TextStyle(
                           fontSize: GetResponsiveSize.getResponsiveFontSize(
                             context,
@@ -207,77 +165,125 @@ class _MyAdsPageState extends State<MyAdsPage> {
                             largeTablet: 20,
                             desktop: 24,
                           ),
+                          color: Colors.grey.shade600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(
+                        height: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 16,
+                          tablet: 24,
+                          largeTablet: 32,
+                          desktop: 40,
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          context
+                              .read<MyAdsBloc>()
+                              .add(const MyAdsEvent.load());
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: GetResponsiveSize.getResponsivePadding(
+                              context,
+                              mobile: 16,
+                              tablet: 24,
+                              largeTablet: 32,
+                              desktop: 40,
+                            ),
+                            vertical: GetResponsiveSize.getResponsivePadding(
+                              context,
+                              mobile: 12,
+                              tablet: 16,
+                              largeTablet: 20,
+                              desktop: 24,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          'Retry',
+                          style: TextStyle(
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 14,
+                              tablet: 18,
+                              largeTablet: 20,
+                              desktop: 24,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              loaded: (loaded) {
+                if (loaded.ads.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No ads yet',
+                      style: TextStyle(
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 16,
+                          tablet: 20,
+                          largeTablet: 24,
+                          desktop: 28,
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-            loaded: (loaded) {
-              if (loaded.ads.isEmpty) {
-                return Center(
-                  child: Text(
-                    'No ads yet',
-                    style: TextStyle(
-                      fontSize: GetResponsiveSize.getResponsiveFontSize(
-                        context,
-                        mobile: 16,
-                        tablet: 20,
-                        largeTablet: 24,
-                        desktop: 28,
-                      ),
+                  );
+                }
+                return ListView.separated(
+                  padding: EdgeInsets.fromLTRB(
+                    GetResponsiveSize.getResponsivePadding(
+                      context,
+                      mobile: 16,
+                      tablet: 24,
+                      largeTablet: 32,
+                      desktop: 40,
+                    ),
+                    GetResponsiveSize.getResponsivePadding(
+                      context,
+                      mobile: 8,
+                      tablet: 12,
+                      largeTablet: 16,
+                      desktop: 20,
+                    ),
+                    GetResponsiveSize.getResponsivePadding(
+                      context,
+                      mobile: 16,
+                      tablet: 24,
+                      largeTablet: 32,
+                      desktop: 40,
+                    ),
+                    GetResponsiveSize.getResponsivePadding(
+                      context,
+                      mobile: 24,
+                      tablet: 32,
+                      largeTablet: 40,
+                      desktop: 48,
                     ),
                   ),
+                  itemCount: loaded.ads.length,
+                  separatorBuilder: (_, __) => SizedBox(
+                    height: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 16,
+                      tablet: 22,
+                      largeTablet: 28,
+                      desktop: 34,
+                    ),
+                  ),
+                  itemBuilder: (context, i) => _AdTile(ad: loaded.ads[i]),
                 );
-              }
-              return ListView.separated(
-                padding: EdgeInsets.fromLTRB(
-                  GetResponsiveSize.getResponsivePadding(
-                    context,
-                    mobile: 16,
-                    tablet: 24,
-                    largeTablet: 32,
-                    desktop: 40,
-                  ),
-                  GetResponsiveSize.getResponsivePadding(
-                    context,
-                    mobile: 8,
-                    tablet: 12,
-                    largeTablet: 16,
-                    desktop: 20,
-                  ),
-                  GetResponsiveSize.getResponsivePadding(
-                    context,
-                    mobile: 16,
-                    tablet: 24,
-                    largeTablet: 32,
-                    desktop: 40,
-                  ),
-                  GetResponsiveSize.getResponsivePadding(
-                    context,
-                    mobile: 24,
-                    tablet: 32,
-                    largeTablet: 40,
-                    desktop: 48,
-                  ),
-                ),
-                itemCount: loaded.ads.length,
-                separatorBuilder: (_, __) => SizedBox(
-                  height: GetResponsiveSize.getResponsiveSize(
-                    context,
-                    mobile: 16,
-                    tablet: 22,
-                    largeTablet: 28,
-                    desktop: 34,
-                  ),
-                ),
-                itemBuilder: (context, i) => _AdTile(ad: loaded.ads[i]),
-              );
-            },
-            orElse: () => const SizedBox.shrink(),
-          );
-        },
+              },
+              orElse: () => const SizedBox.shrink(),
+            );
+          },
+        ),
       ),
     );
   }

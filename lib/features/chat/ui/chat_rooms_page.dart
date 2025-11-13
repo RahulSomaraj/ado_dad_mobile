@@ -20,47 +20,87 @@ class ChatRoomsPage extends StatefulWidget {
 class _ChatRoomsPageState extends State<ChatRoomsPage> {
   late final ChatBloc _chatBloc;
 
+  bool _hasInitialized = false;
+
   @override
   void initState() {
     super.initState();
     // Store ChatBloc reference
     _chatBloc = context.read<ChatBloc>();
-    // Initialize chat when page loads
+    // Initialize chat when page loads - use addPostFrameCallback to ensure context is ready
     print('🚀 Chat rooms page initialized');
-    _chatBloc.add(InitializeChat());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_hasInitialized) {
+        _hasInitialized = true;
+        // Always initialize/load fresh data when page opens
+        // This fixes the issue where the bloc might be stuck in Loading or Error state
+        // from a previous session when the app is reopened
+        final currentState = _chatBloc.state;
+        print('📊 Current chat state: ${currentState.runtimeType}');
+
+        if (currentState is ChatErrorState ||
+            currentState is ChatInitial ||
+            currentState is ChatLoading) {
+          // If in error, initial, or loading state (might be stuck from previous session),
+          // do a full initialization to ensure WebSocket connection is established
+          // This is especially important after app restart
+          print(
+              '🔄 Full initialization needed (state: ${currentState.runtimeType})');
+          _chatBloc.add(InitializeChat());
+        } else if (currentState is MessagesLoaded ||
+            currentState is ChatRoomJoined ||
+            currentState is ChatRoomCreated ||
+            currentState is NewMessageReceivedState) {
+          // When returning from chat page, these states indicate we need to reload rooms
+          print('🔄 Returning from chat page, reloading chat rooms');
+          _chatBloc.add(LoadChatRooms());
+        } else if (currentState is! ChatRoomsSuccess) {
+          // For any other state, reload rooms
+          print('🔄 Loading chat rooms');
+          _chatBloc.add(LoadChatRooms());
+        } else {
+          print('✅ Chat rooms already loaded');
+        }
+      }
+    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Reload chat rooms when returning to this page
-    print('🔄 Chat rooms page dependencies changed - reloading rooms');
-    if (mounted) {
-      context.read<ChatBloc>().add(LoadChatRooms());
-    }
-  }
-
-  @override
-  void didUpdateWidget(ChatRoomsPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Force reload when widget updates (e.g., when returning from chat page)
-    print('🔄 Chat rooms page widget updated - force reloading rooms');
-    if (mounted) {
-      context.read<ChatBloc>().add(LoadChatRooms());
-    }
+    // When page becomes visible again (e.g., returning from chat page),
+    // refresh the chat rooms list to show any updates
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _hasInitialized) {
+        final currentState = _chatBloc.state;
+        // If we're in a state from chat page (MessagesLoaded, ChatRoomJoined, etc.)
+        // or if rooms haven't been loaded, trigger a reload
+        if (currentState is MessagesLoaded ||
+            currentState is ChatRoomJoined ||
+            currentState is ChatRoomCreated ||
+            currentState is NewMessageReceivedState) {
+          print('🔄 Page visible again, reloading chat rooms');
+          _chatBloc.add(LoadChatRooms());
+        } else if (currentState is ChatErrorState) {
+          print('🔄 Error state detected, attempting to reload');
+          _chatBloc.add(LoadChatRooms());
+        }
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Trigger a reload if we're not in a success state
-    final chatBloc = context.read<ChatBloc>();
+    // This callback runs every time build is called, so we need to be careful
+    // We only want to reload if we're in a bad state and not already loading
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        final currentState = chatBloc.state;
-        if (currentState is! ChatRoomsSuccess) {
-          print(
-              '🔄 Chat rooms page build - triggering reload (current state: ${currentState.runtimeType})');
-          chatBloc.add(LoadChatRooms());
+      if (mounted && _hasInitialized) {
+        final currentState = _chatBloc.state;
+        // Only trigger reload if in error state (to allow retry)
+        // Don't reload if already loading or if we have success
+        if (currentState is ChatErrorState) {
+          print('🔄 Detected error state, attempting to reload');
+          _chatBloc.add(LoadChatRooms());
         }
       }
     });
@@ -103,40 +143,71 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
             onPressed: () => _handleBackNavigation(),
           ),
         ),
-        body: BlocListener<ChatBloc, ChatState>(
-          listener: (context, state) {
-            if (state is ChatRoomJoined) {
-              print('✅ Room joined successfully: ${state.roomId}');
+        body: SafeArea(
+          top: false,
+          minimum: const EdgeInsets.only(bottom: 30),
+          child: BlocListener<ChatBloc, ChatState>(
+            listener: (context, state) {
+              if (state is ChatRoomJoined) {
+                print('✅ Room joined successfully: ${state.roomId}');
 
-              // Load messages for the joined room
-              context.read<ChatBloc>().add(LoadRoomMessages(state.roomId));
-            } else if (state is MessagesLoaded) {
-              print(
-                  '✅ Messages loaded: ${state.messages.length} messages for room ${state.roomId}');
-            } else if (state is ChatErrorState) {
-              print('❌ Error: ${state.error}');
-            }
-          },
-          child: BlocBuilder<ChatBloc, ChatState>(
-            builder: (context, state) {
-              if (state is ChatLoading) {
+                // Load messages for the joined room
+                context.read<ChatBloc>().add(LoadRoomMessages(state.roomId));
+              } else if (state is MessagesLoaded) {
+                print(
+                    '✅ Messages loaded: ${state.messages.length} messages for room ${state.roomId}');
+              } else if (state is ChatErrorState) {
+                print('❌ Error: ${state.error}');
+              }
+            },
+            child: BlocBuilder<ChatBloc, ChatState>(
+              builder: (context, state) {
+                if (state is ChatLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                if (state is ChatErrorState) {
+                  return _buildErrorState(state.error);
+                }
+
+                if (state is ChatRoomsSuccess) {
+                  return _buildRoomsList(state.rooms);
+                }
+
+                // Handle states from chat page - trigger reload and show loading
+                if (state is MessagesLoaded ||
+                    state is ChatRoomJoined ||
+                    state is ChatRoomCreated ||
+                    state is NewMessageReceivedState) {
+                  // Trigger reload if we're in a chat-related state
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      print(
+                          '🔄 Triggering chat rooms reload from ${state.runtimeType} state');
+                      context.read<ChatBloc>().add(LoadChatRooms());
+                    }
+                  });
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                // For any other state (including ChatInitial), show loading
+                // and trigger load if not already loading
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted && state is! ChatLoading) {
+                    print('🔄 Triggering initial chat rooms load');
+                    context.read<ChatBloc>().add(LoadChatRooms());
+                  }
+                });
+
                 return const Center(
                   child: CircularProgressIndicator(),
                 );
-              }
-
-              if (state is ChatErrorState) {
-                return _buildErrorState(state.error);
-              }
-
-              if (state is ChatRoomsSuccess) {
-                return _buildRoomsList(state.rooms);
-              }
-
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            },
+              },
+            ),
           ),
         ),
       ),
@@ -164,7 +235,10 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () => context.read<ChatBloc>().add(LoadChatRooms()),
+              onPressed: () {
+                // Retry with full initialization if connection might be lost
+                context.read<ChatBloc>().add(InitializeChat());
+              },
               icon: const Icon(Icons.refresh),
               label: const Text('Retry Connection'),
               style: ElevatedButton.styleFrom(
@@ -216,7 +290,6 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
     final timestamp = room['timestamp'] as DateTime;
     final otherUser = room['otherUser'] as Map<String, dynamic>?;
     final lastMessage = room['lastMessage'] as String;
-    final adId = room['adId'] as String?;
 
     return Container(
       decoration: const BoxDecoration(
@@ -276,7 +349,7 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
           children: [
             Expanded(
               child: Text(
-                room['adTitle'] ?? 'Ad #${adId ?? 'Unknown'}',
+                otherUser?['name'] ?? 'Unknown User',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: GetResponsiveSize.getResponsiveFontSize(

@@ -383,7 +383,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                             ),
                           ),
                           buildDropdown<String>(
-                            labelText: 'Commercial Vehicle Type *',
+                            labelText: 'Commercial Vehicle Type',
                             items: _commercialVehicleTypeMap.keys.toList(),
                             selectedValue: _selectedVehicleType,
                             errorMsg: 'Please select a vehicle type',
@@ -403,7 +403,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                             ),
                           ),
                           buildDropdown<String>(
-                            labelText: 'Body Type *',
+                            labelText: 'Body Type',
                             items: _bodyTypeMap.keys.toList(),
                             selectedValue: _selectedBodyType,
                             errorMsg: 'Please select a body type',
@@ -423,7 +423,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                             ),
                           ),
                           buildDropdown<VehicleManufacturer>(
-                            labelText: 'Manufacturer *',
+                            labelText: 'Manufacturer',
                             items: _manufacturers,
                             selectedValue: _selectedManufacturer,
                             errorMsg: 'Please select a manufacturer',
@@ -453,7 +453,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                             ),
                           ),
                           buildDropdown<VehicleModel>(
-                            labelText: 'Model *',
+                            labelText: 'Model',
                             items: _models,
                             selectedValue: _selectedModel,
                             onChanged: (model) async {
@@ -997,97 +997,109 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                       desktop: 60,
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: GetResponsiveSize.getResponsivePadding(
-                        context,
-                        mobile: 16,
-                        tablet: 24,
-                        largeTablet: 32,
-                        desktop: 40,
-                      ),
-                    ),
-                    child: SizedBox(
-                      height: GetResponsiveSize.getResponsiveSize(
-                        context,
-                        mobile: 50,
-                        tablet: 65,
-                        largeTablet: 75,
-                        desktop: 85,
-                      ),
-                      child: ElevatedButton(
-                        onPressed: state.maybeWhen(
-                          loading: () => () {
-                            SizedBox(
-                              height: GetResponsiveSize.getResponsiveSize(
-                                context,
-                                mobile: 20,
-                                tablet: 28,
-                                largeTablet: 34,
-                                desktop: 40,
+                  SafeArea(
+                    top: false,
+                    minimum: const EdgeInsets.only(bottom: 20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: GetResponsiveSize.getResponsivePadding(
+                              context,
+                              mobile: 16,
+                              tablet: 24,
+                              largeTablet: 32,
+                              desktop: 40,
+                            ),
+                          ),
+                          child: SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 50,
+                              tablet: 65,
+                              largeTablet: 75,
+                              desktop: 85,
+                            ),
+                            child: ElevatedButton(
+                              onPressed: state.maybeWhen(
+                                loading: () => () {
+                                  SizedBox(
+                                    height: GetResponsiveSize.getResponsiveSize(
+                                      context,
+                                      mobile: 20,
+                                      tablet: 28,
+                                      largeTablet: 34,
+                                      desktop: 40,
+                                    ),
+                                    width: GetResponsiveSize.getResponsiveSize(
+                                      context,
+                                      mobile: 20,
+                                      tablet: 28,
+                                      largeTablet: 34,
+                                      desktop: 40,
+                                    ),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 2,
+                                        tablet: 2.5,
+                                        largeTablet: 3,
+                                        desktop: 3.5,
+                                      ),
+                                      color: Colors.white,
+                                    ),
+                                  );
+                                },
+                                orElse: () => _addAdvertisement,
                               ),
-                              width: GetResponsiveSize.getResponsiveSize(
-                                context,
-                                mobile: 20,
-                                tablet: 28,
-                                largeTablet: 34,
-                                desktop: 40,
-                              ),
-                              child: CircularProgressIndicator(
-                                strokeWidth:
-                                    GetResponsiveSize.getResponsiveSize(
-                                  context,
-                                  mobile: 2,
-                                  tablet: 2.5,
-                                  largeTablet: 3,
-                                  desktop: 3.5,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryColor,
+                                foregroundColor: AppColors.whiteColor,
+                                elevation: 5,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    GetResponsiveSize.getResponsiveBorderRadius(
+                                      context,
+                                      mobile: 25,
+                                      tablet: 30,
+                                      largeTablet: 35,
+                                      desktop: 40,
+                                    ),
+                                  ),
                                 ),
-                                color: Colors.white,
                               ),
-                            );
-                          },
-                          orElse: () => _addAdvertisement,
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryColor,
-                          foregroundColor: AppColors.whiteColor,
-                          elevation: 5,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              GetResponsiveSize.getResponsiveBorderRadius(
-                                context,
-                                mobile: 25,
-                                tablet: 30,
-                                largeTablet: 35,
-                                desktop: 40,
-                              ),
-                            ),
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            "Create Advertisement",
-                            style: AppTextstyle.buttonText.copyWith(
-                              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                                context,
-                                mobile: AppTextstyle.buttonText.fontSize ?? 16,
-                                tablet: 20,
-                                largeTablet: 24,
-                                desktop: 28,
+                              child: Center(
+                                child: Text(
+                                  "Create Advertisement",
+                                  style: AppTextstyle.buttonText.copyWith(
+                                    fontSize:
+                                        GetResponsiveSize.getResponsiveFontSize(
+                                      context,
+                                      mobile:
+                                          AppTextstyle.buttonText.fontSize ??
+                                              16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: GetResponsiveSize.getResponsiveSize(
-                      context,
-                      mobile: 30,
-                      tablet: 40,
-                      largeTablet: 50,
-                      desktop: 60,
+                        SizedBox(
+                          height: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 30,
+                            tablet: 40,
+                            largeTablet: 50,
+                            desktop: 60,
+                          ),
+                        ),
+                      ],
                     ),
                   )
                 ],
@@ -1482,7 +1494,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
   Widget _buildVariantDropdown() {
     final dropdown = DropdownButtonFormField<VehicleVariant>(
       decoration:
-          CommonDecoration.textFieldDecoration(labelText: 'Variant *').copyWith(
+          CommonDecoration.textFieldDecoration(labelText: 'Variant').copyWith(
         labelStyle: TextStyle(
           fontSize: GetResponsiveSize.getResponsiveFontSize(
             context,
@@ -1520,6 +1532,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
         desktop: 36,
       ),
       style: TextStyle(
+        color: Colors.black,
         fontSize: GetResponsiveSize.getResponsiveFontSize(
           context,
           mobile: 16.0,
@@ -1536,6 +1549,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
             style: TextStyle(
+              color: Colors.black,
               fontSize: GetResponsiveSize.getResponsiveFontSize(
                 context,
                 mobile: 16,
