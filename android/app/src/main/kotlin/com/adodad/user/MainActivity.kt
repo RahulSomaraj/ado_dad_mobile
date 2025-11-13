@@ -1,4 +1,4 @@
-package com.example.ado_dad_user
+package com.adodad.user
 
 import io.flutter.embedding.android.FlutterActivity
 
