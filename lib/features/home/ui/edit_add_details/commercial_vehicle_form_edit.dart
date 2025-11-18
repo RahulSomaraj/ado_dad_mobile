@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/error_message_util.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/widgets/common_decoration.dart';
 import 'package:ado_dad_user/common/widgets/dropdown_widget.dart';
@@ -39,6 +40,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
   final _formKey = GlobalKey<FormState>();
 
   // text controllers
+  late final TextEditingController _titleCtrl;
   late final TextEditingController _priceCtrl;
   late final TextEditingController _locationCtrl;
   late final TextEditingController _yearCtrl;
@@ -111,12 +113,14 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
   String? _uploadedVideoUrl; // uploaded video URL
   String? _videoFileName;
   late String? _existingVideoUrl; // existing video from ad
+  bool _videoRemoved = false; // track if video was explicitly removed
 
   @override
   void initState() {
     super.initState();
 
     // ---- Prefill from ad ----
+    _titleCtrl = TextEditingController(text: widget.ad.title ?? '');
     _priceCtrl = TextEditingController(text: widget.ad.price.toString());
     _locationCtrl = TextEditingController(text: widget.ad.location);
     _yearCtrl = TextEditingController(
@@ -231,6 +235,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
 
   @override
   void dispose() {
+    _titleCtrl.dispose();
     _priceCtrl.dispose();
     _locationCtrl.dispose();
     _yearCtrl.dispose();
@@ -255,6 +260,12 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
     }
   }
 
+  void _removeNewImage(int index) {
+    setState(() {
+      _newImageFiles.removeAt(index);
+    });
+  }
+
   Future<void> _pickVideo() async {
     final picked = await _picker.pickVideo(source: ImageSource.gallery);
     if (picked != null) {
@@ -262,19 +273,50 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
       setState(() {
         _newVideoFile = bytes;
         _videoFileName = picked.name;
+        _uploadedVideoUrl = null; // Clear previous upload
+        _existingVideoUrl =
+            null; // Clear existing video to replace with new one
+        _videoRemoved = false; // Reset removal flag when new video is picked
       });
     }
   }
 
   Future<void> _uploadVideo() async {
     if (_newVideoFile != null) {
-      final url = await AddRepository().uploadVideoToS3(_newVideoFile!);
-      if (url != null) {
-        setState(() {
-          _uploadedVideoUrl = url;
-        });
+      try {
+        print('📹 Starting video upload...');
+        final url = await AddRepository().uploadVideoToS3(_newVideoFile!);
+        if (url != null) {
+          print('✅ Video uploaded successfully: $url');
+          setState(() {
+            _uploadedVideoUrl = url;
+            _videoRemoved = false; // Reset removal flag when video is uploaded
+          });
+        } else {
+          print('❌ Video upload returned null URL');
+        }
+      } catch (e) {
+        print('❌ Error uploading video: $e');
+        // Optionally show error to user
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(ErrorMessageUtil.getUserFriendlyMessage(
+                    'Failed to upload video: ${e.toString()}'))),
+          );
+        }
       }
     }
+  }
+
+  void _removeVideo() {
+    setState(() {
+      _newVideoFile = null;
+      _videoFileName = null;
+      _uploadedVideoUrl = null;
+      _existingVideoUrl = null; // Clear existing video URL
+      _videoRemoved = true; // Mark that video was explicitly removed
+    });
   }
 
   Future<void> _uploadNewImages() async {
@@ -293,10 +335,16 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
     await _uploadNewImages();
     await _uploadVideo();
 
+    // Handle video URL - prioritize uploaded video, fallback to existing, or empty string if removed
+    final linkValue = _videoRemoved && _uploadedVideoUrl == null
+        ? "" // Explicitly set to empty string to remove video
+        : (_uploadedVideoUrl ?? _existingVideoUrl);
+
     final payload = {
       // keep if backend expects an explicit type discriminator inside "data"
       "commercialVehicleType": _selectedVehicleType,
       "bodyType": _selectedBodyType,
+      "title": _titleCtrl.text.trim(), // Include title like other fields
 
       "price": int.tryParse(_priceCtrl.text.trim()),
       "location": _locationCtrl.text.trim(),
@@ -325,20 +373,28 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
           : _seatingCapacityCtrl.text.trim()),
       "description": _descCtrl.text.trim(),
       "images": _imageUrls,
-      "link": _uploadedVideoUrl ?? _existingVideoUrl, // Video URL
-
       "fuelTypeId": _selectedFuelType?.id,
       "transmissionTypeId": _selectedTransmissionType?.id,
 
       "additionalFeatures": _selectedFeatures,
+      "link": linkValue, // Include link like other fields
     };
 
-    // Optional: drop null/blank values so backend doesn't wipe existing data
-    payload.removeWhere((k, v) {
-      if (v == null) return true;
-      if (v is String && v.trim().isEmpty) return true;
-      return false;
-    });
+    // Remove null/empty values, but preserve 'link' and 'title' fields
+    final linkWasEmpty = payload['link'] == "";
+    final titleValue = payload['title'];
+    payload.removeWhere((k, v) =>
+        k != 'link' &&
+        k != 'title' &&
+        (v == null || (v is String && v.trim().isEmpty)));
+    // Restore link if it was explicitly set to empty string (to remove video)
+    if (linkWasEmpty && _videoRemoved) {
+      payload['link'] = "";
+    }
+    // Always restore title to ensure it's sent to backend (allows updating existing titles)
+    if (titleValue != null) {
+      payload['title'] = titleValue;
+    }
 
     context.read<AdEditBloc>().add(AdEditEvent.submit(
           adId: widget.ad.id,
@@ -387,7 +443,9 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
               },
               failure: (msg) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('❌ Failed: $msg')),
+                  SnackBar(
+                      content:
+                          Text(ErrorMessageUtil.getUserFriendlyMessage(msg))),
                 );
               },
             );
@@ -411,6 +469,16 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
                     label: 'Price',
                     isNumberField: true,
                     controller: _priceCtrl,
+                  ),
+                  SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 10,
+                          tablet: 14,
+                          largeTablet: 18,
+                          desktop: 22)),
+                  GetInput(
+                    label: 'Title',
+                    controller: _titleCtrl,
                   ),
                   SizedBox(
                       height: GetResponsiveSize.getResponsiveSize(context,
@@ -637,6 +705,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
                     onPickImages: _pickImages,
                     onRemoveImage: (url) =>
                         setState(() => _imageUrls.remove(url)),
+                    onRemoveNewImage: _removeNewImage,
                   ),
                   SizedBox(
                       height: GetResponsiveSize.getResponsiveSize(context,
@@ -650,6 +719,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
                     videoFileName: _videoFileName,
                     existingVideoUrl: _existingVideoUrl,
                     onPickVideo: _pickVideo,
+                    onRemoveVideo: _removeVideo,
                   ),
                   SizedBox(
                       height: GetResponsiveSize.getResponsiveSize(context,

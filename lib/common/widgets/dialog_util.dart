@@ -1,4 +1,5 @@
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/error_message_util.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -97,7 +98,7 @@ class DialogUtil {
           ],
         ),
         content: Text(
-          message,
+          ErrorMessageUtil.getUserFriendlyMessage(message),
           style: const TextStyle(fontSize: 16),
           textAlign: TextAlign.center,
         ),
@@ -130,7 +131,7 @@ class DialogUtil {
           borderRadius: BorderRadius.circular(12),
         ),
         content: Text(
-          message,
+          ErrorMessageUtil.getUserFriendlyMessage(message),
           style: const TextStyle(fontSize: 16),
           textAlign: TextAlign.center,
         ),

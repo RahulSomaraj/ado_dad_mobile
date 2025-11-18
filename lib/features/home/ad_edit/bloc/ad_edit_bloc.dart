@@ -21,6 +21,18 @@ class AdEditBloc extends Bloc<AdEditEvent, AdEditState> {
             // 2) re-fetch the updated record, so UI gets fresh data
             final updated = await repo.fetchAdDetail(adId);
 
+            // Print updated ad data to console
+            // print('✅ Ad updated successfully!');
+            // print('📦 Updated Ad Data:');
+            // print('   ID: ${updated.id}');
+            // print('   Title: ${updated.title}');
+            // print('   Category: ${updated.category}');
+            // print('   Price: ${updated.price}');
+            // print('   Location: ${updated.location}');
+            // print('   Video Link: ${updated.link}');
+            // print('   Images: ${updated.images.length} images');
+            print('   Full Ad JSON: ${updated.toJson()}');
+
             emit(AdEditState.success(updated));
           } catch (e) {
             emit(AdEditState.failure(e.toString()));

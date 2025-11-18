@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/error_message_util.dart';
 import 'package:ado_dad_user/common/password_validator.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/features/login/bloc/login_bloc.dart' as login_bloc;
@@ -119,7 +120,9 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick image: $e')),
+        SnackBar(
+            content: Text(ErrorMessageUtil.getUserFriendlyMessage(
+                'Failed to pick image: $e'))),
       );
     }
   }
@@ -628,7 +631,9 @@ class _ProfilePageState extends State<ProfilePage> {
         Navigator.pop(context); // Close the dialog
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to change password: $e')),
+          SnackBar(
+              content: Text(ErrorMessageUtil.getUserFriendlyMessage(
+                  'Failed to change password: $e'))),
         );
       }
     }

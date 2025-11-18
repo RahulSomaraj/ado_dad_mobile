@@ -21,25 +21,9 @@ class AdDetailTitlePrice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String title;
-    if (ad.category == 'property') {
-      // Show BHK only for apartment, house, and villa
-      final shouldShowBHK = ad.propertyType == 'apartment' ||
-          ad.propertyType == 'house' ||
-          ad.propertyType == 'villa';
-      
-      if (shouldShowBHK) {
-        title =
-            '${ad.propertyType ?? ''} • ${ad.bedrooms ?? 0} BHK • ${ad.areaSqft ?? 0} sqft';
-      } else {
-        // For other property types, show only property type and area
-        title =
-            '${ad.propertyType ?? ''} • ${ad.areaSqft ?? 0} sqft';
-      }
-    } else {
-      title =
-          '${ad.manufacturer?.displayName ?? ad.manufacturer?.name ?? ''} ${ad.model?.displayName ?? ad.model?.name ?? ''} (${ad.year ?? ''})';
-    }
+    // Only show title if it exists and is not empty - no auto-generation
+    final title =
+        (ad.title != null && ad.title!.trim().isNotEmpty) ? ad.title! : '';
 
     // Check if running on iPhone
     final isIOS = !kIsWeb && Platform.isIOS;
@@ -63,19 +47,21 @@ class AdDetailTitlePrice extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  toTitleCase(title),
-                  style: TextStyle(
-                      fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                          mobile: isIOS ? 14 : 16,
-                          tablet: 25,
-                          largeTablet: 29,
-                          desktop: 33),
-                      fontWeight: FontWeight.bold),
-                  maxLines: isIOS ? null : 2,
-                  overflow:
-                      isIOS ? TextOverflow.visible : TextOverflow.ellipsis,
-                ),
+                if (title.isNotEmpty)
+                  Text(
+                    toTitleCase(title),
+                    style: TextStyle(
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: isIOS ? 14 : 16,
+                            tablet: 25,
+                            largeTablet: 29,
+                            desktop: 33),
+                        fontWeight: FontWeight.bold),
+                    maxLines: isIOS ? null : 2,
+                    overflow:
+                        isIOS ? TextOverflow.visible : TextOverflow.ellipsis,
+                  ),
               ],
             ),
           ),

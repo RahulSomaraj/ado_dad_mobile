@@ -339,6 +339,15 @@ class _ChatPageState extends State<ChatPage> {
                 // Message input
                 SafeArea(
                   top: false,
+                  minimum: EdgeInsets.only(
+                    bottom: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 50,
+                      tablet: 50,
+                      largeTablet: 50,
+                      desktop: 50,
+                    ),
+                  ),
                   child: _buildMessageInput(),
                 ),
               ],

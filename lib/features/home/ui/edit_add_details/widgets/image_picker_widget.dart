@@ -8,6 +8,7 @@ class ImagePickerWidget extends StatelessWidget {
   final List<Uint8List> newImageFiles;
   final VoidCallback onPickImages;
   final ValueChanged<String> onRemoveImage;
+  final ValueChanged<int>? onRemoveNewImage;
 
   const ImagePickerWidget({
     super.key,
@@ -15,6 +16,7 @@ class ImagePickerWidget extends StatelessWidget {
     required this.newImageFiles,
     required this.onPickImages,
     required this.onRemoveImage,
+    this.onRemoveNewImage,
   });
 
   @override
@@ -87,24 +89,66 @@ class ImagePickerWidget extends StatelessWidget {
                 ),
               ],
             )),
-        ...newImageFiles.map((bytes) => Image.memory(
-              bytes,
-              width: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 100,
-                tablet: 130,
-                largeTablet: 160,
-                desktop: 190,
+        ...newImageFiles.asMap().entries.map((entry) {
+          final index = entry.key;
+          final bytes = entry.value;
+          return Stack(
+            children: [
+              Image.memory(
+                bytes,
+                width: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 100,
+                  tablet: 130,
+                  largeTablet: 160,
+                  desktop: 190,
+                ),
+                height: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 100,
+                  tablet: 130,
+                  largeTablet: 160,
+                  desktop: 190,
+                ),
+                fit: BoxFit.cover,
               ),
-              height: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 100,
-                tablet: 130,
-                largeTablet: 160,
-                desktop: 190,
-              ),
-              fit: BoxFit.cover,
-            )),
+              if (onRemoveNewImage != null)
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: () => onRemoveNewImage!(index),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey,
+                        shape: BoxShape.rectangle,
+                      ),
+                      padding: EdgeInsets.all(
+                        GetResponsiveSize.getResponsivePadding(
+                          context,
+                          mobile: 2,
+                          tablet: 4,
+                          largeTablet: 6,
+                          desktop: 8,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.close,
+                        size: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 14,
+                          tablet: 18,
+                          largeTablet: 22,
+                          desktop: 26,
+                        ),
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        }),
         GestureDetector(
           onTap: onPickImages,
           child: Container(

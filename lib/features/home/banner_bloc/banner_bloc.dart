@@ -18,7 +18,9 @@ class BannerBloc extends Bloc<BannerEvent, BannerState> {
         final List<BannerModel> banners = await bannerRepository.fetchBanners();
         emit(BannerState.loaded(banners));
       } catch (e) {
-        emit(BannerState.error("Failed to load banners: ${e.toString()}"));
+        // Emit user-friendly message instead of raw exception
+        emit(BannerState.error(
+            "Unable to load banners at the moment. Please try again later."));
       }
     });
   }

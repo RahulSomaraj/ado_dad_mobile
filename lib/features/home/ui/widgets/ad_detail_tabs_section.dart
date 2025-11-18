@@ -146,8 +146,10 @@ class _SpecsCard extends StatelessWidget {
             largeTablet: 220,
             desktop: 260);
 
-        // Calculate total height: first row (2 items) + spacing + second row (description with larger height) + padding
+        // Calculate total height: first row (2 items) + spacing + second row (1 item) + spacing + third row (description with larger height) + padding
         final plotTotalHeight = plotItemHeight +
+            plotMainAxisSpacing +
+            plotItemHeight +
             plotMainAxisSpacing +
             descriptionItemHeight +
             (plotPadding * 2);
@@ -159,7 +161,7 @@ class _SpecsCard extends StatelessWidget {
               padding: EdgeInsets.all(plotPadding),
               child: Column(
                 children: [
-                  // First row: Property Type and Area
+                  // First row: Property Type and Listing Type
                   Row(
                     children: [
                       Expanded(
@@ -177,6 +179,22 @@ class _SpecsCard extends StatelessWidget {
                         child: SizedBox(
                           height: plotItemHeight,
                           child: AdDetailSpecTile(
+                            spec: AdDetailSpec('Listing Type',
+                                toTitleCase(ad.listingType ?? '-'),
+                                icon: Icons.sell),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: plotMainAxisSpacing),
+                  // Second row: Area
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: plotItemHeight,
+                          child: AdDetailSpecTile(
                             spec: AdDetailSpec(
                                 'Area (sqft)', ad.areaSqft?.toString() ?? '-',
                                 icon: Icons.square_foot),
@@ -186,7 +204,7 @@ class _SpecsCard extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: plotMainAxisSpacing),
-                  // Second row: Description (spans full width with larger height, scrollable if needed)
+                  // Third row: Description (spans full width with larger height, scrollable if needed)
                   SizedBox(
                     height: descriptionItemHeight,
                     child: SingleChildScrollView(
@@ -214,6 +232,8 @@ class _SpecsCard extends StatelessWidget {
         final items = <AdDetailSpec>[
           AdDetailSpec('Property Type', ad.propertyType ?? '-',
               icon: Icons.home_work),
+          AdDetailSpec('Listing Type', toTitleCase(ad.listingType ?? '-'),
+              icon: Icons.sell),
           AdDetailSpec('Area (sqft)', ad.areaSqft?.toString() ?? '-',
               icon: Icons.square_foot),
           AdDetailSpec('Parking', ad.hasParking == true ? 'Yes' : 'No',
@@ -384,6 +404,8 @@ class _SpecsCard extends StatelessWidget {
         final items = <AdDetailSpec>[
           AdDetailSpec('Property Type', ad.propertyType ?? '-',
               icon: Icons.home_work),
+          AdDetailSpec('Listing Type', toTitleCase(ad.listingType ?? '-'),
+              icon: Icons.sell),
           AdDetailSpec('Bedrooms', ad.bedrooms?.toString() ?? '-',
               icon: Icons.bed),
           AdDetailSpec('Bathrooms', ad.bathrooms?.toString() ?? '-',
@@ -432,6 +454,8 @@ class _SpecsCard extends StatelessWidget {
         final items = <AdDetailSpec>[
           AdDetailSpec('Property Type', ad.propertyType ?? '-',
               icon: Icons.home_work),
+          AdDetailSpec('Listing Type', toTitleCase(ad.listingType ?? '-'),
+              icon: Icons.sell),
           AdDetailSpec('Bedrooms', ad.bedrooms?.toString() ?? '-',
               icon: Icons.bed),
           AdDetailSpec('Bathrooms', ad.bathrooms?.toString() ?? '-',
@@ -480,6 +504,8 @@ class _SpecsCard extends StatelessWidget {
         final items = <AdDetailSpec>[
           AdDetailSpec('Property Type', ad.propertyType ?? '-',
               icon: Icons.home_work),
+          AdDetailSpec('Listing Type', toTitleCase(ad.listingType ?? '-'),
+              icon: Icons.sell),
           AdDetailSpec('Bedrooms', ad.bedrooms?.toString() ?? '-',
               icon: Icons.bed),
           AdDetailSpec('Bathrooms', ad.bathrooms?.toString() ?? '-',
@@ -523,6 +549,8 @@ class _SpecsCard extends StatelessWidget {
       final items = <AdDetailSpec>[
         AdDetailSpec('Property Type', ad.propertyType ?? '-',
             icon: Icons.home_work),
+        AdDetailSpec('Listing Type', toTitleCase(ad.listingType ?? '-'),
+            icon: Icons.sell),
         AdDetailSpec('Bedrooms', ad.bedrooms?.toString() ?? '-',
             icon: Icons.bed),
         AdDetailSpec('Bathrooms', ad.bathrooms?.toString() ?? '-',

@@ -512,7 +512,8 @@ class _HomePageState extends State<HomePage> {
                               initial: () => const SizedBox(),
                               loading: () => const Center(
                                   child: CircularProgressIndicator()),
-                              error: (message) => Text("Error: $message"),
+                              error: (message) =>
+                                  const SizedBox(), // Hide banner error UI - don't show error to user
                               loaded: (banners) => Column(
                                 children: [
                                   CarouselSlider(
@@ -995,7 +996,30 @@ class _HomePageState extends State<HomePage> {
           );
         } else if (state is AdvertisementError) {
           return SliverToBoxAdapter(
-            child: Center(child: Text("Error: ${state.message}")),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      state.message,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[600],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           );
         } else {
           return const SliverToBoxAdapter(
@@ -1060,7 +1084,30 @@ class _HomePageState extends State<HomePage> {
             ),
           );
         } else if (state is AdvertisementError) {
-          return Center(child: Text("Error: ${state.message}"));
+          return Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    state.message,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
         } else {
           return const Center(child: Text("No data available"));
         }

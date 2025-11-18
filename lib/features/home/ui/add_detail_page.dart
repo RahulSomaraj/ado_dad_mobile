@@ -919,6 +919,8 @@ Download Ado Dad app to contact the seller and view more details!
       // PROPERTY SPECS
       final items = <_Spec>[
         _Spec('Property Type', ad.propertyType ?? '-', icon: Icons.home_work),
+        _Spec('Listing Type', toTitleCase(ad.listingType ?? '-'),
+            icon: Icons.sell),
         _Spec('Bedrooms', ad.bedrooms?.toString() ?? '-', icon: Icons.bed),
         _Spec('Bathrooms', ad.bathrooms?.toString() ?? '-',
             icon: Icons.bathtub),

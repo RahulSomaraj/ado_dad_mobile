@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/error_message_util.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/widgets/common_decoration.dart';
 import 'package:ado_dad_user/common/widgets/dropdown_widget.dart';
@@ -39,6 +40,7 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
   final _formKey = GlobalKey<FormState>();
 
   // ---- Controllers (like in TwoWheelerFormEdit)
+  late final TextEditingController _titleCtrl;
   late final TextEditingController _priceCtrl;
   late final TextEditingController _locationCtrl;
   late final TextEditingController _yearCtrl;
@@ -87,6 +89,7 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
   String? _uploadedVideoUrl; // uploaded video URL
   String? _videoFileName;
   late String? _existingVideoUrl; // existing video from ad
+  bool _videoRemoved = false; // track if video was explicitly removed
 
   // ---- Helpers
   String _fuelLabel(VehicleFuelType f) => (f.displayName).toString();
@@ -121,6 +124,7 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
         : null; // existing video URL
 
     // Controllers (like your TwoWheelerFormEdit)
+    _titleCtrl = TextEditingController(text: widget.ad.title ?? '');
     _priceCtrl = TextEditingController(text: price.toString());
     _locationCtrl = TextEditingController(text: location);
     _yearCtrl = TextEditingController(text: year.toString());
@@ -133,6 +137,7 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
 
   @override
   void dispose() {
+    _titleCtrl.dispose();
     _priceCtrl.dispose();
     _locationCtrl.dispose();
     _yearCtrl.dispose();
@@ -228,6 +233,12 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
     }
   }
 
+  void _removeNewImage(int index) {
+    setState(() {
+      _newImageFiles.removeAt(index);
+    });
+  }
+
   Future<void> _pickVideo() async {
     final picked = await _picker.pickVideo(source: ImageSource.gallery);
     if (picked != null) {
@@ -235,19 +246,53 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
       setState(() {
         _newVideoFile = bytes;
         _videoFileName = picked.name;
+        _uploadedVideoUrl = null; // Clear previous upload
+        _existingVideoUrl =
+            null; // Clear existing video to replace with new one
+        _videoRemoved = false; // Reset removal flag when new video is picked
       });
     }
   }
 
   Future<void> _uploadVideo() async {
     if (_newVideoFile != null) {
-      final url = await AddRepository().uploadVideoToS3(_newVideoFile!);
-      if (url != null) {
-        setState(() {
-          _uploadedVideoUrl = url;
-        });
+      try {
+        print('📹 Starting video upload...');
+        final url = await AddRepository().uploadVideoToS3(_newVideoFile!);
+        if (url != null) {
+          print('✅ Video uploaded successfully: $url');
+          if (mounted) {
+            setState(() {
+              _uploadedVideoUrl = url;
+              _videoRemoved =
+                  false; // Reset removal flag when video is uploaded
+            });
+          }
+        } else {
+          print('❌ Video upload returned null URL');
+        }
+      } catch (e) {
+        print('❌ Error uploading video: $e');
+        // Optionally show error to user
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(ErrorMessageUtil.getUserFriendlyMessage(
+                    'Failed to upload video: ${e.toString()}'))),
+          );
+        }
       }
     }
+  }
+
+  void _removeVideo() {
+    setState(() {
+      _newVideoFile = null;
+      _videoFileName = null;
+      _uploadedVideoUrl = null;
+      _existingVideoUrl = null; // Clear existing video URL
+      _videoRemoved = true; // Mark that video was explicitly removed
+    });
   }
 
   Future<void> _uploadNewImages() async {
@@ -267,10 +312,16 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
     await _uploadNewImages();
     await _uploadVideo();
 
+    // Handle video URL - prioritize uploaded video, fallback to existing, or empty string if removed
+    final linkValue = _videoRemoved && _uploadedVideoUrl == null
+        ? "" // Explicitly set to empty string to remove video
+        : (_uploadedVideoUrl ?? _existingVideoUrl);
+
     final payload = {
       "vehicleType": (widget.ad.vehicleType?.isNotEmpty ?? false)
           ? widget.ad.vehicleType
           : "four_wheeler",
+      "title": _titleCtrl.text.trim(), // Include title like other fields
       "price": _safeInt(_priceCtrl.text, fallback: widget.ad.price),
       "location": _locationCtrl.text.trim(),
       "manufacturerId": _selectedManufacturer?.id,
@@ -285,15 +336,27 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
       "hasRcBook": _hasRcBook,
       "description": _descCtrl.text.trim(),
       "images": _imageUrls,
-      "link": _uploadedVideoUrl ?? _existingVideoUrl, // Video URL
       "fuelTypeId": _selectedFuelType?.id,
       "transmissionTypeId": _selectedTransmissionType?.id,
       "additionalFeatures": _additionalFeatures,
+      "link": linkValue, // Include link like other fields
     };
 
-    // Optionally drop empty strings/nulls:
-    payload
-        .removeWhere((k, v) => v == null || (v is String && v.trim().isEmpty));
+    // Remove null/empty values, but preserve 'link' and 'title' fields
+    final linkWasEmpty = payload['link'] == "";
+    final titleValue = payload['title'];
+    payload.removeWhere((k, v) =>
+        k != 'link' &&
+        k != 'title' &&
+        (v == null || (v is String && v.trim().isEmpty)));
+    // Restore link if it was explicitly set to empty string (to remove video)
+    if (linkWasEmpty && _videoRemoved) {
+      payload['link'] = "";
+    }
+    // Always restore title to ensure it's sent to backend (allows updating existing titles)
+    if (titleValue != null) {
+      payload['title'] = titleValue;
+    }
 
     debugPrint('UPDATE PAYLOAD (private_vehicle) => $payload');
 
@@ -340,8 +403,10 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
                     .add(const AdvertisementEvent.fetchAllListings());
                 context.go('/home');
               },
-              failure: (msg) => ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text('❌ Failed: $msg'))),
+              failure: (msg) => ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content:
+                          Text(ErrorMessageUtil.getUserFriendlyMessage(msg)))),
             );
           },
           builder: (context, state) {
@@ -363,6 +428,18 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
                     label: 'Price',
                     isNumberField: true,
                     controller: _priceCtrl,
+                  ),
+                  SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 10,
+                          tablet: 14,
+                          largeTablet: 18,
+                          desktop: 22)),
+
+                  // Title
+                  GetInput(
+                    label: 'Title',
+                    controller: _titleCtrl,
                   ),
                   SizedBox(
                       height: GetResponsiveSize.getResponsiveSize(context,
@@ -545,6 +622,7 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
                     onPickImages: _pickImages,
                     onRemoveImage: (url) =>
                         setState(() => _imageUrls.remove(url)),
+                    onRemoveNewImage: _removeNewImage,
                   ),
                   SizedBox(
                       height: GetResponsiveSize.getResponsiveSize(context,
@@ -558,6 +636,7 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
                     videoFileName: _videoFileName,
                     existingVideoUrl: _existingVideoUrl,
                     onPickVideo: _pickVideo,
+                    onRemoveVideo: _removeVideo,
                   ),
                   SizedBox(
                       height: GetResponsiveSize.getResponsiveSize(context,

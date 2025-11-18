@@ -8,12 +8,14 @@ class VideoUploadSectionWidget extends StatelessWidget {
   final String? videoFileName;
   final String? existingVideoUrl;
   final VoidCallback onPickVideo;
+  final VoidCallback? onRemoveVideo;
 
   const VideoUploadSectionWidget({
     super.key,
     this.videoFileName,
     this.existingVideoUrl,
     required this.onPickVideo,
+    this.onRemoveVideo,
   });
 
   @override
@@ -75,6 +77,7 @@ class VideoUploadSectionWidget extends StatelessWidget {
               videoFileName: videoFileName,
               existingVideoUrl: existingVideoUrl,
               onPickVideo: onPickVideo,
+              onRemoveVideo: onRemoveVideo,
             ),
             SizedBox(
               height: GetResponsiveSize.getResponsiveSize(

@@ -1,6 +1,7 @@
 class AddModel {
   // Common (for both list & detail)
   final String id;
+  final String? title;
   final String description;
   final int price;
   final List<String> images;
@@ -35,6 +36,7 @@ class AddModel {
 
   // Property-related
   final String? propertyType;
+  final String? listingType;
   final int? bedrooms;
   final int? bathrooms;
   final int? areaSqft;
@@ -68,6 +70,7 @@ class AddModel {
   AddModel({
     // basic
     required this.id,
+    this.title,
     required this.description,
     required this.price,
     required this.images,
@@ -93,6 +96,7 @@ class AddModel {
     this.hasRcBook,
     this.additionalFeatures,
     this.propertyType,
+    this.listingType,
     this.bedrooms,
     this.bathrooms,
     this.areaSqft,
@@ -121,6 +125,7 @@ class AddModel {
 
   AddModel copyWith({
     String? id,
+    String? title,
     String? description,
     int? price,
     List<String>? images,
@@ -145,6 +150,7 @@ class AddModel {
     bool? hasRcBook,
     List<String>? additionalFeatures,
     String? propertyType,
+    String? listingType,
     int? bedrooms,
     int? bathrooms,
     int? areaSqft,
@@ -172,6 +178,7 @@ class AddModel {
   }) {
     return AddModel(
       id: id ?? this.id,
+      title: title ?? this.title,
       description: description ?? this.description,
       price: price ?? this.price,
       images: images ?? this.images,
@@ -196,6 +203,7 @@ class AddModel {
       hasRcBook: hasRcBook ?? this.hasRcBook,
       additionalFeatures: additionalFeatures ?? this.additionalFeatures,
       propertyType: propertyType ?? this.propertyType,
+      listingType: listingType ?? this.listingType,
       bedrooms: bedrooms ?? this.bedrooms,
       bathrooms: bathrooms ?? this.bathrooms,
       areaSqft: areaSqft ?? this.areaSqft,
@@ -260,6 +268,7 @@ class AddModel {
     return AddModel(
       // basics
       id: (json['id'] ?? json['_id'] ?? '').toString(),
+      title: json['title'] as String?,
       description: (json['description'] ?? '').toString(),
       price: _asInt(json['price']) ?? 0,
       images: (json['images'] as List?)?.map((e) => e.toString()).toList() ??
@@ -303,6 +312,7 @@ class AddModel {
       // property
 
       propertyType: (propScope['propertyType'] ?? propScope['type']) as String?,
+      listingType: (propScope['listingType'] ?? json['listingType']) as String?,
       bedrooms: _asInt(propScope['bedrooms'] ?? propScope['bhk']),
       bathrooms: _asInt(propScope['bathrooms'] ?? propScope['baths']),
       areaSqft: _asInt(propScope['areaSqft'] ?? propScope['area']),
@@ -348,6 +358,7 @@ class AddModel {
     return {
       // basics
       'id': id,
+      'title': title,
       'description': description,
       'price': price,
       'images': images,
@@ -381,6 +392,7 @@ class AddModel {
 
       // property
       'propertyType': propertyType,
+      'listingType': listingType,
       'bedrooms': bedrooms,
       'bathrooms': bathrooms,
       'areaSqft': areaSqft,

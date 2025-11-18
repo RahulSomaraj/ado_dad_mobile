@@ -303,6 +303,7 @@ class PropertyDetails {
   final String id; // _id
   final String ad; // ad id
   final String propertyType;
+  final String? listingType;
   final int bedrooms;
   final int bathrooms;
   final int areaSqft;
@@ -319,6 +320,7 @@ class PropertyDetails {
     required this.id,
     required this.ad,
     required this.propertyType,
+    this.listingType,
     required this.bedrooms,
     required this.bathrooms,
     required this.areaSqft,
@@ -337,6 +339,7 @@ class PropertyDetails {
       id: (json['_id'] ?? json['id'] ?? '').toString(),
       ad: (json['ad'] ?? '').toString(),
       propertyType: (json['propertyType'] ?? '').toString(),
+      listingType: json['listingType'] as String?,
       bedrooms: _asInt(json['bedrooms']) ?? 0,
       bathrooms: _asInt(json['bathrooms']) ?? 0,
       areaSqft: _asInt(json['areaSqft']) ?? 0,
@@ -360,6 +363,7 @@ class PropertyDetails {
       '_id': id,
       'ad': ad,
       'propertyType': propertyType,
+      'listingType': listingType,
       'bedrooms': bedrooms,
       'bathrooms': bathrooms,
       'areaSqft': areaSqft,

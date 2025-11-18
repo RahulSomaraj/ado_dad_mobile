@@ -1,10 +1,11 @@
 class PropertyAdModel {
-  // final String title;
+  final String? title;
   final String description;
   final int price;
   final String location;
   final List<String> images;
   final String propertyType;
+  final String? listingType;
   final int bedrooms;
   final int bathrooms;
   final int areaSqft;
@@ -16,12 +17,13 @@ class PropertyAdModel {
   final String? link; // Video URL
 
   PropertyAdModel({
-    // required this.title,
+    this.title,
     required this.description,
     required this.price,
     required this.location,
     required this.images,
     required this.propertyType,
+    this.listingType,
     required this.bedrooms,
     required this.bathrooms,
     required this.areaSqft,
@@ -35,12 +37,13 @@ class PropertyAdModel {
 
   Map<String, dynamic> toJson() {
     return {
-      // 'title': title,
+      'title': title,
       'description': description,
       'price': price,
       'location': location,
       'images': images,
       'propertyType': propertyType,
+      'listingType': listingType,
       'bedrooms': bedrooms,
       'bathrooms': bathrooms,
       'areaSqft': areaSqft,
