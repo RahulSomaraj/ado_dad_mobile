@@ -454,7 +454,7 @@ class _ProductTile extends StatelessWidget {
                       children: [
                         // Showroom label for SR users
                         Image.asset(
-                          'assets/images/showroom_label.png',
+                          'assets/images/showroom copy 2.png',
                           height: GetResponsiveSize.getResponsiveSize(context,
                               mobile: 16,
                               tablet: 24,

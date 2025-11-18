@@ -5,13 +5,16 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
-def kp = new Properties()
-kp.load(new FileInputStream(rootProject.file("key.properties")))
+def keystorePropertiesFile = rootProject.file("key.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
 
 android {
     namespace = "com.adodad.user"
     compileSdk = 36
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -39,27 +42,33 @@ android {
     }
 
     signingConfigs {
-        release {
-            storeFile file(kp["storeFile"])
-            storePassword kp["storePassword"]
-            keyAlias kp["keyAlias"]
-            keyPassword kp["keyPassword"]
-        }
-        // Use the same signing config for debug builds
-        debug {
-            storeFile file(kp["storeFile"])
-            storePassword kp["storePassword"]
-            keyAlias kp["keyAlias"]
-            keyPassword kp["keyPassword"]
+        if (keystorePropertiesFile.exists()) {
+            release {
+                storeFile file(keystoreProperties["storeFile"])
+                storePassword keystoreProperties["storePassword"]
+                keyAlias keystoreProperties["keyAlias"]
+                keyPassword keystoreProperties["keyPassword"]
+            }
+            // Use the same signing config for debug builds
+            debug {
+                storeFile file(keystoreProperties["storeFile"])
+                storePassword keystoreProperties["storePassword"]
+                keyAlias keystoreProperties["keyAlias"]
+                keyPassword keystoreProperties["keyPassword"]
+            }
         }
     }
 
     buildTypes {
         debug {
-            signingConfig signingConfigs.debug
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.debug
+            }
         }
         release {
-            signingConfig signingConfigs.release
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),'proguard-rules.pro'

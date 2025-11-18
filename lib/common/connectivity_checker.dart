@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:ado_dad_user/common/get_responsive_size.dart';
 
 class StartupConnectivityGate extends StatefulWidget {
   final Widget child;
@@ -79,7 +80,21 @@ class _StartupConnectivityGateState extends State<StartupConnectivityGate> {
 
   @override
   Widget build(BuildContext context) {
-    if (_passedGate) return widget.child;
+    if (_passedGate) {
+      return SafeArea(
+        top: false,
+        minimum: EdgeInsets.only(
+          bottom: GetResponsiveSize.getResponsiveSize(
+            context,
+            mobile: 50,
+            tablet: 50,
+            largeTablet: 50,
+            desktop: 60,
+          ),
+        ),
+        child: widget.child,
+      );
+    }
 
     return Scaffold(
       body: SafeArea(
