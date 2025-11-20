@@ -8,17 +8,16 @@ class ErrorMessageUtil {
 
     final message = errorMessage.toLowerCase();
 
-    // Remove common prefixes like "Exception: ", "Error: ", "❌ "
-    String cleanMessage = errorMessage;
-    if (cleanMessage.startsWith('❌ ')) {
-      cleanMessage = cleanMessage.substring(2);
-    }
-    if (cleanMessage.startsWith('Exception: ')) {
-      cleanMessage = cleanMessage.substring(11);
-    }
-    if (cleanMessage.startsWith('error: ')) {
-      cleanMessage = cleanMessage.substring(7);
-    }
+    // Remove common prefixes and patterns like "Exception: ", "Error: ", "❌ " from anywhere in the message
+    String cleanMessage = errorMessage
+        .replaceAll(RegExp(r'^Exception:\s*', caseSensitive: false), '')
+        .replaceAll(RegExp(r'^Error:\s*', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\bException:\s*', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\bError:\s*', caseSensitive: false), '')
+        .replaceAll('❌', '')
+        .replaceAll(
+            RegExp(r'\s+'), ' ') // Replace multiple spaces with single space
+        .trim();
 
     // Network/Connection errors
     if (message.contains('socketexception') ||

@@ -589,6 +589,24 @@ class _SpecsCard extends StatelessWidget {
       );
     }
 
+    // Helper to check if additional features exist and need more space
+    final hasAdditionalFeatures =
+        ad.additionalFeatures != null && ad.additionalFeatures!.isNotEmpty;
+
+    // Helper to get grid item height - taller when additional features exist
+    double getVehicleGridItemHeight(BuildContext context) {
+      if (hasAdditionalFeatures) {
+        // Increased height when additional features are present to allow wrapping
+        return GetResponsiveSize.getResponsiveSize(context,
+            mobile: 80, tablet: 120, largeTablet: 140, desktop: 160);
+      }
+      return GetResponsiveSize.getResponsiveSize(context,
+          mobile: 64, tablet: 95, largeTablet: 110, desktop: 125);
+    }
+
+    final additionalFeaturesText =
+        hasAdditionalFeatures ? ad.additionalFeatures!.join(', ') : '-';
+
     final items = <AdDetailSpec>[
       AdDetailSpec(
           'Brand Name',
@@ -606,6 +624,18 @@ class _SpecsCard extends StatelessWidget {
           icon: Icons.calendar_today),
       AdDetailSpec('Mileage', (ad.mileage != null) ? '${ad.mileage} Kmpl' : '-',
           icon: Icons.speed),
+      // Additional vehicle specifications
+      AdDetailSpec('Has Insurance',
+          ad.hasInsurance != null ? (ad.hasInsurance! ? 'Yes' : 'No') : '-',
+          icon: Icons.shield_outlined),
+      AdDetailSpec('First Owner',
+          ad.isFirstOwner != null ? (ad.isFirstOwner! ? 'Yes' : 'No') : '-',
+          icon: Icons.person_outline),
+      AdDetailSpec('Has RC Book',
+          ad.hasRcBook != null ? (ad.hasRcBook! ? 'Yes' : 'No') : '-',
+          icon: Icons.description_outlined),
+      AdDetailSpec('Additional Features', additionalFeaturesText,
+          icon: Icons.star_outline),
     ];
 
     return AdDetailCardShell(
@@ -614,11 +644,10 @@ class _SpecsCard extends StatelessWidget {
           GetResponsiveSize.getResponsivePadding(context,
               mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
         ),
-        physics: const NeverScrollableScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          mainAxisExtent: GetResponsiveSize.getResponsiveSize(context,
-              mobile: 64, tablet: 95, largeTablet: 110, desktop: 125),
+          mainAxisExtent: getVehicleGridItemHeight(context),
           crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
               mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
           mainAxisSpacing: GetResponsiveSize.getResponsiveSize(context,

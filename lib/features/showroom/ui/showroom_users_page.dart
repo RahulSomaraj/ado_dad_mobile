@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/common/error_message_util.dart';
 import 'package:ado_dad_user/models/showroom_user_model.dart';
 import 'package:ado_dad_user/repositories/showroom_repo.dart';
 import 'package:flutter/material.dart';
@@ -108,7 +109,7 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Error: $_error',
+                          ErrorMessageUtil.getUserFriendlyMessage(_error!),
                           style: TextStyle(
                             color: Colors.red,
                             fontSize: GetResponsiveSize.getResponsiveFontSize(

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/common/error_message_util.dart';
 import 'package:ado_dad_user/common/widgets/common_decoration.dart';
 import 'package:ado_dad_user/features/login/bloc/otp_bloc.dart';
 import 'package:flutter/material.dart';
@@ -89,7 +90,7 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                    'Failed to send OTP: ${message.replaceAll('Exception: ', '')}'),
+                    'Failed to send OTP: ${ErrorMessageUtil.getUserFriendlyMessage(message)}'),
                 backgroundColor: Colors.red,
               ),
             );

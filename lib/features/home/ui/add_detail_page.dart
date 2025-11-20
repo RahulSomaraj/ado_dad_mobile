@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/common/error_message_util.dart';
 import 'package:ado_dad_user/features/home/ad_detail/ad_detail_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/features/home/services/offer_service.dart';
@@ -148,7 +149,7 @@ Download Ado Dad app to contact the seller and view more details!
               error: (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Error: $e'),
+                    content: Text(ErrorMessageUtil.getUserFriendlyMessage(e)),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -173,7 +174,8 @@ Download Ado Dad app to contact the seller and view more details!
                 initial: () =>
                     const Center(child: Text('Waiting for details...')),
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e) => Center(child: Text('Error: $e')),
+                error: (e) => Center(
+                    child: Text(ErrorMessageUtil.getUserFriendlyMessage(e))),
                 loaded: (ad) => CustomScrollView(
                   slivers: [
                     SliverToBoxAdapter(child: _headerCarousel(ad)),
@@ -972,6 +974,22 @@ Download Ado Dad app to contact the seller and view more details!
           icon: Icons.calendar_today),
       _Spec('Mileage', (ad.mileage != null) ? '${ad.mileage} Kmpl' : '-',
           icon: Icons.speed),
+      // Additional vehicle specifications
+      _Spec('Has Insurance',
+          ad.hasInsurance != null ? (ad.hasInsurance! ? 'Yes' : 'No') : '-',
+          icon: Icons.shield_outlined),
+      _Spec('First Owner',
+          ad.isFirstOwner != null ? (ad.isFirstOwner! ? 'Yes' : 'No') : '-',
+          icon: Icons.person_outline),
+      _Spec('Has RC Book',
+          ad.hasRcBook != null ? (ad.hasRcBook! ? 'Yes' : 'No') : '-',
+          icon: Icons.description_outlined),
+      _Spec(
+          'Additional Features',
+          (ad.additionalFeatures != null && ad.additionalFeatures!.isNotEmpty)
+              ? ad.additionalFeatures!.join(', ')
+              : '-',
+          icon: Icons.star_outline),
     ];
 
     return _cardShell(
@@ -980,7 +998,7 @@ Download Ado Dad app to contact the seller and view more details!
           GetResponsiveSize.getResponsivePadding(context,
               mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
         ),
-        physics: const NeverScrollableScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           mainAxisExtent: GetResponsiveSize.getResponsiveSize(context,

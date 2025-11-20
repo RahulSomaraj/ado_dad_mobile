@@ -49,20 +49,6 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isConfirmPasswordVisible = false;
   final GlobalKey<FormState> _changePasswordFormKey = GlobalKey<FormState>();
 
-  /// Clean error message by removing "Exception: " or "Exception" text
-  String _cleanErrorMessage(String message) {
-    String cleaned = message;
-    // Remove "Exception: " prefix
-    if (cleaned.startsWith('Exception: ')) {
-      cleaned = cleaned.substring('Exception: '.length);
-    }
-    // Remove "Exception: " if it appears anywhere
-    cleaned = cleaned.replaceAll('Exception: ', '');
-    // Remove standalone "Exception" word
-    cleaned = cleaned.replaceAll(RegExp(r'\bException\b'), '');
-    return cleaned.trim();
-  }
-
   @override
   void initState() {
     super.initState();
@@ -698,7 +684,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       context.go('/profile');
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(_cleanErrorMessage(state.message)),
+                          content: Text(ErrorMessageUtil.getUserFriendlyMessage(
+                              state.message)),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -706,7 +693,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       // For other errors, show normal snackbar
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                            content: Text(_cleanErrorMessage(state.message))),
+                            content: Text(
+                                ErrorMessageUtil.getUserFriendlyMessage(
+                                    state.message))),
                       );
                     }
                   }
@@ -2849,7 +2838,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   }
 
                   if (state is Error) {
-                    return Center(child: Text("Error: ${state.message}"));
+                    return Center(
+                        child: Text(ErrorMessageUtil.getUserFriendlyMessage(
+                            state.message)));
                   }
                   return const SizedBox.shrink();
                 },
