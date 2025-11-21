@@ -40,7 +40,14 @@ class ChatSocketService {
   /// Initialize and connect to WebSocket server
   Future<bool> connect() async {
     try {
-      // Get stored token
+      // Disconnect any existing connection first to ensure fresh token is used
+      if (_socket != null && _isConnected) {
+        print(
+            '🔌 Disconnecting existing socket connection to use fresh token...');
+        await disconnect();
+      }
+
+      // Get stored token (always get fresh token from storage)
       final token = await getToken();
       print('🔑 Retrieved token: ${token != null ? 'Present' : 'Missing'}');
 
@@ -72,7 +79,7 @@ class ChatSocketService {
         return false;
       }
 
-      // Create socket connection
+      // Create socket connection with fresh token
       _socket = IO.io(
           socketUrl,
           IO.OptionBuilder()
@@ -413,7 +420,15 @@ class ChatSocketService {
       print('🔄 Connection lost, attempting to reconnect...');
       await connect();
     } else {
-      print('✅ Connection is stable');
+      // Verify token is still valid by checking if we have a token
+      final token = await getToken();
+      if (token == null || token.isEmpty) {
+        print('⚠️ Token missing, disconnecting and reconnecting...');
+        await disconnect();
+        await connect();
+      } else {
+        print('✅ Connection is stable');
+      }
     }
   }
 
