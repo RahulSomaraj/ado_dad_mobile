@@ -1,6 +1,7 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/common/error_message_util.dart';
 import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/common/widgets/common_decoration.dart';
@@ -522,7 +523,7 @@ class _LoginPageState extends State<LoginPage> {
             // Show error message
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Error: $message'),
+                content: Text(ErrorMessageUtil.getUserFriendlyMessage(message)),
                 backgroundColor: Colors.red,
               ),
             );

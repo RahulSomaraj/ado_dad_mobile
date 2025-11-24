@@ -15,12 +15,15 @@ class AdDetailSpecTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // For Description, align to top to allow proper text wrapping
-    final isDescription = spec.label == 'Description';
+    // For Description and Additional Features, align to top to allow proper text wrapping
+    final needsTopAlignment = spec.label == 'Description' ||
+        spec.label == 'Additional Features' ||
+        spec.label == 'Amenities';
 
     return Row(
-      crossAxisAlignment:
-          isDescription ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+      crossAxisAlignment: needsTopAlignment
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.center,
       children: [
         Container(
           height: GetResponsiveSize.getResponsiveSize(context,
@@ -46,7 +49,7 @@ class AdDetailSpecTile extends StatelessWidget {
                 mobile: 10, tablet: 14, largeTablet: 16, desktop: 18)),
         Expanded(
           child: Column(
-            mainAxisAlignment: isDescription
+            mainAxisAlignment: needsTopAlignment
                 ? MainAxisAlignment.start
                 : MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,14 +67,16 @@ class AdDetailSpecTile extends StatelessWidget {
                       mobile: 2, tablet: 4, largeTablet: 5, desktop: 6)),
               Text(
                 spec.value,
-                maxLines:
-                    (spec.label == 'Amenities' || spec.label == 'Description')
-                        ? null
-                        : 1,
-                overflow:
-                    (spec.label == 'Amenities' || spec.label == 'Description')
-                        ? null
-                        : TextOverflow.ellipsis,
+                maxLines: (spec.label == 'Amenities' ||
+                        spec.label == 'Description' ||
+                        spec.label == 'Additional Features')
+                    ? null
+                    : 1,
+                overflow: (spec.label == 'Amenities' ||
+                        spec.label == 'Description' ||
+                        spec.label == 'Additional Features')
+                    ? null
+                    : TextOverflow.ellipsis,
                 softWrap: true,
                 style: TextStyle(
                   fontSize: GetResponsiveSize.getResponsiveFontSize(context,

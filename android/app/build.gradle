@@ -14,7 +14,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.adodad.user"
     compileSdk = 36
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "28.0.12674087"  // Updated to NDK r28 for 16 KB page size support
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8

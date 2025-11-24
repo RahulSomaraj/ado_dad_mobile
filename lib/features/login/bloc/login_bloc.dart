@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/repositories/login_repository.dart';
+import 'package:ado_dad_user/services/chat_socket_service.dart';
 import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -35,6 +36,14 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   }
 
   Future<void> _onLogout(Logout event, Emitter<LoginState> emit) async {
+    // Disconnect chat socket to prevent using old user's token
+    try {
+      await ChatSocketService().disconnect();
+      print('🔌 Chat socket disconnected on logout');
+    } catch (e) {
+      print('⚠️ Error disconnecting chat socket: $e');
+    }
+
     await clearUserData();
     emit(const LoginState.initial());
   }
