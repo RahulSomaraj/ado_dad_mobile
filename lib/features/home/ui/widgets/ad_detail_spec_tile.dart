@@ -46,6 +46,7 @@ class AdDetailSpecTile extends StatelessWidget {
                 mobile: 10, tablet: 14, largeTablet: 16, desktop: 18)),
         Expanded(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: isDescription
                 ? MainAxisAlignment.start
                 : MainAxisAlignment.center,
@@ -62,21 +63,17 @@ class AdDetailSpecTile extends StatelessWidget {
               SizedBox(
                   height: GetResponsiveSize.getResponsiveSize(context,
                       mobile: 2, tablet: 4, largeTablet: 5, desktop: 6)),
-              Text(
-                spec.value,
-                maxLines:
-                    (spec.label == 'Amenities' || spec.label == 'Description')
-                        ? null
-                        : 1,
-                overflow:
-                    (spec.label == 'Amenities' || spec.label == 'Description')
-                        ? null
-                        : TextOverflow.ellipsis,
-                softWrap: true,
-                style: TextStyle(
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                      mobile: 13, tablet: 20, largeTablet: 24, desktop: 28),
-                  fontWeight: FontWeight.w600,
+              Flexible(
+                child: Text(
+                  spec.value,
+                  maxLines: null,
+                  overflow: TextOverflow.visible,
+                  softWrap: true,
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 12, tablet: 20, largeTablet: 24, desktop: 28),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],

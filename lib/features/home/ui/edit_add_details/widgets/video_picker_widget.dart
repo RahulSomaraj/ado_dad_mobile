@@ -5,12 +5,14 @@ class VideoPickerWidget extends StatelessWidget {
   final String? videoFileName;
   final String? existingVideoUrl;
   final VoidCallback onPickVideo;
+  final VoidCallback? onRemoveVideo;
 
   const VideoPickerWidget({
     super.key,
     this.videoFileName,
     this.existingVideoUrl,
     required this.onPickVideo,
+    this.onRemoveVideo,
   });
 
   @override
@@ -18,6 +20,9 @@ class VideoPickerWidget extends StatelessWidget {
     final displayText = videoFileName ??
         (existingVideoUrl != null ? existingVideoUrl! : 'No video selected');
     final hasVideo = videoFileName != null || existingVideoUrl != null;
+    // In edit forms: if existingVideoUrl is present, only show close button, hide Choose File
+    // Once removed (existingVideoUrl is null), show Choose File button
+    final showChooseFileButton = existingVideoUrl == null;
 
     return Container(
       height: GetResponsiveSize.getResponsiveSize(
@@ -53,63 +58,63 @@ class VideoPickerWidget extends StatelessWidget {
                   desktop: 28,
                 ),
               ),
-              child: Text(
-                displayText,
-                style: TextStyle(
-                  color: hasVideo ? Colors.black87 : Colors.grey.shade500,
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(
-                    context,
-                    mobile: 16,
-                    tablet: 20,
-                    largeTablet: 24,
-                    desktop: 28,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      displayText,
+                      style: TextStyle(
+                        color: hasVideo ? Colors.black87 : Colors.grey.shade500,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 16,
+                          tablet: 20,
+                          largeTablet: 24,
+                          desktop: 28,
+                        ),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                overflow: TextOverflow.ellipsis,
+                  if (hasVideo && onRemoveVideo != null)
+                    GestureDetector(
+                      onTap: onRemoveVideo,
+                      child: Container(
+                        margin: const EdgeInsets.only(left: 8),
+                        decoration: const BoxDecoration(
+                          color: Colors.grey,
+                          shape: BoxShape.circle,
+                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
-          Container(
-            height: GetResponsiveSize.getResponsiveSize(
-              context,
-              mobile: 56,
-              tablet: 70,
-              largeTablet: 84,
-              desktop: 98,
-            ),
-            width: GetResponsiveSize.getResponsiveSize(
-              context,
-              mobile: 120,
-              tablet: 150,
-              largeTablet: 180,
-              desktop: 210,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(
-                    context,
-                    mobile: 8,
-                    tablet: 10,
-                    largeTablet: 12,
-                    desktop: 14,
-                  ),
-                ),
-                bottomRight: Radius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(
-                    context,
-                    mobile: 8,
-                    tablet: 10,
-                    largeTablet: 12,
-                    desktop: 14,
-                  ),
-                ),
+          // Only show Choose File button if there's no existing video (after removal)
+          if (showChooseFileButton)
+            Container(
+              height: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 56,
+                tablet: 70,
+                largeTablet: 84,
+                desktop: 98,
               ),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onPickVideo,
+              width: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 120,
+                tablet: 150,
+                largeTablet: 180,
+                desktop: 210,
+              ),
+              decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
                   topRight: Radius.circular(
                     GetResponsiveSize.getResponsiveBorderRadius(
@@ -130,52 +135,75 @@ class VideoPickerWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-                child: Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        existingVideoUrl != null
-                            ? Icons.edit
-                            : Icons.upload_file,
-                        color: Colors.black,
-                        size: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 18,
-                          tablet: 24,
-                          largeTablet: 30,
-                          desktop: 36,
-                        ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onPickVideo,
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(
+                      GetResponsiveSize.getResponsiveBorderRadius(
+                        context,
+                        mobile: 8,
+                        tablet: 10,
+                        largeTablet: 12,
+                        desktop: 14,
                       ),
-                      SizedBox(
-                        width: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 4,
-                          tablet: 6,
-                          largeTablet: 8,
-                          desktop: 10,
-                        ),
+                    ),
+                    bottomRight: Radius.circular(
+                      GetResponsiveSize.getResponsiveBorderRadius(
+                        context,
+                        mobile: 8,
+                        tablet: 10,
+                        largeTablet: 12,
+                        desktop: 14,
                       ),
-                      Text(
-                        existingVideoUrl != null ? 'Change' : 'Choose File',
-                        style: TextStyle(
+                    ),
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.upload_file,
                           color: Colors.black,
-                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          size: GetResponsiveSize.getResponsiveSize(
                             context,
-                            mobile: 14,
-                            tablet: 18,
-                            largeTablet: 22,
-                            desktop: 26,
+                            mobile: 18,
+                            tablet: 24,
+                            largeTablet: 30,
+                            desktop: 36,
                           ),
-                          fontWeight: FontWeight.w500,
                         ),
-                      ),
-                    ],
+                        SizedBox(
+                          width: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 4,
+                            tablet: 6,
+                            largeTablet: 8,
+                            desktop: 10,
+                          ),
+                        ),
+                        Text(
+                          'Choose File',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 14,
+                              tablet: 18,
+                              largeTablet: 22,
+                              desktop: 26,
+                            ),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

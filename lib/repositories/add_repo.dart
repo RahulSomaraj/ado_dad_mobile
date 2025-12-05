@@ -315,19 +315,43 @@ class AddRepository {
       final signedUrl = signedUrlResponse.data['url'];
       if (signedUrl == null) throw Exception('No signed URL received');
 
-      // Step 2: Upload to S3
-      final uploadResponse = await Dio().put(
+      print('📹 Got presigned URL, starting S3 upload...');
+      print('📹 File size: ${fileBytes.length} bytes');
+      print('📹 MIME type: $mimeType');
+
+      // Step 2: Upload to S3 with timeout
+      final uploadDio = Dio();
+      uploadDio.options.connectTimeout = const Duration(minutes: 5);
+      uploadDio.options.receiveTimeout = const Duration(minutes: 5);
+      uploadDio.options.sendTimeout =
+          const Duration(minutes: 10); // Longer for large videos
+
+      final uploadResponse = await uploadDio.put(
         signedUrl,
         data: fileBytes,
-        options: Options(headers: {
-          'Content-Type': mimeType,
-          'Content-Length': fileBytes.length.toString(),
-        }),
+        options: Options(
+          headers: {
+            'Content-Type': mimeType,
+            'Content-Length': fileBytes.length.toString(),
+          },
+          sendTimeout: const Duration(minutes: 10),
+          receiveTimeout: const Duration(minutes: 5),
+        ),
+        onSendProgress: (sent, total) {
+          if (total > 0) {
+            final progress = (sent / total * 100).toStringAsFixed(1);
+            print('📹 Upload progress: $progress% ($sent/$total bytes)');
+          }
+        },
       );
+
+      print('📹 S3 upload response status: ${uploadResponse.statusCode}');
 
       if (uploadResponse.statusCode == 200 ||
           uploadResponse.statusCode == 204) {
-        return signedUrl.split('?').first;
+        final videoUrl = signedUrl.split('?').first;
+        print('✅ Video upload successful, URL: $videoUrl');
+        return videoUrl;
       } else {
         throw Exception('Upload failed: ${uploadResponse.statusCode}');
       }
@@ -417,6 +441,17 @@ class AddRepository {
           (raw is Map<String, dynamic> && raw['data'] is Map<String, dynamic>)
               ? raw['data'] as Map<String, dynamic>
               : (raw as Map<String, dynamic>);
+
+      // Print the parsed ad detail JSON data
+      print('📦 Ad Detail Page - Item Data JSON Response:');
+      print('   Ad ID: ${obj['id']}');
+      print('   Title: ${obj['title']}');
+      print('   Category: ${obj['category']}');
+      print('   Price: ${obj['price']}');
+      print('   Location: ${obj['location']}');
+      print('   Video Link: ${obj['link']}');
+      print('   Images Count: ${(obj['images'] as List?)?.length ?? 0}');
+      print('   Full JSON Response: $obj');
 
       return AddModel.fromJson(obj);
     } on DioException catch (e) {

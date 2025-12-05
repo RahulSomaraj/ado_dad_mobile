@@ -1,5 +1,5 @@
 class PrivateVehicleAdModel {
-  // final String title;
+  final String? title;
   final String description;
   final int price;
   final String location;
@@ -20,7 +20,7 @@ class PrivateVehicleAdModel {
   final String? link; // Video URL
 
   PrivateVehicleAdModel({
-    // required this.title,
+    this.title,
     required this.description,
     required this.price,
     required this.location,
@@ -43,7 +43,7 @@ class PrivateVehicleAdModel {
 
   Map<String, dynamic> toJson() {
     return {
-      // 'title': title,
+      'title': title,
       'description': description,
       'price': price,
       'location': location,

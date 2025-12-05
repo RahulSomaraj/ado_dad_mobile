@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/error_message_util.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/widgets/common_decoration.dart';
 import 'package:ado_dad_user/common/widgets/dropdown_widget.dart';
@@ -36,6 +37,7 @@ class AddTwoWheelerForm extends StatefulWidget {
 
 class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
   final GlobalKey<FormState> _sellerFormKey = GlobalKey<FormState>();
+  String? _title;
   int _price = 0;
   String _location = '';
   Map<String, String> vehicleTypeMap = {
@@ -159,6 +161,14 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
     }
   }
 
+  void _removeVideo() {
+    setState(() {
+      _videoFile = null;
+      _videoFileName = null;
+      _uploadedVideoUrl = null;
+    });
+  }
+
   final List<String> _allFeatures = [
     "Digital Console",
     "LED Headlight",
@@ -196,6 +206,11 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
       "transmissionTypeId": _selectedtransmissionType!.id,
       "additionalFeatures": _selectedFeatures,
     };
+
+    // Add title if provided
+    if (_title != null && _title!.trim().isNotEmpty) {
+      ad["title"] = _title!.trim();
+    }
 
     context.read<AddPostBloc>().add(
           AddPostEvent.postAd(
@@ -270,7 +285,9 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
             },
             failure: (msg) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("❌ Failed: $msg")),
+                SnackBar(
+                    content:
+                        Text(ErrorMessageUtil.getUserFriendlyMessage(msg))),
               );
             },
           );
@@ -329,6 +346,20 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                             isNumberField: true,
                             onSaved: (val) =>
                                 _price = int.tryParse(val ?? '0') ?? 0,
+                          ),
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 10,
+                              tablet: 16,
+                              largeTablet: 22,
+                              desktop: 28,
+                            ),
+                          ),
+                          GetInput(
+                            label: 'Title',
+                            required: false,
+                            onSaved: (val) => _title = val?.trim(),
                           ),
                           SizedBox(
                             height: GetResponsiveSize.getResponsiveSize(
@@ -1088,6 +1119,12 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
     );
   }
 
+  void _removeImage(int index) {
+    setState(() {
+      _imageFiles.removeAt(index);
+    });
+  }
+
   Widget _buildImagePicker() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1097,12 +1134,39 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
           spacing: 10,
           runSpacing: 10,
           children: [
-            ..._imageFiles.map((bytes) => Image.memory(
-                  bytes,
-                  width: 100,
-                  height: 100,
-                  fit: BoxFit.cover,
-                )),
+            ..._imageFiles.asMap().entries.map((entry) {
+              final index = entry.key;
+              final bytes = entry.value;
+              return Stack(
+                children: [
+                  Image.memory(
+                    bytes,
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                  ),
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: () => _removeImage(index),
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.grey,
+                          shape: BoxShape.circle,
+                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }),
             GestureDetector(
               onTap: _pickImages,
               child: Container(
@@ -1163,21 +1227,44 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                   desktop: 40,
                 ),
               ),
-              child: Text(
-                _videoFileName ?? 'No video selected',
-                style: TextStyle(
-                  color: _videoFileName != null
-                      ? Colors.black87
-                      : Colors.grey.shade500,
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(
-                    context,
-                    mobile: 16,
-                    tablet: 20,
-                    largeTablet: 24,
-                    desktop: 28,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _videoFileName ?? 'No video selected',
+                      style: TextStyle(
+                        color: _videoFileName != null
+                            ? Colors.black87
+                            : Colors.grey.shade500,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 16,
+                          tablet: 20,
+                          largeTablet: 24,
+                          desktop: 28,
+                        ),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                overflow: TextOverflow.ellipsis,
+                  if (_videoFileName != null)
+                    GestureDetector(
+                      onTap: _removeVideo,
+                      child: Container(
+                        margin: const EdgeInsets.only(left: 8),
+                        decoration: const BoxDecoration(
+                          color: Colors.grey,
+                          shape: BoxShape.circle,
+                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:ado_dad_user/common/error_message_util.dart';
 import 'package:ado_dad_user/repositories/favorite_repo.dart';
 import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -59,7 +60,7 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
     } catch (e) {
       emit(FavoriteState.toggleError(
         adId: event.adId,
-        message: e.toString(),
+        message: ErrorMessageUtil.getUserFriendlyMessage(e.toString()),
       ));
     }
   }
@@ -98,7 +99,7 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
     } catch (e) {
       emit(FavoriteState.toggleError(
         adId: event.adId,
-        message: e.toString(),
+        message: ErrorMessageUtil.getUserFriendlyMessage(e.toString()),
       ));
     }
   }
@@ -138,7 +139,7 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
     } catch (e) {
       emit(FavoriteState.toggleError(
         adId: event.adId,
-        message: e.toString(),
+        message: ErrorMessageUtil.getUserFriendlyMessage(e.toString()),
       ));
     }
   }
@@ -161,7 +162,8 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
         currentPage: event.page,
       ));
     } catch (e) {
-      emit(FavoriteState.error(message: e.toString()));
+      emit(FavoriteState.error(
+          message: ErrorMessageUtil.getUserFriendlyMessage(e.toString())));
     }
   }
 
@@ -183,7 +185,8 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
         currentPage: 1,
       ));
     } catch (e) {
-      emit(FavoriteState.error(message: e.toString()));
+      emit(FavoriteState.error(
+          message: ErrorMessageUtil.getUserFriendlyMessage(e.toString())));
     }
   }
 }

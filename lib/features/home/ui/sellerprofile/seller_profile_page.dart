@@ -176,10 +176,12 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                                   desktop: 24)),
                           itemBuilder: (context, index) => _ProductTile(
                             ad: ads[index],
-                            onTap: () {
-                              context.push('/add-detail-page',
-                                  extra: ads[index]);
-                            },
+                            onTap: ads[index].soldOut == true
+                                ? null // Don't navigate if sold out
+                                : () {
+                                    context.push('/add-detail-page',
+                                        extra: ads[index]);
+                                  },
                           ),
                         ),
                         // Load more button

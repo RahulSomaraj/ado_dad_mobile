@@ -54,6 +54,12 @@
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>This app needs access to location to provide location-based services and show nearby vehicles.</string>
 	
+	<!-- Photo Library Permissions -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to allow you to upload photos of vehicles and properties when creating or editing listings.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs access to save photos to your photo library.</string>
+	
 	<!-- Network Security Configuration -->
 	<key>NSAppTransportSecurity</key>
 	<dict>

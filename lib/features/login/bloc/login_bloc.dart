@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/repositories/login_repository.dart';
+import 'package:ado_dad_user/services/chat_socket_service.dart';
 import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -35,6 +36,10 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   }
 
   Future<void> _onLogout(Logout event, Emitter<LoginState> emit) async {
+    // Disconnect socket connection
+    await ChatSocketService().disconnect();
+    print('🔌 Socket disconnected on logout');
+
     await clearUserData();
     emit(const LoginState.initial());
   }

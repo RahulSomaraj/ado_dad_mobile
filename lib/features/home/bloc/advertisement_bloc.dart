@@ -70,7 +70,9 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
       emit(AdvertisementState.listingsLoaded(
           listings: result.data, hasMore: result.hasNext));
     } catch (e) {
-      emit(AdvertisementState.error("Failed to fetch ads: $e"));
+      // Emit user-friendly message instead of raw exception
+      emit(AdvertisementState.error(
+          "Unable to load recommendations. Please try again later."));
     }
   }
 
@@ -106,7 +108,9 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
 
         emit(ListingsLoaded(listings: updatedList, hasMore: result.hasNext));
       } catch (e) {
-        emit(AdvertisementState.error("Failed to load more ads: $e"));
+        // Emit user-friendly message instead of raw exception
+        emit(AdvertisementState.error(
+            "Unable to load more recommendations. Please try again later."));
       }
     }
 
@@ -147,7 +151,9 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
         hasMore: result.hasNext,
       ));
     } catch (e) {
-      emit(AdvertisementState.error("Failed to fetch category ads: $e"));
+      // Emit user-friendly message instead of raw exception
+      emit(AdvertisementState.error(
+          "Unable to load recommendations. Please try again later."));
     }
   }
 
@@ -198,7 +204,9 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
         hasMore: result.hasNext,
       ));
     } catch (e) {
-      emit(AdvertisementState.error("Failed to apply filters: $e"));
+      // Emit user-friendly message instead of raw exception
+      emit(AdvertisementState.error(
+          "Unable to load recommendations. Please try again later."));
     }
   }
 
@@ -258,7 +266,9 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
       emit(AdvertisementState.listingsLoaded(
           listings: result.data, hasMore: result.hasNext));
     } catch (e) {
-      emit(AdvertisementState.error("Failed to fetch ads by location: $e"));
+      // Emit user-friendly message instead of raw exception
+      emit(AdvertisementState.error(
+          "Unable to load recommendations. Please try again later."));
     }
   }
 
@@ -293,7 +303,9 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
       emit(AdvertisementState.listingsLoaded(
           listings: result.data, hasMore: result.hasNext));
     } catch (e) {
-      emit(AdvertisementState.error("Failed to fetch ads by user: $e"));
+      // Emit user-friendly message instead of raw exception
+      emit(AdvertisementState.error(
+          "Unable to load recommendations. Please try again later."));
     }
   }
 }

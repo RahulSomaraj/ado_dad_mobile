@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:ado_dad_user/common/app_routes.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/config/app_config.dart';
+import 'package:ado_dad_user/services/chat_socket_service.dart';
 import 'package:dio/dio.dart';
 
 /// Centralized authentication service for token refresh and automatic logout
@@ -245,6 +246,10 @@ class AuthService {
       // Reset initial refresh flag
       resetInitialRefreshFlag();
 
+      // Disconnect socket connection
+      await ChatSocketService().disconnect();
+      print('🔌 Socket disconnected on token expiration');
+
       // Clear all user data
       await clearUserData();
 
@@ -276,6 +281,10 @@ class AuthService {
   Future<void> logout() async {
     // Reset initial refresh flag
     resetInitialRefreshFlag();
+
+    // Disconnect socket connection
+    await ChatSocketService().disconnect();
+    print('🔌 Socket disconnected on logout');
 
     await clearUserData();
 

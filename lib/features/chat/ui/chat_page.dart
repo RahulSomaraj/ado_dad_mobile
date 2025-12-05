@@ -160,21 +160,21 @@ class _ChatPageState extends State<ChatPage> {
           onPressed: () => _handleBackNavigation(),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.more_vert,
-              size: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 24,
-                tablet: 30,
-                largeTablet: 32,
-                desktop: 36,
-              ),
-            ),
-            onPressed: () {
-              // TODO: Add more options menu
-            },
-          ),
+          // IconButton(
+          //   icon: Icon(
+          //     Icons.more_vert,
+          //     size: GetResponsiveSize.getResponsiveSize(
+          //       context,
+          //       mobile: 24,
+          //       tablet: 30,
+          //       largeTablet: 32,
+          //       desktop: 36,
+          //     ),
+          //   ),
+          //   onPressed: () {
+          //     // TODO: Add more options menu
+          //   },
+          // ),
         ],
       ),
       body: BlocListener<ChatBloc, ChatState>(
@@ -339,6 +339,15 @@ class _ChatPageState extends State<ChatPage> {
                 // Message input
                 SafeArea(
                   top: false,
+                  minimum: EdgeInsets.only(
+                    bottom: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 50,
+                      tablet: 50,
+                      largeTablet: 50,
+                      desktop: 50,
+                    ),
+                  ),
                   child: _buildMessageInput(),
                 ),
               ],
