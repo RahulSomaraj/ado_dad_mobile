@@ -9,6 +9,7 @@ import 'package:ado_dad_user/features/chat/bloc/chat_state.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/repositories/chat_repository.dart';
+import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:go_router/go_router.dart';
 
 class ChatPage extends StatefulWidget {
@@ -124,20 +125,26 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
             Expanded(
-              child: Text(
-                widget.adTitle ?? (widget.otherUserName ?? 'Chat'),
-                style: TextStyle(
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(
-                    context,
-                    mobile: 16,
-                    tablet: 20,
-                    largeTablet: 24,
-                    desktop: 28,
+              child: GestureDetector(
+                onTap: widget.adId != null ? () => _navigateToAdDetail() : null,
+                child: Text(
+                  widget.adTitle ?? (widget.otherUserName ?? 'Chat'),
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(
+                      context,
+                      mobile: 16,
+                      tablet: 20,
+                      largeTablet: 24,
+                      desktop: 28,
+                    ),
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    decoration: widget.adId != null
+                        ? TextDecoration.underline
+                        : TextDecoration.none,
                   ),
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -700,6 +707,51 @@ class _ChatPageState extends State<ChatPage> {
     print('💬 Navigating to chat rooms page');
     final fromPage = widget.fromPage ?? 'home';
     context.go('/chat-rooms?from=$fromPage');
+  }
+
+  Future<void> _navigateToAdDetail() async {
+    if (widget.adId == null) return;
+
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Fetch ad details
+      final repository = AddRepository();
+      final ad = await repository.fetchAdDetail(widget.adId!);
+
+      // Close loading indicator
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Navigate to ad detail page
+      if (mounted) {
+        context.push('/add-detail-page', extra: ad);
+      }
+    } catch (e) {
+      // Close loading indicator if still open
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load ad details: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      print('❌ Error fetching ad details: $e');
+    }
   }
 
   @override
