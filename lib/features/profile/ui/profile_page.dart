@@ -5,6 +5,8 @@ import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/error_message_util.dart';
 import 'package:ado_dad_user/common/password_validator.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
+import 'package:ado_dad_user/common/auth_guard.dart';
+import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:ado_dad_user/features/login/bloc/login_bloc.dart' as login_bloc;
 import 'package:ado_dad_user/features/profile/bloc/profile_bloc.dart'
     as profile_bloc;
@@ -3173,11 +3175,40 @@ class BottomNavBar extends StatelessWidget {
     double iconSize = 20,
   }) {
     return GestureDetector(
-      onTap: () {
-        if (route != null && route.contains('/chat-rooms')) {
-          context.go(route);
-        } else if (route != null) {
-          context.push(route);
+      onTap: () async {
+        if (route == null) return;
+
+        // Routes that don't require authentication
+        final publicRoutes = ['/home', '/search'];
+        final isPublicRoute = publicRoutes.any((r) => route.startsWith(r));
+
+        if (isPublicRoute) {
+          // Allow navigation without authentication
+          if (route.contains('/chat-rooms')) {
+            context.go(route);
+          } else {
+            context.push(route);
+          }
+        } else {
+          // Protected routes - check authentication
+          final isAuthenticated = await AuthGuard.isAuthenticated();
+          if (isAuthenticated) {
+            // User is authenticated, allow navigation
+            if (route.contains('/chat-rooms')) {
+              context.go(route);
+            } else {
+              context.push(route);
+            }
+          } else {
+            // User is not authenticated, show login prompt
+            final routePath =
+                route.split('?').first; // Remove query params for redirect
+            DialogUtil.showLoginPromptDialog(
+              context,
+              message: "Please login to access this feature.",
+              redirectPath: routePath,
+            );
+          }
         }
       },
       child: Center(

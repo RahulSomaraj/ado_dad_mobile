@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/common/auth_guard.dart';
 import 'package:ado_dad_user/models/showroom_user_model.dart';
 import 'package:ado_dad_user/repositories/showroom_repo.dart';
 import 'package:flutter/material.dart';
@@ -24,18 +25,43 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
   @override
   void initState() {
     super.initState();
-    _fetchShowroomUsers();
+    _checkAuthAndFetch();
   }
 
-  Future<void> _fetchShowroomUsers() async {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Re-check auth when returning from login (e.g., after successful login redirect)
+    // This ensures data is fetched if user logged in and was redirected back
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_isLoading && _showroomUsers.isEmpty && _error == null) {
+        _checkAuthAndFetch();
+      }
+    });
+  }
+
+  Future<void> _checkAuthAndFetch() async {
+    // Check authentication status
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+
+    // Fetch showroom users - use public endpoint if not authenticated, authenticated endpoint if authenticated
+    _fetchShowroomUsers(isAuthenticated: isAuthenticated);
+  }
+
+  Future<void> _fetchShowroomUsers({required bool isAuthenticated}) async {
     try {
-      print('🚀 Starting to fetch showroom users...');
+      print(
+          '🚀 Starting to fetch showroom users (authenticated: $isAuthenticated)...');
       setState(() {
         _isLoading = true;
         _error = null;
       });
 
-      final users = await _showroomRepo.fetchShowroomUsers();
+      // Use authenticated endpoint if user is logged in, public endpoint if not
+      final users = isAuthenticated
+          ? await _showroomRepo.fetchShowroomUsers()
+          : await _showroomRepo.fetchPublicShowroomUsers();
+
       print('✅ Successfully fetched ${users.length} showroom users');
 
       setState(() {
@@ -45,12 +71,38 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
     } catch (e) {
       print('❌ Error in _fetchShowroomUsers: $e');
       print('❌ Error type: ${e.runtimeType}');
+
+      // Extract user-friendly error message
+      String errorMessage =
+          "Unable to load showroom users. Please try again later.";
+
       if (e is Exception) {
-        print('❌ Exception message: ${e.toString()}');
+        final exceptionMessage = e.toString();
+        print('❌ Exception message: $exceptionMessage');
+
+        // Extract the actual error message from Exception: "message"
+        // Remove "Exception: " prefix if present
+        if (exceptionMessage.contains('Exception: ')) {
+          errorMessage = exceptionMessage.split('Exception: ').last.trim();
+        } else if (exceptionMessage.startsWith('Exception: ')) {
+          errorMessage = exceptionMessage.substring(11).trim();
+        } else {
+          // If it's just the message without "Exception:" prefix, use it directly
+          errorMessage = exceptionMessage.trim();
+        }
+
+        // Ensure we have a meaningful message
+        if (errorMessage.isEmpty || errorMessage == 'null') {
+          errorMessage =
+              "Unable to load showroom users. Please try again later.";
+        }
+      } else {
+        // For non-Exception errors, use a generic message
+        errorMessage = "An unexpected error occurred. Please try again later.";
       }
 
       setState(() {
-        _error = e.toString();
+        _error = errorMessage;
         _isLoading = false;
       });
     }
@@ -131,7 +183,12 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
                           ),
                         ),
                         ElevatedButton(
-                          onPressed: _fetchShowroomUsers,
+                          onPressed: () async {
+                            final isAuthenticated =
+                                await AuthGuard.isAuthenticated();
+                            _fetchShowroomUsers(
+                                isAuthenticated: isAuthenticated);
+                          },
                           style: ElevatedButton.styleFrom(
                             padding: EdgeInsets.symmetric(
                               horizontal:
@@ -205,7 +262,12 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
                       ),
                     )
                   : RefreshIndicator(
-                      onRefresh: _fetchShowroomUsers,
+                      onRefresh: () async {
+                        final isAuthenticated =
+                            await AuthGuard.isAuthenticated();
+                        await _fetchShowroomUsers(
+                            isAuthenticated: isAuthenticated);
+                      },
                       child: ListView.builder(
                         padding: EdgeInsets.all(
                           GetResponsiveSize.getResponsivePadding(

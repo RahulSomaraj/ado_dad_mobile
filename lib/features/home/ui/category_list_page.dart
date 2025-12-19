@@ -3,12 +3,14 @@ import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/common/api_service.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/services/filter_state_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dio/dio.dart';
 
 class CategoryListPage extends StatefulWidget {
   final String categoryId;
@@ -25,6 +27,9 @@ class _CategoryListPageState extends State<CategoryListPage> {
   final ScrollController _scrollController = ScrollController();
   Map<String, dynamic> _filters = {};
   final FilterStateService _filterStateService = FilterStateService();
+  final Dio _dio = ApiService().dio;
+  Map<String, bool?> _manufacturerPremiumCache =
+      {}; // Cache manufacturer isPremium
 
   // Helper method to check if this is Premium Vehicles category
   bool get _isPremiumVehiclesCategory {
@@ -46,6 +51,11 @@ class _CategoryListPageState extends State<CategoryListPage> {
           AdvertisementEvent.applyFilters(categoryId: _effectiveCategoryId),
         );
 
+    // Pre-fetch manufacturer isPremium data for premium category
+    if (_isPremiumVehiclesCategory) {
+      _fetchManufacturerPremiumData();
+    }
+
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 300) {
@@ -54,6 +64,52 @@ class _CategoryListPageState extends State<CategoryListPage> {
             );
       }
     });
+  }
+
+  /// Fetch manufacturer isPremium data from API
+  Future<void> _fetchManufacturerPremiumData() async {
+    if (_manufacturerPremiumCache.isNotEmpty) return; // Already cached
+
+    try {
+      final response = await _dio.get('/vehicle-inventory/manufacturers');
+      if (response.statusCode == 200 && response.data['data'] != null) {
+        final List<dynamic> manufacturers = response.data['data'];
+        for (final mfg in manufacturers) {
+          if (mfg is Map<String, dynamic>) {
+            final id = (mfg['_id'] ?? mfg['id'] ?? '').toString();
+            final isPremium = mfg['isPremium'] as bool?;
+            if (id.isNotEmpty) {
+              _manufacturerPremiumCache[id] = isPremium ?? false;
+            }
+          }
+        }
+        print(
+            '✅ Cached ${_manufacturerPremiumCache.length} manufacturers with isPremium data');
+      }
+    } catch (e) {
+      print('⚠️ Error fetching manufacturer isPremium: $e');
+    }
+  }
+
+  /// Enrich ad's manufacturer with isPremium from cache
+  AddModel _enrichAdWithPremium(AddModel ad) {
+    if (ad.manufacturer == null) return ad;
+    if (ad.manufacturer!.isPremium != null) return ad; // Already has isPremium
+
+    // Get isPremium from cache
+    final isPremium = _manufacturerPremiumCache[ad.manufacturer!.id];
+    if (isPremium != null) {
+      // Create enriched manufacturer with isPremium
+      final enrichedMfg = Manufacturer(
+        id: ad.manufacturer!.id,
+        name: ad.manufacturer!.name,
+        displayName: ad.manufacturer!.displayName,
+        isPremium: isPremium,
+      );
+      return ad.copyWith(manufacturer: enrichedMfg);
+    }
+
+    return ad;
   }
 
   @override
@@ -313,7 +369,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                 );
               }
               if (state is ListingsLoaded) {
-                // Get the listings
+                // Get the listings (this accumulates all pages)
                 List<AddModel> items = state.listings;
                 final isPremiumCategory =
                     widget.categoryTitle.toLowerCase().contains('premium');
@@ -321,10 +377,80 @@ class _CategoryListPageState extends State<CategoryListPage> {
                 // For Premium Vehicles: Apply all filters client-side since we fetch all categories
                 // (categoryId is null), so server-side filters may not work correctly
                 if (isPremiumCategory) {
-                  // First filter by isPremium
-                  items = items
+                  // Debug: Show total items from all pages
+                  print(
+                      '📦 Total items loaded from all pages: ${items.length} (hasMore: ${state.hasMore})');
+
+                  // Enrich ads with manufacturer isPremium data from cache
+                  items = items.map((ad) => _enrichAdWithPremium(ad)).toList();
+
+                  // Debug: Check what's in the manufacturer objects
+                  print(
+                      '🔍 Premium Category Filter - Total items before filter: ${items.length}');
+
+                  // Check for specific ad ID
+                  final specificAdId = '690325a2fb5f59e577b0208c';
+                  final specificAd =
+                      items.where((ad) => ad.id == specificAdId).firstOrNull;
+                  if (specificAd != null) {
+                    print('🎯 SPECIFIC AD FOUND - ID: ${specificAd.id}');
+                    print('🎯 Manufacturer ID: ${specificAd.manufacturer?.id}');
+                    print(
+                        '🎯 Manufacturer isPremium: ${specificAd.manufacturer?.isPremium}');
+                    print(
+                        '🎯 Manufacturer name: ${specificAd.manufacturer?.name}');
+                    print(
+                        '🎯 Manufacturer object: ${specificAd.manufacturer?.toJson()}');
+                  } else {
+                    print('⚠️ SPECIFIC AD NOT FOUND in items list');
+                  }
+
+                  // Count how many have isPremium == true
+                  final premiumCount = items
                       .where((ad) => ad.manufacturer?.isPremium == true)
-                      .toList();
+                      .length;
+                  print(
+                      '📊 Ads with isPremium == true: $premiumCount out of ${items.length}');
+
+                  // First filter by isPremium
+                  items = items.where((ad) {
+                    final isPremium = ad.manufacturer?.isPremium == true;
+                    if (ad.id == specificAdId) {
+                      print(
+                          '🎯 FILTERING - Ad ID: ${ad.id}, isPremium result: $isPremium');
+                    }
+                    return isPremium;
+                  }).toList();
+
+                  print(
+                      '✅ Premium Category Filter - Total items after filter: ${items.length}');
+
+                  // Check if specific ad is in filtered list
+                  final isInFilteredList =
+                      items.any((ad) => ad.id == specificAdId);
+                  print('🎯 SPECIFIC AD IN FILTERED LIST: $isInFilteredList');
+
+                  // Debug: Print all filtered ad IDs
+                  print(
+                      '📋 Filtered ad IDs: ${items.map((ad) => ad.id).toList()}');
+
+                  // For premium category, we need to load ALL pages to get all premium items
+                  // Since filtering is client-side, we need all data first
+                  // Auto-load more pages if we have more data available
+                  if (state.hasMore) {
+                    print(
+                        '🔄 Auto-loading more pages for premium category (hasMore: true)...');
+                    // Use Future.microtask to avoid setState during build
+                    Future.microtask(() {
+                      if (mounted) {
+                        context.read<AdvertisementBloc>().add(
+                              const AdvertisementEvent.fetchNextPage(),
+                            );
+                      }
+                    });
+                  } else {
+                    print('✅ All pages loaded (hasMore: false)');
+                  }
 
                   // Then apply all other filters from _filters map
                   // Manufacturer filter
@@ -768,14 +894,16 @@ class _CategoryListPageState extends State<CategoryListPage> {
                                         ),
                                         child: Center(
                                           child: SizedBox(
-                                            width: GetResponsiveSize.getResponsiveSize(
+                                            width: GetResponsiveSize
+                                                .getResponsiveSize(
                                               context,
                                               mobile: 18,
                                               tablet: 22,
                                               largeTablet: 26,
                                               desktop: 30,
                                             ),
-                                            height: GetResponsiveSize.getResponsiveSize(
+                                            height: GetResponsiveSize
+                                                .getResponsiveSize(
                                               context,
                                               mobile: 18,
                                               tablet: 22,

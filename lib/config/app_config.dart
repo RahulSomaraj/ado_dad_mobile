@@ -4,7 +4,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class AppConfig {
   // Base URL for API calls
   static String get baseUrl =>
-      dotenv.env['BASE_URL'] ?? 'https://uat.ado-dad.com';
+      // dotenv.env['BASE_URL'] ?? 'https://uat.ado-dad.com';
+      dotenv.env['BASE_URL'] ?? '';
 
   // Google Places API Key for map integration
   static String get googlePlacesApiKey =>

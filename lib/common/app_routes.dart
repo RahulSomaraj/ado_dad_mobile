@@ -40,12 +40,18 @@ import 'package:ado_dad_user/features/showroom/bloc/showroom_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:ado_dad_user/repositories/showroom_repo.dart';
+import 'package:ado_dad_user/common/auth_guard.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRoutes {
   static final GoRouter router = GoRouter(
     initialLocation: '/',
+    redirect: (context, state) async {
+      final location = state.uri.toString();
+      final redirectPath = await AuthGuard.checkRouteAccess(location);
+      return redirectPath;
+    },
     routes: [
       GoRoute(path: '/', builder: (context, state) => Splash()),
       GoRoute(path: '/splash-1', builder: (context, state) => SplashScreen1()),

@@ -1,4 +1,6 @@
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/common/auth_guard.dart';
+import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
 import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_circle_icon_button.dart';
@@ -77,7 +79,18 @@ class AdDetailFavoriteButton extends StatelessWidget {
         }
 
         return InkWell(
-          onTap: () {
+          onTap: () async {
+            // Check authentication before allowing favorite toggle
+            final isAuthenticated = await AuthGuard.isAuthenticated();
+            if (!isAuthenticated) {
+              DialogUtil.showLoginPromptDialog(
+                context,
+                message: "Please login to add this ad to your favorites.",
+                redirectPath: '/add-detail-page',
+              );
+              return;
+            }
+
             context.read<FavoriteBloc>().add(
                   FavoriteEvent.toggleFavorite(
                     adId: ad.id,
@@ -140,7 +153,18 @@ class AdDetailShareButton extends StatelessWidget {
 
   const AdDetailShareButton({super.key, required this.ad});
 
-  void _shareAd(BuildContext context) {
+  Future<void> _shareAd(BuildContext context) async {
+    // Check authentication before allowing share
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      DialogUtil.showLoginPromptDialog(
+        context,
+        message: "Please login to share this ad.",
+        redirectPath: '/add-detail-page',
+      );
+      return;
+    }
+
     String title;
     if (ad.category == 'property') {
       title =

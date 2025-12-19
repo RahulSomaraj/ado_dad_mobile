@@ -2,6 +2,8 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/common/auth_guard.dart';
+import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:ado_dad_user/features/home/ad_detail/ad_detail_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/features/home/services/offer_service.dart';
@@ -51,6 +53,12 @@ class _AdDetailPageState extends State<AdDetailPage> {
   final Map<String, VideoPlayerController?> _videoControllers = {};
   final Map<String, VoidCallback?> _onVideoCompleteCallbacks = {};
 
+  @override
+  void initState() {
+    super.initState();
+    print('isPremium: ${widget.ad.manufacturer?.isPremium}');
+  }
+
   // Check if current user is the owner of the ad
   Future<bool> _isCurrentUserOwner(AddModel ad) async {
     final currentUserId = await SharedPrefs().getUserId();
@@ -60,7 +68,17 @@ class _AdDetailPageState extends State<AdDetailPage> {
   }
 
   // Share ad functionality
-  void _shareAd(AddModel ad) {
+  Future<void> _shareAd(AddModel ad) async {
+    // Check authentication before allowing share
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      DialogUtil.showLoginPromptDialog(
+        context,
+        message: "Please login to share this ad.",
+        redirectPath: '/add-detail-page',
+      );
+      return;
+    }
     String title;
     if (ad.category == 'property') {
       title =
@@ -328,7 +346,18 @@ Download Ado Dad app to contact the seller and view more details!
   }
 
   // Handle mark as sold action
-  void _handleMarkAsSold(BuildContext context, AddModel ad) {
+  Future<void> _handleMarkAsSold(BuildContext context, AddModel ad) async {
+    // Check authentication before allowing mark as sold
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      DialogUtil.showLoginPromptDialog(
+        context,
+        message: "Please login to mark this ad as sold.",
+        redirectPath: '/add-detail-page',
+      );
+      return;
+    }
+
     // Store the bloc reference before showing the dialog
     final adDetailBloc = context.read<AdDetailBloc>();
 
@@ -578,7 +607,8 @@ Download Ado Dad app to contact the seller and view more details!
                         return AdDetailCircleIconButton(
                           icon: Icons.share,
                           onTap: () {
-                            _shareAd(ad);
+                            _shareAd(
+                                ad); // Already async, no await needed for fire-and-forget
                           },
                         );
                       }
@@ -858,6 +888,17 @@ Download Ado Dad app to contact the seller and view more details!
   }
 
   Future<void> _goToEdit(BuildContext context, AddModel ad) async {
+    // Check authentication before allowing edit
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      DialogUtil.showLoginPromptDialog(
+        context,
+        message: "Please login to edit this ad.",
+        redirectPath: '/add-detail-page',
+      );
+      return;
+    }
+
     final route = _editRouteFor(ad.category);
     if (route == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1484,7 +1525,18 @@ Download Ado Dad app to contact the seller and view more details!
     );
   }
 
-  void _handleMakeOffer(BuildContext context) {
+  Future<void> _handleMakeOffer(BuildContext context) async {
+    // Check authentication before allowing make offer
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      DialogUtil.showLoginPromptDialog(
+        context,
+        message: "Please login to make an offer on this ad.",
+        redirectPath: '/add-detail-page',
+      );
+      return;
+    }
+
     // Get the ad from the current state
     final state = context.read<AdDetailBloc>().state;
     state.when(
@@ -1515,7 +1567,18 @@ Download Ado Dad app to contact the seller and view more details!
     );
   }
 
-  void _handleChat(BuildContext context) {
+  Future<void> _handleChat(BuildContext context) async {
+    // Check authentication before allowing chat
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      DialogUtil.showLoginPromptDialog(
+        context,
+        message: "Please login to chat with the seller.",
+        redirectPath: '/add-detail-page',
+      );
+      return;
+    }
+
     // Get the ad from the current state
     final state = context.read<AdDetailBloc>().state;
     state.when(

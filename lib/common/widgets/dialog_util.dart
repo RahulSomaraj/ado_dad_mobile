@@ -1,6 +1,8 @@
+import 'dart:io' show Platform;
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/error_message_util.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
 class DialogUtil {
@@ -203,5 +205,147 @@ class DialogUtil {
         );
       },
     );
+  }
+
+  /// Show login prompt dialog when user tries to access protected features
+  /// Uses iOS-friendly CupertinoAlertDialog on iOS, Material AlertDialog on Android
+  static void showLoginPromptDialog(
+    BuildContext context, {
+    String? message,
+    String? redirectPath,
+  }) {
+    if (Platform.isIOS) {
+      // iOS-friendly design using CupertinoAlertDialog
+      showCupertinoDialog(
+        context: context,
+        builder: (context) {
+          return CupertinoAlertDialog(
+            title: const Text(
+              "Login Required",
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: Text(
+              message ??
+                  "Please login to access this feature. You can browse listings without logging in.",
+              style: const TextStyle(
+                fontSize: 13,
+              ),
+            ),
+            actions: [
+              CupertinoDialogAction(
+                isDefaultAction: false,
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text(
+                  "Cancel",
+                  style: TextStyle(
+                    color: CupertinoColors.destructiveRed,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              CupertinoDialogAction(
+                isDefaultAction: true,
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // Navigate to login with redirect path if provided
+                  if (redirectPath != null) {
+                    context.go(
+                        '/login?redirect=${Uri.encodeComponent(redirectPath)}');
+                  } else {
+                    context.go('/login');
+                  }
+                },
+                child: const Text(
+                  "Login",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      // Android design using Material AlertDialog
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            title: const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.lock_outline,
+                  color: AppColors.primaryColor,
+                  size: 50,
+                ),
+                SizedBox(height: 10),
+                Text(
+                  "Login Required",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryColor,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+            content: Text(
+              message ??
+                  "Please login to access this feature. You can browse listings without logging in.",
+              style: const TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text(
+                  "Cancel",
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // Navigate to login with redirect path if provided
+                  if (redirectPath != null) {
+                    context.go(
+                        '/login?redirect=${Uri.encodeComponent(redirectPath)}');
+                  } else {
+                    context.go('/login');
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  "Login",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 }

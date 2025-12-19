@@ -2,6 +2,8 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/common/auth_guard.dart';
+import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/features/home/ad_detail/ad_detail_bloc.dart';
 import 'package:flutter/material.dart';
@@ -275,7 +277,22 @@ class AdDetailMarkAsSoldButton extends StatelessWidget {
                 ),
               ),
             ),
-            onPressed: isLoading ? null : () => _handleMarkAsSold(context),
+            onPressed: isLoading
+                ? null
+                : () async {
+                    // Check authentication BEFORE opening dialog
+                    final isAuthenticated = await AuthGuard.isAuthenticated();
+                    if (!isAuthenticated) {
+                      DialogUtil.showLoginPromptDialog(
+                        context,
+                        message: "Please login to mark this ad as sold.",
+                        redirectPath: '/add-detail-page',
+                      );
+                      return;
+                    }
+                    // If authenticated, proceed with showing the dialog
+                    _handleMarkAsSold(context);
+                  },
             child: isLoading
                 ? SizedBox(
                     height: GetResponsiveSize.getResponsiveSize(context,

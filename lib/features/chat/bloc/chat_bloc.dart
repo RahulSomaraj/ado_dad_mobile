@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ado_dad_user/common/auth_guard.dart';
 import 'package:ado_dad_user/repositories/chat_repository.dart';
 import 'package:ado_dad_user/features/chat/bloc/chat_event.dart';
 import 'package:ado_dad_user/features/chat/bloc/chat_state.dart';
@@ -27,6 +28,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onInitializeChat(
       InitializeChat event, Emitter<ChatState> emit) async {
+    // Check authentication before initializing chat
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      emit(ChatErrorState('Please login to access chat features.'));
+      return;
+    }
+
     try {
       emit(ChatLoading());
 
@@ -73,6 +81,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onLoadChatRooms(
       LoadChatRooms event, Emitter<ChatState> emit) async {
+    // Check authentication before loading chat rooms
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      emit(ChatErrorState('Please login to view your chat rooms.'));
+      return;
+    }
+
     try {
       emit(ChatLoading());
       await _chatRepository.getUserChatRooms();
@@ -84,6 +99,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   Future<void> _onJoinChatRoom(
       JoinChatRoom event, Emitter<ChatState> emit) async {
     print('🎯 _onJoinChatRoom method called with roomId: ${event.roomId}');
+
+    // Check authentication before joining chat room
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      emit(ChatErrorState('Please login to join chat rooms.'));
+      return;
+    }
+
     try {
       print('🚪 Attempting to join room: ${event.roomId}');
 
@@ -107,6 +130,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   Future<void> _onLoadRoomMessages(
       LoadRoomMessages event, Emitter<ChatState> emit) async {
     print('🎯 _onLoadRoomMessages method called with roomId: ${event.roomId}');
+
+    // Check authentication before loading messages
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      emit(ChatErrorState('Please login to view messages.'));
+      return;
+    }
+
     try {
       print('📨 Loading messages for room: ${event.roomId}');
       emit(ChatLoading());
@@ -125,6 +156,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onSendMessage(
       SendMessage event, Emitter<ChatState> emit) async {
+    // Check authentication before sending message
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      emit(ChatErrorState('Please login to send messages.'));
+      return;
+    }
+
     try {
       print('📤 Sending message through Bloc: ${event.content}');
       _chatRepository.sendMessage(event.content, type: event.type);
@@ -135,6 +173,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onCreateChatRoom(
       CreateChatRoom event, Emitter<ChatState> emit) async {
+    // Check authentication before creating chat room
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      emit(ChatErrorState('Please login to create chat rooms.'));
+      return;
+    }
+
     try {
       print('🏠 Creating new chat room for ad: ${event.adId}');
       emit(ChatLoading());
@@ -161,6 +206,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Future<void> _onSendOffer(SendOffer event, Emitter<ChatState> emit) async {
+    // Check authentication before sending offer
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      emit(ChatErrorState('Please login to send offers.'));
+      return;
+    }
+
     try {
       emit(ChatLoading());
       print('💬 Sending offer for ad: ${event.adId}');

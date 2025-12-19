@@ -34,7 +34,8 @@ class _SplashScreenState extends State<SplashScreen>
     _fallbackTimer = Timer(const Duration(seconds: 5), () {
       if (mounted && !_hasNavigated) {
         _hasNavigated = true;
-        context.go('/login'); // Default to login page
+        context.go(
+            '/home'); // Default to home page (allows browsing without login)
       }
     });
 
@@ -69,16 +70,19 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Only navigate for core login states, ignore forgot password states
     if (loginState is Initial) {
+      // Allow unauthenticated users to access home page for browsing
       _hasNavigated = true;
-      context.go('/login');
+      context.go('/home');
     } else if (loginState is Loading) {
       // Still checking, wait
     } else if (loginState is Success) {
       _hasNavigated = true;
       context.go('/home');
     } else if (loginState is Failure) {
+      // If login check failed, still allow browsing (go to home)
+      // User can login later if needed
       _hasNavigated = true;
-      context.go('/login');
+      context.go('/home');
     }
     // Ignore forgot password states - they shouldn't trigger navigation
   }

@@ -10,7 +10,8 @@
         <domain includeSubdomains="true">192.168.0.1</domain>
         
         <!-- Development servers -->
-        <domain includeSubdomains="true">uat.ado-dad.com</domain>
+        <!-- <domain includeSubdomains="true">uat.ado-dad.com</domain> -->
+        <domain includeSubdomains="true">uatapi.ado-dad.com</domain>
         <domain includeSubdomains="true">dev.ado-dad.com</domain>
         <domain includeSubdomains="true">staging.ado-dad.com</domain>
         

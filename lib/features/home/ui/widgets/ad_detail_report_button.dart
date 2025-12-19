@@ -1,6 +1,8 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/common/auth_guard.dart';
+import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/features/home/ui/report_ad_dialog.dart';
 import 'package:flutter/material.dart';
@@ -72,7 +74,20 @@ class AdDetailReportButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton.icon(
-                onPressed: () => _showReportDialog(context),
+                onPressed: () async {
+                  // Check authentication BEFORE opening dialog
+                  final isAuthenticated = await AuthGuard.isAuthenticated();
+                  if (!isAuthenticated) {
+                    DialogUtil.showLoginPromptDialog(
+                      context,
+                      message: "Please login to report this ad.",
+                      redirectPath: '/add-detail-page',
+                    );
+                    return;
+                  }
+                  // If authenticated, proceed with showing the dialog
+                  _showReportDialog(context);
+                },
                 icon: Icon(
                   Icons.report_problem,
                   size: GetResponsiveSize.getResponsiveSize(context,

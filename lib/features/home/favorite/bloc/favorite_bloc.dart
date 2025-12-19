@@ -1,4 +1,5 @@
 import 'package:ado_dad_user/common/error_message_util.dart';
+import 'package:ado_dad_user/common/auth_guard.dart';
 import 'package:ado_dad_user/repositories/favorite_repo.dart';
 import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -25,6 +26,16 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
     Emitter<FavoriteState> emit,
   ) async {
     emit(FavoriteState.toggleLoading(adId: event.adId));
+
+    // Check authentication before favorite operations
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      emit(FavoriteState.toggleError(
+        adId: event.adId,
+        message: "Please login to add items to favorites.",
+      ));
+      return;
+    }
 
     try {
       FavoriteResponse response;
@@ -71,6 +82,16 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
   ) async {
     emit(FavoriteState.toggleLoading(adId: event.adId));
 
+    // Check authentication before favorite operations
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      emit(FavoriteState.toggleError(
+        adId: event.adId,
+        message: "Please login to add items to favorites.",
+      ));
+      return;
+    }
+
     try {
       final response = await _favoriteRepository.addToFavorites(event.adId);
 
@@ -109,6 +130,16 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
     Emitter<FavoriteState> emit,
   ) async {
     emit(FavoriteState.toggleLoading(adId: event.adId));
+
+    // Check authentication before favorite operations
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      emit(FavoriteState.toggleError(
+        adId: event.adId,
+        message: "Please login to remove items from favorites.",
+      ));
+      return;
+    }
 
     try {
       final response =
@@ -150,6 +181,15 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
   ) async {
     emit(const FavoriteState.loading());
 
+    // Check authentication before loading favorites
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      emit(const FavoriteState.error(
+        message: "Please login to view your favorites.",
+      ));
+      return;
+    }
+
     try {
       final response = await _favoriteRepository.getFavoriteAds(
         page: event.page,
@@ -172,6 +212,15 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
     Emitter<FavoriteState> emit,
   ) async {
     emit(const FavoriteState.loading());
+
+    // Check authentication before refreshing favorites
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!isAuthenticated) {
+      emit(const FavoriteState.error(
+        message: "Please login to view your favorites.",
+      ));
+      return;
+    }
 
     try {
       final response = await _favoriteRepository.getFavoriteAds(

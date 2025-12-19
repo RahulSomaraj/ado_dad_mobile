@@ -1,5 +1,6 @@
 import 'package:ado_dad_user/common/api_response.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
+import 'package:ado_dad_user/config/app_config.dart';
 import 'package:ado_dad_user/services/auth_service.dart';
 import 'package:dio/dio.dart';
 
@@ -13,7 +14,8 @@ class ApiService {
 
   ApiService._internal() {
     _dio = Dio(BaseOptions(
-      baseUrl: 'https://uat.ado-dad.com/',
+      // baseUrl: 'https://uat.ado-dad.com/',
+      baseUrl: '${AppConfig.baseUrl}/',
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 15),
     ));
@@ -62,9 +64,13 @@ class ApiService {
             print(
                 '🔑 Authorization header format: ${authHeader.substring(0, authHeader.length > 30 ? 30 : authHeader.length)}...');
           } else {
-            print('⚠️ No token found for request to: ${options.path}');
+            // No token found - proceed without Authorization header
+            // Public endpoints like /v2/ads/list work without authentication
+            print(
+                'ℹ️ No token found for request to: ${options.path} - proceeding without authentication');
           }
-          // If no token, proceed without Authorization header (some endpoints don't need it)
+          // If no token, proceed without Authorization header (public endpoints don't need it)
+          // This allows unauthenticated users to browse listings
           return handler.next(options);
         },
         onError: (DioException e, handler) async {
@@ -83,7 +89,12 @@ class ApiService {
             // Check if token exists before attempting refresh
             final currentToken = await getToken();
             if (currentToken == null || currentToken.isEmpty) {
-              print('❌ No token found in storage - cannot refresh');
+              // No token exists - this is an unauthenticated request
+              // If endpoint requires auth, reject the error (user needs to login)
+              // If endpoint is public, this shouldn't happen, but handle gracefully
+              print('ℹ️ No token found in storage - unauthenticated request');
+              print(
+                  'ℹ️ If this endpoint requires authentication, user needs to login');
               return handler.reject(e);
             }
 
