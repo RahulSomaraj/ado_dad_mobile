@@ -10,6 +10,7 @@ import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/repositories/chat_repository.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 
 class ChatPage extends StatefulWidget {
   final String roomId;
@@ -124,20 +125,26 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
             Expanded(
-              child: Text(
-                widget.adTitle ?? (widget.otherUserName ?? 'Chat'),
-                style: TextStyle(
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(
-                    context,
-                    mobile: 16,
-                    tablet: 20,
-                    largeTablet: 24,
-                    desktop: 28,
+              child: GestureDetector(
+                onTap: widget.adId != null ? () => _navigateToAdDetail() : null,
+                child: Text(
+                  widget.adTitle ?? (widget.otherUserName ?? 'Chat'),
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(
+                      context,
+                      mobile: 16,
+                      tablet: 20,
+                      largeTablet: 24,
+                      desktop: 28,
+                    ),
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    decoration: widget.adId != null
+                        ? TextDecoration.underline
+                        : TextDecoration.none,
                   ),
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -159,23 +166,23 @@ class _ChatPageState extends State<ChatPage> {
           ),
           onPressed: () => _handleBackNavigation(),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.more_vert,
-              size: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 24,
-                tablet: 30,
-                largeTablet: 32,
-                desktop: 36,
-              ),
-            ),
-            onPressed: () {
-              // TODO: Add more options menu
-            },
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     icon: Icon(
+        //       Icons.more_vert,
+        //       size: GetResponsiveSize.getResponsiveSize(
+        //         context,
+        //         mobile: 24,
+        //         tablet: 30,
+        //         largeTablet: 32,
+        //         desktop: 36,
+        //       ),
+        //     ),
+        //     onPressed: () {
+        //       // TODO: Add more options menu
+        //     },
+        //   ),
+        // ],
       ),
       body: BlocListener<ChatBloc, ChatState>(
         listener: (context, state) {
@@ -700,6 +707,28 @@ class _ChatPageState extends State<ChatPage> {
     print('💬 Navigating to chat rooms page');
     final fromPage = widget.fromPage ?? 'home';
     context.go('/chat-rooms?from=$fromPage');
+  }
+
+  void _navigateToAdDetail() {
+    if (widget.adId == null) return;
+
+    print('🔗 Navigating to ad detail page for ad: ${widget.adId}');
+
+    // Create a minimal AddModel with just the ID
+    // The detail page will fetch the full ad details
+    final minimalAd = AddModel(
+      id: widget.adId!,
+      title: widget.adTitle,
+      description: '', // Will be fetched by detail page
+      price: 0, // Will be fetched by detail page
+      images: [], // Will be fetched by detail page
+      location: '', // Will be fetched by detail page
+      category: '', // Will be fetched by detail page
+      isActive: true,
+      updatedAt: DateTime.now().toIso8601String(),
+    );
+
+    context.push('/add-detail-page', extra: minimalAd);
   }
 
   @override

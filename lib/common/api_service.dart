@@ -1,5 +1,6 @@
 import 'package:ado_dad_user/common/api_response.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
+import 'package:ado_dad_user/config/app_config.dart';
 import 'package:ado_dad_user/services/auth_service.dart';
 import 'package:dio/dio.dart';
 
@@ -13,7 +14,7 @@ class ApiService {
 
   ApiService._internal() {
     _dio = Dio(BaseOptions(
-      baseUrl: 'https://uat.ado-dad.com/',
+      baseUrl: '${AppConfig.baseUrl}/',
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 15),
     ));

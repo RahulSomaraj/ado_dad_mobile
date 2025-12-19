@@ -32,8 +32,10 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Fallback timer to ensure navigation happens after 5 seconds
     _fallbackTimer = Timer(const Duration(seconds: 5), () {
+      debugPrint('⏰ [SplashScreen] Fallback timer fired');
       if (mounted && !_hasNavigated) {
         _hasNavigated = true;
+        debugPrint('🚀 [SplashScreen] Navigating to /login (fallback)');
         context.go('/login'); // Default to login page
       }
     });
@@ -65,7 +67,9 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _navigateBasedOnState(dynamic loginState) {
-    if (!mounted || _hasNavigated) return;
+    if (!mounted || _hasNavigated) {
+      return;
+    }
 
     // Only navigate for core login states, ignore forgot password states
     if (loginState is Initial) {
@@ -85,73 +89,133 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.primaryColor,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Logo image with responsive sizing
-            Image.asset(
-              'assets/images/ado-d.png',
-              height: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 80,
-                tablet: 120,
-                largeTablet: 140,
-                desktop: 160,
-              ),
-              width: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 80,
-                tablet: 120,
-                largeTablet: 140,
-                desktop: 160,
-              ),
-            ),
-            SizedBox(
-              height: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 30,
-                tablet: 30,
-                largeTablet: 40,
-                desktop: 50,
-              ),
-            ),
-            // Title image aligned to center with responsive sizing
-            Center(
-              child: GetResponsiveSize.isTablet(context)
-                  ? SizedBox(
+    try {
+      return Scaffold(
+        backgroundColor: AppColors.primaryColor,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Logo image with responsive sizing - add error handling
+              Builder(
+                builder: (context) {
+                  try {
+                    return Image.asset(
+                      'assets/images/ado-d.png',
                       height: GetResponsiveSize.getResponsiveSize(
                         context,
-                        mobile: 0, // Not used since we check isTablet first
-                        tablet: 80,
-                        largeTablet: 100,
-                        desktop: 120,
+                        mobile: 80,
+                        tablet: 120,
+                        largeTablet: 140,
+                        desktop: 160,
                       ),
-                      child: Image.asset(
-                        'assets/images/adodad-v1.png',
-                        fit: BoxFit.contain,
-                      ),
-                    )
-                  : SizedBox(
                       width: GetResponsiveSize.getResponsiveSize(
                         context,
-                        mobile: 250,
-                        tablet: 300,
-                        largeTablet: 350,
-                        desktop: 400,
+                        mobile: 80,
+                        tablet: 120,
+                        largeTablet: 140,
+                        desktop: 160,
                       ),
-                      child: Image.asset(
-                        'assets/images/adodad-v1.png',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-            ),
-          ],
+                      errorBuilder: (context, error, stackTrace) {
+                        print(
+                            '❌ [SplashScreen] Error loading ado-d.png: $error');
+                        return const Icon(Icons.error,
+                            size: 80, color: Colors.white);
+                      },
+                    );
+                  } catch (e) {
+                    print('❌ [SplashScreen] Exception loading image: $e');
+                    return const Icon(Icons.error,
+                        size: 80, color: Colors.white);
+                  }
+                },
+              ),
+              SizedBox(
+                height: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 30,
+                  tablet: 30,
+                  largeTablet: 40,
+                  desktop: 50,
+                ),
+              ),
+              // Title image aligned to center with responsive sizing - add error handling
+              Center(
+                child: Builder(
+                  builder: (context) {
+                    try {
+                      return GetResponsiveSize.isTablet(context)
+                          ? SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile:
+                                    0, // Not used since we check isTablet first
+                                tablet: 80,
+                                largeTablet: 100,
+                                desktop: 120,
+                              ),
+                              child: Image.asset(
+                                'assets/images/adodad-v1.png',
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                  print(
+                                      '❌ [SplashScreen] Error loading adodad-v1.png: $error');
+                                  return const Text('ADO-DAD',
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 24));
+                                },
+                              ),
+                            )
+                          : SizedBox(
+                              width: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 250,
+                                tablet: 300,
+                                largeTablet: 350,
+                                desktop: 400,
+                              ),
+                              child: Image.asset(
+                                'assets/images/adodad-v1.png',
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                  print(
+                                      '❌ [SplashScreen] Error loading adodad-v1.png: $error');
+                                  return const Text('ADO-DAD',
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 24));
+                                },
+                              ),
+                            );
+                    } catch (e) {
+                      print('❌ [SplashScreen] Exception in title image: $e');
+                      return const Text('ADO-DAD',
+                          style: TextStyle(color: Colors.white, fontSize: 24));
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e, stackTrace) {
+      print('❌ [SplashScreen] CRITICAL ERROR in build(): $e');
+      print('❌ [SplashScreen] Stack: $stackTrace');
+      // Return a simple fallback widget
+      return Scaffold(
+        backgroundColor: Colors.blue,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error, size: 100, color: Colors.white),
+              const SizedBox(height: 20),
+              Text('Error: $e', style: const TextStyle(color: Colors.white)),
+            ],
+          ),
+        ),
+      );
+    }
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:ado_dad_user/common/app_colors.dart';
@@ -7,9 +8,12 @@ import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/features/signup/bloc/signup_bloc.dart';
 import 'package:ado_dad_user/models/signup_model.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -29,18 +33,160 @@ class _SignupPageState extends State<SignupPage> {
   Uint8List? _avatarBytes; // <-- NEW: local preview bytes
 
   Future<void> _pickAvatar() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      allowMultiple: false,
-      withData: true, // we need bytes for S3 upload
-    );
+    try {
+      if (kIsWeb) {
+        // Web - use file_picker
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.image,
+          allowMultiple: false,
+          withData: true,
+        );
 
-    if (result != null && result.files.isNotEmpty) {
-      final file = result.files.single;
-      if (file.bytes != null && file.bytes!.isNotEmpty) {
-        setState(() {
-          _avatarBytes = file.bytes;
-        });
+        if (result != null && result.files.isNotEmpty) {
+          final file = result.files.single;
+          if (file.bytes != null && file.bytes!.isNotEmpty) {
+            setState(() {
+              _avatarBytes = file.bytes;
+            });
+          }
+        }
+      } else if (Platform.isIOS) {
+        // iOS - use native image picker (bypasses pigeon channel)
+        try {
+          const platform = MethodChannel('com.ado_dad_user/image_picker');
+          final dynamic result = await platform.invokeMethod('pickImage');
+          final String? imagePath = result as String?;
+
+          if (imagePath != null && imagePath.isNotEmpty) {
+            try {
+              final file = File(imagePath);
+              if (await file.exists()) {
+                // Read image bytes
+                final Uint8List imageBytes = await file.readAsBytes();
+
+                // Update UI immediately
+                if (mounted) {
+                  setState(() {
+                    _avatarBytes = imageBytes;
+                  });
+                }
+
+                // Clean up temp file after a short delay
+                Future.delayed(const Duration(seconds: 1), () async {
+                  try {
+                    await file.delete();
+                  } catch (_) {
+                    // Ignore cleanup errors
+                  }
+                });
+              } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                          'Unable to read the selected image. Please try again.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                        'Unable to read the selected image. Please try again.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+          }
+          // User cancelled - no action needed
+        } on PlatformException catch (e) {
+          final errorMessage = e.message ?? 'Unknown error';
+
+          // User cancelled - don't show error
+          if (e.code == "NO_VIEW_CONTROLLER" ||
+              errorMessage.contains("cancelled")) {
+            return;
+          }
+
+          // Permission related
+          if (errorMessage.toLowerCase().contains('permission') ||
+              errorMessage.toLowerCase().contains('access denied')) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                      'Photo library access is required. Please enable it in Settings.'),
+                  backgroundColor: Colors.orange,
+                  duration: Duration(seconds: 4),
+                ),
+              );
+            }
+            return;
+          }
+
+          // Other errors
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Unable to access photos: ${errorMessage.isNotEmpty ? errorMessage : "Please try again"}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Unable to access photos. Please try again.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } else {
+        // Android - use image_picker (original implementation)
+        final picker = ImagePicker();
+        final XFile? file = await picker.pickImage(
+          source: ImageSource.gallery,
+          imageQuality: 88,
+          maxWidth: 1200,
+        );
+
+        if (file != null) {
+          try {
+            final bytes = await file.readAsBytes();
+            if (mounted) {
+              setState(() {
+                _avatarBytes = bytes;
+              });
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Failed to read image: ${e.toString()}'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(Platform.isIOS
+                ? 'Unable to access photos. Please check your permissions in Settings.'
+                : 'Failed to pick image: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }

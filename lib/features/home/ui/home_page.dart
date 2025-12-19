@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/google_places_service.dart';
@@ -9,6 +11,7 @@ import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/models/cayegory_model.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -43,6 +46,11 @@ class _HomePageState extends State<HomePage> {
     _scrollController.addListener(_onScroll);
 
     Future.microtask(() async {
+      // Request location permission on first home page load (iOS only)
+      if (Platform.isIOS) {
+        await _requestLocationPermissionOnFirstLoad();
+      }
+
       context
           .read<AdvertisementBloc>()
           .add(const AdvertisementEvent.fetchAllListings());
@@ -59,6 +67,83 @@ class _HomePageState extends State<HomePage> {
         _getLocationAndAddress();
       }
     });
+  }
+
+  /// Request location permission on first home page load after installation (iOS only)
+  Future<void> _requestLocationPermissionOnFirstLoad() async {
+    try {
+      // Check if we've already requested permission before
+      final prefs = await SharedPreferences.getInstance();
+      final hasRequestedLocation =
+          prefs.getBool('has_requested_location_permission') ?? false;
+
+      if (!hasRequestedLocation) {
+        print(
+            '📍 [HomePage] Requesting location permission on first load (iOS)');
+
+        if (Platform.isIOS) {
+          // Use native iOS channel to bypass pigeon channel issues
+          print('📍 [HomePage] Using native iOS location channel...');
+          const platform = MethodChannel('com.ado_dad_user/location');
+
+          try {
+            // First check current permission status
+            final currentStatus =
+                await platform.invokeMethod<String>('checkPermission');
+            print('📍 [HomePage] Current permission status: $currentStatus');
+
+            // Only request if not determined
+            if (currentStatus == 'notDetermined') {
+              print(
+                  '📍 [HomePage] Requesting location permission via native channel...');
+              final result =
+                  await platform.invokeMethod<String>('requestPermission');
+              print('📍 [HomePage] Location permission result: $result');
+
+              // Mark that we've requested permission
+              await prefs.setBool('has_requested_location_permission', true);
+            } else {
+              print(
+                  '📍 [HomePage] Location permission already: $currentStatus');
+              // Mark as requested even if already granted/denied
+              await prefs.setBool('has_requested_location_permission', true);
+            }
+          } on PlatformException catch (e) {
+            print('❌ [HomePage] Native channel PlatformException:');
+            print('   Code: ${e.code}');
+            print('   Message: ${e.message}');
+            print('   Details: ${e.details}');
+            // Mark as requested to avoid repeated failures
+            await prefs.setBool('has_requested_location_permission', true);
+          }
+        } else {
+          // Android: Use geolocator
+          final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+          if (!serviceEnabled) {
+            print('📍 [HomePage] Location services are disabled');
+            return;
+          }
+
+          LocationPermission permission = await Geolocator.checkPermission();
+
+          if (permission == LocationPermission.denied) {
+            print('📍 [HomePage] Requesting location permission...');
+            permission = await Geolocator.requestPermission();
+            print('📍 [HomePage] Location permission result: $permission');
+
+            await prefs.setBool('has_requested_location_permission', true);
+          } else {
+            print('📍 [HomePage] Location permission already: $permission');
+            await prefs.setBool('has_requested_location_permission', true);
+          }
+        }
+      } else {
+        print('📍 [HomePage] Location permission already requested before');
+      }
+    } catch (e) {
+      print('❌ [HomePage] Error requesting location permission: $e');
+      // Don't block home page load if permission request fails
+    }
   }
 
   void _onScroll() {
@@ -740,11 +825,49 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _launchURL(String url) async {
-    final Uri uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      print("❌ Could not launch $url");
+    try {
+      print('🔗 [URL Launcher] Attempting to open URL: $url');
+
+      if (Platform.isIOS) {
+        // Use native iOS channel to bypass pigeon channel issues
+        print('🔗 [URL Launcher] Using native iOS channel...');
+        const platform = MethodChannel('com.ado_dad_user/url_launcher');
+        try {
+          final result = await platform.invokeMethod('launchUrl', url);
+          print('✅ [URL Launcher] Native channel result: $result');
+          if (result == false) {
+            print('❌ [URL Launcher] Native channel returned false');
+          }
+        } on PlatformException catch (e) {
+          print('❌ [URL Launcher] Native channel PlatformException:');
+          print('   Code: ${e.code}');
+          print('   Message: ${e.message}');
+          print('   Details: ${e.details}');
+        }
+      } else {
+        // Android: Use url_launcher package
+        print('🔗 [URL Launcher] Using url_launcher package for Android...');
+        final Uri uri = Uri.parse(url);
+        final canLaunch = await canLaunchUrl(uri);
+        print('🔗 [URL Launcher] canLaunchUrl result: $canLaunch');
+
+        if (canLaunch) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          print('✅ [URL Launcher] URL launched successfully');
+        } else {
+          print('❌ [URL Launcher] Cannot launch URL: $url');
+        }
+      }
+    } on PlatformException catch (e) {
+      print('❌ [URL Launcher] PlatformException:');
+      print('   Code: ${e.code}');
+      print('   Message: ${e.message}');
+      print('   Details: ${e.details}');
+    } catch (e, stackTrace) {
+      print('❌ [URL Launcher] General exception occurred:');
+      print('   Error: $e');
+      print('   Type: ${e.runtimeType}');
+      print('   StackTrace: $stackTrace');
     }
   }
 

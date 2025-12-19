@@ -40,6 +40,7 @@ import 'package:ado_dad_user/features/showroom/bloc/showroom_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:ado_dad_user/repositories/showroom_repo.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -47,7 +48,12 @@ class AppRoutes {
   static final GoRouter router = GoRouter(
     initialLocation: '/',
     routes: [
-      GoRoute(path: '/', builder: (context, state) => Splash()),
+      GoRoute(
+        path: '/',
+        builder: (context, state) {
+          return Splash();
+        },
+      ),
       GoRoute(path: '/splash-1', builder: (context, state) => SplashScreen1()),
       GoRoute(path: '/splash-2', builder: (context, state) => SplashScreen2()),
       GoRoute(path: '/splash-3', builder: (context, state) => SplashScreen3()),

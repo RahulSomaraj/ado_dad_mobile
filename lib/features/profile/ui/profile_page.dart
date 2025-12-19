@@ -11,7 +11,7 @@ import 'package:ado_dad_user/features/profile/bloc/profile_bloc.dart'
 import 'package:ado_dad_user/features/profile/bloc/profile_bloc.dart';
 import 'package:ado_dad_user/models/profile_model.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:io' show Platform;
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -82,6 +82,8 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _pickImage() async {
+    print(
+        '📸 [Profile] _pickImage called - Platform: ${Platform.isIOS ? "iOS" : "Android"}');
     try {
       if (kIsWeb) {
         final res = await FilePicker.platform.pickFiles(
@@ -91,25 +93,180 @@ class _ProfilePageState extends State<ProfilePage> {
         if (res != null && res.files.single.bytes != null) {
           setState(() => _pickedImageBytes = res.files.single.bytes);
         }
+      } else if (Platform.isIOS) {
+        // Use native iOS image picker (bypasses pigeon channel)
+        print('📸 [iOS] Using native image picker channel...');
+
+        try {
+          const platform = MethodChannel('com.ado_dad_user/image_picker');
+          print('📸 [iOS] Calling pickImage method...');
+
+          final dynamic result = await platform.invokeMethod('pickImage');
+          final String? imagePath = result as String?;
+
+          print('📸 [iOS] Native picker returned: ${imagePath ?? "null"}');
+          print('📸 [iOS] Result type: ${result.runtimeType}');
+
+          if (imagePath != null && imagePath.isNotEmpty) {
+            try {
+              final file = File(imagePath);
+              if (await file.exists()) {
+                // Read image bytes
+                final Uint8List imageBytes = await file.readAsBytes();
+                print('📸 [iOS] Image bytes read: ${imageBytes.length} bytes');
+
+                // Update UI immediately
+                if (mounted) {
+                  setState(() {
+                    _pickedImageBytes = imageBytes;
+                  });
+                  print(
+                      '📸 [iOS] Image set in state successfully - UI should update now');
+                }
+
+                // Clean up temp file after a short delay
+                Future.delayed(const Duration(seconds: 1), () async {
+                  try {
+                    await file.delete();
+                  } catch (_) {
+                    // Ignore cleanup errors
+                  }
+                });
+              } else {
+                print('❌ [iOS] Image file does not exist at path: $imagePath');
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                          'Unable to read the selected image. Please try again.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            } catch (e) {
+              print('❌ [iOS] Error reading image file: $e');
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                        'Unable to read the selected image. Please try again.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+          } else {
+            print('📸 [iOS] User cancelled image selection');
+            // User cancelled - no action needed
+          }
+        } on PlatformException catch (e) {
+          print(
+              '❌ [iOS Native Picker] PlatformException - Code: ${e.code}, Message: ${e.message}');
+
+          final errorCode = e.code;
+          final errorMessage = e.message ?? 'Unknown error';
+
+          // User cancelled - don't show error
+          if (errorCode == "NO_VIEW_CONTROLLER" ||
+              errorMessage.contains("cancelled")) {
+            return;
+          }
+
+          // Permission related
+          if (errorMessage.toLowerCase().contains('permission') ||
+              errorMessage.toLowerCase().contains('access denied')) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                      'Photo library access is required. Please enable it in Settings.'),
+                  backgroundColor: Colors.orange,
+                  duration: Duration(seconds: 4),
+                ),
+              );
+            }
+            return;
+          }
+
+          // Other errors
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Unable to access photos: ${errorMessage.isNotEmpty ? errorMessage : "Please try again"}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        } catch (e, stackTrace) {
+          print(
+              '❌ [iOS Native Picker] General Exception - Type: ${e.runtimeType}, Error: $e, StackTrace: $stackTrace');
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Unable to access photos. Please try again.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
       } else {
+        // Android - use image_picker (original implementation)
         final picker = ImagePicker();
         final XFile? file = await picker.pickImage(
-          source:
-              ImageSource.gallery, // or show a bottom sheet for camera/gallery
+          source: ImageSource.gallery,
           imageQuality: 88,
           maxWidth: 1200,
         );
+
         if (file != null) {
-          final bytes = await file.readAsBytes();
-          setState(() => _pickedImageBytes = bytes);
+          try {
+            final bytes = await file.readAsBytes();
+            if (mounted) {
+              setState(() => _pickedImageBytes = bytes);
+            }
+          } catch (e, stackTrace) {
+            // Error reading file bytes
+            print(
+                '❌ [Image Picker] Error reading file bytes - Type: ${e.runtimeType}, Error: $e, StackTrace: $stackTrace');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Failed to read image: ${e.toString()}'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
         }
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(ErrorMessageUtil.getUserFriendlyMessage(
-                'Failed to pick image: $e'))),
-      );
+    } catch (e, stackTrace) {
+      // Final catch for any unhandled errors
+      final errorStr = e.toString().toLowerCase();
+
+      // Print exact error details to console
+      print(
+          '❌ [Image Picker] Final catch - Platform: ${Platform.isIOS ? "iOS" : "Android"}, Type: ${e.runtimeType}, Error: $e, StackTrace: $stackTrace');
+
+      // Don't show error for user cancellation
+      if (errorStr.contains('cancel') || errorStr.contains('cancelled')) {
+        return;
+      }
+
+      // Show user-friendly error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(Platform.isIOS
+                ? 'Unable to access photos. Please check your permissions in Settings.'
+                : ErrorMessageUtil.getUserFriendlyMessage(
+                    'Failed to pick image: $e')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

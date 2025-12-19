@@ -1,5 +1,35 @@
 # Build Scripts
 
+## iOS Setup
+
+### Initial Setup
+
+Before running the iOS app, ensure all dependencies are installed:
+
+```bash
+./scripts/setup_ios.sh
+```
+
+This script will:
+- ✅ Check CocoaPods installation
+- ✅ Install Flutter dependencies
+- ✅ Install iOS CocoaPods
+
+### Running iOS App
+
+If you encounter "CocoaPods not installed" errors when running from your IDE, use:
+
+```bash
+./scripts/run_ios.sh
+```
+
+Or specify a device:
+```bash
+./scripts/run_ios.sh "iPhone 16"
+```
+
+**Note:** If running from your IDE (Cursor/VS Code), you may need to configure the IDE to include `/opt/homebrew/bin` in the PATH, or use the `run_ios.sh` script instead.
+
 ## Automatic Build Number Increment
 
 These scripts automatically increment your build number before each build.

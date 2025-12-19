@@ -24,36 +24,82 @@ import 'package:ado_dad_user/repositories/my_ads_repo.dart';
 import 'package:ado_dad_user/features/home/ui/sellerprofile/bloc/bloc/seller_profile_bloc.dart';
 import 'package:ado_dad_user/repositories/seller_profile_repo.dart';
 import 'package:ado_dad_user/features/chat/bloc/chat_bloc.dart';
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // Set up global error handlers before zone
+  FlutterError.onError = (FlutterErrorDetails details) {
+    print('❌ [FLUTTER ERROR] ${details.exception}');
+    print('❌ [FLUTTER ERROR] Stack: ${details.stack}');
 
-  // Lock orientation to portrait mode only
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+    FlutterError.presentError(details);
+  };
 
-  // Initialize environment configuration
-  await AppConfig.load();
+  // Set up zone error handler for async errors
+  // IMPORTANT: ensureInitialized() must be called inside the same zone as runApp()
+  runZonedGuarded(() async {
+    try {
+      WidgetsFlutterBinding.ensureInitialized();
 
-  // Configure iOS scrolling behavior
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-    ),
-  );
+      // Lock orientation to portrait mode only
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+      print('✅ [MAIN] Orientation locked');
+      debugPrint('✅ [MAIN] Orientation locked');
 
-  await SharedPrefs().init();
+      // Initialize environment configuration
+      await AppConfig.load();
+      print('✅ [MAIN] AppConfig loaded');
+      debugPrint('✅ [MAIN] AppConfig loaded');
 
-  // Token refresh will happen automatically when bearer token expires (401 error)
-  // No need to refresh proactively on app startup
+      // Configure iOS scrolling behavior
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+        ),
+      );
+      print('✅ [MAIN] SystemUIOverlayStyle configured');
+      debugPrint('✅ [MAIN] SystemUIOverlayStyle configured');
 
-  runApp(const MyApp());
+      // Initialize SharedPreferences
+      // On iOS, add a longer delay to ensure native channel is ready
+      // This prevents "channel-error" on iOS while keeping Android fast
+      // The delay also helps avoid conflicts with connectivity plugin initialization
+      if (Platform.isIOS) {
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
+
+      // Initialize SharedPreferences (with automatic retry on iOS if needed)
+      // If initialization fails, it will retry automatically when first accessed
+      await SharedPrefs().init();
+
+      // On iOS, add a small delay after initialization to let channel stabilize
+      if (Platform.isIOS) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+
+      runApp(const MyApp());
+    } catch (e, stackTrace) {
+      print('❌ [MAIN] ERROR during initialization: $e');
+      print('❌ [MAIN] Stack trace: $stackTrace');
+      debugPrint('❌ [MAIN] ERROR during initialization: $e');
+      debugPrint('❌ [MAIN] Stack trace: $stackTrace');
+      // Still try to run the app even if initialization fails
+      runApp(const MyApp());
+    }
+  }, (error, stackTrace) {
+    print('❌ [ZONE ERROR] $error');
+    print('❌ [ZONE ERROR] Stack: $stackTrace');
+    debugPrint('❌ [ZONE ERROR] $error');
+    debugPrint('❌ [ZONE ERROR] Stack: $stackTrace');
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -64,8 +110,10 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) => LoginBloc(authRepository: AuthRepository())
-            ..add(const LoginEvent.checkLoginStatus()),
+          create: (context) {
+            return LoginBloc(authRepository: AuthRepository())
+              ..add(const LoginEvent.checkLoginStatus());
+          },
         ),
         BlocProvider<OtpBloc>(
           create: (context) => OtpBloc(),
@@ -124,13 +172,25 @@ class MyApp extends StatelessWidget {
         routerConfig: AppRoutes.router,
         // ✅ This wraps every page with a connectivity gate
         // ✅ Shows only at first app open, before login, until real internet is available
-        builder: (context, child) => StartupConnectivityGate(
-          child: child ?? const SizedBox.shrink(),
-          onBackOnline: () {
-            // Optional warm-ups once online (before login UI proceeds)
-            // context.read<BannerBloc>().add(BannerEvent.fetchBanners());
-          },
-        ),
+        builder: (context, child) {
+          // Ensure child is never null - show splash screen if router hasn't initialized yet
+          final childWidget = child ??
+              const Scaffold(
+                backgroundColor:
+                    Colors.red, // Red background to see if this is shown
+                body: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+
+          return StartupConnectivityGate(
+            child: childWidget,
+            onBackOnline: () {
+              // Optional warm-ups once online (before login UI proceeds)
+              // context.read<BannerBloc>().add(BannerEvent.fetchBanners());
+            },
+          );
+        },
       ),
     );
   }

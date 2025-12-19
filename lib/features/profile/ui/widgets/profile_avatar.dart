@@ -74,8 +74,11 @@ class ProfileAvatar extends StatelessWidget {
             Positioned(
               right: 0,
               bottom: 0,
-              child: InkWell(
-                onTap: onPickImage,
+              child: GestureDetector(
+                onTap: () {
+                  print('📸 [ProfileAvatar] Edit icon tapped');
+                  onPickImage();
+                },
                 child: Container(
                   padding: EdgeInsets.all(
                     GetResponsiveSize.getResponsiveSize(

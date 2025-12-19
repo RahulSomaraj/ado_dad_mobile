@@ -22,6 +22,7 @@ class AuthRepository {
         throw Exception("Login failed: ${response.statusMessage}");
       }
     } on DioException catch (e) {
+      print('Login error: $e');
       throw Exception(DioErrorHandler.handleError(e));
     } catch (e) {
       throw Exception("Unexpected error: ${e.toString()}");

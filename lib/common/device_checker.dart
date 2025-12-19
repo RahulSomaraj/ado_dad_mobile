@@ -16,17 +16,24 @@ class DeviceChecker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final bool isAndroid = Platform.isAndroid;
+    try {
+      final screenWidth = MediaQuery.of(context).size.width;
+      final bool isAndroid = Platform.isAndroid;
 
-    // Determine if the device is a tablet
-    bool isTablet = screenWidth >= 600 && screenWidth <= 1200;
+      // Determine if the device is a tablet
+      bool isTablet = screenWidth >= 600 && screenWidth <= 1200;
 
-    // Determine the platform
-    if (isAndroid) {
-      return isTablet ? androidTabletView : androidMobileView;
-    } else {
-      return isTablet ? iosTabletView : iosMobileView;
+      // Determine the platform
+      if (isAndroid) {
+        return isTablet ? androidTabletView : androidMobileView;
+      } else {
+        return isTablet ? iosTabletView : iosMobileView;
+      }
+    } catch (e, stackTrace) {
+      print('❌ [DeviceChecker] ERROR: $e');
+      print('❌ [DeviceChecker] Stack: $stackTrace');
+      // Fallback to iOS mobile view on error
+      return iosMobileView;
     }
   }
 }
