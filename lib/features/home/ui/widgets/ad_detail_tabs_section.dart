@@ -589,7 +589,14 @@ class _SpecsCard extends StatelessWidget {
       );
     }
 
-    final items = <AdDetailSpec>[
+    // Format additional features as comma-separated string
+    final additionalFeaturesText =
+        (ad.additionalFeatures != null && ad.additionalFeatures!.isNotEmpty)
+            ? ad.additionalFeatures!.join(', ')
+            : '-';
+
+    // Regular vehicle items (without Additional Features)
+    final regularItems = <AdDetailSpec>[
       AdDetailSpec(
           'Brand Name',
           toTitleCase(
@@ -606,26 +613,63 @@ class _SpecsCard extends StatelessWidget {
           icon: Icons.calendar_today),
       AdDetailSpec('Mileage', (ad.mileage != null) ? '${ad.mileage} Kmpl' : '-',
           icon: Icons.speed),
+      AdDetailSpec('Has Insurance', ad.hasInsurance == true ? 'Yes' : 'No',
+          icon: Icons.shield),
+      AdDetailSpec('First Owner', ad.isFirstOwner == true ? 'Yes' : 'No',
+          icon: Icons.person),
+      AdDetailSpec('Has RC Book', ad.hasRcBook == true ? 'Yes' : 'No',
+          icon: Icons.description),
     ];
 
+    final vehiclePadding = GetResponsiveSize.getResponsivePadding(context,
+        mobile: 12, tablet: 16, largeTablet: 20, desktop: 24);
+    final vehicleMainAxisSpacing = GetResponsiveSize.getResponsiveSize(context,
+        mobile: 8, tablet: 12, largeTablet: 16, desktop: 20);
+    final vehicleItemHeight = _getBaseGridItemHeight(context);
+
+    // Use larger height for Additional Features to accommodate long text
+    final additionalFeaturesHeight = GetResponsiveSize.getResponsiveSize(
+        context,
+        mobile: 100,
+        tablet: 150,
+        largeTablet: 180,
+        desktop: 220);
+
     return AdDetailCardShell(
-      child: GridView.builder(
-        padding: EdgeInsets.all(
-          GetResponsiveSize.getResponsivePadding(context,
-              mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+      child: Padding(
+        padding: EdgeInsets.all(vehiclePadding),
+        child: Column(
+          children: [
+            // GridView for regular items
+            Expanded(
+              child: GridView.builder(
+                physics: const ClampingScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisExtent: vehicleItemHeight,
+                  crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                      mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+                  mainAxisSpacing: vehicleMainAxisSpacing,
+                ),
+                itemCount: regularItems.length,
+                itemBuilder: (_, i) => AdDetailSpecTile(spec: regularItems[i]),
+              ),
+            ),
+            // Additional Features - full width, scrollable
+            SizedBox(height: vehicleMainAxisSpacing),
+            SizedBox(
+              height: additionalFeaturesHeight,
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                child: AdDetailSpecTile(
+                  spec: AdDetailSpec(
+                      'Additional Features', additionalFeaturesText,
+                      icon: Icons.add_circle_outline),
+                ),
+              ),
+            ),
+          ],
         ),
-        physics: const ClampingScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisExtent: GetResponsiveSize.getResponsiveSize(context,
-              mobile: 80, tablet: 110, largeTablet: 130, desktop: 150),
-          crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
-              mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
-          mainAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
-              mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
-        ),
-        itemCount: items.length,
-        itemBuilder: (_, i) => AdDetailSpecTile(spec: items[i]),
       ),
     );
   }

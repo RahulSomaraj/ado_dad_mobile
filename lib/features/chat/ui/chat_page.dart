@@ -139,9 +139,7 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
-                    decoration: widget.adId != null
-                        ? TextDecoration.underline
-                        : TextDecoration.none,
+                    decoration: TextDecoration.none,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),

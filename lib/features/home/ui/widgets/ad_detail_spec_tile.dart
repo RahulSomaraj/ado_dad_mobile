@@ -15,12 +15,13 @@ class AdDetailSpecTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // For Description, align to top to allow proper text wrapping
-    final isDescription = spec.label == 'Description';
+    // For Description and Additional Features, align to top to allow proper text wrapping
+    final isLongText =
+        spec.label == 'Description' || spec.label == 'Additional Features';
 
     return Row(
       crossAxisAlignment:
-          isDescription ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+          isLongText ? CrossAxisAlignment.start : CrossAxisAlignment.center,
       children: [
         Container(
           height: GetResponsiveSize.getResponsiveSize(context,
@@ -47,9 +48,8 @@ class AdDetailSpecTile extends StatelessWidget {
         Expanded(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: isDescription
-                ? MainAxisAlignment.start
-                : MainAxisAlignment.center,
+            mainAxisAlignment:
+                isLongText ? MainAxisAlignment.start : MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(

@@ -3,9 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 /// Application configuration class that loads environment variables from .env file
 class AppConfig {
   // Base URL for API calls
-  static String get baseUrl =>
-      // dotenv.env['BASE_URL'] ?? 'https://uat.ado-dad.com';
-      dotenv.env['BASE_URL'] ?? '';
+  static String get baseUrl => dotenv.env['BASE_URL'] ?? '';
 
   // Google Places API Key for map integration
   static String get googlePlacesApiKey =>

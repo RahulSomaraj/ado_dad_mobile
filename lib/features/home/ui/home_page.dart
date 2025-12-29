@@ -432,14 +432,24 @@ class _HomePageState extends State<HomePage> {
             ),
           );
         } else if (state is FavoriteToggleError) {
-          // Show error message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              duration: const Duration(seconds: 2),
-              backgroundColor: Colors.red,
-            ),
-          );
+          // Check if error is about login - show login popup instead of snackbar
+          if (state.message.toLowerCase().contains('please login') ||
+              state.message.toLowerCase().contains('login')) {
+            DialogUtil.showLoginPromptDialog(
+              context,
+              message: state.message,
+              redirectPath: '/home',
+            );
+          } else {
+            // Show error message for other errors
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                duration: const Duration(seconds: 2),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
       },
       child: Scaffold(
@@ -1290,7 +1300,20 @@ class _HomePageState extends State<HomePage> {
                             }
 
                             return GestureDetector(
-                              onTap: () {
+                              onTap: () async {
+                                // Check authentication before allowing favorite toggle
+                                final isAuthenticated =
+                                    await AuthGuard.isAuthenticated();
+                                if (!isAuthenticated) {
+                                  DialogUtil.showLoginPromptDialog(
+                                    context,
+                                    message:
+                                        "Please login to add this ad to your favorites.",
+                                    redirectPath: '/home',
+                                  );
+                                  return;
+                                }
+
                                 context.read<FavoriteBloc>().add(
                                       FavoriteEvent.toggleFavorite(
                                         adId: ad.id,
