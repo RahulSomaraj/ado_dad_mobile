@@ -55,7 +55,11 @@ class _SearchPageState extends State<SearchPage> {
       final state = bloc.state;
 
       if (state is ListingsLoaded && state.hasMore) {
-        bloc.add(const FetchNextPageEvent());
+        if (_isSearching && !_isLocationSearchMode) {
+          bloc.add(const SearchNextPageEvent());
+        } else if (!_isSearching) {
+          bloc.add(const FetchNextPageEvent());
+        }
       }
     }
   }
@@ -208,23 +212,9 @@ class _SearchPageState extends State<SearchPage> {
       return;
     }
 
-    // Global search mode - search across multiple fields
-    final filteredList = allAds.where((ad) {
-      final searchQuery = query.toLowerCase();
-      return ad.description.toLowerCase().contains(searchQuery) ||
-          ad.category.toLowerCase().contains(searchQuery) ||
-          ad.location.toLowerCase().contains(searchQuery) ||
-          (ad.manufacturer?.name?.toLowerCase().contains(searchQuery) ??
-              false) ||
-          (ad.model?.name.toLowerCase().contains(searchQuery) ?? false) ||
-          (ad.vehicleType?.toLowerCase().contains(searchQuery) ?? false) ||
-          (ad.propertyType?.toLowerCase().contains(searchQuery) ?? false) ||
-          ad.price.toString().contains(searchQuery);
-    }).toList();
-
-    setState(() {
-      filteredAds = filteredList;
-    });
+    context.read<AdvertisementBloc>().add(
+          AdvertisementEvent.searchAds(query: query),
+        );
   }
 
   void _selectAddressSuggestion(String address) async {
@@ -558,10 +548,11 @@ class _SearchPageState extends State<SearchPage> {
                     loading: () {},
                     listingsLoaded: (listings, hasMore) {
                       setState(() {
-                        allAds = listings;
-                        // Always update filteredAds when new listings are loaded
-                        // If not currently searching, show all ads
-                        if (!_isSearching || _searchController.text.isEmpty) {
+                        // Update "all ads" only when not in search modes
+                        if (!_isSearching && !_isLocationSearchMode) {
+                          allAds = listings;
+                          filteredAds = listings;
+                        } else {
                           filteredAds = listings;
                         }
                       });

@@ -35,6 +35,10 @@ class AdvertisementEvent with _$AdvertisementEvent {
     required double latitude,
     required double longitude,
   }) = SearchByLocationEvent;
+  const factory AdvertisementEvent.searchAds({
+    required String query,
+  }) = SearchAdsEvent;
+  const factory AdvertisementEvent.searchNextPage() = SearchNextPageEvent;
   const factory AdvertisementEvent.fetchByUserId({
     required String userId,
   }) = FetchByUserIdEvent;

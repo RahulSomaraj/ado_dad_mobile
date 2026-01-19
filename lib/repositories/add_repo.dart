@@ -17,6 +17,7 @@ class AddRepository {
   Future<PaginatedAdsResponse> fetchAllAds({
     int page = 1,
     int limit = 20,
+    String? search,
     String? category,
     int? minYear,
     int? maxYear,
@@ -42,6 +43,7 @@ class AddRepository {
       final body = <String, dynamic>{
         'page': page,
         'limit': limit,
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         if (category != null) 'category': category,
         if (minYear != null) 'minYear': minYear,
         if (maxYear != null) 'maxYear': maxYear,

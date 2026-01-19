@@ -17,11 +17,16 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     on<ApplyFiltersEvent>(_onApplyFilters);
     on<UpdateAdFavoriteStatusEvent>(_onUpdateAdFavoriteStatus);
     on<SearchByLocationEvent>(_onSearchByLocation);
+    on<SearchAdsEvent>(_onSearchAds);
+    on<SearchNextPageEvent>(_onSearchNextPage);
     on<FetchByUserIdEvent>(_onFetchByUserId);
   }
 
   int _currentPage = 1;
   bool _isFetching = false;
+  bool _isSearchFetching = false;
+  int _searchPage = 1;
+  String? _searchQuery;
 
   // Active filters remembered by the bloc
   String? _categoryId;
@@ -269,6 +274,59 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
       // Emit user-friendly message instead of raw exception
       emit(AdvertisementState.error(
           "Unable to load recommendations. Please try again later."));
+    }
+  }
+
+  Future<void> _onSearchAds(
+      SearchAdsEvent event, Emitter<AdvertisementState> emit) async {
+    final query = event.query.trim();
+    if (query.isEmpty) return;
+
+    emit(const AdvertisementState.loading());
+    _searchQuery = query;
+    _searchPage = 1;
+
+    try {
+      print(
+          '🔍 Search API: /v2/ads/list page=$_searchPage limit=20 search="$query"');
+      final result = await repository.fetchAllAds(
+        page: _searchPage,
+        limit: 20,
+        search: query,
+      );
+      emit(AdvertisementState.listingsLoaded(
+          listings: result.data, hasMore: result.hasNext));
+    } catch (e) {
+      emit(AdvertisementState.error(
+          "Unable to load recommendations. Please try again later."));
+    }
+  }
+
+  Future<void> _onSearchNextPage(
+      SearchNextPageEvent event, Emitter<AdvertisementState> emit) async {
+    if (_isSearchFetching) return;
+    if (_searchQuery == null || _searchQuery!.isEmpty) return;
+
+    final currentState = state;
+    if (currentState is ListingsLoaded && currentState.hasMore) {
+      _isSearchFetching = true;
+      try {
+        _searchPage += 1;
+        print(
+            '🔍 Search API: /v2/ads/list page=$_searchPage limit=20 search="${_searchQuery!}"');
+        final result = await repository.fetchAllAds(
+          page: _searchPage,
+          limit: 20,
+          search: _searchQuery,
+        );
+        final updatedList = [...currentState.listings, ...result.data];
+        emit(ListingsLoaded(listings: updatedList, hasMore: result.hasNext));
+      } catch (e) {
+        emit(AdvertisementState.error(
+            "Unable to load more recommendations. Please try again later."));
+      } finally {
+        _isSearchFetching = false;
+      }
     }
   }
 
