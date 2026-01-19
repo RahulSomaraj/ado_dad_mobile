@@ -743,8 +743,11 @@ class _ChatPageState extends State<ChatPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load ad details: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            content: Text(
+              'Failed to load ad details: ${e.toString()}',
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red.shade300.withOpacity(0.9),
           ),
         );
       }

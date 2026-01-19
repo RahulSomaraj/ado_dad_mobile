@@ -62,9 +62,12 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
 
     if (_selectedReason.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a reason for reporting'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text(
+            'Please select a reason for reporting',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red.shade300.withOpacity(0.9),
         ),
       );
       return;
@@ -94,8 +97,11 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
             // Show success snackbar
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Ad reported successfully!'),
-                backgroundColor: Colors.green,
+                content: const Text(
+                  'Ad reported successfully!',
+                  style: TextStyle(color: Colors.white),
+                ),
+                backgroundColor: AppColors.primaryColor,
                 duration: const Duration(seconds: 3),
               ),
             );
@@ -109,8 +115,11 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
             // Show error snackbar after dialog is closed
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Failed to report ad: $message'),
-                backgroundColor: Colors.red,
+                content: Text(
+                  'Failed to report ad: $message',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                backgroundColor: Colors.red.shade300.withOpacity(0.9),
                 duration: const Duration(seconds: 4),
               ),
             );

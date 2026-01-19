@@ -211,11 +211,24 @@ class AppRoutes {
           final categoryId = state.uri.queryParameters['categoryId'];
           final categoryTitle = state.uri.queryParameters['title'];
           final currentFilters = state.extra as Map<String, dynamic>?;
+
+          // Determine vehicleCategory based on categoryId
+          // Note: Both "Car" and "Premium Vehicles" use categoryId 'private_vehicle'
+          // Both should show 'passenger_car' manufacturers
+          String? vehicleCategory;
+          if (categoryId == 'two_wheeler') {
+            vehicleCategory = 'two_wheeler';
+          } else if (categoryId == 'private_vehicle' ||
+              categoryId == 'commercial_vehicle') {
+            vehicleCategory = 'passenger_car';
+          }
+
           return MultiBlocProvider(
             providers: [
               BlocProvider(
                 create: (_) => ManufacturerBloc(repository: repo)
-                  ..add(const ManufacturerEvent.load()),
+                  ..add(
+                      ManufacturerEvent.load(vehicleCategory: vehicleCategory)),
               ),
               BlocProvider(
                 create: (_) => FuelTypeFilterBloc(repository: repo)

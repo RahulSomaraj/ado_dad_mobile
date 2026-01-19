@@ -28,16 +28,36 @@ class _SearchPageState extends State<SearchPage> {
   List<String> _addressSuggestions = [];
   bool _showSuggestions = false;
   late GooglePlacesService _placesService;
+  late ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
     // Initialize Google Places service
     _placesService = GooglePlacesService(apiKey: AppConfig.googlePlacesApiKey);
     // Initialize with all ads from the bloc
     _loadAllAds();
     // Ensure initial state shows all ads
     _isSearching = false;
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+
+    final threshold = 200; // px before bottom
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+
+    if (maxScroll - currentScroll <= threshold) {
+      final bloc = context.read<AdvertisementBloc>();
+      final state = bloc.state;
+
+      if (state is ListingsLoaded && state.hasMore) {
+        bloc.add(const FetchNextPageEvent());
+      }
+    }
   }
 
   void _loadAllAds() {
@@ -273,6 +293,13 @@ class _SearchPageState extends State<SearchPage> {
       filteredAds = filteredList;
       _isSearching = true;
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -550,7 +577,8 @@ class _SearchPageState extends State<SearchPage> {
                   return state.when(
                     initial: () => _buildLoadingState(),
                     loading: () => _buildLoadingState(),
-                    listingsLoaded: (listings, hasMore) => _buildAdsList(),
+                    listingsLoaded: (listings, hasMore) =>
+                        _buildAdsList(hasMore: hasMore),
                     error: (message) => _buildErrorState(message),
                   );
                 },
@@ -674,7 +702,7 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Widget _buildAdsList() {
+  Widget _buildAdsList({required bool hasMore}) {
     if (filteredAds.isEmpty) {
       return Center(
         child: Column(
@@ -704,8 +732,16 @@ class _SearchPageState extends State<SearchPage> {
     }
 
     return ListView.builder(
-      itemCount: filteredAds.length,
+      controller: _scrollController,
+      // itemCount: filteredAds.length + 1,
+      itemCount: hasMore ? filteredAds.length + 1 : filteredAds.length,
       itemBuilder: (BuildContext context, int index) {
+        if (index >= filteredAds.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
         final ad = filteredAds[index];
         return _buildAdCard(ad);
       },

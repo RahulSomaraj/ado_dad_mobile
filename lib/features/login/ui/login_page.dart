@@ -5,6 +5,7 @@ import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/common/widgets/common_decoration.dart';
 import 'package:ado_dad_user/features/login/bloc/login_bloc.dart';
+import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -25,6 +26,55 @@ class _LoginPageState extends State<LoginPage> {
   final GlobalKey<FormState> _loginFormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> _forgotPasswordFormKey = GlobalKey<FormState>();
 
+  String _selectedCountryCode = "+91";
+  String _selectedFlag = "🇮🇳";
+  bool _showCountryCode = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _usernameController.addListener(_onUsernameChanged);
+  }
+
+  @override
+  void dispose() {
+    _usernameController.removeListener(_onUsernameChanged);
+    _usernameController.dispose();
+    _passwordController.dispose();
+    _forgotPasswordEmailController.dispose();
+    super.dispose();
+  }
+
+  void _onUsernameChanged() {
+    final text = _usernameController.text;
+    // Hide country code if:
+    // 1. User types any character that suggests email (@ or any letter)
+    // 2. User types a phone number that already starts with + (already has country code)
+    // Show country code if field is empty or contains only digits without +
+    final hasEmailIndicator = text.contains('@') ||
+        (text.isNotEmpty && RegExp(r'[a-zA-Z]').hasMatch(text));
+    final hasCountryCodeInInput = text.trim().startsWith('+') &&
+        text.length > 1 &&
+        RegExp(r'^\+[0-9]+$').hasMatch(text.trim());
+
+    setState(() {
+      _showCountryCode = !hasEmailIndicator && !hasCountryCodeInInput;
+    });
+  }
+
+  void _showCountryPicker() {
+    showCountryPicker(
+      context: context,
+      showPhoneCode: true,
+      onSelect: (Country country) {
+        setState(() {
+          _selectedCountryCode = "+${country.phoneCode}";
+          _selectedFlag = country.flagEmoji;
+        });
+      },
+    );
+  }
+
   /// Helper function to validate if input is email or phone
   bool _isEmail(String value) {
     return RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
@@ -32,7 +82,10 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   bool _isPhone(String value) {
-    return RegExp(r"^[0-9]{10}$").hasMatch(value);
+    // Allow phone numbers with or without country code
+    // Remove + and spaces for validation
+    final cleaned = value.replaceAll(RegExp(r'[\s\+]'), '');
+    return RegExp(r"^[0-9]+$").hasMatch(cleaned);
   }
 
   String? _validateUsername(String? value) {
@@ -44,6 +97,27 @@ class _LoginPageState extends State<LoginPage> {
       return "Enter a valid email or phone number";
     }
     return null;
+  }
+
+  String _getFormattedUsername() {
+    final username = _usernameController.text.trim();
+
+    // If it's an email, return as is
+    if (_isEmail(username)) {
+      return username;
+    }
+
+    // If it's a phone number
+    if (_isPhone(username)) {
+      // If it already starts with +, return as is
+      if (username.startsWith('+')) {
+        return username;
+      }
+      // Otherwise, prepend the selected country code
+      return '$_selectedCountryCode$username';
+    }
+
+    return username;
   }
 
   Future<void> _openExternalUrl(String url) async {
@@ -441,6 +515,64 @@ class _LoginPageState extends State<LoginPage> {
             desktop: 24,
           ),
         ),
+        prefixIcon: _showCountryCode
+            ? Padding(
+                padding: const EdgeInsets.only(left: 10, right: 5),
+                child: GestureDetector(
+                  onTap: _showCountryPicker,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _selectedFlag,
+                        style: TextStyle(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 20.0,
+                            tablet: 25.0,
+                            largeTablet: 28.0,
+                            desktop: 30.0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      SizedBox(
+                        height: 25,
+                        child: const VerticalDivider(
+                          width: 10,
+                          thickness: 1.5,
+                          color: AppColors.greyColor,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        _selectedCountryCode,
+                        style: TextStyle(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 16.0,
+                            tablet: 18.0,
+                            largeTablet: 20.0,
+                            desktop: 22.0,
+                          ),
+                          color: AppColors.greyColor,
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_drop_down,
+                        size: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 20.0,
+                          tablet: 24.0,
+                          largeTablet: 26.0,
+                          desktop: 28.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : null,
       ),
       validator: _validateUsername,
     );
@@ -522,8 +654,11 @@ class _LoginPageState extends State<LoginPage> {
             // Show error message
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Error: $message'),
-                backgroundColor: Colors.red,
+                content: Text(
+                  'Error: $message',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                backgroundColor: Colors.red.shade300.withOpacity(0.9),
               ),
             );
           },
@@ -548,9 +683,10 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(10))),
             onPressed: () {
               if (_loginFormKey.currentState!.validate()) {
+                final formattedUsername = _getFormattedUsername();
                 context.read<LoginBloc>().add(
                       LoginEvent.login(
-                        username: _usernameController.text.trim(),
+                        username: formattedUsername,
                         password: _passwordController.text.trim(),
                       ),
                     );

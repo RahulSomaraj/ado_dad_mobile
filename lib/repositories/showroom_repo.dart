@@ -9,7 +9,7 @@ class ShowroomRepo {
   /// Fetches showroom users for authenticated users
   Future<List<ShowroomUser>> fetchShowroomUsers({
     int page = 1,
-    int limit = 10000,
+    int limit = 10,
   }) async {
     try {
       print(
@@ -81,10 +81,9 @@ class ShowroomRepo {
           print(
               '📄 Pagination info - total: $total, hasNext: $hasNext, currentPage: $currentPage');
 
-          // If there are more pages and we haven't reached the limit, fetch them
-          if ((hasNext == true ||
-                  (total != null && (currentPage * limit) < total)) &&
-              limit >= 1000) {
+          // If there are more pages, fetch them
+          if (hasNext == true ||
+              (total != null && (currentPage * limit) < total)) {
             print('🔄 Fetching additional pages...');
             // Fetch remaining pages
             int nextPage = currentPage + 1;
@@ -294,7 +293,7 @@ class ShowroomRepo {
   /// Fetches public showroom users (SR type) without authentication
   Future<List<ShowroomUser>> fetchPublicShowroomUsers({
     int page = 1,
-    int limit = 10000,
+    int limit = 10,
   }) async {
     try {
       print(

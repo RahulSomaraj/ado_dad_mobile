@@ -12,16 +12,33 @@ class ManufacturerBloc extends Bloc<ManufacturerEvent, ManufacturerState> {
   ManufacturerBloc({required this.repository})
       : super(const ManufacturerState.initial()) {
     on<_LoadManufacturers>(_onLoad);
+    on<_SearchManufacturers>(_onSearch);
   }
 
   Future<void> _onLoad(
       _LoadManufacturers event, Emitter<ManufacturerState> emit) async {
     emit(const ManufacturerState.loading());
     try {
-      final list = await repository.fetchManufacturers();
+      final list = await repository.fetchManufacturers(
+        vehicleCategory: event.vehicleCategory,
+      );
       emit(ManufacturerState.loaded(list));
     } catch (e) {
       emit(ManufacturerState.error('Failed to load brands: $e'));
+    }
+  }
+
+  Future<void> _onSearch(
+      _SearchManufacturers event, Emitter<ManufacturerState> emit) async {
+    emit(const ManufacturerState.loading());
+    try {
+      final list = await repository.fetchManufacturers(
+        search: event.query.isEmpty ? null : event.query,
+        vehicleCategory: event.vehicleCategory,
+      );
+      emit(ManufacturerState.loaded(list));
+    } catch (e) {
+      emit(ManufacturerState.error('Failed to search brands: $e'));
     }
   }
 }

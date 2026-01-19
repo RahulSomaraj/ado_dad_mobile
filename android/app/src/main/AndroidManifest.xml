@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <application
         android:label="ADO-DAD"
         android:name="${applicationName}"
@@ -34,7 +35,27 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Google Maps API Key -->
+        <!-- IMPORTANT: Replace YOUR_API_KEY_HERE in android/app/src/main/res/values/strings.xml -->
+        <!-- with your actual Google Maps API key from Google Cloud Console -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/google_maps_key"/>
     </application>
+    
+    <!-- IMPORTANT: Remove READ_MEDIA_IMAGES and READ_MEDIA_VIDEO permissions if added by plugins -->
+    <!-- These permissions are not needed because:
+         1. For Android 13+ (API 33+): Photo Picker API is used automatically (no permissions needed)
+         2. For Android 12 and below: READ_EXTERNAL_STORAGE is sufficient
+         Our app only needs one-time access to media files when users select them for upload -->
+    <!-- This removal MUST come before any other permissions to take effect during manifest merge -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove" />
+    
+    <!-- Permissions for Google Maps -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
@@ -60,5 +81,13 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    
+    <!-- Camera permission for taking photos with camera -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    
+    <!-- Storage permission - Only for Android 12 and below (API 32 and below) -->
+    <!-- For Android 13+ (API 33+), the Photo Picker API is used automatically by image_picker plugin -->
+    <!-- The Photo Picker API doesn't require any permissions for one-time media access -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
 
 </manifest>

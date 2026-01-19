@@ -4,6 +4,7 @@ class SignupModel {
   final String? type;
   final String name;
   final String phoneNumber;
+  final String? countryCode;
   final String email;
   final String? password;
   final String? username;
@@ -19,6 +20,7 @@ class SignupModel {
     this.type,
     required this.name,
     required this.phoneNumber,
+    this.countryCode,
     required this.email,
     this.password,
     this.username,
@@ -36,6 +38,7 @@ class SignupModel {
       type: json['type'],
       name: json['name'] ?? '',
       phoneNumber: json['phoneNumber'] ?? '',
+      countryCode: json['countryCode'],
       email: json['email'] ?? '',
       password: json['password'],
       username: json['username'],
@@ -89,9 +92,11 @@ class SignupModel {
       "name": name,
       "email": email,
       "phoneNumber": phoneNumber,
+      if (countryCode != null && countryCode!.isNotEmpty)
+        "countryCode": countryCode,
       if (password != null && password!.isNotEmpty) "password": password,
       if (type != null && type!.isNotEmpty)
-        "type": type, // remove if backend doesn’t expect it
+        "type": type, // remove if backend doesn't expect it
       if (username != null && username!.isNotEmpty) "username": username,
       if (profilePic != null && profilePic!.isNotEmpty)
         "profilePic": profilePic,
@@ -107,6 +112,7 @@ class SignupModel {
     String? type,
     String? name,
     String? phoneNumber,
+    String? countryCode,
     String? email,
     String? password,
     String? username,
@@ -122,6 +128,7 @@ class SignupModel {
       type: type ?? this.type,
       name: name ?? this.name,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      countryCode: countryCode ?? this.countryCode,
       email: email ?? this.email,
       password: password ?? this.password,
       username: username ?? this.username,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../ui/offer_popup.dart' as offer_popup;
 import 'package:ado_dad_user/services/chat_api_service.dart';
 import 'package:ado_dad_user/repositories/chat_repository.dart';
+import 'package:ado_dad_user/common/app_colors.dart';
 
 class OfferService {
   /// Show the offer popup and handle the complete offer flow
@@ -48,7 +49,8 @@ class OfferService {
         try {
           // Check room existence instead of sending offer
           // Pass the ScaffoldMessenger reference through the chain
-          await _checkRoomExists(context, adId, otherUserId, amount, pageScaffoldMessenger);
+          await _checkRoomExists(
+              context, adId, otherUserId, amount, pageScaffoldMessenger);
         } catch (e) {
           print('💥 Error in offer flow: $e');
           // Close loading dialog
@@ -62,8 +64,12 @@ class OfferService {
   }
 
   /// Check if room exists for the ad and other user
-  static Future<void> _checkRoomExists(BuildContext context, String adId,
-      String otherUserId, double offerAmount, ScaffoldMessengerState? scaffoldMessenger) async {
+  static Future<void> _checkRoomExists(
+      BuildContext context,
+      String adId,
+      String otherUserId,
+      double offerAmount,
+      ScaffoldMessengerState? scaffoldMessenger) async {
     try {
       print('🔍 Starting room existence check...');
       print('📋 Room check details:');
@@ -101,7 +107,8 @@ class OfferService {
         print('❌ No room exists for this ad and user combination');
         print('🔄 Proceeding to create new room...');
         // Create a new room since none exists
-        await _createRoomAndJoin(context, adId, otherUserId, offerAmount, scaffoldMessenger: scaffoldMessenger);
+        await _createRoomAndJoin(context, adId, otherUserId, offerAmount,
+            scaffoldMessenger: scaffoldMessenger);
       }
     } catch (e) {
       print('💥 Error checking room existence: $e');
@@ -115,8 +122,9 @@ class OfferService {
   }
 
   /// Create room and join when no room exists
-  static Future<void> _createRoomAndJoin(BuildContext context, String adId,
-      String otherUserId, double offerAmount, {ScaffoldMessengerState? scaffoldMessenger}) async {
+  static Future<void> _createRoomAndJoin(
+      BuildContext context, String adId, String otherUserId, double offerAmount,
+      {ScaffoldMessengerState? scaffoldMessenger}) async {
     try {
       print('🏠 Starting room creation process...');
       print('📋 Room creation details:');
@@ -176,7 +184,8 @@ class OfferService {
   /// Join room and provide single proper log
   static Future<void> _joinRoom(BuildContext context, String roomId,
       String adId, String otherUserId, double offerAmount,
-      {required bool isNewRoom, ScaffoldMessengerState? scaffoldMessenger}) async {
+      {required bool isNewRoom,
+      ScaffoldMessengerState? scaffoldMessenger}) async {
     try {
       print('🚪 Attempting to join room: $roomId');
       print('📋 Join details:');
@@ -198,7 +207,8 @@ class OfferService {
 
       // Send message to the room after successful join
       await _sendMessageToRoom(
-          context, roomId, adId, otherUserId, offerAmount, isNewRoom, scaffoldMessenger: scaffoldMessenger);
+          context, roomId, adId, otherUserId, offerAmount, isNewRoom,
+          scaffoldMessenger: scaffoldMessenger);
     } catch (e) {
       print(
           '❌ ROOM JOIN FAILED - Room ID: $roomId | Error: $e | Timestamp: ${DateTime.now().toIso8601String()}');
@@ -222,13 +232,8 @@ class OfferService {
   }
 
   /// Send message to room after successful join
-  static Future<void> _sendMessageToRoom(
-      BuildContext context,
-      String roomId,
-      String adId,
-      String otherUserId,
-      double offerAmount,
-      bool isNewRoom,
+  static Future<void> _sendMessageToRoom(BuildContext context, String roomId,
+      String adId, String otherUserId, double offerAmount, bool isNewRoom,
       {ScaffoldMessengerState? scaffoldMessenger}) async {
     // Use the passed ScaffoldMessenger if available, otherwise try to get it
     if (scaffoldMessenger == null) {
@@ -246,7 +251,7 @@ class OfferService {
         print('⚠️ Could not get ScaffoldMessenger: $e');
       }
     }
-    
+
     try {
       print('📤 Sending message to room: $roomId');
       print('📋 Message details:');
@@ -298,15 +303,16 @@ class OfferService {
                     Expanded(
                       child: Text(
                         'Offer message sent successfully!',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
+                          color: Colors.white,
                         ),
                       ),
                     ),
                   ],
                 ),
-                backgroundColor: Colors.green.shade600,
+                backgroundColor: AppColors.primaryColor,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -318,18 +324,20 @@ class OfferService {
           } else {
             // Fallback: Try to get ScaffoldMessenger from root navigator
             try {
-              final rootNavigator = Navigator.maybeOf(context, rootNavigator: true);
+              final rootNavigator =
+                  Navigator.maybeOf(context, rootNavigator: true);
               ScaffoldMessengerState? fallbackMessenger;
-              
+
               if (rootNavigator != null && rootNavigator.context.mounted) {
-                fallbackMessenger = ScaffoldMessenger.maybeOf(rootNavigator.context);
+                fallbackMessenger =
+                    ScaffoldMessenger.maybeOf(rootNavigator.context);
               }
-              
+
               // If still null, try the passed context
               if (fallbackMessenger == null) {
                 fallbackMessenger = ScaffoldMessenger.maybeOf(context);
               }
-              
+
               if (fallbackMessenger != null) {
                 fallbackMessenger.showSnackBar(
                   SnackBar(
@@ -344,15 +352,16 @@ class OfferService {
                         Expanded(
                           child: Text(
                             'Offer message sent successfully!',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
+                              color: Colors.white,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    backgroundColor: Colors.green.shade600,
+                    backgroundColor: AppColors.primaryColor,
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

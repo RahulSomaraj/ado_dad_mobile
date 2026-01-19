@@ -12,6 +12,7 @@ class ModelFilterBloc extends Bloc<ModelFilterEvent, ModelFilterState> {
   ModelFilterBloc({required this.repository})
       : super(const ModelFilterState.initial()) {
     on<_LoadModels>(_onLoad);
+    on<_SearchModels>(_onSearch);
   }
 
   Future<void> _onLoad(
@@ -22,6 +23,19 @@ class ModelFilterBloc extends Bloc<ModelFilterEvent, ModelFilterState> {
       emit(ModelFilterState.loaded(list));
     } catch (e) {
       emit(ModelFilterState.error('Failed to load models: $e'));
+    }
+  }
+
+  Future<void> _onSearch(
+      _SearchModels event, Emitter<ModelFilterState> emit) async {
+    emit(const ModelFilterState.loading());
+    try {
+      final list = await repository.fetchModals(
+        search: event.query.isEmpty ? null : event.query,
+      );
+      emit(ModelFilterState.loaded(list));
+    } catch (e) {
+      emit(ModelFilterState.error('Failed to search models: $e'));
     }
   }
 }

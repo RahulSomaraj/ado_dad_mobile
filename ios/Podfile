@@ -36,4 +36,30 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
   end
+  
+  # Sync Google Maps API key from .env to Info.plist
+  env_file = File.expand_path('../.env', __FILE__)
+  info_plist = File.expand_path('../Runner/Info.plist', __FILE__)
+  
+  if File.exist?(env_file) && File.exist?(info_plist)
+    begin
+      api_key = nil
+      File.readlines(env_file).each do |line|
+        if line.start_with?('GOOGLE_PLACES_API_KEY=')
+          api_key = line.split('=', 2)[1].strip.gsub(/^["']|["']$/, '')
+          break
+        end
+      end
+      
+      if api_key && !api_key.empty?
+        # Use plutil to update Info.plist
+        system("plutil -replace GMSApiKey -string \"#{api_key}\" \"#{info_plist}\"")
+        puts "✅ Synced Google Maps API key to Info.plist"
+      else
+        puts "⚠️ Warning: GOOGLE_PLACES_API_KEY not found in .env file"
+      end
+    rescue => e
+      puts "⚠️ Warning: Could not sync API key: #{e.message}"
+    end
+  end
 end

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
@@ -27,6 +28,9 @@ class CarFiltersPage extends StatefulWidget {
 }
 
 class _CarFiltersPageState extends State<CarFiltersPage> {
+  // Left-pane filter categories – same for all vehicle categories
+  // (including two wheelers). Only the manufacturer list itself is
+  // filtered by vehicleCategory for bikes.
   final List<String> categories = const [
     'Brands',
     'Model',
@@ -40,6 +44,8 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
   int selectedCategoryIndex = 0;
   String brandQuery = '';
   String modelQuery = '';
+  String fuelTypeQuery = '';
+  String transmissionQuery = '';
   final Set<String> _selectedManufacturerIds = {};
   final Set<String> _selectedFuelTypeIds = {};
   final Set<String> _selectedTransmissionTypeIds = {};
@@ -48,14 +54,46 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
   final _maxYearCtrl = TextEditingController();
   final _minPriceCtrl = TextEditingController();
   final _maxPriceCtrl = TextEditingController();
+  final _brandSearchCtrl = TextEditingController();
+  final _modelSearchCtrl = TextEditingController();
 
   // Filter state service
   final FilterStateService _filterStateService = FilterStateService();
+
+  // Debounce timer for manufacturer search
+  Timer? _manufacturerSearchTimer;
+  // Debounce timer for model search
+  Timer? _modelSearchTimer;
 
   @override
   void initState() {
     super.initState();
     _loadSavedFilterState();
+    // Load manufacturers with appropriate vehicleCategory on init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final vehicleCategory = _getVehicleCategoryForFilter();
+        context.read<ManufacturerBloc>().add(
+              ManufacturerEvent.load(vehicleCategory: vehicleCategory),
+            );
+      }
+    });
+  }
+
+  /// Get vehicleCategory based on categoryId for filter page
+  /// Car (private_vehicle), Premium Vehicle (private_vehicle), Commercial Vehicle (commercial_vehicle) → passenger_car
+  /// Bike (two_wheeler) → two_wheeler
+  String? _getVehicleCategoryForFilter() {
+    final categoryId = widget.categoryId;
+    if (categoryId == 'two_wheeler') {
+      return 'two_wheeler';
+    }
+    // Both "Car" and "Premium Vehicles" use categoryId 'private_vehicle'
+    // Both should show 'passenger_car' manufacturers
+    if (categoryId == 'private_vehicle' || categoryId == 'commercial_vehicle') {
+      return 'passenger_car';
+    }
+    return null; // No filter if category is not recognized
   }
 
   void _loadSavedFilterState() {
@@ -79,8 +117,36 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
           _minPriceCtrl.text = savedState.minPrice ?? '';
           _maxPriceCtrl.text = savedState.maxPrice ?? '';
           brandQuery = savedState.brandQuery;
+          _brandSearchCtrl.text = savedState.brandQuery;
           modelQuery = savedState.modelQuery;
+          _modelSearchCtrl.text = savedState.modelQuery;
         });
+
+        // If there's a saved brandQuery, trigger a search after the page is built
+        if (savedState.brandQuery.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              final vehicleCategory = _getVehicleCategoryForFilter();
+              context.read<ManufacturerBloc>().add(
+                    ManufacturerEvent.search(
+                      savedState.brandQuery,
+                      vehicleCategory: vehicleCategory,
+                    ),
+                  );
+            }
+          });
+        }
+
+        // If there's a saved modelQuery, trigger a search after the page is built
+        if (savedState.modelQuery.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              context.read<ModelFilterBloc>().add(
+                    ModelFilterEvent.search(savedState.modelQuery),
+                  );
+            }
+          });
+        }
       }
     }
   }
@@ -105,10 +171,14 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
 
   @override
   void dispose() {
+    _manufacturerSearchTimer?.cancel();
+    _modelSearchTimer?.cancel();
     _minYearCtrl.dispose();
     _maxYearCtrl.dispose();
     _minPriceCtrl.dispose();
     _maxPriceCtrl.dispose();
+    _brandSearchCtrl.dispose();
+    _modelSearchCtrl.dispose();
     super.dispose();
   }
 
@@ -117,7 +187,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
     final theme = Theme.of(context);
     final leftPaneWidth = GetResponsiveSize.getResponsiveSize(
       context,
-      mobile: 150.0, // Keep mobile unchanged
+      mobile: 170.0, // Increased to accommodate "Transmission" on one line
       tablet: 200.0,
       largeTablet: 260.0,
       desktop: 300.0,
@@ -266,12 +336,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                           ),
                           error: (msg) => Center(child: Text(msg)),
                           loaded: (items) {
-                            final filtered = items.where((m) {
-                              final name = m.displayName.toLowerCase();
-                              return brandQuery.isEmpty ||
-                                  name.contains(brandQuery.toLowerCase());
-                            }).toList();
-
+                            // No client-side filtering needed - already filtered by API
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -307,8 +372,43 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                                     ),
                                   ),
                                   child: TextField(
-                                    onChanged: (v) =>
-                                        setState(() => brandQuery = v),
+                                    controller: _brandSearchCtrl,
+                                    onChanged: (v) {
+                                      setState(() => brandQuery = v);
+                                      // Cancel previous timer
+                                      _manufacturerSearchTimer?.cancel();
+
+                                      // Create new timer with 500ms delay for debouncing
+                                      _manufacturerSearchTimer = Timer(
+                                          const Duration(milliseconds: 500),
+                                          () {
+                                        if (mounted) {
+                                          final vehicleCategory =
+                                              _getVehicleCategoryForFilter();
+                                          // If search is empty, load all manufacturers, otherwise search
+                                          if (v.isEmpty) {
+                                            context
+                                                .read<ManufacturerBloc>()
+                                                .add(
+                                                  ManufacturerEvent.load(
+                                                    vehicleCategory:
+                                                        vehicleCategory,
+                                                  ),
+                                                );
+                                          } else {
+                                            context
+                                                .read<ManufacturerBloc>()
+                                                .add(
+                                                  ManufacturerEvent.search(
+                                                    v,
+                                                    vehicleCategory:
+                                                        vehicleCategory,
+                                                  ),
+                                                );
+                                          }
+                                        }
+                                      });
+                                    },
                                     style: TextStyle(
                                       fontSize: GetResponsiveSize
                                           .getResponsiveFontSize(
@@ -429,9 +529,9 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                                   child: ListView.separated(
                                     padding:
                                         const EdgeInsets.fromLTRB(8, 8, 8, 20),
-                                    itemCount: filtered.length,
+                                    itemCount: items.length,
                                     itemBuilder: (_, i) {
-                                      final m = filtered[i];
+                                      final m = items[i];
                                       final id = m.id;
                                       final name = m.displayName.trim();
                                       final checked =
@@ -517,12 +617,6 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                           ),
                           error: (msg) => Center(child: Text(msg)),
                           loaded: (items) {
-                            final filtered = items.where((m) {
-                              final name = m.displayName.toLowerCase();
-                              return modelQuery.isEmpty ||
-                                  name.contains(modelQuery.toLowerCase());
-                            }).toList();
-
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -558,8 +652,30 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                                     ),
                                   ),
                                   child: TextField(
-                                    onChanged: (v) =>
-                                        setState(() => modelQuery = v),
+                                    controller: _modelSearchCtrl,
+                                    onChanged: (v) {
+                                      setState(() => modelQuery = v);
+                                      // Cancel previous timer
+                                      _modelSearchTimer?.cancel();
+
+                                      // Create new timer with 500ms delay for debouncing
+                                      _modelSearchTimer = Timer(
+                                          const Duration(milliseconds: 500),
+                                          () {
+                                        if (mounted) {
+                                          // If search is empty, load all models, otherwise search
+                                          if (v.isEmpty) {
+                                            context.read<ModelFilterBloc>().add(
+                                                  const ModelFilterEvent.load(),
+                                                );
+                                          } else {
+                                            context.read<ModelFilterBloc>().add(
+                                                  ModelFilterEvent.search(v),
+                                                );
+                                          }
+                                        }
+                                      });
+                                    },
                                     style: TextStyle(
                                       fontSize: GetResponsiveSize
                                           .getResponsiveFontSize(
@@ -631,9 +747,9 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                                   child: ListView.separated(
                                     padding:
                                         const EdgeInsets.fromLTRB(8, 8, 8, 20),
-                                    itemCount: filtered.length,
+                                    itemCount: items.length,
                                     itemBuilder: (_, i) {
-                                      final m = filtered[i];
+                                      final m = items[i];
                                       final id = m.id;
                                       final name = m.displayName.trim();
                                       final checked =
@@ -719,32 +835,113 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                           loaded: (items) {
                             final filtered = items.where((m) {
                               final name = m.displayName.toLowerCase();
-                              return brandQuery.isEmpty ||
-                                  name.contains(brandQuery.toLowerCase());
+                              return fuelTypeQuery.isEmpty ||
+                                  name.contains(fuelTypeQuery.toLowerCase());
                             }).toList();
 
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Padding(
-                                //   padding:
-                                //       const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                                //   child: TextField(
-                                //     onChanged: (v) =>
-                                //         setState(() => brandQuery = v),
-                                //     decoration: InputDecoration(
-                                //       prefixIcon:
-                                //           const Icon(Icons.search_rounded),
-                                //       hintText: 'Search Brand',
-                                //       contentPadding:
-                                //           const EdgeInsets.symmetric(
-                                //               vertical: 14, horizontal: 12),
-                                //       border: OutlineInputBorder(
-                                //         borderRadius: BorderRadius.circular(6),
-                                //       ),
-                                //     ),
-                                //   ),
-                                // ),
+                                Padding(
+                                  padding: EdgeInsets.fromLTRB(
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28,
+                                    ),
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28,
+                                    ),
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28,
+                                    ),
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 8,
+                                      tablet: 10,
+                                      largeTablet: 12,
+                                      desktop: 14,
+                                    ),
+                                  ),
+                                  child: TextField(
+                                    onChanged: (v) =>
+                                        setState(() => fuelTypeQuery = v),
+                                    style: TextStyle(
+                                      fontSize: GetResponsiveSize
+                                          .getResponsiveFontSize(
+                                        context,
+                                        mobile: 16.0, // Keep mobile unchanged
+                                        tablet: 20.0,
+                                        largeTablet: 22.0,
+                                        desktop: 24.0,
+                                      ),
+                                    ),
+                                    decoration: InputDecoration(
+                                      prefixIcon: Icon(
+                                        Icons.search_rounded,
+                                        size:
+                                            GetResponsiveSize.getResponsiveSize(
+                                          context,
+                                          mobile: 24.0, // Keep mobile unchanged
+                                          tablet: 28.0,
+                                          largeTablet: 32.0,
+                                          desktop: 36.0,
+                                        ),
+                                      ),
+                                      hintText: 'Search Fuel Type',
+                                      hintStyle: TextStyle(
+                                        fontSize: GetResponsiveSize
+                                            .getResponsiveFontSize(
+                                          context,
+                                          mobile: 16.0, // Keep mobile unchanged
+                                          tablet: 20.0,
+                                          largeTablet: 22.0,
+                                          desktop: 24.0,
+                                        ),
+                                      ),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        vertical: GetResponsiveSize
+                                            .getResponsivePadding(
+                                          context,
+                                          mobile: 14,
+                                          tablet: 18,
+                                          largeTablet: 22,
+                                          desktop: 26,
+                                        ),
+                                        horizontal: GetResponsiveSize
+                                            .getResponsivePadding(
+                                          context,
+                                          mobile: 12,
+                                          tablet: 16,
+                                          largeTablet: 20,
+                                          desktop: 24,
+                                        ),
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          GetResponsiveSize
+                                              .getResponsiveBorderRadius(
+                                            context,
+                                            mobile: 6,
+                                            tablet: 8,
+                                            largeTablet: 10,
+                                            desktop: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                                 const Divider(height: 1),
                                 Expanded(
                                   child: ListView.separated(
@@ -839,32 +1036,114 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                           loaded: (items) {
                             final filtered = items.where((m) {
                               final name = m.displayName.toLowerCase();
-                              return brandQuery.isEmpty ||
-                                  name.contains(brandQuery.toLowerCase());
+                              return transmissionQuery.isEmpty ||
+                                  name.contains(
+                                      transmissionQuery.toLowerCase());
                             }).toList();
 
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Padding(
-                                //   padding:
-                                //       const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                                //   child: TextField(
-                                //     onChanged: (v) =>
-                                //         setState(() => brandQuery = v),
-                                //     decoration: InputDecoration(
-                                //       prefixIcon:
-                                //           const Icon(Icons.search_rounded),
-                                //       hintText: 'Search Brand',
-                                //       contentPadding:
-                                //           const EdgeInsets.symmetric(
-                                //               vertical: 14, horizontal: 12),
-                                //       border: OutlineInputBorder(
-                                //         borderRadius: BorderRadius.circular(6),
-                                //       ),
-                                //     ),
-                                //   ),
-                                // ),
+                                Padding(
+                                  padding: EdgeInsets.fromLTRB(
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28,
+                                    ),
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28,
+                                    ),
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 20,
+                                      largeTablet: 24,
+                                      desktop: 28,
+                                    ),
+                                    GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 8,
+                                      tablet: 10,
+                                      largeTablet: 12,
+                                      desktop: 14,
+                                    ),
+                                  ),
+                                  child: TextField(
+                                    onChanged: (v) =>
+                                        setState(() => transmissionQuery = v),
+                                    style: TextStyle(
+                                      fontSize: GetResponsiveSize
+                                          .getResponsiveFontSize(
+                                        context,
+                                        mobile: 16.0, // Keep mobile unchanged
+                                        tablet: 20.0,
+                                        largeTablet: 22.0,
+                                        desktop: 24.0,
+                                      ),
+                                    ),
+                                    decoration: InputDecoration(
+                                      prefixIcon: Icon(
+                                        Icons.search_rounded,
+                                        size:
+                                            GetResponsiveSize.getResponsiveSize(
+                                          context,
+                                          mobile: 24.0, // Keep mobile unchanged
+                                          tablet: 28.0,
+                                          largeTablet: 32.0,
+                                          desktop: 36.0,
+                                        ),
+                                      ),
+                                      hintText: 'Search Transmission',
+                                      hintStyle: TextStyle(
+                                        fontSize: GetResponsiveSize
+                                            .getResponsiveFontSize(
+                                          context,
+                                          mobile: 16.0, // Keep mobile unchanged
+                                          tablet: 20.0,
+                                          largeTablet: 22.0,
+                                          desktop: 24.0,
+                                        ),
+                                      ),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        vertical: GetResponsiveSize
+                                            .getResponsivePadding(
+                                          context,
+                                          mobile: 14,
+                                          tablet: 18,
+                                          largeTablet: 22,
+                                          desktop: 26,
+                                        ),
+                                        horizontal: GetResponsiveSize
+                                            .getResponsivePadding(
+                                          context,
+                                          mobile: 12,
+                                          tablet: 16,
+                                          largeTablet: 20,
+                                          desktop: 24,
+                                        ),
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          GetResponsiveSize
+                                              .getResponsiveBorderRadius(
+                                            context,
+                                            mobile: 6,
+                                            tablet: 8,
+                                            largeTablet: 10,
+                                            desktop: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                                 const Divider(height: 1),
                                 Expanded(
                                   child: ListView.separated(

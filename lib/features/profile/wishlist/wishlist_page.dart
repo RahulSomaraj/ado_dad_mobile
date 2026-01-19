@@ -68,7 +68,11 @@ class _WishlistPageState extends State<WishlistPage> {
           // Show success message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.message),
+              content: Text(
+                state.message,
+                style: const TextStyle(color: Colors.white),
+              ),
+              backgroundColor: AppColors.primaryColor,
               duration: const Duration(seconds: 2),
             ),
           );
@@ -81,9 +85,12 @@ class _WishlistPageState extends State<WishlistPage> {
           // Show error message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.message),
+              content: Text(
+                state.message,
+                style: const TextStyle(color: Colors.white),
+              ),
               duration: const Duration(seconds: 2),
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.red.shade300.withOpacity(0.9),
             ),
           );
         }

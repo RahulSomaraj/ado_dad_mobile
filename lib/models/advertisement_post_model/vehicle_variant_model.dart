@@ -6,8 +6,8 @@ class VehicleVariant {
 
   factory VehicleVariant.fromJson(Map<String, dynamic> json) {
     return VehicleVariant(
-      id: json['_id'],
-      name: json['name'],
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
+      name: (json['name'] ?? json['displayName'] ?? '').toString(),
     );
   }
 

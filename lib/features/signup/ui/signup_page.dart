@@ -6,8 +6,10 @@ import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/features/signup/bloc/signup_bloc.dart';
 import 'package:ado_dad_user/models/signup_model.dart';
+import 'package:country_picker/country_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -24,6 +26,8 @@ class _SignupPageState extends State<SignupPage> {
   String _name = '';
   String _email = '';
   String _phone = '';
+  String _countryCode = "+1";
+  String _selectedFlag = "🇺🇸";
   String _password = '';
 
   Uint8List? _avatarBytes; // <-- NEW: local preview bytes
@@ -45,6 +49,19 @@ class _SignupPageState extends State<SignupPage> {
     }
   }
 
+  void _showCountryPicker() {
+    showCountryPicker(
+      context: context,
+      showPhoneCode: true,
+      onSelect: (Country country) {
+        setState(() {
+          _countryCode = "+${country.phoneCode}";
+          _selectedFlag = country.flagEmoji;
+        });
+      },
+    );
+  }
+
   void _signUp() {
     if (_signupFormKey.currentState!.validate()) {
       _signupFormKey.currentState!.save();
@@ -54,6 +71,7 @@ class _SignupPageState extends State<SignupPage> {
           name: _name,
           email: _email,
           phoneNumber: _phone,
+          countryCode: _countryCode,
           password: _password,
           type: 'NU');
 
@@ -350,12 +368,105 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Widget _buildPhoneField() {
-    return GetInput(
-      label: "Phone Number",
-      initialValue: '',
-      onSaved: (value) => _phone = value!,
-      isPhone: true,
+    return _buildPhoneNumberField();
+  }
+
+  Widget _buildPhoneNumberField() {
+    final textField = TextFormField(
+      initialValue: _phone,
+      onSaved: (value) => _phone = value ?? "",
+      keyboardType: TextInputType.phone,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+      ],
+      style: TextStyle(
+        fontSize: GetResponsiveSize.getResponsiveFontSize(
+          context,
+          mobile: 16.0,
+          tablet: 20.0,
+          largeTablet: 22.0,
+          desktop: 24.0,
+        ),
+      ),
+      decoration: InputDecoration(
+        labelText: "Phone Number",
+        labelStyle: TextStyle(
+          fontSize: GetResponsiveSize.getResponsiveFontSize(
+            context,
+            mobile: 16.0,
+            tablet: 20.0,
+            largeTablet: 22.0,
+            desktop: 24.0,
+          ),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 12,
+            tablet: 16,
+            largeTablet: 18,
+            desktop: 20,
+          ),
+          vertical: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 16,
+            tablet: 20,
+            largeTablet: 22,
+            desktop: 24,
+          ),
+        ),
+        prefixIcon: Padding(
+          padding: const EdgeInsets.only(left: 10, right: 5),
+          child: GestureDetector(
+            onTap: _showCountryPicker,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(_selectedFlag, style: const TextStyle(fontSize: 25)),
+                const SizedBox(width: 10),
+                SizedBox(
+                  height: 25,
+                  child: const VerticalDivider(
+                      width: 10, thickness: 1.5, color: AppColors.greyColor),
+                ),
+                const SizedBox(width: 10),
+                Text(_countryCode,
+                    style: const TextStyle(
+                        fontSize: 16, color: AppColors.greyColor)),
+                const Icon(Icons.arrow_drop_down, size: 20),
+              ],
+            ),
+          ),
+        ),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return "Phone Number is required";
+        }
+        if (!RegExp(r"^[0-9]+$").hasMatch(value)) {
+          return "Enter a valid phone number";
+        }
+        return null;
+      },
     );
+
+    // Wrap in SizedBox only for tablets and above to increase field height
+    if (GetResponsiveSize.isTablet(context)) {
+      return SizedBox(
+        height: GetResponsiveSize.getResponsiveSize(
+          context,
+          mobile: 0, // Not used since we check isTablet first
+          tablet: 65,
+          largeTablet: 75,
+          desktop: 85,
+        ),
+        child: textField,
+      );
+    }
+    return textField;
   }
 
   Widget _buildPasswordField() {

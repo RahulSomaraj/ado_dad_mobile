@@ -5,6 +5,7 @@ import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/error_message_util.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
+import 'package:ado_dad_user/common/widgets/location_picker_widget.dart';
 import 'package:ado_dad_user/features/home/ad_edit/bloc/ad_edit_bloc.dart';
 import 'package:ado_dad_user/features/home/ui/edit_add_details/widgets/checkbox_toggle_widget.dart';
 import 'package:ado_dad_user/features/home/ui/edit_add_details/widgets/features_selection_widget.dart';
@@ -34,8 +35,11 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
   // controllers (text fields)
   late final TextEditingController _titleCtrl;
   late final TextEditingController _priceCtrl;
-  late final TextEditingController _locationCtrl;
   late final TextEditingController _areaCtrl;
+
+  String _location = '';
+  double? _latitude;
+  double? _longitude;
   late final TextEditingController _floorCtrl;
   late final TextEditingController _bedroomsCtrl;
   late final TextEditingController _bathroomsCtrl;
@@ -77,7 +81,11 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
     // Prefill from ad
     _titleCtrl = TextEditingController(text: widget.ad.title ?? '');
     _priceCtrl = TextEditingController(text: widget.ad.price.toString());
-    _locationCtrl = TextEditingController(text: widget.ad.location);
+    _location = widget.ad.location;
+
+    // Initialize location coordinates if available
+    _latitude = null; // widget.ad.latitude if available
+    _longitude = null; // widget.ad.longitude if available
 
     // Ensure description is correctly assigned
     _descCtrl = TextEditingController(text: widget.ad.description);
@@ -130,7 +138,6 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
   void dispose() {
     _titleCtrl.dispose();
     _priceCtrl.dispose();
-    _locationCtrl.dispose();
     _areaCtrl.dispose();
     _floorCtrl.dispose();
     _bedroomsCtrl.dispose();
@@ -234,7 +241,9 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
     final payload = <String, dynamic>{
       "title": _titleCtrl.text.trim(), // Include title like other fields
       "price": int.tryParse(_priceCtrl.text.trim()),
-      "location": _locationCtrl.text.trim(),
+      "location": _location,
+      if (_latitude != null) "latitude": _latitude,
+      if (_longitude != null) "longitude": _longitude,
       "description": _descCtrl.text.trim(),
       "images": _imageUrls,
       "propertyType": _selectedPropertyType,
@@ -334,7 +343,13 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
               ),
               success: (updated) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('✅ Saved')),
+                  SnackBar(
+                    content: const Text(
+                      '✅ Saved',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: AppColors.primaryColor,
+                  ),
                 );
                 context
                     .read<AdvertisementBloc>()
@@ -344,8 +359,12 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
               failure: (msg) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content:
-                          Text(ErrorMessageUtil.getUserFriendlyMessage(msg))),
+                    content: Text(
+                      ErrorMessageUtil.getUserFriendlyMessage(msg),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.red.shade300.withOpacity(0.9),
+                  ),
                 );
               },
             );
@@ -398,11 +417,24 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
                           largeTablet: 18,
                           desktop: 22)),
 
-                  GetInput(
+                  LocationPickerWidget(
                     label: 'Location',
-                    controller: _locationCtrl,
-                    // validator: (v) =>
-                    //     (v == null || v.trim().isEmpty) ? 'Required' : null,
+                    initialLocation: _location,
+                    initialLatitude: _latitude,
+                    initialLongitude: _longitude,
+                    onLocationSelected: (location, latitude, longitude) {
+                      setState(() {
+                        _location = location;
+                        _latitude = latitude;
+                        _longitude = longitude;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select a location';
+                      }
+                      return null;
+                    },
                   ),
                   SizedBox(
                       height: GetResponsiveSize.getResponsiveSize(context,
@@ -501,12 +533,14 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
                           ),
                           child: GetInput(
                             label: 'Description',
+                            isDescription: true,
                             maxLines: 5,
                             controller: _descCtrl,
                           ),
                         )
                       : GetInput(
                           label: 'Description',
+                          isDescription: true,
                           maxLines: 5,
                           controller: _descCtrl,
                         ),

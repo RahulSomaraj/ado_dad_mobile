@@ -46,6 +46,13 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	
+	<!-- Google Maps API Key -->
+	<!-- This value is auto-generated from .env file during build -->
+	<!-- DO NOT edit manually - your changes will be overwritten -->
+	<!-- The API key is read from GOOGLE_PLACES_API_KEY in your .env file -->
+	<key>GMSApiKey</key>
+	<string>PLACEHOLDER_WILL_BE_REPLACED_BY_BUILD</string>
+	
 	<!-- Location Permissions -->
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app needs access to location when open to show nearby vehicles and services.</string>

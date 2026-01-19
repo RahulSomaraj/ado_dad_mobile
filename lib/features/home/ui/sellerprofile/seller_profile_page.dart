@@ -338,6 +338,18 @@ class _SellerCard extends StatelessWidget {
   const _SellerCard({required this.seller});
   final AdUser seller;
 
+  String _formatPhoneNumber(String? countryCode, String phone) {
+    final trimmedCountryCode = countryCode?.trim();
+    if (trimmedCountryCode != null && trimmedCountryCode.isNotEmpty) {
+      // Ensure country code starts with + if it doesn't already
+      final formattedCountryCode = trimmedCountryCode.startsWith('+')
+          ? trimmedCountryCode
+          : '+$trimmedCountryCode';
+      return '$formattedCountryCode $phone';
+    }
+    return phone;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -405,7 +417,7 @@ class _SellerCard extends StatelessWidget {
                 ],
                 if (seller.phone?.trim().isNotEmpty == true) ...[
                   Text(
-                    seller.phone!,
+                    _formatPhoneNumber(seller.countryCode, seller.phone!),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF111827),

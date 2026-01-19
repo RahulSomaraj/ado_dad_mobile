@@ -5,6 +5,7 @@ import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/widgets/common_decoration.dart';
 import 'package:ado_dad_user/features/login/bloc/otp_bloc.dart';
+import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,6 +25,16 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
   /// false = phone mode (default), true = email mode
   bool _emailMode = false;
 
+  /// Selected country code when in phone mode
+  String _selectedCountryCode = '+91';
+
+  /// Selected flag emoji for the chosen country (for display only)
+  String _selectedFlag = '🇮🇳';
+
+  /// Stores the last identifier used for sending OTP so that we reuse
+  /// the exact same value during navigation, resend, etc.
+  String? _lastIdentifier;
+
   /// Helper function to validate if input is email or phone
   bool _isEmail(String value) {
     return RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
@@ -31,7 +42,7 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
   }
 
   bool _isPhone(String value) {
-    return RegExp(r"^[0-9]{10}$").hasMatch(value);
+    return RegExp(r"^[0-9]+$").hasMatch(value);
   }
 
   String? _validateInput(String? value) {
@@ -51,6 +62,31 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
     return null;
   }
 
+  /// Builds the identifier value that is sent to the backend.
+  /// - For email mode: plain email
+  /// - For phone mode: `<countryCode><phoneNumber>` e.g. `+937559052468`
+  String _buildIdentifier() {
+    final trimmedValue = _otpInputController.text.trim();
+    if (_emailMode) {
+      return trimmedValue;
+    }
+    if (trimmedValue.isEmpty) return '';
+    return '$_selectedCountryCode$trimmedValue';
+  }
+
+  void _showCountryPicker() {
+    showCountryPicker(
+      context: context,
+      showPhoneCode: true,
+      onSelect: (Country country) {
+        setState(() {
+          _selectedCountryCode = "+${country.phoneCode}";
+          _selectedFlag = country.flagEmoji;
+        });
+      },
+    );
+  }
+
   void _toggleMode() {
     setState(() {
       _emailMode = !_emailMode;
@@ -60,7 +96,11 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
 
   void _handleGetOtp() {
     if (_otpFormKey.currentState!.validate()) {
-      final identifier = _otpInputController.text.trim();
+      final identifier = _buildIdentifier();
+      if (identifier.isEmpty) {
+        return;
+      }
+      _lastIdentifier = identifier;
       context.read<OtpBloc>().add(OtpEvent.sendOtp(identifier: identifier));
     }
   }
@@ -71,10 +111,13 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
       listener: (context, state) {
         state.whenOrNull(
           sendOtpSuccess: () {
-            final identifier = _otpInputController.text.trim();
+            final identifier = _lastIdentifier ?? _buildIdentifier();
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('OTP sent successfully'),
+              SnackBar(
+                content: const Text(
+                  'OTP sent successfully',
+                  style: TextStyle(color: Colors.white),
+                ),
                 backgroundColor: AppColors.primaryColor,
               ),
             );
@@ -89,8 +132,10 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                    'Failed to send OTP: ${message.replaceAll('Exception: ', '')}'),
-                backgroundColor: Colors.red,
+                  'Failed to send OTP: ${message.replaceAll('Exception: ', '')}',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                backgroundColor: Colors.red.shade300.withOpacity(0.9),
               ),
             );
           },
@@ -276,7 +321,6 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
           ? null
           : [
               FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(10)
             ],
       style: TextStyle(
         fontSize: GetResponsiveSize.getResponsiveFontSize(
@@ -318,24 +362,83 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
             desktop: 24,
           ),
         ),
+        prefixIcon: !_emailMode
+            ? Padding(
+                padding: const EdgeInsets.only(left: 10, right: 5),
+                child: GestureDetector(
+                  onTap: _showCountryPicker,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _selectedFlag,
+                        style: TextStyle(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 20.0,
+                            tablet: 25.0,
+                            largeTablet: 28.0,
+                            desktop: 30.0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      SizedBox(
+                        height: 25,
+                        child: const VerticalDivider(
+                          width: 10,
+                          thickness: 1.5,
+                          color: AppColors.greyColor,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        _selectedCountryCode,
+                        style: TextStyle(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 16.0,
+                            tablet: 18.0,
+                            largeTablet: 20.0,
+                            desktop: 22.0,
+                          ),
+                          color: AppColors.greyColor,
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_drop_down,
+                        size: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 20.0,
+                          tablet: 24.0,
+                          largeTablet: 26.0,
+                          desktop: 28.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : null,
       ),
       validator: _validateInput,
     );
 
-    // Wrap in SizedBox only for tablets and above
-    if (GetResponsiveSize.isTablet(context)) {
-      return SizedBox(
-        height: GetResponsiveSize.getResponsiveSize(
-          context,
-          mobile: 0, // Not used since we check isTablet first
-          tablet: 65,
-          largeTablet: 75,
-          desktop: 85,
-        ),
-        child: textField,
-      );
-    }
-    return textField;
+    // Apply responsive height wrapper for tablets and above
+    final fieldWithHeight = GetResponsiveSize.isTablet(context)
+        ? SizedBox(
+            height: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 0, // Not used since we check isTablet first
+              tablet: 65,
+              largeTablet: 75,
+              desktop: 85,
+            ),
+            child: textField,
+          )
+        : textField;
+
+    return fieldWithHeight;
   }
 
   Widget _buildGetOtpButton() {

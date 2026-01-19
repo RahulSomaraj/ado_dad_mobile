@@ -37,7 +37,8 @@ class MyAdsBloc extends Bloc<MyAdsEvent, MyAdsState> {
                 isPaging: false,
               ));
             } catch (e) {
-              emit(MyAdsState.error(e.toString()));
+              // On error, restore previous state without isPaging flag
+              emit(current.copyWith(isPaging: false));
             }
           }
         },

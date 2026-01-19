@@ -156,6 +156,15 @@ class ProfileRepo {
             "📝 Phone changed: ${originalProfile.phoneNumber} → ${updatedProfile.phoneNumber}");
       }
 
+      // Check if countryCode changed (handle null values)
+      final originalCountryCode = originalProfile.countryCode ?? "+1";
+      final updatedCountryCode = updatedProfile.countryCode ?? "+1";
+      if (updatedCountryCode != originalCountryCode) {
+        body['countryCode'] = updatedProfile.countryCode;
+        print(
+            "📝 Country Code changed: $originalCountryCode → $updatedCountryCode");
+      }
+
       if (updatedProfile.profilePic != originalProfile.profilePic) {
         body['profilePic'] = updatedProfile.profilePic;
         print(
@@ -207,13 +216,25 @@ class ProfileRepo {
         final errorData = e.response?.data;
         if (errorData is Map<String, dynamic> &&
             errorData.containsKey('message')) {
-          throw Exception("❌ ${errorData['message']}");
+          final message = errorData['message'];
+          String errorMessage;
+          if (message is List) {
+            // Handle array messages - join them or take first
+            errorMessage = message.isNotEmpty
+                ? message.first.toString()
+                : "Invalid profile data";
+          } else if (message is String) {
+            errorMessage = message;
+          } else {
+            errorMessage = message.toString();
+          }
+          throw Exception(errorMessage);
         }
         throw Exception(
-            "❌ Invalid profile data. Please check your information and try again.");
+            "Invalid profile data. Please check your information and try again.");
       } else if (e.response?.statusCode == 500) {
         throw Exception(
-            "❌ Server error while updating profile. Please try again or contact support if the issue persists.");
+            "Server error while updating profile. Please try again or contact support if the issue persists.");
       }
 
       throw Exception(DioErrorHandler.handleError(e));

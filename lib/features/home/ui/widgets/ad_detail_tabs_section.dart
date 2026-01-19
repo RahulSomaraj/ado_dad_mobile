@@ -16,7 +16,7 @@ String toTitleCase(String text) {
       .join(' ');
 }
 
-class AdDetailTabsSection extends StatelessWidget {
+class AdDetailTabsSection extends StatefulWidget {
   final AddModel ad;
   final Future<bool> Function(AddModel) isCurrentUserOwner;
 
@@ -27,6 +27,13 @@ class AdDetailTabsSection extends StatelessWidget {
   });
 
   @override
+  State<AdDetailTabsSection> createState() => _AdDetailTabsSectionState();
+}
+
+class _AdDetailTabsSectionState extends State<AdDetailTabsSection> {
+  int _selectedIndex = 0;
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -35,60 +42,88 @@ class AdDetailTabsSection extends StatelessWidget {
         vertical: GetResponsiveSize.getResponsivePadding(context,
             mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
       ),
-      child: DefaultTabController(
-        length: 2,
-        child: Column(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFF4F6FA),
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(context,
-                      mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
-                ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFF4F6FA),
+              borderRadius: BorderRadius.circular(
+                GetResponsiveSize.getResponsiveBorderRadius(context,
+                    mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
               ),
-              padding: EdgeInsets.all(
-                GetResponsiveSize.getResponsiveSize(context,
-                    mobile: 6, tablet: 8, largeTablet: 10, desktop: 12),
-              ),
-              child: TabBar(
-                indicatorSize: TabBarIndicatorSize.tab,
-                indicator: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(
-                    GetResponsiveSize.getResponsiveBorderRadius(context,
-                        mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+            ),
+            padding: EdgeInsets.all(
+              GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 6, tablet: 8, largeTablet: 10, desktop: 12),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildTabButton(
+                    context,
+                    'Specifications',
+                    0,
                   ),
                 ),
-                indicatorColor: Colors.transparent,
-                dividerColor: Colors.transparent,
-                labelColor: const Color(0xFF6366F1),
-                unselectedLabelColor: Colors.grey.shade600,
-                labelStyle: TextStyle(
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                      mobile: 14, tablet: 22, largeTablet: 25, desktop: 27),
+                SizedBox(
+                  width: GetResponsiveSize.getResponsiveSize(context,
+                      mobile: 4, tablet: 6, largeTablet: 8, desktop: 10),
                 ),
-                tabs: const [
-                  Tab(text: 'Specifications'),
-                  Tab(text: 'Other Details'),
-                ],
-              ),
+                Expanded(
+                  child: _buildTabButton(
+                    context,
+                    'Other Details',
+                    1,
+                  ),
+                ),
+              ],
             ),
-            SizedBox(
-                height: GetResponsiveSize.getResponsiveSize(context,
-                    mobile: 12, tablet: 16, largeTablet: 20, desktop: 24)),
-            SizedBox(
+          ),
+          SizedBox(
               height: GetResponsiveSize.getResponsiveSize(context,
-                  mobile: 320, tablet: 450, largeTablet: 550, desktop: 650),
-              child: TabBarView(
-                children: [
-                  _SpecsCard(ad: ad),
-                  _OtherDetailsCard(
-                      ad: ad, isCurrentUserOwner: isCurrentUserOwner),
-                ],
-              ),
+                  mobile: 12, tablet: 16, largeTablet: 20, desktop: 24)),
+          // Use IndexedStack to allow natural expansion
+          IndexedStack(
+            index: _selectedIndex,
+            children: [
+              _SpecsCard(ad: widget.ad),
+              _OtherDetailsCard(
+                  ad: widget.ad, isCurrentUserOwner: widget.isCurrentUserOwner),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabButton(BuildContext context, String text, int index) {
+    final isSelected = _selectedIndex == index;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedIndex = index),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          vertical: GetResponsiveSize.getResponsivePadding(context,
+              mobile: 8, tablet: 12, largeTablet: 14, desktop: 16),
+        ),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(
+            GetResponsiveSize.getResponsiveBorderRadius(context,
+                mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+          ),
+        ),
+        child: Center(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                  mobile: 14, tablet: 22, largeTablet: 25, desktop: 27),
+              color:
+                  isSelected ? const Color(0xFF6366F1) : Colors.grey.shade600,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -124,7 +159,7 @@ class _SpecsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (ad.category == 'property') {
-      // For plot, show: Property Type, Area, Description
+      // For plot, show: Property Type, Listing Type, Area
       if (ad.propertyType == 'plot') {
         final plotItemHeight = _getBaseGridItemHeight(context);
         final plotPadding = GetResponsiveSize.getResponsivePadding(context,
@@ -138,20 +173,10 @@ class _SpecsCard extends StatelessWidget {
             largeTablet: 16,
             desktop: 20);
 
-        // Use larger height for description to accommodate long text
-        final descriptionItemHeight = GetResponsiveSize.getResponsiveSize(
-            context,
-            mobile: 120,
-            tablet: 180,
-            largeTablet: 220,
-            desktop: 260);
-
-        // Calculate total height: first row (2 items) + spacing + second row (1 item) + spacing + third row (description with larger height) + padding
+        // Calculate total height: first row (2 items) + spacing + second row (1 item) + padding
         final plotTotalHeight = plotItemHeight +
             plotMainAxisSpacing +
             plotItemHeight +
-            plotMainAxisSpacing +
-            descriptionItemHeight +
             (plotPadding * 2);
 
         return AdDetailCardShell(
@@ -203,19 +228,6 @@ class _SpecsCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: plotMainAxisSpacing),
-                  // Third row: Description (spans full width with larger height, scrollable if needed)
-                  SizedBox(
-                    height: descriptionItemHeight,
-                    child: SingleChildScrollView(
-                      physics: const ClampingScrollPhysics(),
-                      child: AdDetailSpecTile(
-                        spec: AdDetailSpec('Description',
-                            ad.description.isNotEmpty ? ad.description : '-',
-                            icon: Icons.description),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -248,7 +260,8 @@ class _SpecsCard extends StatelessWidget {
               GetResponsiveSize.getResponsivePadding(context,
                   mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
             ),
-            physics: const ClampingScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisExtent: _getGridItemHeight(context),
@@ -292,7 +305,8 @@ class _SpecsCard extends StatelessWidget {
               GetResponsiveSize.getResponsivePadding(context,
                   mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
             ),
-            physics: const ClampingScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisExtent: _getGridItemHeight(context),
@@ -336,7 +350,8 @@ class _SpecsCard extends StatelessWidget {
               GetResponsiveSize.getResponsivePadding(context,
                   mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
             ),
-            physics: const ClampingScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisExtent: _getGridItemHeight(context),
@@ -380,7 +395,8 @@ class _SpecsCard extends StatelessWidget {
               GetResponsiveSize.getResponsivePadding(context,
                   mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
             ),
-            physics: const ClampingScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisExtent: _getGridItemHeight(context),
@@ -430,7 +446,8 @@ class _SpecsCard extends StatelessWidget {
               GetResponsiveSize.getResponsivePadding(context,
                   mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
             ),
-            physics: const ClampingScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisExtent: _getGridItemHeight(context),
@@ -480,7 +497,8 @@ class _SpecsCard extends StatelessWidget {
               GetResponsiveSize.getResponsivePadding(context,
                   mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
             ),
-            physics: const ClampingScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisExtent: _getGridItemHeight(context),
@@ -530,7 +548,8 @@ class _SpecsCard extends StatelessWidget {
               GetResponsiveSize.getResponsivePadding(context,
                   mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
             ),
-            physics: const ClampingScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisExtent: _getGridItemHeight(context),
@@ -573,7 +592,8 @@ class _SpecsCard extends StatelessWidget {
             GetResponsiveSize.getResponsivePadding(context,
                 mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
           ),
-          physics: const ClampingScrollPhysics(),
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             mainAxisExtent: GetResponsiveSize.getResponsiveSize(context,
@@ -607,11 +627,12 @@ class _SpecsCard extends StatelessWidget {
           icon: Icons.directions_car),
       AdDetailSpec('Transmission', ad.transmission ?? '-',
           icon: Icons.settings),
+      AdDetailSpec('Variant', toTitleCase(ad.variant ?? '-'), icon: Icons.tune),
       AdDetailSpec('Fuel Type', ad.fuelType ?? '-',
           icon: Icons.local_gas_station),
       AdDetailSpec('Registration Year', (ad.year ?? 0).toString(),
           icon: Icons.calendar_today),
-      AdDetailSpec('Mileage', (ad.mileage != null) ? '${ad.mileage} Kmpl' : '-',
+      AdDetailSpec('Mileage', (ad.mileage != null) ? '${ad.mileage} Km' : '-',
           icon: Icons.speed),
       AdDetailSpec('Has Insurance', ad.hasInsurance == true ? 'Yes' : 'No',
           icon: Icons.shield),
@@ -627,46 +648,32 @@ class _SpecsCard extends StatelessWidget {
         mobile: 8, tablet: 12, largeTablet: 16, desktop: 20);
     final vehicleItemHeight = _getBaseGridItemHeight(context);
 
-    // Use larger height for Additional Features to accommodate long text
-    final additionalFeaturesHeight = GetResponsiveSize.getResponsiveSize(
-        context,
-        mobile: 100,
-        tablet: 150,
-        largeTablet: 180,
-        desktop: 220);
-
     return AdDetailCardShell(
       child: Padding(
         padding: EdgeInsets.all(vehiclePadding),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // GridView for regular items
-            Expanded(
-              child: GridView.builder(
-                physics: const ClampingScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisExtent: vehicleItemHeight,
-                  crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
-                      mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
-                  mainAxisSpacing: vehicleMainAxisSpacing,
-                ),
-                itemCount: regularItems.length,
-                itemBuilder: (_, i) => AdDetailSpecTile(spec: regularItems[i]),
+            // GridView for regular items - no scroll, shrinkWrap to fit content
+            GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisExtent: vehicleItemHeight,
+                crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
+                    mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+                mainAxisSpacing: vehicleMainAxisSpacing,
               ),
+              itemCount: regularItems.length,
+              itemBuilder: (_, i) => AdDetailSpecTile(spec: regularItems[i]),
             ),
-            // Additional Features - full width, scrollable
+            // Additional Features - full width, natural height
             SizedBox(height: vehicleMainAxisSpacing),
-            SizedBox(
-              height: additionalFeaturesHeight,
-              child: SingleChildScrollView(
-                physics: const ClampingScrollPhysics(),
-                child: AdDetailSpecTile(
-                  spec: AdDetailSpec(
-                      'Additional Features', additionalFeaturesText,
-                      icon: Icons.add_circle_outline),
-                ),
-              ),
+            AdDetailSpecTile(
+              spec: AdDetailSpec('Additional Features', additionalFeaturesText,
+                  icon: Icons.add_circle_outline),
             ),
           ],
         ),

@@ -17,10 +17,43 @@ class MyAdsPage extends StatefulWidget {
 }
 
 class _MyAdsPageState extends State<MyAdsPage> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     _checkAuthentication();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+
+    // Trigger load more when 200 pixels before the end
+    if (maxScroll > 0 && currentScroll >= maxScroll - 200) {
+      final state = context.read<MyAdsBloc>().state;
+      state.maybeMap(
+        loaded: (loadedState) {
+          if (loadedState.hasNext && !loadedState.isPaging) {
+            context.read<MyAdsBloc>().add(MyAdsEvent.loadMore(
+                  nextPage: loadedState.page + 1,
+                  limit: 20,
+                ));
+          }
+        },
+        orElse: () {},
+      );
+    }
   }
 
   Future<void> _checkAuthentication() async {
@@ -28,9 +61,12 @@ class _MyAdsPageState extends State<MyAdsPage> {
     if (token == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please login to view your ads'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text(
+              'Please login to view your ads',
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red.shade300.withOpacity(0.9),
           ),
         );
         context.go('/login');
@@ -40,7 +76,7 @@ class _MyAdsPageState extends State<MyAdsPage> {
 
     // Load ads if authenticated
     if (mounted) {
-      context.read<MyAdsBloc>().add(const MyAdsEvent.load());
+      context.read<MyAdsBloc>().add(const MyAdsEvent.load(page: 1, limit: 20));
     }
   }
 
@@ -237,6 +273,7 @@ class _MyAdsPageState extends State<MyAdsPage> {
                   );
                 }
                 return ListView.separated(
+                  controller: _scrollController,
                   padding: EdgeInsets.fromLTRB(
                     GetResponsiveSize.getResponsivePadding(
                       context,
@@ -267,7 +304,9 @@ class _MyAdsPageState extends State<MyAdsPage> {
                       desktop: 48,
                     ),
                   ),
-                  itemCount: loaded.ads.length,
+                  itemCount: loaded.ads.length +
+                      (loaded.isPaging ? 1 : 0) +
+                      (loaded.hasNext ? 0 : 1),
                   separatorBuilder: (_, __) => SizedBox(
                     height: GetResponsiveSize.getResponsiveSize(
                       context,
@@ -277,7 +316,55 @@ class _MyAdsPageState extends State<MyAdsPage> {
                       desktop: 34,
                     ),
                   ),
-                  itemBuilder: (context, i) => _AdTile(ad: loaded.ads[i]),
+                  itemBuilder: (context, i) {
+                    // Show loading indicator at the bottom when loading more
+                    if (i == loaded.ads.length && loaded.isPaging) {
+                      return Padding(
+                        padding: EdgeInsets.all(
+                          GetResponsiveSize.getResponsivePadding(
+                            context,
+                            mobile: 16,
+                            tablet: 24,
+                            largeTablet: 32,
+                            desktop: 40,
+                          ),
+                        ),
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+                    // Show end message when no more items
+                    if (i == loaded.ads.length && !loaded.hasNext) {
+                      return Padding(
+                        padding: EdgeInsets.all(
+                          GetResponsiveSize.getResponsivePadding(
+                            context,
+                            mobile: 16,
+                            tablet: 24,
+                            largeTablet: 32,
+                            desktop: 40,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'No more ads',
+                            style: TextStyle(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: 14,
+                                tablet: 18,
+                                largeTablet: 22,
+                                desktop: 26,
+                              ),
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    return _AdTile(ad: loaded.ads[i]);
+                  },
                 );
               },
               orElse: () => const SizedBox.shrink(),

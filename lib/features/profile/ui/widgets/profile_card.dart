@@ -8,6 +8,8 @@ class ProfileCard extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController emailController;
   final TextEditingController phoneController;
+  final String? countryCode;
+  final Function(String)? onCountryCodeChanged;
   final bool isEditing;
   final VoidCallback onEditTap;
   final VoidCallback onSaveTap;
@@ -17,6 +19,8 @@ class ProfileCard extends StatelessWidget {
     required this.nameController,
     required this.emailController,
     required this.phoneController,
+    this.countryCode,
+    this.onCountryCodeChanged,
     required this.isEditing,
     required this.onEditTap,
     required this.onSaveTap,
@@ -122,6 +126,8 @@ class ProfileCard extends StatelessWidget {
               controller: phoneController,
               isEditable: isEditing,
               isPhoneField: true,
+              countryCode: countryCode,
+              onCountryCodeChanged: onCountryCodeChanged,
             ),
           ],
         ),

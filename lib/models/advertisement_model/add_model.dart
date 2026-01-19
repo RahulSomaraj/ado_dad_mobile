@@ -265,6 +265,27 @@ class AddModel {
       model = Model(id: modelId, name: '');
     }
 
+    // Handle variant - could be nested object, ID string, or name string
+    String? variantValue;
+    final variantObj = _asMap(inv?['variant']) ??
+        _asMap(json['variant']) ??
+        _asMap(vd?['variant']);
+    if (variantObj != null) {
+      // Prefer variant name from nested object, fallback to ID
+      variantValue = (variantObj['name'] ??
+              variantObj['displayName'] ??
+              variantObj['_id'] ??
+              variantObj['id'])
+          ?.toString();
+    } else {
+      // Try variantId first, then variant as string
+      variantValue = (vd?['variantId'] ??
+              json['variantId'] ??
+              json['variant'] ??
+              vd?['variant'])
+          ?.toString();
+    }
+
     return AddModel(
       // basics
       id: (json['id'] ?? json['_id'] ?? '').toString(),
@@ -285,8 +306,7 @@ class AddModel {
       vehicleType: (json['vehicleType'] ?? vd?['vehicleType']) as String?,
       manufacturer: manufacturer,
       model: model,
-      variant:
-          (json['variant'] ?? vd?['variant'] ?? vd?['variantId'])?.toString(),
+      variant: variantValue,
       year: _asInt(json['year']) ?? _asInt(vd?['year']),
       mileage: _asInt(json['mileage']) ?? _asInt(vd?['mileage']),
 
@@ -529,16 +549,24 @@ class AdUser {
   final String? email;
   final String? profilePic;
   final String? phone;
+  final String? countryCode;
 
-  const AdUser(
-      {required this.id, this.name, this.email, this.profilePic, this.phone});
+  const AdUser({
+    required this.id,
+    this.name,
+    this.email,
+    this.profilePic,
+    this.phone,
+    this.countryCode,
+  });
 
   factory AdUser.fromJson(Map<String, dynamic> json) => AdUser(
         id: (json['id'] ?? json['_id'] ?? '').toString(),
         name: (json['name'] ?? '').toString(),
         email: (json['email'] ?? '').toString(),
         profilePic: (json['profilePic'] ?? '').toString(),
-        phone: (json['phone'] ?? '').toString(),
+        phone: (json['phone'] ?? json['phoneNumber'] ?? '').toString(),
+        countryCode: json['countryCode']?.toString(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -547,5 +575,6 @@ class AdUser {
         if (email != null) 'email': email,
         if (profilePic != null) 'profilePic': profilePic,
         if (phone != null) 'phone': phone,
+        if (countryCode != null) 'countryCode': countryCode,
       };
 }

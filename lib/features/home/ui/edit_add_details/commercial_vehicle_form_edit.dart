@@ -4,8 +4,9 @@ import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/error_message_util.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
-import 'package:ado_dad_user/common/widgets/common_decoration.dart';
 import 'package:ado_dad_user/common/widgets/dropdown_widget.dart';
+import 'package:ado_dad_user/common/widgets/searchable_dropdown_widget.dart';
+import 'package:ado_dad_user/common/widgets/location_picker_widget.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/features/home/ad_edit/bloc/ad_edit_bloc.dart';
 import 'package:ado_dad_user/features/home/ui/edit_add_details/widgets/checkbox_toggle_widget.dart';
@@ -42,8 +43,11 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
   // text controllers
   late final TextEditingController _titleCtrl;
   late final TextEditingController _priceCtrl;
-  late final TextEditingController _locationCtrl;
   late final TextEditingController _yearCtrl;
+
+  String _location = '';
+  double? _latitude;
+  double? _longitude;
   late final TextEditingController _mileageCtrl;
   late final TextEditingController _colorCtrl;
   late final TextEditingController _payloadCapacityCtrl;
@@ -122,9 +126,13 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
     // ---- Prefill from ad ----
     _titleCtrl = TextEditingController(text: widget.ad.title ?? '');
     _priceCtrl = TextEditingController(text: widget.ad.price.toString());
-    _locationCtrl = TextEditingController(text: widget.ad.location);
+    _location = widget.ad.location;
     _yearCtrl = TextEditingController(
         text: (widget.ad.year ?? DateTime.now().year).toString());
+
+    // Initialize location coordinates if available
+    _latitude = null; // widget.ad.latitude if available
+    _longitude = null; // widget.ad.longitude if available
     _mileageCtrl =
         TextEditingController(text: (widget.ad.mileage ?? 0).toString());
     _colorCtrl = TextEditingController(text: widget.ad.color ?? '');
@@ -160,8 +168,10 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
   Future<void> _bootstrap() async {
     final repo = AddRepository();
 
-    // manufacturers
-    _manufacturers = await repo.fetchManufacturers();
+    // manufacturers with vehicleCategory 'passenger_car'
+    _manufacturers = await repo.fetchManufacturers(
+      vehicleCategory: 'passenger_car',
+    );
     setState(() {});
 
     // preselect manufacturer by id
@@ -188,11 +198,25 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
     if (_selectedModel != null) {
       _variants = await repo.fetchVariantsByModel(_selectedModel!.id);
       setState(() {});
-      // if AddModel.variant is id:
-      final variantId = widget.ad.variant;
-      if (variantId != null) {
-        final vv = _variants.where((x) => x.id == variantId);
-        if (vv.isNotEmpty) _selectedVariant = vv.first;
+
+      final variantIdOrName = widget.ad.variant;
+      if (_variants.isNotEmpty &&
+          variantIdOrName != null &&
+          variantIdOrName.isNotEmpty) {
+        final trimmedVariant = variantIdOrName.trim();
+        try {
+          _selectedVariant = _variants.firstWhere(
+            (v) =>
+                v.id.trim() == trimmedVariant ||
+                v.name.trim().toLowerCase() == trimmedVariant.toLowerCase(),
+          );
+        } catch (_) {
+          // Variant not found, leave it null instead of defaulting to first
+          _selectedVariant = null;
+        }
+      } else {
+        // No variant stored, leave it null
+        _selectedVariant = null;
       }
     }
 
@@ -237,7 +261,6 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
   void dispose() {
     _titleCtrl.dispose();
     _priceCtrl.dispose();
-    _locationCtrl.dispose();
     _yearCtrl.dispose();
     _mileageCtrl.dispose();
     _colorCtrl.dispose();
@@ -347,7 +370,9 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
       "title": _titleCtrl.text.trim(), // Include title like other fields
 
       "price": int.tryParse(_priceCtrl.text.trim()),
-      "location": _locationCtrl.text.trim(),
+      "location": _location,
+      if (_latitude != null) "latitude": _latitude,
+      if (_longitude != null) "longitude": _longitude,
 
       "manufacturerId": _selectedManufacturer?.id,
       "modelId": _selectedModel?.id,
@@ -434,7 +459,13 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
               },
               success: (updated) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('✅ Saved')),
+                  SnackBar(
+                    content: const Text(
+                      '✅ Saved',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: AppColors.primaryColor,
+                  ),
                 );
                 context
                     .read<AdvertisementBloc>()
@@ -444,8 +475,12 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
               failure: (msg) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content:
-                          Text(ErrorMessageUtil.getUserFriendlyMessage(msg))),
+                    content: Text(
+                      ErrorMessageUtil.getUserFriendlyMessage(msg),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.red.shade300.withOpacity(0.9),
+                  ),
                 );
               },
             );
@@ -486,9 +521,24 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
                           tablet: 14,
                           largeTablet: 18,
                           desktop: 22)),
-                  GetInput(
+                  LocationPickerWidget(
                     label: 'Location',
-                    controller: _locationCtrl,
+                    initialLocation: _location,
+                    initialLatitude: _latitude,
+                    initialLongitude: _longitude,
+                    onLocationSelected: (location, latitude, longitude) {
+                      setState(() {
+                        _location = location;
+                        _latitude = latitude;
+                        _longitude = longitude;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select a location';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 10),
 
@@ -520,11 +570,18 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
                   const SizedBox(height: 10),
 
                   // Manufacturer / Model / Variant
-                  buildDropdown<VehicleManufacturer>(
+                  buildSearchableDropdown<VehicleManufacturer>(
                     labelText: 'Manufacturer',
                     items: _manufacturers,
                     selectedValue: _selectedManufacturer,
                     errorMsg: 'Please select a manufacturer',
+                    getDisplayText: (item) => item.displayName,
+                    onSearch: (query) async {
+                      return await AddRepository().fetchManufacturers(
+                        search: query,
+                        vehicleCategory: 'passenger_car',
+                      );
+                    },
                     onChanged: (m) async {
                       setState(() {
                         _selectedManufacturer = m;
@@ -541,11 +598,23 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
                     },
                   ),
                   const SizedBox(height: 10),
-                  buildDropdown<VehicleModel>(
+                  buildSearchableDropdown<VehicleModel>(
                     labelText: 'Model',
                     items: _models,
                     selectedValue: _selectedModel,
                     errorMsg: 'Please select a model',
+                    getDisplayText: (item) => item.displayName,
+                    enabled:
+                        _models.isNotEmpty && _selectedManufacturer != null,
+                    onSearch: (query) async {
+                      if (_selectedManufacturer == null) {
+                        return [];
+                      }
+                      return await AddRepository().fetchModelsByManufacturer(
+                        _selectedManufacturer!.id,
+                        search: query,
+                      );
+                    },
                     onChanged: (mdl) async {
                       setState(() {
                         _selectedModel = mdl;
@@ -564,19 +633,21 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
                   const SizedBox(height: 10),
 
                   // Transmission / Fuel
-                  buildDropdown<VehicleTransmissionType>(
+                  buildSearchableDropdown<VehicleTransmissionType>(
                     labelText: 'Transmission Type',
                     items: _transmissionTypes,
                     selectedValue: _selectedTransmissionType,
+                    getDisplayText: (item) => item.displayName,
                     errorMsg: 'Please select a transmission type',
                     onChanged: (t) =>
                         setState(() => _selectedTransmissionType = t),
                   ),
                   const SizedBox(height: 10),
-                  buildDropdown<VehicleFuelType>(
+                  buildSearchableDropdown<VehicleFuelType>(
                     labelText: 'Fuel Type',
                     items: _fuelTypes,
                     selectedValue: _selectedFuelType,
+                    getDisplayText: (item) => item.displayName,
                     errorMsg: 'Please select a fuel type',
                     onChanged: (f) => setState(() => _selectedFuelType = f),
                   ),
@@ -675,12 +746,14 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
                           ),
                           child: GetInput(
                             label: 'Description',
+                            isDescription: true,
                             maxLines: 5,
                             controller: _descCtrl,
                           ),
                         )
                       : GetInput(
                           label: 'Description',
+                          isDescription: true,
                           maxLines: 5,
                           controller: _descCtrl,
                         ),
@@ -743,92 +816,16 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
   }
 
   Widget _buildVariantDropdown() {
-    final dropdown = DropdownButtonFormField<VehicleVariant>(
-      decoration:
-          CommonDecoration.textFieldDecoration(labelText: 'Variant').copyWith(
-        labelStyle: TextStyle(
-          fontSize: GetResponsiveSize.getResponsiveFontSize(
-            context,
-            mobile: 16,
-            tablet: 20,
-            largeTablet: 22,
-            desktop: 24,
-          ),
-        ),
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: GetResponsiveSize.getResponsivePadding(
-            context,
-            mobile: 12,
-            tablet: 16,
-            largeTablet: 18,
-            desktop: 20,
-          ),
-          vertical: GetResponsiveSize.getResponsivePadding(
-            context,
-            mobile: 16,
-            tablet: 20,
-            largeTablet: 22,
-            desktop: 24,
-          ),
-        ),
-      ),
-      value: _selectedVariant,
-      dropdownColor: Colors.white,
-      isExpanded: true,
-      iconSize: GetResponsiveSize.getResponsiveSize(
-        context,
-        mobile: 24,
-        tablet: 28,
-        largeTablet: 32,
-        desktop: 36,
-      ),
-      items: _variants.map((VehicleVariant variant) {
-        return DropdownMenuItem<VehicleVariant>(
-          value: variant,
-          child: Text(
-            variant.name,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: 16,
-                tablet: 20,
-                largeTablet: 24,
-                desktop: 28,
-              ),
-            ),
-          ),
-        );
-      }).toList(),
+    return buildSearchableDropdown<VehicleVariant>(
+      labelText: 'Variant',
+      items: _variants,
+      selectedValue: _selectedVariant,
+      getDisplayText: (item) => item.name,
+      enabled: _variants.isNotEmpty,
       onChanged: (val) {
         setState(() => _selectedVariant = val);
       },
-      validator: (value) => value == null ? 'Please select a variant' : null,
-    );
-
-    // Wrap in SizedBox for tablets and above to match textbox height
-    if (GetResponsiveSize.isTablet(context)) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            height: GetResponsiveSize.getResponsiveSize(
-              context,
-              mobile: 0, // Not used since we check isTablet first
-              tablet: 65,
-              largeTablet: 75,
-              desktop: 85,
-            ),
-            child: dropdown,
-          ),
-        ],
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [dropdown],
+      errorMsg: 'Please select a variant',
     );
   }
 }

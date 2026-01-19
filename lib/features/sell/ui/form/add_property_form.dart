@@ -8,6 +8,7 @@ import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/widgets/dropdown_widget.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/common/widgets/common_decoration.dart';
+import 'package:ado_dad_user/common/widgets/location_picker_widget.dart';
 import 'package:ado_dad_user/features/sell/bloc/bloc/add_post_bloc.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +32,8 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
   String _description = '';
   int _price = 0;
   String _location = '';
+  double? _latitude;
+  double? _longitude;
   final ImagePicker _picker = ImagePicker();
   final List<Uint8List> _imageFiles = [];
   final List<String> _uploadedUrls = [];
@@ -123,9 +126,9 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
   int _bathrooms = 0;
   int _areasqft = 0;
   int _floor = 0;
-  bool _isFurnished = true;
-  bool _hasParking = true;
-  bool _hasGarden = true;
+  bool _isFurnished = false;
+  bool _hasParking = false;
+  bool _hasGarden = false;
 
   void _addAdvertisement() async {
     if (!_sellerFormKey.currentState!.validate()) return;
@@ -138,6 +141,8 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
       "description": _description,
       "price": _price,
       "location": _location,
+      if (_latitude != null) "latitude": _latitude,
+      if (_longitude != null) "longitude": _longitude,
       "images": _uploadedUrls,
       "link": _uploadedVideoUrl, // Video URL
       "propertyType": _selectedPropertyType,
@@ -245,15 +250,25 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
           state.whenOrNull(
             success: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("✅ Ad posted successfully")),
+                SnackBar(
+                  content: const Text(
+                    "✅ Ad posted successfully",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  backgroundColor: AppColors.primaryColor,
+                ),
               );
               context.go('/home');
             },
             failure: (msg) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                    content:
-                        Text(ErrorMessageUtil.getUserFriendlyMessage(msg))),
+                  content: Text(
+                    ErrorMessageUtil.getUserFriendlyMessage(msg),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  backgroundColor: Colors.red.shade300.withOpacity(0.9),
+                ),
               );
             },
           );
@@ -344,9 +359,25 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
                               desktop: 28,
                             ),
                           ),
-                          GetInput(
+                          LocationPickerWidget(
                             label: 'Location',
-                            onSaved: (val) => _location = val ?? '',
+                            initialLocation: _location,
+                            initialLatitude: _latitude,
+                            initialLongitude: _longitude,
+                            onLocationSelected:
+                                (location, latitude, longitude) {
+                              setState(() {
+                                _location = location;
+                                _latitude = latitude;
+                                _longitude = longitude;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please select a location';
+                              }
+                              return null;
+                            },
                           ),
                           SizedBox(
                             height: GetResponsiveSize.getResponsiveSize(
@@ -570,11 +601,13 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
                                   child: GetInput(
                                     label: 'Description',
                                     maxLines: 5,
+                                    isDescription: true,
                                     onSaved: (val) => _description = val ?? '',
                                   ),
                                 )
                               : GetInput(
                                   label: 'Description',
+                                  isDescription: true,
                                   maxLines: 5,
                                   onSaved: (val) => _description = val ?? '',
                                 ),

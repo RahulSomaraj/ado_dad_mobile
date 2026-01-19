@@ -11,6 +11,49 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
+// Task to generate strings.xml with API key from .env file
+task generateStringsXml {
+    doLast {
+        def envFile = rootProject.file("../.env")
+        def googleMapsApiKey = ""
+        
+        if (envFile.exists()) {
+            envFile.eachLine { line ->
+                if (line.contains("GOOGLE_PLACES_API_KEY") && !line.trim().startsWith("#")) {
+                    def parts = line.split("=", 2)
+                    if (parts.length == 2) {
+                        googleMapsApiKey = parts[1].trim().replaceAll(/^["']|["']$/, "")
+                    }
+                }
+            }
+        }
+        
+        if (googleMapsApiKey.isEmpty()) {
+            throw new GradleException("ERROR: GOOGLE_PLACES_API_KEY not found in .env file!\n" +
+                "Please ensure your .env file exists in the project root and contains:\n" +
+                "GOOGLE_PLACES_API_KEY=your_actual_api_key_here")
+        }
+        
+        def stringsXmlFile = file("src/main/res/values/strings.xml")
+        def stringsXmlContent = """<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Google Maps API Key -->
+    <!-- This file is auto-generated from .env file during build -->
+    <!-- DO NOT edit manually - your changes will be overwritten -->
+    <!-- The API key is read from GOOGLE_PLACES_API_KEY in your .env file -->
+    <string name="google_maps_key">${googleMapsApiKey}</string>
+</resources>
+"""
+        
+        stringsXmlFile.parentFile.mkdirs()
+        stringsXmlFile.write(stringsXmlContent)
+        println("✅ Generated strings.xml with Google Maps API key from .env")
+    }
+}
+
+// Make sure strings.xml is generated before building
+preBuild.dependsOn generateStringsXml
+
 android {
     namespace = "com.adodad.user"
     // Use API 36 for plugin compatibility
@@ -79,4 +122,61 @@ android {
 
 flutter {
     source = "../.."
+}
+
+// Remove READ_MEDIA_IMAGES and READ_MEDIA_VIDEO permissions after manifest merge
+// This ensures compliance with Google Play Store policy for apps with one-time media access
+// We use Photo Picker API on Android 13+ (no permissions needed) and READ_EXTERNAL_STORAGE for Android 12-
+afterEvaluate {
+    android.applicationVariants.all { variant ->
+        def variantName = variant.name.capitalize()
+        // Try different task name patterns for different AGP versions
+        def taskNames = [
+            "process${variantName}Manifest",
+            "merge${variantName}Manifests",
+            "process${variantName}MainManifest"
+        ]
+        
+        taskNames.each { taskName ->
+            def mergeManifestTask = tasks.findByName(taskName)
+            if (mergeManifestTask != null) {
+                mergeManifestTask.doLast {
+                    // Try multiple possible manifest output locations
+                    def possibleDirs = [
+                        "${buildDir}/intermediates/merged_manifests/${variant.name}/",
+                        "${buildDir}/intermediates/merged_manifests/${variant.name.capitalize()}/",
+                        "${buildDir}/generated/source/manifests/${variant.name}/",
+                        "${buildDir}/intermediates/manifests/full/${variant.name}/"
+                    ]
+                    
+                    possibleDirs.each { dirPath ->
+                        def manifestOutputDir = file(dirPath)
+                        if (manifestOutputDir.exists()) {
+                            manifestOutputDir.eachFileRecurse { file ->
+                                if (file.name == "AndroidManifest.xml") {
+                                    def manifestContent = file.getText('UTF-8')
+                                    def originalContent = manifestContent
+                                    // Remove READ_MEDIA_IMAGES permission (with various whitespace patterns)
+                                    manifestContent = manifestContent.replaceAll(
+                                        /<uses-permission\s+[^>]*android:name\s*=\s*["']android\.permission\.READ_MEDIA_IMAGES["'][^>]*\/?>/, 
+                                        ''
+                                    )
+                                    // Remove READ_MEDIA_VIDEO permission (with various whitespace patterns)
+                                    manifestContent = manifestContent.replaceAll(
+                                        /<uses-permission\s+[^>]*android:name\s*=\s*["']android\.permission\.READ_MEDIA_VIDEO["'][^>]*\/?>/, 
+                                        ''
+                                    )
+                                    if (manifestContent != originalContent) {
+                                        file.write(manifestContent, 'UTF-8')
+                                        println("✅ Removed READ_MEDIA_IMAGES and READ_MEDIA_VIDEO permissions from ${file.path}")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                return // Found and configured task, no need to check other names
+            }
+        }
+    }
 }

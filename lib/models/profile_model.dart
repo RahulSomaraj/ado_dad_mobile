@@ -3,6 +3,7 @@ class UserProfile {
   final String name;
   final String email;
   final String phoneNumber;
+  final String? countryCode;
   final String type;
   final String? profilePic;
 
@@ -11,6 +12,7 @@ class UserProfile {
     required this.name,
     required this.email,
     required this.phoneNumber,
+    this.countryCode,
     required this.type,
     this.profilePic,
   });
@@ -21,6 +23,7 @@ class UserProfile {
       name: json["name"] ?? "",
       email: json["email"] ?? "",
       phoneNumber: json["phoneNumber"] ?? "",
+      countryCode: json["countryCode"],
       type: json["type"] ?? "",
       profilePic: json["profilePic"],
     );
@@ -60,6 +63,7 @@ class UserProfile {
     String? name,
     String? email,
     String? phoneNumber,
+    String? countryCode,
     String? type,
     String? profilePic,
   }) {
@@ -68,6 +72,7 @@ class UserProfile {
       name: name ?? this.name,
       email: email ?? this.email,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      countryCode: countryCode ?? this.countryCode,
       type: type ?? this.type,
       profilePic: profilePic ?? this.profilePic,
     );

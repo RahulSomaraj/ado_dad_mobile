@@ -9,7 +9,7 @@ class MyAdsRepo {
 
   Future<PaginatedMyAdsResponse> fetchMyAds({
     int page = 1,
-    int limit = 100,
+    int limit = 20,
     String sortBy = 'createdAt',
     String sortOrder = 'ASC',
   }) async {
@@ -39,16 +39,52 @@ class MyAdsRepo {
 
       print('📥 My Ads Response Status: ${response.statusCode}');
       print('📥 My Ads Response Data: ${response.data}');
+      print('📥 My Ads Response Data Type: ${response.data.runtimeType}');
 
       dynamic raw = response.data;
 
-      List list;
-      if (raw is List) {
-        list = raw;
-      } else if (raw is Map<String, dynamic> && raw['data'] is List) {
-        list = raw['data'] as List;
-      } else {
-        throw StateError('Unexpected response: ${raw.runtimeType} -> $raw');
+      List<dynamic> list;
+      try {
+        if (raw is List) {
+          list = raw;
+          print('✅ Response is a List with ${list.length} items');
+        } else if (raw is Map) {
+          // Handle both Map<String, dynamic> and Map<dynamic, dynamic>
+          final Map map = raw;
+          final dataField = map['data'];
+
+          print(
+              '📋 Response is a Map. Data field type: ${dataField?.runtimeType}');
+
+          if (dataField is List) {
+            list = dataField;
+            print('✅ Data field is a List with ${list.length} items');
+          } else if (dataField is Map) {
+            // Handle case where data is a single object wrapped in a map
+            // Convert single object to list
+            list = [dataField];
+            print('⚠️ Data field is a Map (single object), converting to List');
+          } else if (dataField == null) {
+            // If data field is null, return empty list
+            list = [];
+            print('⚠️ Data field is null, returning empty list');
+          } else {
+            // Unexpected type
+            print(
+                '❌ Unexpected data field type: ${dataField.runtimeType}, value: $dataField');
+            throw StateError(
+                'Unexpected data field type: ${dataField.runtimeType}. '
+                'Expected List or Map. Got: $dataField');
+          }
+        } else {
+          print('❌ Unexpected response type: ${raw.runtimeType}');
+          throw StateError('Unexpected response type: ${raw.runtimeType}. '
+              'Expected List or Map. Response: $raw');
+        }
+      } catch (e) {
+        print('❌ Error parsing response: $e');
+        print('❌ Raw response: $raw');
+        rethrow;
       }
 
       final int total = raw is Map<String, dynamic>
@@ -56,10 +92,15 @@ class MyAdsRepo {
           : list.length;
       final bool hasNext = (page * limit) < total;
 
-      final ads = list
-          .whereType<Map<String, dynamic>>()
-          .map((obj) => MyAd.fromJson(obj))
-          .toList();
+      final ads = list.whereType<Map<String, dynamic>>().map((obj) {
+        try {
+          return MyAd.fromJson(obj);
+        } catch (e) {
+          print('⚠️ Error parsing ad: $e');
+          print('⚠️ Ad data: $obj');
+          rethrow;
+        }
+      }).toList();
 
       // Enrich ads with manufacturer and model names
       final enrichedAds = await _enrichMyAdsWithNames(ads);
@@ -87,14 +128,28 @@ class MyAdsRepo {
       if (manufacturerIds.isNotEmpty) {
         try {
           final response = await _dio.get('/vehicle/manufacturers');
-          if (response.statusCode == 200 && response.data is List) {
-            final manufacturers = response.data as List;
+          if (response.statusCode == 200) {
+            dynamic manufacturersData = response.data;
+            List<dynamic> manufacturers;
+
+            // Handle different response structures
+            if (manufacturersData is List) {
+              manufacturers = manufacturersData;
+            } else if (manufacturersData is Map &&
+                manufacturersData['data'] is List) {
+              manufacturers = manufacturersData['data'] as List;
+            } else {
+              print(
+                  '⚠️ Unexpected manufacturers response structure: ${manufacturersData.runtimeType}');
+              manufacturers = [];
+            }
+
             for (final manufacturer in manufacturers) {
-              if (manufacturer is Map<String, dynamic>) {
-                final id = manufacturer['_id']?.toString() ??
-                    manufacturer['id']?.toString();
-                final name = manufacturer['displayName']?.toString() ??
-                    manufacturer['name']?.toString();
+              if (manufacturer is Map) {
+                final Map map = manufacturer;
+                final id = map['_id']?.toString() ?? map['id']?.toString();
+                final name =
+                    map['displayName']?.toString() ?? map['name']?.toString();
                 if (id != null && name != null) {
                   manufacturerMap[id] = name;
                 }
@@ -128,13 +183,27 @@ class MyAdsRepo {
               'manufacturerId': request['manufacturerId'],
             },
           );
-          if (response.statusCode == 200 && response.data is List) {
-            final models = response.data as List;
+          if (response.statusCode == 200) {
+            dynamic modelsData = response.data;
+            List<dynamic> models;
+
+            // Handle different response structures
+            if (modelsData is List) {
+              models = modelsData;
+            } else if (modelsData is Map && modelsData['data'] is List) {
+              models = modelsData['data'] as List;
+            } else {
+              print(
+                  '⚠️ Unexpected models response structure: ${modelsData.runtimeType}');
+              models = [];
+            }
+
             for (final model in models) {
-              if (model is Map<String, dynamic>) {
-                final id = model['_id']?.toString() ?? model['id']?.toString();
-                final name = model['displayName']?.toString() ??
-                    model['name']?.toString();
+              if (model is Map) {
+                final Map map = model;
+                final id = map['_id']?.toString() ?? map['id']?.toString();
+                final name =
+                    map['displayName']?.toString() ?? map['name']?.toString();
                 if (id != null && name != null) {
                   modelMap[id] = name;
                 }

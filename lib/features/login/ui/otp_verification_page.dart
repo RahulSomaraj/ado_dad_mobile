@@ -65,9 +65,12 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
           );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter complete OTP'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text(
+            'Please enter complete OTP',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red.shade300.withOpacity(0.9),
         ),
       );
     }
@@ -92,8 +95,11 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
           },
           sendOtpSuccess: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('OTP sent successfully'),
+              SnackBar(
+                content: const Text(
+                  'OTP sent successfully',
+                  style: TextStyle(color: Colors.white),
+                ),
                 backgroundColor: AppColors.primaryColor,
               ),
             );
@@ -102,8 +108,10 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                    'Failed to send OTP: ${message.replaceAll('Exception: ', '')}'),
-                backgroundColor: Colors.red,
+                  'Failed to send OTP: ${message.replaceAll('Exception: ', '')}',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                backgroundColor: Colors.red.shade300.withOpacity(0.9),
               ),
             );
           },

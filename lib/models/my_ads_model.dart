@@ -90,11 +90,17 @@ class MyAd {
   }
 
   factory MyAd.fromJson(Map<String, dynamic> json) {
-    final List<String> images = (json['images'] as List?)
-            ?.where((e) => e != null)
-            .map((e) => e.toString())
-            .toList() ??
-        const [];
+    // Safely parse images - handle both List and unexpected types
+    List<String> images = const [];
+    final imagesRaw = json['images'];
+    if (imagesRaw is List) {
+      images =
+          imagesRaw.where((e) => e != null).map((e) => e.toString()).toList();
+    } else if (imagesRaw != null) {
+      // If images is not a List, log warning and use empty list
+      print(
+          '⚠️ Warning: images field is not a List, got ${imagesRaw.runtimeType}');
+    }
 
     final userJson = _asMap(json['user']);
     final dynamic propertyRaw = json['propertyDetails'];
@@ -116,12 +122,19 @@ class MyAd {
           Map<String, dynamic>.from(vehicleRaw.first as Map));
     }
 
-    final List<Map<String, dynamic>> commercialVehicleDetails =
-        (json['commercialVehicleDetails'] as List?)
-                ?.where((e) => e is Map)
-                .map((e) => Map<String, dynamic>.from(e as Map))
-                .toList() ??
-            const [];
+    // Safely parse commercialVehicleDetails - handle both List and unexpected types
+    List<Map<String, dynamic>> commercialVehicleDetails = const [];
+    final commercialVehicleDetailsRaw = json['commercialVehicleDetails'];
+    if (commercialVehicleDetailsRaw is List) {
+      commercialVehicleDetails = commercialVehicleDetailsRaw
+          .where((e) => e is Map)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+    } else if (commercialVehicleDetailsRaw != null) {
+      // If commercialVehicleDetails is not a List, log warning
+      print(
+          '⚠️ Warning: commercialVehicleDetails field is not a List, got ${commercialVehicleDetailsRaw.runtimeType}');
+    }
 
     // Parse manufacturer and model information (using same classes as AddModel)
     Manufacturer? manufacturer;
@@ -265,11 +278,7 @@ class MyAdVehicleDetails {
       isFirstOwner: (json['isFirstOwner'] as bool?) ?? false,
       hasInsurance: (json['hasInsurance'] as bool?) ?? false,
       hasRcBook: (json['hasRcBook'] as bool?) ?? false,
-      additionalFeatures: (json['additionalFeatures'] as List?)
-              ?.where((e) => e != null)
-              .map((e) => e.toString())
-              .toList() ??
-          const [],
+      additionalFeatures: _parseStringList(json['additionalFeatures']),
       createdAt: (json['createdAt'] ?? '').toString(),
       updatedAt: (json['updatedAt'] ?? '').toString(),
       v: _asInt(json['__v']),
@@ -347,11 +356,7 @@ class PropertyDetails {
       isFurnished: (json['isFurnished'] as bool?) ?? false,
       hasParking: (json['hasParking'] as bool?) ?? false,
       hasGarden: (json['hasGarden'] as bool?) ?? false,
-      amenities: (json['amenities'] as List?)
-              ?.where((e) => e != null)
-              .map((e) => e.toString())
-              .toList() ??
-          const [],
+      amenities: _parseStringList(json['amenities']),
       createdAt: (json['createdAt'] ?? '').toString(),
       updatedAt: (json['updatedAt'] ?? '').toString(),
       v: _asInt(json['__v']),
@@ -392,4 +397,14 @@ int? _asInt(dynamic v) {
   if (v is num) return v.toInt();
   if (v is String) return int.tryParse(v);
   return null;
+}
+
+List<String> _parseStringList(dynamic v) {
+  if (v == null) return const [];
+  if (v is List) {
+    return v.where((e) => e != null).map((e) => e.toString()).toList();
+  }
+  // If not a List, log warning and return empty list
+  print('⚠️ Warning: Expected List but got ${v.runtimeType}');
+  return const [];
 }

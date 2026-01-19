@@ -3,10 +3,7 @@ import 'dart:typed_data';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/error_message_util.dart';
-import 'package:ado_dad_user/common/password_validator.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
-import 'package:ado_dad_user/common/auth_guard.dart';
-import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:ado_dad_user/features/login/bloc/login_bloc.dart' as login_bloc;
 import 'package:ado_dad_user/features/profile/bloc/profile_bloc.dart'
     as profile_bloc;
@@ -26,6 +23,8 @@ import 'package:ado_dad_user/features/profile/ui/widgets/profile_header.dart';
 import 'package:ado_dad_user/features/profile/ui/widgets/profile_card.dart';
 import 'package:ado_dad_user/features/profile/ui/widgets/profile_avatar.dart';
 import 'package:ado_dad_user/features/profile/ui/widgets/profile_menu_item.dart';
+import 'package:ado_dad_user/features/profile/ui/widgets/change_password_dialog.dart';
+import 'package:ado_dad_user/features/profile/ui/widgets/bottom_nav_bar.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -39,10 +38,13 @@ class _ProfilePageState extends State<ProfilePage> {
   late TextEditingController nameController;
   late TextEditingController emailController;
   late TextEditingController phoneController;
+  String _countryCode = "+1"; // Default country code
 
   Uint8List? _pickedImageBytes; // local preview
   String? _currentProfilePicUrl; // from API or after upload
   bool _isSaving = false;
+  bool _isUpdatingProfile = false; // Track if we're updating profile
+  UserProfile? _lastLoadedProfile; // Store last loaded profile to show on error
 
   // Change password dialog controllers
   late TextEditingController _newPasswordController;
@@ -51,7 +53,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isConfirmPasswordVisible = false;
   final GlobalKey<FormState> _changePasswordFormKey = GlobalKey<FormState>();
 
-  /// Clean error message by removing "Exception: " or "Exception" text
+  /// Clean error message by removing "Exception: ", "Exception" text, and square brackets
   String _cleanErrorMessage(String message) {
     String cleaned = message;
     // Remove "Exception: " prefix
@@ -62,6 +64,17 @@ class _ProfilePageState extends State<ProfilePage> {
     cleaned = cleaned.replaceAll('Exception: ', '');
     // Remove standalone "Exception" word
     cleaned = cleaned.replaceAll(RegExp(r'\bException\b'), '');
+
+    // Extract content from square brackets instead of removing them
+    // If message is like "[property countryCode should not exist]", extract "property countryCode should not exist"
+    final bracketMatch = RegExp(r'\[(.*?)\]').firstMatch(cleaned);
+    if (bracketMatch != null && bracketMatch.group(1) != null) {
+      cleaned = bracketMatch.group(1)!;
+    } else {
+      // If no brackets found, remove any remaining brackets
+      cleaned = cleaned.replaceAll('[', '').replaceAll(']', '');
+    }
+
     return cleaned.trim();
   }
 
@@ -137,11 +150,23 @@ class _ProfilePageState extends State<ProfilePage> {
 
       // Get current profile state to compare changes
       final currentState = context.read<ProfileBloc>().state;
-      if (currentState is! Loaded) {
-        throw 'Profile not loaded. Please refresh and try again.';
-      }
+      UserProfile originalProfile;
 
-      final originalProfile = currentState.profile;
+      if (currentState is Loaded) {
+        // Use the loaded profile
+        originalProfile = currentState.profile;
+        // Update _lastLoadedProfile to keep it in sync
+        _lastLoadedProfile = originalProfile;
+      } else if (_lastLoadedProfile != null) {
+        // If state is Error but we have last loaded profile, use it
+        originalProfile = _lastLoadedProfile!;
+        print("⚠️ Using last loaded profile due to error state");
+      } else {
+        // No profile data available, try to fetch it
+        print("⚠️ No profile data available, fetching...");
+        context.read<ProfileBloc>().add(const ProfileEvent.fetchProfile());
+        throw 'Profile not loaded. Please wait a moment and try again.';
+      }
       final updatedName = nameController.text.trim();
       final updatedEmail = emailController.text.trim();
       final updatedPhoneNumber = phoneController.text.trim();
@@ -150,12 +175,15 @@ class _ProfilePageState extends State<ProfilePage> {
       final nameChanged = updatedName != originalProfile.name;
       final emailChanged = updatedEmail != originalProfile.email;
       final phoneChanged = updatedPhoneNumber != originalProfile.phoneNumber;
+      final countryCodeChanged =
+          _countryCode != (originalProfile.countryCode ?? "+1");
       final profilePicChanged = _pickedImageBytes != null;
 
       // If nothing changed, just exit editing mode
       if (!nameChanged &&
           !emailChanged &&
           !phoneChanged &&
+          !countryCodeChanged &&
           !profilePicChanged) {
         setState(() {
           isEditing = false;
@@ -196,8 +224,8 @@ class _ProfilePageState extends State<ProfilePage> {
       // Validate phone number format if provided and changed
       if (phoneChanged &&
           updatedPhoneNumber.isNotEmpty &&
-          !RegExp(r"^[0-9]{10}$").hasMatch(updatedPhoneNumber)) {
-        throw 'Please enter a valid 10-digit phone number';
+          !RegExp(r"^[0-9]+$").hasMatch(updatedPhoneNumber)) {
+        throw 'Please enter a valid phone number';
       }
 
       // Build updated model with only changed fields
@@ -207,6 +235,8 @@ class _ProfilePageState extends State<ProfilePage> {
         email: emailChanged ? updatedEmail : originalProfile.email,
         phoneNumber:
             phoneChanged ? updatedPhoneNumber : originalProfile.phoneNumber,
+        countryCode:
+            countryCodeChanged ? _countryCode : originalProfile.countryCode,
         type: "NU", // Keep type unchanged
         profilePic:
             profilePicChanged ? profilePicUrl : originalProfile.profilePic,
@@ -216,6 +246,8 @@ class _ProfilePageState extends State<ProfilePage> {
       print("  - Name: ${nameChanged ? 'CHANGED' : 'unchanged'}");
       print("  - Email: ${emailChanged ? 'CHANGED' : 'unchanged'}");
       print("  - Phone: ${phoneChanged ? 'CHANGED' : 'unchanged'}");
+      print(
+          "  - Country Code: ${countryCodeChanged ? 'CHANGED' : 'unchanged'}");
       print("  - Profile Pic: ${profilePicChanged ? 'CHANGED' : 'unchanged'}");
 
       // Dispatch update event
@@ -228,19 +260,16 @@ class _ProfilePageState extends State<ProfilePage> {
         _pickedImageBytes = null;
       });
 
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      // Success message will be shown in BlocConsumer listener after successful update
     } catch (e) {
       print("❌ Profile save error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Save failed: $e'),
-          backgroundColor: Colors.red,
+          content: Text(
+            'Save failed: $e',
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red.shade300.withOpacity(0.9),
         ),
       );
     } finally {
@@ -255,372 +284,25 @@ class _ProfilePageState extends State<ProfilePage> {
     _isNewPasswordVisible = false;
     _isConfirmPasswordVisible = false;
 
-    if (!kIsWeb && Platform.isIOS) {
-      // iOS Cupertino Dialog
-      showCupertinoDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return StatefulBuilder(
-            builder: (context, setDialogState) {
-              return CupertinoAlertDialog(
-                title: Text(
-                  "Change Password",
-                  style: TextStyle(
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(
-                      context,
-                      mobile: 18,
-                      tablet: 22,
-                      largeTablet: 26,
-                      desktop: 30,
-                    ),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                content: Container(
-                  padding: EdgeInsets.only(
-                    top: GetResponsiveSize.getResponsivePadding(
-                      context,
-                      mobile: 16,
-                      tablet: 20,
-                      largeTablet: 24,
-                      desktop: 28,
-                    ),
-                  ),
-                  child: Builder(
-                    builder: (context) {
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildIOSPasswordField(
-                            controller: _newPasswordController,
-                            label: "New Password",
-                            isVisible: _isNewPasswordVisible,
-                            onToggleVisibility: () {
-                              setDialogState(() {
-                                _isNewPasswordVisible = !_isNewPasswordVisible;
-                              });
-                            },
-                            validator: PasswordValidator.validatePassword,
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 12,
-                              tablet: 16,
-                              largeTablet: 20,
-                              desktop: 24,
-                            ),
-                          ),
-                          _buildIOSPasswordField(
-                            controller: _confirmPasswordController,
-                            label: "Confirm Password",
-                            isVisible: _isConfirmPasswordVisible,
-                            onToggleVisibility: () {
-                              setDialogState(() {
-                                _isConfirmPasswordVisible =
-                                    !_isConfirmPasswordVisible;
-                              });
-                            },
-                            validator: (value) =>
-                                PasswordValidator.validateConfirmPassword(
-                              value,
-                              _newPasswordController.text,
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-                actions: [
-                  CupertinoDialogAction(
-                    isDefaultAction: false,
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      "Cancel",
-                      style: TextStyle(
-                        color: CupertinoColors.systemBlue,
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: 16,
-                          tablet: 18,
-                          largeTablet: 20,
-                          desktop: 22,
-                        ),
-                      ),
-                    ),
-                  ),
-                  CupertinoDialogAction(
-                    isDefaultAction: true,
-                    onPressed: () {
-                      // Manual validation for iOS
-                      final newPasswordError =
-                          PasswordValidator.validatePassword(
-                        _newPasswordController.text,
-                      );
-                      final confirmPasswordError =
-                          PasswordValidator.validateConfirmPassword(
-                        _confirmPasswordController.text,
-                        _newPasswordController.text,
-                      );
-
-                      if (newPasswordError != null ||
-                          confirmPasswordError != null) {
-                        // Show error message
-                        showCupertinoDialog(
-                          context: context,
-                          builder: (ctx) => CupertinoAlertDialog(
-                            title: Text('Validation Error'),
-                            content: Text(
-                              newPasswordError ??
-                                  confirmPasswordError ??
-                                  'Please check your input',
-                            ),
-                            actions: [
-                              CupertinoDialogAction(
-                                isDefaultAction: true,
-                                onPressed: () => Navigator.pop(ctx),
-                                child: Text('OK'),
-                              ),
-                            ],
-                          ),
-                        );
-                        return;
-                      }
-
-                      Navigator.pop(context); // Close the password dialog
-                      // Call the change password logic directly for iOS
-                      _performChangePassword();
-                    },
-                    child: Text(
-                      "OK",
-                      style: TextStyle(
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: 16,
-                          tablet: 18,
-                          largeTablet: 20,
-                          desktop: 22,
-                        ),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
-          );
-        },
-      );
-      return;
-    }
-
-    // Android/Other Platforms Material Dialog
-    showDialog(
+    ChangePasswordDialog.show(
       context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
-              backgroundColor: AppColors.whiteColor,
-              insetPadding: EdgeInsets.symmetric(
-                horizontal: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 16,
-                  tablet: 40,
-                  largeTablet: 60,
-                  desktop: 80,
-                ),
-              ),
-              title: Text(
-                "Change Password",
-                textAlign: TextAlign.center,
-                style: AppTextstyle.title1.copyWith(
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(
-                    context,
-                    mobile: AppTextstyle.title1.fontSize ?? 20,
-                    tablet: 24,
-                    largeTablet: 28,
-                    desktop: 34,
-                  ),
-                ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 24,
-                  tablet: 32,
-                  largeTablet: 40,
-                  desktop: 48,
-                ),
-                vertical: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 20,
-                  tablet: 24,
-                  largeTablet: 28,
-                  desktop: 32,
-                ),
-              ),
-              content: SizedBox(
-                width: GetResponsiveSize.getResponsiveSize(
-                  context,
-                  mobile: 300,
-                  tablet: 400,
-                  largeTablet: 500,
-                  desktop: 600,
-                ),
-                child: Form(
-                  key: _changePasswordFormKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildPasswordField(
-                        controller: _newPasswordController,
-                        label: "New Password",
-                        isVisible: _isNewPasswordVisible,
-                        onToggleVisibility: () {
-                          setDialogState(() {
-                            _isNewPasswordVisible = !_isNewPasswordVisible;
-                          });
-                        },
-                        validator: PasswordValidator.validatePassword,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildPasswordField(
-                        controller: _confirmPasswordController,
-                        label: "Confirm Password",
-                        isVisible: _isConfirmPasswordVisible,
-                        onToggleVisibility: () {
-                          setDialogState(() {
-                            _isConfirmPasswordVisible =
-                                !_isConfirmPasswordVisible;
-                          });
-                        },
-                        validator: (value) =>
-                            PasswordValidator.validateConfirmPassword(
-                          value,
-                          _newPasswordController.text,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 40,
-                          tablet: 60,
-                          largeTablet: 75,
-                          desktop: 85,
-                        ),
-                        child: TextButton(
-                          style: ButtonStyle(
-                            backgroundColor:
-                                WidgetStatePropertyAll(AppColors.whiteColor),
-                            side: WidgetStatePropertyAll(BorderSide(
-                                color: Colors.grey[400]!, width: 1.0)),
-                            shape: WidgetStatePropertyAll(
-                                RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10))),
-                            padding: WidgetStatePropertyAll(
-                              EdgeInsets.symmetric(
-                                vertical:
-                                    GetResponsiveSize.getResponsivePadding(
-                                  context,
-                                  mobile: 12,
-                                  tablet: 16,
-                                  largeTablet: 20,
-                                  desktop: 24,
-                                ),
-                              ),
-                            ),
-                          ),
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(
-                            "Cancel",
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                                context,
-                                mobile: 14,
-                                tablet: 18,
-                                largeTablet: 22,
-                                desktop: 26,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: GetResponsiveSize.getResponsiveSize(
-                        context,
-                        mobile: 12,
-                        tablet: 18,
-                        largeTablet: 24,
-                        desktop: 30,
-                      ),
-                    ),
-                    Expanded(
-                      child: SizedBox(
-                        height: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 40,
-                          tablet: 60,
-                          largeTablet: 75,
-                          desktop: 85,
-                        ),
-                        child: TextButton(
-                          style: ButtonStyle(
-                            backgroundColor:
-                                WidgetStatePropertyAll(AppColors.primaryColor),
-                            shape: WidgetStatePropertyAll(
-                                RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10))),
-                            padding: WidgetStatePropertyAll(
-                              EdgeInsets.symmetric(
-                                vertical:
-                                    GetResponsiveSize.getResponsivePadding(
-                                  context,
-                                  mobile: 12,
-                                  tablet: 16,
-                                  largeTablet: 20,
-                                  desktop: 24,
-                                ),
-                              ),
-                            ),
-                          ),
-                          onPressed: () => _changePassword(),
-                          child: Text(
-                            "OK",
-                            style: TextStyle(
-                              color: AppColors.whiteColor,
-                              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                                context,
-                                mobile: 14,
-                                tablet: 18,
-                                largeTablet: 22,
-                                desktop: 26,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            );
-          },
-        );
+      newPasswordController: _newPasswordController,
+      confirmPasswordController: _confirmPasswordController,
+      formKey: _changePasswordFormKey,
+      isNewPasswordVisible: _isNewPasswordVisible,
+      isConfirmPasswordVisible: _isConfirmPasswordVisible,
+      onNewPasswordVisibilityChanged: (value) {
+        setState(() {
+          _isNewPasswordVisible = value;
+        });
       },
+      onConfirmPasswordVisibilityChanged: (value) {
+        setState(() {
+          _isConfirmPasswordVisible = value;
+        });
+      },
+      onConfirm: () => _changePassword(),
+      onIOSConfirm: () => _performChangePassword(),
     );
   }
 
@@ -673,6 +355,25 @@ class _ProfilePageState extends State<ProfilePage> {
             SingleChildScrollView(
               child: BlocConsumer<ProfileBloc, ProfileState>(
                 listener: (context, state) {
+                  // Show success message only after successful profile update
+                  if (state is profile_bloc.Loaded && _isUpdatingProfile) {
+                    _isUpdatingProfile = false; // Reset flag
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text(
+                          'Profile updated successfully!',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: AppColors.primaryColor,
+                      ),
+                    );
+                  }
+
+                  // Track when saving starts
+                  if (state is profile_bloc.Saving) {
+                    _isUpdatingProfile = true;
+                  }
+
                   if (state is profile_bloc.Error) {
                     // Check if error is related to token expiration (silent logout)
                     final isTokenExpirationError = state.message
@@ -687,6 +388,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     if (isTokenExpirationError) {
                       print(
                           '🔇 Suppressing token expiration error in ProfilePage - logout in progress');
+                      _isUpdatingProfile = false;
                       return; // Skip showing snackbar
                     }
 
@@ -697,26 +399,47 @@ class _ProfilePageState extends State<ProfilePage> {
 
                     if (isDeleteMyDataError) {
                       // Navigate back to profile page and show error in red snackbar
+                      _isUpdatingProfile = false;
                       context.go('/profile');
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(_cleanErrorMessage(state.message)),
-                          backgroundColor: Colors.red,
+                          content: Text(
+                            _cleanErrorMessage(state.message),
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: Colors.red.shade300.withOpacity(0.9),
                         ),
                       );
                     } else {
-                      // For other errors, show normal snackbar
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(_cleanErrorMessage(state.message))),
-                      );
+                      // Only show error message if it's a profile update error (not initial load error)
+                      if (_isUpdatingProfile) {
+                        _isUpdatingProfile = false; // Reset flag
+                        // Show cleaned error message only once
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              _cleanErrorMessage(state.message),
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor:
+                                Colors.red.shade300.withOpacity(0.9),
+                            duration: const Duration(seconds: 4),
+                          ),
+                        );
+                      }
+                      // For initial load errors, don't show snackbar here (let builder handle it)
                     }
                   }
 
                   if (state is profile_bloc.PasswordChanged) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Password changed successfully!')),
+                      SnackBar(
+                        content: const Text(
+                          'Password changed successfully!',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: AppColors.primaryColor,
+                      ),
                     );
                     // Navigate back to profile page
                     context.go('/profile');
@@ -724,10 +447,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
                   if (state is profile_bloc.DataDeleted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content:
-                            Text('Your data has been deleted successfully!'),
-                        backgroundColor: Colors.green,
+                      SnackBar(
+                        content: const Text(
+                          'Your data has been deleted successfully!',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: AppColors.primaryColor,
                       ),
                     );
                     // Navigate back to profile page and refresh profile data
@@ -752,6 +477,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     nameController.text = state.profile.name;
                     emailController.text = state.profile.email;
                     phoneController.text = state.profile.phoneNumber;
+                    _countryCode = state.profile.countryCode ?? "+1";
 
                     print(
                         "🔍 Original profile pic from API: ${state.profile.profilePic}");
@@ -763,6 +489,11 @@ class _ProfilePageState extends State<ProfilePage> {
                         "🔍 Processed profile pic URL: $_currentProfilePicUrl");
                     _seededOnce = true;
                   }
+
+                  // Store last loaded profile to show on error
+                  if (state is Loaded) {
+                    _lastLoadedProfile = state.profile;
+                  }
                 },
                 builder: (context, state) {
                   if (state is profile_bloc.Loading) {
@@ -772,16 +503,16 @@ class _ProfilePageState extends State<ProfilePage> {
                     );
                   }
 
-                  // Handle error state with retry option
+                  // Handle error state - show profile card if we have last loaded profile
+                  // Errors are already shown as snackbars in the listener
                   if (state is profile_bloc.Error) {
-                    // Check if error is related to "Delete My Data" - don't show error UI for this
+                    // Check if error is related to "Delete My Data"
                     final isDeleteMyDataError =
                         state.message.toLowerCase().contains('delete') &&
                             state.message.toLowerCase().contains('data');
 
-                    // For delete my data errors, don't show error UI (already handled in listener with navigation)
+                    // For delete my data errors, trigger a profile fetch
                     if (isDeleteMyDataError) {
-                      // Trigger a profile fetch to show the profile page content
                       WidgetsBinding.instance.addPostFrameCallback((_) {
                         if (mounted) {
                           context.read<ProfileBloc>().add(
@@ -795,56 +526,39 @@ class _ProfilePageState extends State<ProfilePage> {
                       );
                     }
 
-                    // For other errors, show error UI with retry
-                    return SizedBox(
-                      height: 400,
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.error_outline,
-                                size: 48, color: Colors.red[300]),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Failed to load profile',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.grey[800],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              state.message,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 24),
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                // Reset seeded flag and retry
-                                _seededOnce = false;
-                                context.read<ProfileBloc>().add(
-                                      const ProfileEvent.fetchProfile(),
-                                    );
-                              },
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('Retry'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primaryColor,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
+                    // If we have a last loaded profile, show it (for profile update errors)
+                    // This ensures the profile card is visible even when update fails
+                    if (_lastLoadedProfile != null) {
+                      // Update controllers with last loaded profile data
+                      if (!isEditing) {
+                        nameController.text = _lastLoadedProfile!.name;
+                        emailController.text = _lastLoadedProfile!.email;
+                        phoneController.text = _lastLoadedProfile!.phoneNumber;
+                        _countryCode = _lastLoadedProfile!.countryCode ?? "+1";
+                        _currentProfilePicUrl = _lastLoadedProfile!.profilePic;
+                      }
+                      // Continue to show profile content below
+                    } else {
+                      // No profile loaded yet, try to fetch it
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          context.read<ProfileBloc>().add(
+                                const ProfileEvent.fetchProfile(),
+                              );
+                        }
+                      });
+                      return const SizedBox(
+                        height: 400,
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
                   }
 
-                  if (state is Loaded || state is Saving) {
+                  // Show profile content when loaded, while saving, or on error (if we have last loaded profile)
+                  if (state is Loaded ||
+                      state is Saving ||
+                      (state is profile_bloc.Error &&
+                          _lastLoadedProfile != null)) {
                     // if (state is Loaded) {
                     //   nameController.text = state.profile.name;
                     //   emailController.text = state.profile.email;
@@ -889,6 +603,12 @@ class _ProfilePageState extends State<ProfilePage> {
                           nameController: nameController,
                           emailController: emailController,
                           phoneController: phoneController,
+                          countryCode: _countryCode,
+                          onCountryCodeChanged: (code) {
+                            setState(() {
+                              _countryCode = code;
+                            });
+                          },
                           isEditing: isEditing,
                           onEditTap: () => setState(() => isEditing = true),
                           onSaveTap: saveProfile,
@@ -2072,8 +1792,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                           .showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                              'Failed to delete account: $e'),
-                                          backgroundColor: Colors.red,
+                                            'Failed to delete account: $e',
+                                            style: const TextStyle(
+                                                color: Colors.white),
+                                          ),
+                                          backgroundColor: Colors.red.shade300
+                                              .withOpacity(0.9),
                                         ),
                                       );
                                     }
@@ -2826,8 +2550,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                           .showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                              'Failed to delete my data: $e'),
-                                          backgroundColor: Colors.red,
+                                            'Failed to delete my data: $e',
+                                            style: const TextStyle(
+                                                color: Colors.white),
+                                          ),
+                                          backgroundColor: Colors.red.shade300
+                                              .withOpacity(0.9),
                                         ),
                                       );
                                     }
@@ -2870,355 +2598,6 @@ class _ProfilePageState extends State<ProfilePage> {
         floatingActionButton: SafeArea(
           minimum: const EdgeInsets.only(bottom: 20),
           child: const BottomNavBar(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPasswordField({
-    required TextEditingController controller,
-    required String label,
-    required bool isVisible,
-    required VoidCallback onToggleVisibility,
-    required String? Function(String?) validator,
-  }) {
-    return SizedBox(
-      height: GetResponsiveSize.getResponsiveSize(
-        context,
-        mobile: 56,
-        tablet: 65,
-        largeTablet: 75,
-        desktop: 85,
-      ),
-      child: TextFormField(
-        controller: controller,
-        obscureText: !isVisible,
-        validator: validator,
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: AppColors.primaryColor),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.red),
-          ),
-          suffixIcon: IconButton(
-            icon: Icon(
-              isVisible ? Icons.visibility : Icons.visibility_off,
-              color: Colors.grey[600],
-            ),
-            onPressed: onToggleVisibility,
-          ),
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: GetResponsiveSize.getResponsivePadding(
-              context,
-              mobile: 12,
-              tablet: 18,
-              largeTablet: 24,
-              desktop: 30,
-            ),
-            vertical: GetResponsiveSize.getResponsivePadding(
-              context,
-              mobile: 16,
-              tablet: 20,
-              largeTablet: 24,
-              desktop: 28,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildIOSPasswordField({
-    required TextEditingController controller,
-    required String label,
-    required bool isVisible,
-    required VoidCallback onToggleVisibility,
-    required String? Function(String?) validator,
-    String? errorText,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.only(
-            bottom: GetResponsiveSize.getResponsivePadding(
-              context,
-              mobile: 6,
-              tablet: 8,
-              largeTablet: 10,
-              desktop: 12,
-            ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: 13,
-                tablet: 15,
-                largeTablet: 17,
-                desktop: 19,
-              ),
-              fontWeight: FontWeight.w500,
-              color: CupertinoColors.label,
-            ),
-          ),
-        ),
-        Container(
-          height: GetResponsiveSize.getResponsiveSize(
-            context,
-            mobile: 44,
-            tablet: 50,
-            largeTablet: 56,
-            desktop: 62,
-          ),
-          decoration: BoxDecoration(
-            color: CupertinoColors.systemGrey6,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: CupertinoTextField(
-                  controller: controller,
-                  obscureText: !isVisible,
-                  placeholder: label,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: GetResponsiveSize.getResponsivePadding(
-                      context,
-                      mobile: 12,
-                      tablet: 16,
-                      largeTablet: 20,
-                      desktop: 24,
-                    ),
-                    vertical: GetResponsiveSize.getResponsivePadding(
-                      context,
-                      mobile: 10,
-                      tablet: 12,
-                      largeTablet: 14,
-                      desktop: 16,
-                    ),
-                  ),
-                  style: TextStyle(
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(
-                      context,
-                      mobile: 16,
-                      tablet: 18,
-                      largeTablet: 20,
-                      desktop: 22,
-                    ),
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(
-                  right: GetResponsiveSize.getResponsivePadding(
-                    context,
-                    mobile: 8,
-                    tablet: 12,
-                    largeTablet: 16,
-                    desktop: 20,
-                  ),
-                ),
-                child: CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  minSize: 0,
-                  onPressed: onToggleVisibility,
-                  child: Icon(
-                    isVisible ? CupertinoIcons.eye_slash : CupertinoIcons.eye,
-                    size: GetResponsiveSize.getResponsiveSize(
-                      context,
-                      mobile: 20,
-                      tablet: 22,
-                      largeTablet: 24,
-                      desktop: 26,
-                    ),
-                    color: CupertinoColors.label,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (errorText != null)
-          Padding(
-            padding: EdgeInsets.only(
-              top: GetResponsiveSize.getResponsivePadding(
-                context,
-                mobile: 6,
-                tablet: 8,
-                largeTablet: 10,
-                desktop: 12,
-              ),
-            ),
-            child: Text(
-              errorText,
-              style: TextStyle(
-                color: CupertinoColors.systemRed,
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 12,
-                  tablet: 14,
-                  largeTablet: 16,
-                  desktop: 18,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class BottomNavBar extends StatelessWidget {
-  const BottomNavBar({super.key});
-
-  static const double _vPad = 10;
-
-  @override
-  Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double horizontalMargin = GetResponsiveSize.getResponsiveSize(
-      context,
-      mobile: 0,
-      tablet: 24,
-      largeTablet: 32,
-      desktop: 40,
-    );
-    final double barWidth = GetResponsiveSize.getResponsiveSize(
-      context,
-      mobile: 300,
-      tablet: screenWidth - (horizontalMargin * 2),
-      largeTablet: screenWidth - (horizontalMargin * 2),
-      desktop: screenWidth - (horizontalMargin * 2),
-    );
-    final double barHeight = GetResponsiveSize.getResponsiveSize(
-      context,
-      mobile: 60,
-      tablet: 80,
-      largeTablet: 85,
-      desktop: 90,
-    );
-    final double baseIconSize = GetResponsiveSize.getResponsiveSize(
-      context,
-      mobile: 20,
-      tablet: 35,
-      largeTablet: 40,
-      desktop: 40,
-    );
-    final double addIconSize = GetResponsiveSize.getResponsiveSize(
-      context,
-      mobile: 36,
-      tablet: 50,
-      largeTablet: 50,
-      desktop: 54,
-    );
-    return Container(
-      height: barHeight,
-      width: barWidth,
-      decoration: BoxDecoration(
-        color: AppColors.primaryColor,
-        borderRadius: BorderRadius.circular(50),
-      ),
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: 10,
-          vertical: GetResponsiveSize.getResponsiveSize(
-            context,
-            mobile: _vPad,
-            tablet: 15,
-            largeTablet: 17,
-            desktop: 17,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _navItem(context, 'assets/images/home-icon.png', '/home',
-                iconSize: baseIconSize),
-            _navItem(context, 'assets/images/search-icon.png',
-                '/search?from=/profile',
-                iconSize: baseIconSize),
-            _navItem(context, 'assets/images/seller-icon.png', '/seller',
-                iconSize: addIconSize),
-            _navItem(context, 'assets/images/chat-icon.png',
-                '/chat-rooms?from=profile',
-                iconSize: baseIconSize),
-            _navItem(context, 'assets/images/profile-icon.png', '/profile',
-                iconSize: baseIconSize),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _navItem(
-    BuildContext context,
-    String image,
-    String? route, {
-    double iconSize = 20,
-  }) {
-    return GestureDetector(
-      onTap: () async {
-        if (route == null) return;
-
-        // Routes that don't require authentication
-        final publicRoutes = ['/home', '/search'];
-        final isPublicRoute = publicRoutes.any((r) => route.startsWith(r));
-
-        if (isPublicRoute) {
-          // Allow navigation without authentication
-          if (route.contains('/chat-rooms')) {
-            context.go(route);
-          } else {
-            context.push(route);
-          }
-        } else {
-          // Protected routes - check authentication
-          final isAuthenticated = await AuthGuard.isAuthenticated();
-          if (isAuthenticated) {
-            // User is authenticated, allow navigation
-            if (route.contains('/chat-rooms')) {
-              context.go(route);
-            } else {
-              context.push(route);
-            }
-          } else {
-            // User is not authenticated, show login prompt
-            final routePath =
-                route.split('?').first; // Remove query params for redirect
-            DialogUtil.showLoginPromptDialog(
-              context,
-              message: "Please login to access this feature.",
-              redirectPath: routePath,
-            );
-          }
-        }
-      },
-      child: Center(
-        // Fix the rendered size exactly
-        child: SizedBox.square(
-          dimension: iconSize,
-          child: Image.asset(
-            image,
-            fit: BoxFit.contain,
-          ),
         ),
       ),
     );

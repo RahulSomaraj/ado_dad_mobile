@@ -22,9 +22,12 @@ class AdDetailReportButton extends StatelessWidget {
     final reportedUserId = ad.user?.id;
     if (reportedUserId == null || reportedUserId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unable to report: User information not available'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text(
+            'Unable to report: User information not available',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red.shade300.withOpacity(0.9),
         ),
       );
       return;

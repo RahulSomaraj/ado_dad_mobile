@@ -166,8 +166,11 @@ Download Ado Dad app to contact the seller and view more details!
               error: (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Error: $e'),
-                    backgroundColor: Colors.red,
+                    content: Text(
+                      'Error: $e',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.red.shade300.withOpacity(0.9),
                   ),
                 );
               },
@@ -175,9 +178,12 @@ Download Ado Dad app to contact the seller and view more details!
               markingAsSold: () {},
               markedAsSold: (ad) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Ad marked as sold successfully!'),
-                    backgroundColor: Colors.green,
+                  SnackBar(
+                    content: const Text(
+                      'Ad marked as sold successfully!',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: AppColors.primaryColor,
                   ),
                 );
                 // Navigate to home page after showing success message
@@ -1226,9 +1232,12 @@ Download Ado Dad app to contact the seller and view more details!
     final reportedUserId = ad.user?.id;
     if (reportedUserId == null || reportedUserId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unable to report: User information not available'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text(
+            'Unable to report: User information not available',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red.shade300.withOpacity(0.9),
         ),
       );
       return;

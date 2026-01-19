@@ -102,19 +102,34 @@ class AddRepository {
     }
   }
 
-  Future<List<VehicleManufacturer>> fetchManufacturers() async {
+  Future<List<VehicleManufacturer>> fetchManufacturers({
+    String? search,
+    String? vehicleCategory,
+  }) async {
     final List<VehicleManufacturer> allManufacturers = [];
     int page = 1;
-    int limit = 100; // Fetch 100 items per page
+    int limit = 20; // Fetch 20 items per page
     bool hasMore = true;
 
     while (hasMore) {
+      final queryParameters = <String, dynamic>{
+        'page': page,
+        'limit': limit,
+      };
+
+      // Add search parameter if provided
+      if (search != null && search.isNotEmpty) {
+        queryParameters['search'] = search;
+      }
+
+      // Add category parameter if provided
+      if (vehicleCategory != null && vehicleCategory.isNotEmpty) {
+        queryParameters['category'] = vehicleCategory;
+      }
+
       final response = await _dio.get(
         '/vehicle-inventory/manufacturers',
-        queryParameters: {
-          'page': page,
-          'limit': limit,
-        },
+        queryParameters: queryParameters,
       );
 
       final responseData = response.data;
@@ -142,21 +157,28 @@ class AddRepository {
     return allManufacturers;
   }
 
-  Future<List<VehicleModel>> fetchModelsByManufacturer(
-      String manufacturerId) async {
+  Future<List<VehicleModel>> fetchModelsByManufacturer(String manufacturerId,
+      {String? search}) async {
     final List<VehicleModel> allModels = [];
     int page = 1;
-    int limit = 100; // Fetch 100 items per page
+    int limit = 20; // Fetch 20 items per page
     bool hasMore = true;
 
     while (hasMore) {
+      final queryParameters = <String, dynamic>{
+        'manufacturerId': manufacturerId,
+        'page': page,
+        'limit': limit,
+      };
+
+      // Add search parameter if provided
+      if (search != null && search.isNotEmpty) {
+        queryParameters['search'] = search;
+      }
+
       final response = await _dio.get(
         '/vehicle-inventory/models',
-        queryParameters: {
-          'manufacturerId': manufacturerId,
-          'page': page,
-          'limit': limit,
-        },
+        queryParameters: queryParameters,
       );
 
       final responseData = response.data;
@@ -390,19 +412,26 @@ class AddRepository {
     }
   }
 
-  Future<List<VehicleModel>> fetchModals() async {
+  Future<List<VehicleModel>> fetchModals({String? search}) async {
     final List<VehicleModel> allModels = [];
     int page = 1;
-    int limit = 100; // Fetch 100 items per page
+    int limit = 20; // Fetch 20 items per page
     bool hasMore = true;
 
     while (hasMore) {
+      final queryParameters = <String, dynamic>{
+        'page': page,
+        'limit': limit,
+      };
+
+      // Add search parameter if provided
+      if (search != null && search.isNotEmpty) {
+        queryParameters['search'] = search;
+      }
+
       final response = await _dio.get(
         '/vehicle-inventory/models',
-        queryParameters: {
-          'page': page,
-          'limit': limit,
-        },
+        queryParameters: queryParameters,
       );
 
       final responseData = response.data;

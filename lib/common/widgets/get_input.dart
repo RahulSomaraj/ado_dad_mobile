@@ -19,25 +19,25 @@ class GetInput extends StatefulWidget {
   final bool readOnly;
   final int maxLines;
   final bool required;
-
-  const GetInput({
-    super.key,
-    required this.label,
-    this.controller,
-    this.onSaved,
-    this.isEmail = false,
-    this.isPhone = false,
-    this.isPassword = false,
-    this.isSignupPassword = false,
-    this.isDate = false,
-    this.initialValue,
-    this.onTap,
-    this.readOnly = false,
-    this.isNumberField = false,
-    this.isPrice = false,
-    this.maxLines = 1,
-    this.required = true,
-  });
+  final bool? isDescription;
+  const GetInput(
+      {super.key,
+      required this.label,
+      this.controller,
+      this.onSaved,
+      this.isEmail = false,
+      this.isPhone = false,
+      this.isPassword = false,
+      this.isSignupPassword = false,
+      this.isDate = false,
+      this.initialValue,
+      this.onTap,
+      this.readOnly = false,
+      this.isNumberField = false,
+      this.isPrice = false,
+      this.maxLines = 1,
+      this.required = true,
+      this.isDescription = false});
 
   @override
   State<GetInput> createState() => _GetInputState();
@@ -64,9 +64,12 @@ class _GetInputState extends State<GetInput> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDescriptionField = widget.isDescription == true;
+    final int effectiveMaxLines =
+        isDescriptionField && widget.maxLines == 1 ? 4 : widget.maxLines;
     final textField = TextFormField(
       controller: _internalController,
-      maxLines: widget.maxLines,
+      maxLines: effectiveMaxLines,
       // readOnly: widget.readOnly ||
       //     widget.isDate, // Prevent manual typing for date inputs
       onTap: widget.onTap,
@@ -118,15 +121,19 @@ class _GetInputState extends State<GetInput> {
           ),
         ),
       ),
-      keyboardType: widget.isEmail
-          ? TextInputType.emailAddress
-          : widget.isPhone
-              ? TextInputType.phone
-              : widget.isDate
-                  ? TextInputType.datetime
-                  : widget.isNumberField
-                      ? TextInputType.number
-                      : TextInputType.text,
+      keyboardType: isDescriptionField
+          ? TextInputType.multiline
+          : widget.isEmail
+              ? TextInputType.emailAddress
+              : widget.isPhone
+                  ? TextInputType.phone
+                  : widget.isDate
+                      ? TextInputType.datetime
+                      : widget.isNumberField
+                          ? TextInputType.number
+                          : TextInputType.text,
+      textInputAction:
+          isDescriptionField ? TextInputAction.newline : TextInputAction.next,
       inputFormatters: _getInputFormatters(),
       obscureText: widget.isPassword ? _obscureText : false,
       validator: _validateInput,
@@ -170,7 +177,6 @@ class _GetInputState extends State<GetInput> {
     if (widget.isPhone) {
       return [
         FilteringTextInputFormatter.digitsOnly,
-        LengthLimitingTextInputFormatter(10)
       ];
     }
     if (widget.isNumberField) {
@@ -193,7 +199,7 @@ class _GetInputState extends State<GetInput> {
             .hasMatch(value)) {
       return "Enter a valid email address";
     }
-    if (widget.isPhone && !RegExp(r"^[0-9]{10}$").hasMatch(value)) {
+    if (widget.isPhone && !RegExp(r"^[0-9]+$").hasMatch(value)) {
       return "Enter a valid phone number";
     }
     if (widget.isPassword && widget.isSignupPassword) {
