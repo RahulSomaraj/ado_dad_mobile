@@ -26,8 +26,8 @@ class _SignupPageState extends State<SignupPage> {
   String _name = '';
   String _email = '';
   String _phone = '';
-  String _countryCode = "+1";
-  String _selectedFlag = "🇺🇸";
+  String _countryCode = "+91";
+  String _selectedFlag = "🇮🇳";
   String _password = '';
 
   Uint8List? _avatarBytes; // <-- NEW: local preview bytes
