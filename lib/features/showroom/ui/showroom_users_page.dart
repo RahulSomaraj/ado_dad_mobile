@@ -22,6 +22,16 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
   bool _isLoading = true;
   String? _error;
 
+  String _maskPhoneNumber(String phoneNumber) {
+    final digitsOnly = phoneNumber.replaceAll(RegExp(r'\D'), '');
+    if (digitsOnly.isEmpty) return '';
+    final visible = digitsOnly.length >= 3
+        ? digitsOnly.substring(digitsOnly.length - 3)
+        : digitsOnly;
+    final maskedCount = (digitsOnly.length - visible.length).clamp(0, 1000);
+    return '${'*' * maskedCount}$visible';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -437,7 +447,7 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
                         ),
                       ),
                       Text(
-                        user.phoneNumber!,
+                        _maskPhoneNumber(user.phoneNumber!),
                         style: AppTextstyle.categoryLabelTextStyle.copyWith(
                           fontSize: GetResponsiveSize.getResponsiveFontSize(
                             context,

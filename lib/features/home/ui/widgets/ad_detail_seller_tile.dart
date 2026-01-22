@@ -9,16 +9,13 @@ class AdDetailSellerTile extends StatelessWidget {
 
   const AdDetailSellerTile({super.key, required this.ad});
 
-  String _formatPhoneNumber(String? countryCode, String phone) {
-    final trimmedCountryCode = countryCode?.trim();
-    if (trimmedCountryCode != null && trimmedCountryCode.isNotEmpty) {
-      // Ensure country code starts with + if it doesn't already
-      final formattedCountryCode = trimmedCountryCode.startsWith('+')
-          ? trimmedCountryCode
-          : '+$trimmedCountryCode';
-      return '$formattedCountryCode $phone';
-    }
-    return phone;
+  String _maskPhoneNumber(String phone) {
+    final digitsOnly = phone.replaceAll(RegExp(r'\D'), '');
+    if (digitsOnly.isEmpty) return '';
+    final visible = digitsOnly.length >= 3
+        ? digitsOnly.substring(digitsOnly.length - 3)
+        : digitsOnly;
+    return '+ **  *******$visible';
   }
 
   @override
@@ -64,7 +61,7 @@ class AdDetailSellerTile extends StatelessWidget {
                 ),
               if (ad.user?.phone?.trim().isNotEmpty == true)
                 Text(
-                  _formatPhoneNumber(ad.user!.countryCode, ad.user!.phone!),
+                  _maskPhoneNumber(ad.user!.phone!),
                   style: TextStyle(
                     fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                         mobile: 14, tablet: 20, largeTablet: 24, desktop: 28),

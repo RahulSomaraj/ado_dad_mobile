@@ -338,6 +338,16 @@ class _SellerCard extends StatelessWidget {
   const _SellerCard({required this.seller});
   final AdUser seller;
 
+  String _maskPhoneNumber(String phoneNumber) {
+    final digitsOnly = phoneNumber.replaceAll(RegExp(r'\D'), '');
+    if (digitsOnly.isEmpty) return '';
+    final visible = digitsOnly.length >= 3
+        ? digitsOnly.substring(digitsOnly.length - 3)
+        : digitsOnly;
+    final maskedCount = (digitsOnly.length - visible.length).clamp(0, 1000);
+    return '${'*' * maskedCount}$visible';
+  }
+
   String _formatPhoneNumber(String? countryCode, String phone) {
     final trimmedCountryCode = countryCode?.trim();
     if (trimmedCountryCode != null && trimmedCountryCode.isNotEmpty) {
@@ -417,7 +427,10 @@ class _SellerCard extends StatelessWidget {
                 ],
                 if (seller.phone?.trim().isNotEmpty == true) ...[
                   Text(
-                    _formatPhoneNumber(seller.countryCode, seller.phone!),
+                    _formatPhoneNumber(
+                      seller.countryCode,
+                      _maskPhoneNumber(seller.phone!),
+                    ),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF111827),
@@ -621,18 +634,47 @@ class _ProductTile extends StatelessWidget {
                     SizedBox(
                         height: GetResponsiveSize.getResponsiveSize(context,
                             mobile: 2, tablet: 4, largeTablet: 6, desktop: 8)),
-                    Text(
-                      ad.location,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: const Color(0xFF6B7280),
-                        fontWeight: FontWeight.w600,
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          size: GetResponsiveSize.getResponsiveSize(
                             context,
-                            mobile: theme.textTheme.bodySmall?.fontSize ?? 12.0,
+                            mobile: 12,
                             tablet: 16,
-                            largeTablet: 20,
-                            desktop: 24),
-                      ),
+                            largeTablet: 18,
+                            desktop: 20,
+                          ),
+                          color: const Color(0xFF6B7280),
+                        ),
+                        SizedBox(
+                          width: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 4,
+                            tablet: 6,
+                            largeTablet: 8,
+                            desktop: 8,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            ad.location,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: const Color(0xFF6B7280),
+                              fontWeight: FontWeight.w600,
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                  context,
+                                  mobile: theme.textTheme.bodySmall?.fontSize ??
+                                      12.0,
+                                  tablet: 16,
+                                  largeTablet: 20,
+                                  desktop: 24),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                     if (subtitle.isNotEmpty) ...[
                       SizedBox(
