@@ -16,7 +16,6 @@ import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_fuel_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_manufacturer_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_transmission_type_model.dart';
-import 'package:ado_dad_user/models/advertisement_post_model/vehicle_variant_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehilce_model.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:flutter/material.dart';
@@ -53,9 +52,6 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
 
   List<VehicleModel> _models = [];
   VehicleModel? _selectedModel;
-
-  List<VehicleVariant> _variants = [];
-  VehicleVariant? _selectedVariant;
 
   List<VehicleTransmissionType> _transmissionTypes = [];
   VehicleTransmissionType? _selectedTransmissionType;
@@ -149,33 +145,7 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
           : null;
     }
 
-    // 3) load variants for selected model, then select by id or name
-    if (_selectedModel != null) {
-      _variants = await repo.fetchVariantsByModel(_selectedModel!.id);
-      setState(() {});
-
-      final variantIdOrName = widget.ad.variant;
-      if (_variants.isNotEmpty &&
-          variantIdOrName != null &&
-          variantIdOrName.isNotEmpty) {
-        final trimmedVariant = variantIdOrName.trim();
-        try {
-          _selectedVariant = _variants.firstWhere(
-            (v) =>
-                v.id.trim() == trimmedVariant ||
-                v.name.trim().toLowerCase() == trimmedVariant.toLowerCase(),
-          );
-        } catch (_) {
-          // Variant not found, leave it null instead of defaulting to first
-          _selectedVariant = null;
-        }
-      } else {
-        // No variant stored, leave it null
-        _selectedVariant = null;
-      }
-    }
-
-    // 4) load transmission types and fuel types; preselect by IDs
+    // 3) load transmission types and fuel types; preselect by IDs
     try {
       _transmissionTypes = await repo.fetchVehicleTransmissionTypes();
       _selectedTransmissionType = _transmissionTypes.firstWhere(
@@ -320,7 +290,6 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
   //     "location": _location,
   //     "manufacturerId": _selectedManufacturer?.id,
   //     "modelId": _selectedModel?.id,
-  //     "variantId": _selectedVariant?.id,
   //     "year": _year,
   //     "mileage": _mileage,
   //     "color": _color,
@@ -367,7 +336,6 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
       if (_longitude != null) "longitude": _longitude,
       "manufacturerId": _selectedManufacturer?.id,
       "modelId": _selectedModel?.id,
-      "variantId": _selectedVariant?.id,
       "year": int.parse(_yearCtrl.text.trim()),
       "mileage": int.parse(_mileageCtrl.text.trim()),
       "color": _colorCtrl.text.trim(),
@@ -544,8 +512,6 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
                         _selectedManufacturer = m;
                         _selectedModel = null;
                         _models = [];
-                        _selectedVariant = null;
-                        _variants = [];
                       });
                       if (m != null) {
                         _models = await AddRepository()
@@ -575,18 +541,9 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
                     onChanged: (mdl) async {
                       setState(() {
                         _selectedModel = mdl;
-                        _selectedVariant = null;
-                        _variants = [];
                       });
-                      if (mdl != null) {
-                        _variants =
-                            await AddRepository().fetchVariantsByModel(mdl.id);
-                        if (mounted) setState(() {});
-                      }
                     },
                   ),
-                  const SizedBox(height: 10),
-                  _buildVariantDropdown(),
                   const SizedBox(height: 10),
 
                   // Transmission / Fuel
@@ -744,20 +701,6 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
           },
         ),
       ),
-    );
-  }
-
-  Widget _buildVariantDropdown() {
-    return buildSearchableDropdown<VehicleVariant>(
-      labelText: 'Variant',
-      items: _variants,
-      selectedValue: _selectedVariant,
-      getDisplayText: (item) => item.name,
-      enabled: _variants.isNotEmpty,
-      onChanged: (val) {
-        setState(() => _selectedVariant = val);
-      },
-      errorMsg: 'Please select a variant',
     );
   }
 }

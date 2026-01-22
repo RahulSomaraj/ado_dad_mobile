@@ -801,23 +801,52 @@ class _CategoryListPageState extends State<CategoryListPage> {
                                                 maxLines: 2,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
-                                              Text(
-                                                ad.location,
-                                                style: AppTextstyle
-                                                    .categoryLabelTextStyle
-                                                    .copyWith(
-                                                  fontSize: GetResponsiveSize
-                                                      .getResponsiveFontSize(
-                                                    context,
-                                                    mobile:
-                                                        12.0, // Keep mobile unchanged
-                                                    tablet: 14.0,
-                                                    largeTablet: 16.0,
-                                                    desktop: 18.0,
+                                              Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.location_on,
+                                                    size: GetResponsiveSize
+                                                        .getResponsiveSize(
+                                                      context,
+                                                      mobile: 12,
+                                                      tablet: 16,
+                                                      largeTablet: 18,
+                                                      desktop: 20,
+                                                    ),
+                                                    color: Colors.black,
                                                   ),
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
+                                                  SizedBox(
+                                                    width: GetResponsiveSize
+                                                        .getResponsiveSize(
+                                                      context,
+                                                      mobile: 4,
+                                                      tablet: 6,
+                                                      largeTablet: 8,
+                                                      desktop: 8,
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    child: Text(
+                                                      ad.location,
+                                                      style: AppTextstyle
+                                                          .categoryLabelTextStyle
+                                                          .copyWith(
+                                                        fontSize: GetResponsiveSize
+                                                            .getResponsiveFontSize(
+                                                          context,
+                                                          mobile:
+                                                              12.0, // Keep mobile unchanged
+                                                          tablet: 14.0,
+                                                          largeTablet: 16.0,
+                                                          desktop: 18.0,
+                                                        ),
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                               SizedBox(
                                                 height: GetResponsiveSize

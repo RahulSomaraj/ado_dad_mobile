@@ -549,23 +549,52 @@ class _AdTile extends StatelessWidget {
                           ),
                         ),
                         // Location
-                        Text(
-                          ad.location,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: GetResponsiveSize.getResponsiveFontSize(
-                              context,
-                              mobile: 12,
-                              tablet: 18,
-                              largeTablet: 22,
-                              desktop: 26,
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on,
+                              size: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 12,
+                                tablet: 16,
+                                largeTablet: 18,
+                                desktop: 20,
+                              ),
+                              color: isSold
+                                  ? Colors.grey.shade400
+                                  : const Color(0xFFA0A4AB),
                             ),
-                            color: isSold
-                                ? Colors.grey.shade400
-                                : const Color(0xFFA0A4AB),
-                            fontWeight: FontWeight.w600,
-                          ),
+                            SizedBox(
+                              width: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 4,
+                                tablet: 6,
+                                largeTablet: 8,
+                                desktop: 8,
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                ad.location,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                    context,
+                                    mobile: 12,
+                                    tablet: 18,
+                                    largeTablet: 22,
+                                    desktop: 26,
+                                  ),
+                                  color: isSold
+                                      ? Colors.grey.shade400
+                                      : const Color(0xFFA0A4AB),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

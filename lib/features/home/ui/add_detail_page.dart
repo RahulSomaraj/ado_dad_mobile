@@ -206,13 +206,11 @@ Download Ado Dad app to contact the seller and view more details!
                       count: _getTotalCarouselItems(ad),
                       currentIndex: _currentIndex,
                     )),
-                    // Share button for ad owners - positioned above price section
                     SliverToBoxAdapter(
-                        child: AdDetailOwnerShareButton(
+                        child: AdDetailTitlePrice(
                       ad: ad,
                       isCurrentUserOwner: _isCurrentUserOwner,
                     )),
-                    SliverToBoxAdapter(child: AdDetailTitlePrice(ad: ad)),
                     SliverToBoxAdapter(child: Divider()),
 
                     SliverToBoxAdapter(
@@ -239,14 +237,11 @@ Download Ado Dad app to contact the seller and view more details!
                       count: _getTotalCarouselItems(widget.ad),
                       currentIndex: _currentIndex,
                     )),
-                    // Share button for ad owners - positioned above price section
                     SliverToBoxAdapter(
-                        child: AdDetailOwnerShareButton(
+                        child: AdDetailTitlePrice(
                       ad: widget.ad,
                       isCurrentUserOwner: _isCurrentUserOwner,
                     )),
-                    SliverToBoxAdapter(
-                        child: AdDetailTitlePrice(ad: widget.ad)),
                     SliverToBoxAdapter(child: Divider()),
                     SliverToBoxAdapter(
                         child: AdDetailTabsSection(
@@ -272,13 +267,11 @@ Download Ado Dad app to contact the seller and view more details!
                       count: _getTotalCarouselItems(ad),
                       currentIndex: _currentIndex,
                     )),
-                    // Share button for ad owners - positioned above price section
                     SliverToBoxAdapter(
-                        child: AdDetailOwnerShareButton(
+                        child: AdDetailTitlePrice(
                       ad: ad,
                       isCurrentUserOwner: _isCurrentUserOwner,
                     )),
-                    SliverToBoxAdapter(child: AdDetailTitlePrice(ad: ad)),
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: EdgeInsets.symmetric(

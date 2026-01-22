@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_action_buttons.dart';
 import 'package:flutter/material.dart';
 
 String toTitleCase(String text) {
@@ -16,8 +17,13 @@ String toTitleCase(String text) {
 
 class AdDetailTitlePrice extends StatelessWidget {
   final AddModel ad;
+  final Future<bool> Function(AddModel) isCurrentUserOwner;
 
-  const AdDetailTitlePrice({super.key, required this.ad});
+  const AdDetailTitlePrice({
+    super.key,
+    required this.ad,
+    required this.isCurrentUserOwner,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -39,68 +45,76 @@ class AdDetailTitlePrice extends StatelessWidget {
         GetResponsiveSize.getResponsivePadding(context,
             mobile: 10, tablet: 14, largeTablet: 18, desktop: 22),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: isIOS ? 3 : 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (title.isNotEmpty)
-                  Text(
-                    toTitleCase(title),
-                    style: TextStyle(
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile: isIOS ? 14 : 16,
-                            tablet: 25,
-                            largeTablet: 29,
-                            desktop: 33),
-                        fontWeight: FontWeight.bold),
-                    maxLines: isIOS ? null : 2,
-                    overflow:
-                        isIOS ? TextOverflow.visible : TextOverflow.ellipsis,
-                  ),
-              ],
-            ),
-          ),
-          SizedBox(
-              width: GetResponsiveSize.getResponsiveSize(context,
-                  mobile: isIOS ? 8 : 16,
-                  tablet: 20,
-                  largeTablet: 24,
-                  desktop: 28)),
-          Container(
-            height: GetResponsiveSize.getResponsiveSize(context,
-                mobile: 40, tablet: 60, largeTablet: 70, desktop: 80),
-            child: const VerticalDivider(
-              thickness: 1,
-              color: Colors.grey,
-            ),
-          ),
-          SizedBox(
-              width: GetResponsiveSize.getResponsiveSize(context,
-                  mobile: isIOS ? 8 : 16,
-                  tablet: 20,
-                  largeTablet: 24,
-                  desktop: 28)),
-          Flexible(
-            flex: isIOS ? 2 : 1,
-            child: Text(
-              '₹ ${(ad.price)}',
-              style: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                    mobile: isIOS ? 13 : 16,
-                    tablet: 25,
-                    largeTablet: 29,
-                    desktop: 33),
-                fontWeight: FontWeight.w800,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: title.isNotEmpty
+                    ? Text(
+                        toTitleCase(title),
+                        style: TextStyle(
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: isIOS ? 14 : 16,
+                                tablet: 25,
+                                largeTablet: 29,
+                                desktop: 33),
+                            fontWeight: FontWeight.bold),
+                        maxLines: isIOS ? null : 2,
+                        overflow: isIOS
+                            ? TextOverflow.visible
+                            : TextOverflow.ellipsis,
+                      )
+                    : const SizedBox.shrink(),
               ),
-              textAlign: TextAlign.end,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              FutureBuilder<bool>(
+                future: isCurrentUserOwner(ad),
+                builder: (context, snapshot) {
+                  final isOwner = snapshot.data ?? false;
+                  if (!isOwner) {
+                    return const SizedBox.shrink();
+                  }
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      left: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 8,
+                        tablet: 12,
+                        largeTablet: 14,
+                        desktop: 16,
+                      ),
+                    ),
+                    child: AdDetailShareButton(ad: ad),
+                  );
+                },
+              ),
+            ],
+          ),
+          if (title.isNotEmpty)
+            SizedBox(
+              height: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: isIOS ? 6 : 8,
+                tablet: 12,
+                largeTablet: 14,
+                desktop: 16,
+              ),
             ),
+          Text(
+            '₹ ${(ad.price)}',
+            style: TextStyle(
+              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                  mobile: isIOS ? 13 : 16,
+                  tablet: 25,
+                  largeTablet: 29,
+                  desktop: 33),
+              fontWeight: FontWeight.w800,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

@@ -615,6 +615,9 @@ class _SpecsCard extends StatelessWidget {
             ? ad.additionalFeatures!.join(', ')
             : '-';
 
+    final isTwoWheeler =
+        ad.category == 'two_wheeler' || ad.vehicleType == 'two-wheeler';
+
     // Regular vehicle items (without Additional Features)
     final regularItems = <AdDetailSpec>[
       AdDetailSpec(
@@ -627,7 +630,9 @@ class _SpecsCard extends StatelessWidget {
           icon: Icons.directions_car),
       AdDetailSpec('Transmission', ad.transmission ?? '-',
           icon: Icons.settings),
-      AdDetailSpec('Variant', toTitleCase(ad.variant ?? '-'), icon: Icons.tune),
+      if (!isTwoWheeler)
+        AdDetailSpec('Variant', toTitleCase(ad.variant ?? '-'),
+            icon: Icons.tune),
       AdDetailSpec('Fuel Type', ad.fuelType ?? '-',
           icon: Icons.local_gas_station),
       AdDetailSpec('Registration Year', (ad.year ?? 0).toString(),

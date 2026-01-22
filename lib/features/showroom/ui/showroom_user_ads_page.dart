@@ -514,19 +514,50 @@ class _ProductTile extends StatelessWidget {
                                 tablet: 6,
                                 largeTablet: 10,
                                 desktop: 14)),
-                        Text(
-                          ad.location,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: const Color(0xFF6B7280),
-                            fontWeight: FontWeight.w600,
-                            fontSize: GetResponsiveSize.getResponsiveFontSize(
-                              context,
-                              mobile: theme.textTheme.bodySmall?.fontSize ?? 14,
-                              tablet: 18,
-                              largeTablet: 22,
-                              desktop: 26,
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on,
+                              size: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 12,
+                                tablet: 16,
+                                largeTablet: 18,
+                                desktop: 20,
+                              ),
+                              color: const Color(0xFF6B7280),
                             ),
-                          ),
+                            SizedBox(
+                              width: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 4,
+                                tablet: 6,
+                                largeTablet: 8,
+                                desktop: 8,
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                ad.location,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: const Color(0xFF6B7280),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                    context,
+                                    mobile:
+                                        theme.textTheme.bodySmall?.fontSize ??
+                                            14,
+                                    tablet: 18,
+                                    largeTablet: 22,
+                                    desktop: 26,
+                                  ),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                         if (subtitle.isNotEmpty) ...[
                           SizedBox(

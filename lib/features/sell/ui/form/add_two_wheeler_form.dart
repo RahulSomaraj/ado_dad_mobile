@@ -13,7 +13,6 @@ import 'package:ado_dad_user/features/sell/bloc/bloc/add_post_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_fuel_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_manufacturer_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_transmission_type_model.dart';
-import 'package:ado_dad_user/models/advertisement_post_model/vehicle_variant_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehilce_model.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:flutter/material.dart';
@@ -46,8 +45,6 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
   VehicleManufacturer? _selectedManufacturer;
   List<VehicleModel> _models = [];
   VehicleModel? _selectedModel;
-  List<VehicleVariant> _variants = [];
-  VehicleVariant? _selectedVariant;
   int _year = 2023;
   int _mileage = 0;
   List<VehicleTransmissionType> _transmissionTypes = [];
@@ -195,7 +192,6 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
       if (_longitude != null) "longitude": _longitude,
       "manufacturerId": _selectedManufacturer?.id,
       "modelId": _selectedModel?.id,
-      "variantId": _selectedVariant?.id,
       "year": _year,
       "mileage": _mileage,
       "color": _color,
@@ -429,8 +425,6 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                                 _selectedManufacturer = manufacturer;
                                 _selectedModel = null;
                                 _models = [];
-                                _selectedVariant = null;
-                                _variants = [];
                               });
 
                               if (manufacturer != null) {
@@ -469,28 +463,10 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                             onChanged: (model) async {
                               setState(() {
                                 _selectedModel = model;
-                                _selectedVariant = null;
-                                _variants = [];
                               });
-
-                              if (model != null) {
-                                final variants = await AddRepository()
-                                    .fetchVariantsByModel(model.id);
-                                setState(() => _variants = variants);
-                              }
                             },
                             errorMsg: 'Please select a model',
                           ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          _buildVariantDropdown(),
                           SizedBox(
                             height: GetResponsiveSize.getResponsiveSize(
                               context,
@@ -1476,20 +1452,6 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
           ],
         );
       }).toList(),
-    );
-  }
-
-  Widget _buildVariantDropdown() {
-    return buildSearchableDropdown<VehicleVariant>(
-      labelText: 'Variant',
-      items: _variants,
-      selectedValue: _selectedVariant,
-      getDisplayText: (item) => item.name,
-      enabled: _variants.isNotEmpty,
-      onChanged: (val) {
-        setState(() => _selectedVariant = val);
-      },
-      errorMsg: 'Please select a variant',
     );
   }
 }

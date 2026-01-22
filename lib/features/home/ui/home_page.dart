@@ -1393,20 +1393,46 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      ad.location,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: 12,
-                          tablet: 20,
-                          largeTablet: 22,
-                          desktop: 22,
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          size: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 12,
+                            tablet: 18,
+                            largeTablet: 20,
+                            desktop: 20,
+                          ),
+                          color: Colors.black,
                         ),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                        SizedBox(
+                          width: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 4,
+                            tablet: 6,
+                            largeTablet: 8,
+                            desktop: 8,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            ad.location,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: 12,
+                                tablet: 20,
+                                largeTablet: 22,
+                                desktop: 22,
+                              ),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

@@ -616,21 +616,49 @@ class _WishlistPageState extends State<WishlistPage> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      Text(
-                        favorite.location,
-                        style: AppTextstyle.categoryLabelTextStyle.copyWith(
-                          fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile:
-                                AppTextstyle.categoryLabelTextStyle.fontSize ??
-                                    14,
-                            tablet: 18,
-                            largeTablet: 22,
-                            desktop: 26,
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            size: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 12,
+                              tablet: 16,
+                              largeTablet: 18,
+                              desktop: 20,
+                            ),
+                            color: Colors.black,
                           ),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                          SizedBox(
+                            width: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 4,
+                              tablet: 6,
+                              largeTablet: 8,
+                              desktop: 8,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              favorite.location,
+                              style:
+                                  AppTextstyle.categoryLabelTextStyle.copyWith(
+                                fontSize:
+                                    GetResponsiveSize.getResponsiveFontSize(
+                                  context,
+                                  mobile: AppTextstyle
+                                          .categoryLabelTextStyle.fontSize ??
+                                      14,
+                                  tablet: 18,
+                                  largeTablet: 22,
+                                  desktop: 26,
+                                ),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(
                           height: GetResponsiveSize.getResponsiveSize(context,
