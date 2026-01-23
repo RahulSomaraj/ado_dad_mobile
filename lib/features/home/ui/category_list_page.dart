@@ -975,6 +975,9 @@ class _CategoryListPageState extends State<CategoryListPage> {
       return '${ad.manufacturer?.name ?? ''} ${ad.model?.name ?? ''} ${ad.year ?? ''}'
           .trim();
     } else if (ad.propertyType != null) {
+      if (ad.propertyType!.toLowerCase() == 'plot') {
+        return ad.propertyType!;
+      }
       return '${ad.propertyType} - ${ad.bedrooms ?? 0} BHK';
     } else {
       return ad.description.length > 50

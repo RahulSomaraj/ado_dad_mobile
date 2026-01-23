@@ -277,6 +277,7 @@ class AppRoutes {
             final roomId = state.pathParameters['roomId']!;
             final otherUserName = state.uri.queryParameters['name'];
             final otherUserProfilePic = state.uri.queryParameters['profilePic'];
+            final otherUserPhone = state.uri.queryParameters['phone'];
             final fromPage = state.uri.queryParameters['from'];
             final adId = state.uri.queryParameters['adId'];
             final adTitle = state.uri.queryParameters['adTitle'];
@@ -284,6 +285,7 @@ class AppRoutes {
               roomId: roomId,
               otherUserName: otherUserName,
               otherUserProfilePic: otherUserProfilePic,
+              otherUserPhone: otherUserPhone,
               fromPage: fromPage,
               adId: adId,
               adTitle: adTitle,

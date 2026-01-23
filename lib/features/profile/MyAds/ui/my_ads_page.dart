@@ -917,6 +917,9 @@ String _titleFor(MyAd ad) {
         : '';
     final bhk = ad.propertyDetails?.bedrooms ?? 0;
     final area = ad.propertyDetails?.areaSqft ?? 0;
+    if (type.toLowerCase() == 'plot') {
+      return '$capitalizedType • ${area}sqft';
+    }
     return '$capitalizedType • ${bhk}BHK • ${area}sqft';
   }
 

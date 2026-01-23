@@ -469,8 +469,12 @@ class _ProductTile extends StatelessWidget {
     // Generate title - for vehicles: "ManufacturerName ModelName (Year)"
     String title;
     if (ad.category == 'property') {
-      title =
-          '${_toTitleCase(ad.propertyType)} • ${ad.bedrooms ?? 0} BHK • ${ad.areaSqft ?? 0} sqft';
+      if (ad.propertyType?.toLowerCase() == 'plot') {
+        title = '${_toTitleCase(ad.propertyType)} • ${ad.areaSqft ?? 0} sqft';
+      } else {
+        title =
+            '${_toTitleCase(ad.propertyType)} • ${ad.bedrooms ?? 0} BHK • ${ad.areaSqft ?? 0} sqft';
+      }
     } else {
       // Vehicle format: ManufacturerName ModelName (Year)
       final manufacturerName = ad.manufacturer?.displayName ??

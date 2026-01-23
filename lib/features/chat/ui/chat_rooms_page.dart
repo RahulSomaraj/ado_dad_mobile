@@ -399,6 +399,9 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
           final otherUser = room['otherUser'] as Map<String, dynamic>?;
           final otherUserName = otherUser?['name'] ?? 'Chat';
           final otherUserProfilePic = otherUser?['profilePic'];
+          final otherUserPhone = otherUser?['phone'] ??
+              otherUser?['phoneNumber'] ??
+              otherUser?['mobile'];
           final adId = room['adId'] as String?;
           final adTitle = room['adTitle'] as String?;
 
@@ -422,6 +425,12 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
           // Add adTitle parameter if available
           if (adTitle != null) {
             queryParams['adTitle'] = adTitle;
+          }
+
+          // Add phone parameter if available
+          if (otherUserPhone != null &&
+              otherUserPhone.toString().trim().isNotEmpty) {
+            queryParams['phone'] = otherUserPhone.toString();
           }
 
           // Add fromPage parameter if available

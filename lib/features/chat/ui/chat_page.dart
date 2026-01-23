@@ -11,11 +11,13 @@ import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/repositories/chat_repository.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ChatPage extends StatefulWidget {
   final String roomId;
   final String? otherUserName;
   final String? otherUserProfilePic;
+  final String? otherUserPhone;
   final String? fromPage; // Track where user came from
   final String? adId; // Ad ID for this chat
   final String? adTitle; // Ad title for this chat
@@ -25,6 +27,7 @@ class ChatPage extends StatefulWidget {
     required this.roomId,
     this.otherUserName,
     this.otherUserProfilePic,
+    this.otherUserPhone,
     this.fromPage,
     this.adId,
     this.adTitle,
@@ -46,6 +49,7 @@ class _ChatPageState extends State<ChatPage> {
     print('🚀 Chat page initialized for room: ${widget.roomId}');
     print('👤 Other user: ${widget.otherUserName}');
     print('🖼️ Profile pic: ${widget.otherUserProfilePic}');
+    print('📞 Phone: ${widget.otherUserPhone}');
     print('📝 Ad title: ${widget.adTitle}');
 
     // Get current user ID
@@ -165,21 +169,21 @@ class _ChatPageState extends State<ChatPage> {
           onPressed: () => _handleBackNavigation(),
         ),
         actions: [
-          // IconButton(
-          //   icon: Icon(
-          //     Icons.more_vert,
-          //     size: GetResponsiveSize.getResponsiveSize(
-          //       context,
-          //       mobile: 24,
-          //       tablet: 30,
-          //       largeTablet: 32,
-          //       desktop: 36,
-          //     ),
-          //   ),
-          //   onPressed: () {
-          //     // TODO: Add more options menu
-          //   },
-          // ),
+          if (widget.otherUserPhone != null &&
+              widget.otherUserPhone!.trim().isNotEmpty)
+            IconButton(
+              icon: Icon(
+                Icons.phone,
+                size: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 22,
+                  tablet: 28,
+                  largeTablet: 32,
+                  desktop: 36,
+                ),
+              ),
+              onPressed: _callUser,
+            ),
         ],
       ),
       body: BlocListener<ChatBloc, ChatState>(
@@ -705,6 +709,19 @@ class _ChatPageState extends State<ChatPage> {
     print('💬 Navigating to chat rooms page');
     final fromPage = widget.fromPage ?? 'home';
     context.go('/chat-rooms?from=$fromPage');
+  }
+
+  Future<void> _callUser() async {
+    final rawPhone = widget.otherUserPhone?.trim() ?? '';
+    if (rawPhone.isEmpty) return;
+    final uri = Uri(scheme: 'tel', path: rawPhone);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to open phone app')),
+      );
+    }
   }
 
   Future<void> _navigateToAdDetail() async {
