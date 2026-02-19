@@ -1087,7 +1087,7 @@ Download Ado Dad app to contact the seller and view more details!
             SizedBox(
                 height: GetResponsiveSize.getResponsiveSize(context,
                     mobile: 8, tablet: 10, largeTablet: 12, desktop: 14)),
-            _KeyValRow(label: 'Posted On', value: _niceDate(ad.updatedAt)),
+            _KeyValRow(label: 'Posted On', value: _niceDate(ad.postedAt!)),
             SizedBox(
                 height: GetResponsiveSize.getResponsiveSize(context,
                     mobile: 8, tablet: 24, largeTablet: 32, desktop: 40)),

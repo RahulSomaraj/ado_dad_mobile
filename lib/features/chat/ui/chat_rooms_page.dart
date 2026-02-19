@@ -399,9 +399,20 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
           final otherUser = room['otherUser'] as Map<String, dynamic>?;
           final otherUserName = otherUser?['name'] ?? 'Chat';
           final otherUserProfilePic = otherUser?['profilePic'];
-          final otherUserPhone = otherUser?['phone'] ??
-              otherUser?['phoneNumber'] ??
-              otherUser?['mobile'];
+          final countryCode = otherUser?['countryCode']?.toString().trim();
+          final rawPhone = (otherUser?['phoneNumber'] ??
+                  otherUser?['phone'] ??
+                  otherUser?['mobile'])
+              ?.toString()
+              .trim();
+          String? otherUserPhone;
+          if (rawPhone != null && rawPhone.isNotEmpty) {
+            if (countryCode != null && countryCode.isNotEmpty) {
+              otherUserPhone = '$countryCode$rawPhone';
+            } else {
+              otherUserPhone = rawPhone;
+            }
+          }
           final adId = room['adId'] as String?;
           final adTitle = room['adTitle'] as String?;
 

@@ -9,6 +9,7 @@ class AddModel {
   final String category;
   final bool isActive;
   final String updatedAt;
+  final String postedAt;
 
   // Seller info
   final AdUser? user;
@@ -121,7 +122,8 @@ class AddModel {
     this.soldOut,
     // Video field
     this.link,
-  });
+    String? postedAt,
+  }) : postedAt = postedAt ?? updatedAt;
 
   AddModel copyWith({
     String? id,
@@ -133,6 +135,7 @@ class AddModel {
     String? category,
     bool? isActive,
     String? updatedAt,
+    String? postedAt,
     AdUser? user,
     String? vehicleType,
     Manufacturer? manufacturer,
@@ -229,6 +232,7 @@ class AddModel {
       soldOut: soldOut ?? this.soldOut,
       // Video field
       link: link ?? this.link,
+      postedAt: postedAt ?? this.postedAt,
     );
   }
 
@@ -371,6 +375,7 @@ class AddModel {
       soldOut: json['soldOut'] as bool?,
       // Video field
       link: json['link'] as String?,
+      postedAt: (json['postedAt'] ?? '').toString(),
     );
   }
 

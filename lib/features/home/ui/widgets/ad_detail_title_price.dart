@@ -15,6 +15,30 @@ String toTitleCase(String text) {
       .join(' ');
 }
 
+String _niceDate(String iso) {
+  try {
+    final dt = DateTime.tryParse(iso) ?? DateTime.now();
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    final month = months[dt.month - 1];
+    return '${dt.day} $month ${dt.year}';
+  } catch (_) {
+    return '';
+  }
+}
+
 class AdDetailTitlePrice extends StatelessWidget {
   final AddModel ad;
   final Future<bool> Function(AddModel) isCurrentUserOwner;
@@ -30,6 +54,8 @@ class AdDetailTitlePrice extends StatelessWidget {
     // Only show title if it exists and is not empty - no auto-generation
     final title =
         (ad.title != null && ad.title!.trim().isNotEmpty) ? ad.title! : '';
+
+    final postedAt = (ad.postedAt ?? '').trim();
 
     // Check if running on iPhone
     final isIOS = !kIsWeb && Platform.isIOS;
@@ -94,6 +120,31 @@ class AdDetailTitlePrice extends StatelessWidget {
             ],
           ),
           if (title.isNotEmpty)
+            SizedBox(
+              height: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: isIOS ? 6 : 8,
+                tablet: 12,
+                largeTablet: 14,
+                desktop: 16,
+              ),
+            ),
+          if (postedAt.isNotEmpty)
+            Text(
+              'Posted On ${_niceDate(postedAt)}',
+              style: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  context,
+                  mobile: isIOS ? 11 : 13,
+                  tablet: 18,
+                  largeTablet: 20,
+                  desktop: 22,
+                ),
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade700,
+              ),
+            ),
+          if (postedAt.isNotEmpty)
             SizedBox(
               height: GetResponsiveSize.getResponsiveSize(
                 context,

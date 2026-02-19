@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ado_dad_user/features/chat/bloc/chat_bloc.dart';
 import 'package:ado_dad_user/features/chat/bloc/chat_event.dart';
@@ -714,6 +715,10 @@ class _ChatPageState extends State<ChatPage> {
   Future<void> _callUser() async {
     final rawPhone = widget.otherUserPhone?.trim() ?? '';
     if (rawPhone.isEmpty) return;
+
+    // Copy to clipboard for user convenience
+    await Clipboard.setData(ClipboardData(text: rawPhone));
+
     final uri = Uri(scheme: 'tel', path: rawPhone);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);

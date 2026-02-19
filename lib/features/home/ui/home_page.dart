@@ -1379,7 +1379,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      ad.description,
+                      ad.title ?? '',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(

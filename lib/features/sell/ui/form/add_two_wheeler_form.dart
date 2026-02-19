@@ -270,18 +270,28 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
         ),
       ),
       body: BlocConsumer<AddPostBloc, AddPostState>(
-        listener: (context, state) {
+        listener: (context, state) async {
           state.whenOrNull(
-            success: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text(
-                    "✅ Ad posted successfully",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  backgroundColor: AppColors.primaryColor,
-                ),
+            success: () async {
+              await showDialog<void>(
+                context: context,
+                barrierDismissible: false,
+                builder: (dialogContext) {
+                  return AlertDialog(
+                    title: const Text('Success'),
+                    content: const Text('Ad posted successfully'),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(dialogContext).pop();
+                        },
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  );
+                },
               );
+              if (!context.mounted) return;
               // ✅ Refresh home listings
               context
                   .read<AdvertisementBloc>()

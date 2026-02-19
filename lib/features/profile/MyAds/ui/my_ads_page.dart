@@ -659,6 +659,7 @@ class _AdTile extends StatelessWidget {
       category: myAd.category,
       isActive: myAd.isActive,
       updatedAt: myAd.updatedAt,
+      postedAt: myAd.postedAt,
       user: adUser,
       year: myAd.year ?? myAd.vehicleDetails?.year,
       soldOut: myAd.soldOut,
