@@ -28,9 +28,17 @@ class AdDetailBloc extends Bloc<AdDetailEvent, AdDetailState> {
         markAsSold: (adId) async {
           emit(const AdDetailState.markingAsSold());
           try {
-            // Mark as sold and get the updated ad data directly from the response
             final updatedAd = await repository.markAdAsSold(adId);
             emit(AdDetailState.markedAsSold(updatedAd));
+          } catch (e) {
+            emit(AdDetailState.error(e.toString()));
+          }
+        },
+        deleteAd: (adId) async {
+          emit(const AdDetailState.deleting());
+          try {
+            await repository.deleteAd(adId);
+            emit(const AdDetailState.deleted());
           } catch (e) {
             emit(AdDetailState.error(e.toString()));
           }

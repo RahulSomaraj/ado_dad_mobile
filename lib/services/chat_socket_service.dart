@@ -346,8 +346,10 @@ class ChatSocketService {
     _socket!.emit('getRoomMessages', {'roomId': roomId});
   }
 
-  /// Send a message to the current room with connection persistence
-  void sendMessage(String content, {String type = 'text'}) async {
+  /// Send a message to the current room with connection persistence.
+  /// For image/audio, pass type and optional attachments.
+  void sendMessage(String content,
+      {String type = 'text', List<Map<String, dynamic>>? attachments}) async {
     if (_currentRoomId == null) {
       print('❌ No room selected, cannot send message');
       return;
@@ -365,16 +367,20 @@ class ChatSocketService {
     print('📤 Sending message: $content');
     print('🏠 Room ID: $_currentRoomId');
     print('📝 Type: $type');
+    if (attachments != null) print('📎 Attachments: ${attachments.length}');
     print('🔍 Socket connected before emit: $_isConnected');
     print('🔍 Socket ID before emit: ${_socket!.id}');
 
     try {
-      // Emit sendMessage event exactly like HTML file
-      _socket!.emit('sendMessage', {
+      final payload = <String, dynamic>{
         'roomId': _currentRoomId,
         'content': content,
         'type': type,
-      });
+      };
+      if (attachments != null && attachments.isNotEmpty) {
+        payload['attachments'] = attachments;
+      }
+      _socket!.emit('sendMessage', payload);
 
       // Optional: Use emitWithAck for better reliability
       // _socket!.emitWithAck('sendMessage', {

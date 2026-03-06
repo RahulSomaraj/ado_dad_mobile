@@ -45,6 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- FCM: allow remote notifications in background -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	
 	<!-- Google Maps API Key -->
 	<!-- This value is auto-generated from .env file during build -->
@@ -66,6 +71,10 @@
 	<string>This app needs access to your photo library to allow you to upload photos of vehicles and properties when creating or editing listings.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>This app needs access to save photos to your photo library.</string>
+	
+	<!-- Microphone for voice notes in chat -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access to record and send voice notes in chat.</string>
 	
 	<!-- Network Security Configuration -->
 	<key>NSAppTransportSecurity</key>

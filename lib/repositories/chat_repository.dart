@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:ado_dad_user/services/chat_socket_service.dart';
 import 'package:ado_dad_user/services/chat_api_service.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
+import 'package:ado_dad_user/repositories/add_repo.dart';
 
 /// Repository for WebSocket connection testing
 class ChatRepository {
@@ -82,10 +84,12 @@ class ChatRepository {
     final latestMessage = room['latestMessage'] as Map<String, dynamic>?;
     final adDetails = room['adDetails'] as Map<String, dynamic>?;
 
+    final lastMessageType = latestMessage?['type'] as String? ?? 'text';
     return {
       'id': room['roomId'] ?? '',
       'name': otherUser?['name'] ?? 'Chat Room',
       'lastMessage': latestMessage?['content'] ?? 'No messages yet',
+      'lastMessageType': lastMessageType,
       'timestamp': room['lastMessageAt'] != null
           ? DateTime.tryParse(room['lastMessageAt']) ?? DateTime.now()
           : DateTime.now(),
@@ -230,6 +234,68 @@ class ChatRepository {
         _errorController.add('Failed to send message: $e');
       }
     }
+  }
+
+  /// Send message with attachments via API (for image/audio). Falls back to
+  /// WebSocket if the API POST /chats/rooms/:roomId/messages is not available.
+  Future<void> sendMessageWithAttachments(String roomId, String type,
+      List<Map<String, dynamic>> attachments,
+      {String content = ''}) async {
+    try {
+      print('📤 Sending message with attachments via API: type=$type');
+      await _apiService.sendMessage(roomId, content,
+          type: type, attachments: attachments);
+      print('✅ Message with attachments sent successfully');
+    } catch (e) {
+      final errStr = e.toString();
+      final isPostNotAvailable = errStr.contains('Cannot POST') ||
+          errStr.contains('404') ||
+          errStr.contains('Not Found');
+      if (isPostNotAvailable) {
+        print(
+            '⚠️ POST messages API not available, falling back to WebSocket for type=$type');
+        try {
+          await _socketService.joinRoomAndWait(roomId);
+          _socketService.sendMessage(content,
+              type: type, attachments: attachments);
+          print('✅ Message with attachments sent via WebSocket');
+        } catch (socketErr) {
+          print('❌ WebSocket fallback failed: $socketErr');
+          if (!_errorController.isClosed) {
+            _errorController.add('Failed to send message: $socketErr');
+          }
+          rethrow;
+        }
+      } else {
+        print('❌ Error sending message with attachments: $e');
+        if (!_errorController.isClosed) {
+          _errorController.add('Failed to send message: $e');
+        }
+        rethrow;
+      }
+    }
+  }
+
+  /// Upload file to S3 and send as image message.
+  Future<void> sendImageMessage(
+      String roomId, Uint8List fileBytes, String mimeType) async {
+    final url = await AddRepository().uploadFileToS3(fileBytes, mimeType,
+        filePrefix: 'image');
+    if (url == null) throw Exception('Image upload failed');
+    await sendMessageWithAttachments(roomId, 'image', [
+      {'type': 'image', 'url': url, 'mimeType': mimeType, 'size': fileBytes.length}
+    ]);
+  }
+
+  /// Upload file to S3 and send as audio message.
+  Future<void> sendAudioMessage(
+      String roomId, Uint8List fileBytes, String mimeType) async {
+    final url = await AddRepository().uploadFileToS3(fileBytes, mimeType,
+        filePrefix: 'audio');
+    if (url == null) throw Exception('Audio upload failed');
+    await sendMessageWithAttachments(roomId, 'audio', [
+      {'type': 'audio', 'url': url, 'mimeType': mimeType, 'size': fileBytes.length}
+    ]);
   }
 
   /// Helper method to join a chat room

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ado_dad_user/common/auth_guard.dart';
 import 'package:ado_dad_user/repositories/chat_repository.dart';
@@ -164,8 +165,26 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
 
     try {
-      print('📤 Sending message through Bloc: ${event.content}');
-      _chatRepository.sendMessage(event.content, type: event.type);
+      final at = event.attachmentType;
+      if ((at == 'image' || at == 'audio') &&
+          event.roomId != null &&
+          event.fileBytes != null &&
+          event.fileBytes!.isNotEmpty &&
+          event.mimeType != null) {
+        print('📤 Sending ${at} message through Bloc (upload + API)');
+        final bytes = Uint8List.fromList(event.fileBytes!);
+        if (at == 'image') {
+          await _chatRepository.sendImageMessage(
+              event.roomId!, bytes, event.mimeType!);
+        } else {
+          await _chatRepository.sendAudioMessage(
+              event.roomId!, bytes, event.mimeType!);
+        }
+        add(LoadRoomMessages(event.roomId!));
+      } else {
+        print('📤 Sending text message through Bloc: ${event.content}');
+        _chatRepository.sendMessage(event.content, type: event.type);
+      }
     } catch (e) {
       emit(ChatErrorState('Failed to send message: $e'));
     }

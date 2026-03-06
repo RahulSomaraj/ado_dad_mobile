@@ -491,7 +491,9 @@ class _AdTile extends StatelessWidget {
                           children: [
                             Expanded(
                               child: Text(
-                                _titleFor(ad),
+                                (ad.title != null && ad.title!.isNotEmpty)
+                                    ? ad.title!
+                                    : _titleFor(ad),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -652,6 +654,7 @@ class _AdTile extends StatelessWidget {
 
     return AddModel(
       id: myAd.id,
+      title: myAd.title,
       description: myAd.description,
       price: myAd.price,
       images: myAd.images,

@@ -6,12 +6,15 @@ class DeviceChecker extends StatelessWidget {
       androidMobileView,
       iosTabletView,
       iosMobileView;
+  final bool showLoginPromptForNotifications;
+
   const DeviceChecker({
     super.key,
     required this.androidTabletView,
     required this.androidMobileView,
     required this.iosTabletView,
     required this.iosMobileView,
+    this.showLoginPromptForNotifications = false,
   });
 
   @override

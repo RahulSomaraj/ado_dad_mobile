@@ -41,6 +41,10 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key"/>
+        <!-- FCM: default notification channel (Android 8.0+). Create same id in Dart when requesting permission. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="high_importance_channel" />
     </application>
     
     <!-- IMPORTANT: Remove READ_MEDIA_IMAGES and READ_MEDIA_VIDEO permissions if added by plugins -->
@@ -81,9 +85,13 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- FCM: show notifications (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     
     <!-- Camera permission for taking photos with camera -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Microphone for voice notes in chat -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     
     <!-- Storage permission - Only for Android 12 and below (API 32 and below) -->
     <!-- For Android 13+ (API 33+), the Photo Picker API is used automatically by image_picker plugin -->

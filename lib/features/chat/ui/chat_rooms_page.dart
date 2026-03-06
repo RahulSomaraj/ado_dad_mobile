@@ -290,6 +290,7 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
     final timestamp = room['timestamp'] as DateTime;
     final otherUser = room['otherUser'] as Map<String, dynamic>?;
     final lastMessage = room['lastMessage'] as String;
+    final lastMessageType = room['lastMessageType'] as String? ?? 'text';
 
     return Container(
       decoration: const BoxDecoration(
@@ -378,21 +379,97 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
             ),
           ],
         ),
-        subtitle: Text(
-          lastMessage,
-          style: TextStyle(
-            fontSize: GetResponsiveSize.getResponsiveFontSize(
-              context,
-              mobile: 14,
-              tablet: 18,
-              largeTablet: 20,
-              desktop: 24,
-            ),
-            color: Colors.grey[600],
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+        subtitle: lastMessageType == 'image'
+            ? Row(
+                children: [
+                  Icon(
+                    Icons.image,
+                    size: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 16,
+                      tablet: 20,
+                      largeTablet: 22,
+                      desktop: 26,
+                    ),
+                    color: Colors.grey[600],
+                  ),
+                  SizedBox(
+                    width: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 6,
+                      tablet: 8,
+                      largeTablet: 10,
+                      desktop: 12,
+                    ),
+                  ),
+                  Text(
+                    'Photo',
+                    style: TextStyle(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 14,
+                        tablet: 18,
+                        largeTablet: 20,
+                        desktop: 24,
+                      ),
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              )
+            : lastMessageType == 'audio'
+                ? Row(
+                    children: [
+                      Icon(
+                        Icons.mic,
+                        size: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 16,
+                          tablet: 20,
+                          largeTablet: 22,
+                          desktop: 26,
+                        ),
+                        color: Colors.grey[600],
+                      ),
+                      SizedBox(
+                        width: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 6,
+                          tablet: 8,
+                          largeTablet: 10,
+                          desktop: 12,
+                        ),
+                      ),
+                      Text(
+                        'Voice message',
+                        style: TextStyle(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 14,
+                            tablet: 18,
+                            largeTablet: 20,
+                            desktop: 24,
+                          ),
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  )
+                : Text(
+                    lastMessage,
+                    style: TextStyle(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 14,
+                        tablet: 18,
+                        largeTablet: 20,
+                        desktop: 24,
+                      ),
+                      color: Colors.grey[600],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
         onTap: () {
           // Navigate to chat page
           final roomId = room['id'] as String;

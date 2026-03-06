@@ -186,7 +186,19 @@ Download Ado Dad app to contact the seller and view more details!
                     backgroundColor: AppColors.primaryColor,
                   ),
                 );
-                // Navigate to home page after showing success message
+                context.go('/home');
+              },
+              deleting: () {},
+              deleted: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text(
+                      'Advertisement deleted successfully.',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: AppColors.primaryColor,
+                  ),
+                );
                 context.go('/home');
               },
             );
@@ -306,6 +318,37 @@ Download Ado Dad app to contact the seller and view more details!
                     SliverToBoxAdapter(child: AdDetailSellerTile(ad: ad)),
                   ],
                 ),
+                deleting: () => CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(child: _headerCarousel(widget.ad)),
+                    SliverToBoxAdapter(
+                        child: AdDetailCarouselDots(
+                      count: _getTotalCarouselItems(widget.ad),
+                      currentIndex: _currentIndex,
+                    )),
+                    SliverToBoxAdapter(
+                        child: AdDetailTitlePrice(
+                      ad: widget.ad,
+                      isCurrentUserOwner: _isCurrentUserOwner,
+                    )),
+                    SliverToBoxAdapter(child: Divider()),
+                    SliverToBoxAdapter(
+                        child: AdDetailTabsSection(
+                      ad: widget.ad,
+                      isCurrentUserOwner: _isCurrentUserOwner,
+                    )),
+                    SliverToBoxAdapter(
+                        child: AdDetailDescription(ad: widget.ad)),
+                    SliverToBoxAdapter(
+                        child: AdDetailReportButton(
+                      ad: widget.ad,
+                      isCurrentUserOwner: _isCurrentUserOwner,
+                    )),
+                    SliverToBoxAdapter(
+                        child: AdDetailSellerTile(ad: widget.ad)),
+                  ],
+                ),
+                deleted: () => const SizedBox.shrink(),
               );
             },
           ),
@@ -337,6 +380,8 @@ Download Ado Dad app to contact the seller and view more details!
                 onMakeOffer: () => _handleMakeOffer(context),
                 onChat: () => _handleChat(context),
               ),
+              deleting: () => const SizedBox.shrink(),
+              deleted: () => const SizedBox.shrink(),
             );
           },
         ),
@@ -1091,13 +1136,88 @@ Download Ado Dad app to contact the seller and view more details!
             SizedBox(
                 height: GetResponsiveSize.getResponsiveSize(context,
                     mobile: 8, tablet: 24, largeTablet: 32, desktop: 40)),
-            // Mark as Sold button for ad owners
+            // Mark as Sold and Delete Advertisement buttons for ad owners
             FutureBuilder<bool>(
               future: _isCurrentUserOwner(ad),
               builder: (context, snapshot) {
                 final isOwner = snapshot.data ?? false;
                 if (isOwner) {
-                  return AdDetailMarkAsSoldButton(ad: ad);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AdDetailMarkAsSoldButton(ad: ad),
+                      SizedBox(
+                          height: GetResponsiveSize.getResponsiveSize(context,
+                              mobile: 10, tablet: 12, largeTablet: 14, desktop: 16)),
+                      SizedBox(
+                        width: double.infinity,
+                        height: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 44, tablet: 65, largeTablet: 75, desktop: 85),
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                              color: AppColors.redColor,
+                              width: GetResponsiveSize.getResponsiveSize(context,
+                                  mobile: 1, tablet: 1.5, largeTablet: 2, desktop: 2.5),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: GetResponsiveSize.getResponsivePadding(context,
+                                  mobile: 12, tablet: 20, largeTablet: 24, desktop: 28),
+                              vertical: GetResponsiveSize.getResponsivePadding(context,
+                                  mobile: 6, tablet: 16, largeTablet: 20, desktop: 24),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                GetResponsiveSize.getResponsiveBorderRadius(context,
+                                    mobile: 12, tablet: 14, largeTablet: 16, desktop: 18),
+                              ),
+                            ),
+                          ),
+                          onPressed: () {
+                            // TODO: wire delete action (dialog + API)
+                          },
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.delete_outline,
+                                  color: AppColors.redColor,
+                                  size: GetResponsiveSize.getResponsiveSize(context,
+                                      mobile: 18,
+                                      tablet: 26,
+                                      largeTablet: 30,
+                                      desktop: 34),
+                                ),
+                                SizedBox(
+                                    width: GetResponsiveSize.getResponsiveSize(context,
+                                        mobile: 6,
+                                        tablet: 10,
+                                        largeTablet: 12,
+                                        desktop: 14)),
+                                Text(
+                                  'Delete Advertisement',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.redColor,
+                                    fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                        context,
+                                        mobile: 14,
+                                        tablet: 22,
+                                        largeTablet: 26,
+                                        desktop: 30),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
                 }
                 return const SizedBox.shrink();
               },
@@ -1557,7 +1677,6 @@ Download Ado Dad app to contact the seller and view more details!
       },
       markingAsSold: () {},
       markedAsSold: (ad) {
-        // Show the offer popup
         OfferService.showOfferPopup(
           context: context,
           adId: ad.id,
@@ -1566,6 +1685,8 @@ Download Ado Dad app to contact the seller and view more details!
           otherUserId: ad.user?.id ?? '',
         );
       },
+      deleting: () {},
+      deleted: () {},
     );
   }
 
@@ -1599,7 +1720,6 @@ Download Ado Dad app to contact the seller and view more details!
       },
       markingAsSold: () {},
       markedAsSold: (ad) {
-        // Start direct chat
         ChatService.startDirectChat(
           context: context,
           adId: ad.id,
@@ -1608,6 +1728,8 @@ Download Ado Dad app to contact the seller and view more details!
           otherUserId: ad.user?.id ?? '',
         );
       },
+      deleting: () {},
+      deleted: () {},
     );
   }
 

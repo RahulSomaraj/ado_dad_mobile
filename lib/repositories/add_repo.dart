@@ -320,6 +320,49 @@ class AddRepository {
     }
   }
 
+  /// Upload a file to S3 (e.g. chat image/audio). [filePrefix] e.g. 'image', 'audio'.
+  Future<String?> uploadFileToS3(Uint8List fileBytes, String mimeType,
+      {String filePrefix = 'file'}) async {
+    try {
+      final fileExtension = mimeType.split('/').last;
+      final safeExt = fileExtension.length <= 4 ? fileExtension : 'bin';
+      final fileName =
+          '${filePrefix}_${DateTime.now().millisecondsSinceEpoch}.$safeExt';
+
+      final signedUrlResponse = await _dio.get(
+        '/upload/presigned-url',
+        queryParameters: {
+          'fileName': fileName,
+          'fileType': mimeType,
+        },
+      );
+
+      final signedUrl = signedUrlResponse.data['url'];
+      if (signedUrl == null) throw Exception('No signed URL received');
+
+      final uploadResponse = await Dio().put(
+        signedUrl,
+        data: fileBytes,
+        options: Options(headers: {
+          'Content-Type': mimeType,
+          'Content-Length': fileBytes.length.toString(),
+        }),
+      );
+
+      if (uploadResponse.statusCode == 200 ||
+          uploadResponse.statusCode == 204) {
+        return signedUrl.split('?').first;
+      } else {
+        throw Exception('Upload failed: ${uploadResponse.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw Exception(DioErrorHandler.handleError(e));
+    } catch (e) {
+      print('❌ Unexpected error in uploadFileToS3: $e');
+      throw Exception('Unexpected error: $e');
+    }
+  }
+
   Future<String?> uploadVideoToS3(Uint8List fileBytes) async {
     try {
       final mimeType = lookupMimeType('video.mp4', headerBytes: fileBytes);
@@ -411,6 +454,29 @@ class AddRepository {
     } catch (e) {
       print('❌ Unexpected error: $e');
       throw Exception('Failed to post ad: $e');
+    }
+  }
+
+  /// Delete an advertisement by ID.
+  /// Backend endpoint: DELETE /ads/{id}
+  Future<void> deleteAd(String adId) async {
+    try {
+      final response = await _dio.delete('/ads/$adId');
+
+      if (response.statusCode == 200 ||
+          response.statusCode == 204 ||
+          response.statusCode == 202) {
+        print('✅ Ad deleted successfully: $adId');
+      } else {
+        print('⚠️ Failed to delete ad, status: ${response.statusCode}');
+        throw Exception('Failed to delete ad');
+      }
+    } on DioException catch (e) {
+      print('❌ Dio error while deleting ad $adId: $e');
+      throw Exception(DioErrorHandler.handleError(e));
+    } catch (e) {
+      print('❌ Unexpected error while deleting ad $adId: $e');
+      throw Exception('Failed to delete ad: $e');
     }
   }
 

@@ -8,4 +8,6 @@ class AdDetailState with _$AdDetailState {
   const factory AdDetailState.error(String message) = _Error;
   const factory AdDetailState.markingAsSold() = _MarkingAsSold;
   const factory AdDetailState.markedAsSold(AddModel detail) = _MarkedAsSold;
+  const factory AdDetailState.deleting() = _Deleting;
+  const factory AdDetailState.deleted() = _Deleted;
 }

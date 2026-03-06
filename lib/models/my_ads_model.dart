@@ -2,6 +2,7 @@ import 'advertisement_model/add_model.dart';
 
 class MyAd {
   final String id;
+  final String? title;
   final String description;
   final int price;
   final List<String> images;
@@ -27,6 +28,7 @@ class MyAd {
 
   MyAd({
     required this.id,
+    this.title,
     required this.description,
     required this.price,
     required this.images,
@@ -48,6 +50,7 @@ class MyAd {
 
   MyAd copyWith({
     String? id,
+    String? title,
     String? description,
     int? price,
     List<String>? images,
@@ -68,6 +71,7 @@ class MyAd {
   }) {
     return MyAd(
       id: id ?? this.id,
+      title: title ?? this.title,
       description: description ?? this.description,
       price: price ?? this.price,
       images: images ?? this.images,
@@ -151,6 +155,7 @@ class MyAd {
 
     return MyAd(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
+      title: json['title'] as String?,
       description: (json['description'] ?? '').toString(),
       price: _asInt(json['price']) ?? 0,
       images: images,
@@ -175,6 +180,7 @@ class MyAd {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'title': title,
       'description': description,
       'price': price,
       'images': images,

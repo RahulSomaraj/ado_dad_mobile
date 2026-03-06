@@ -2183,6 +2183,7 @@ class __$$SearchAdsEventImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
+
 class _$SearchAdsEventImpl implements SearchAdsEvent {
   const _$SearchAdsEventImpl({required this.query});
 
@@ -2415,6 +2416,7 @@ class __$$SearchNextPageEventImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
+
 class _$SearchNextPageEventImpl implements SearchNextPageEvent {
   const _$SearchNextPageEventImpl();
 

@@ -209,14 +209,15 @@ class DialogUtil {
 
   /// Show login prompt dialog when user tries to access protected features
   /// Uses iOS-friendly CupertinoAlertDialog on iOS, Material AlertDialog on Android
-  static void showLoginPromptDialog(
+  /// Returns a Future that completes when the dialog is dismissed.
+  static Future<void> showLoginPromptDialog(
     BuildContext context, {
     String? message,
     String? redirectPath,
   }) {
     if (Platform.isIOS) {
       // iOS-friendly design using CupertinoAlertDialog
-      showCupertinoDialog(
+      return showCupertinoDialog<void>(
         context: context,
         builder: (context) {
           return CupertinoAlertDialog(
@@ -273,7 +274,7 @@ class DialogUtil {
       );
     } else {
       // Android design using Material AlertDialog
-      showDialog(
+      return showDialog<void>(
         context: context,
         builder: (context) {
           return AlertDialog(

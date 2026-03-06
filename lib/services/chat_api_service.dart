@@ -193,9 +193,11 @@ class ChatApiService {
     }
   }
 
-  /// Send message via HTTP API to store in database
+  /// Send message via HTTP API to store in database.
+  /// For image/audio, pass type and attachments (content can be empty).
   Future<Map<String, dynamic>> sendMessage(String roomId, String content,
-      {String type = 'text'}) async {
+      {String type = 'text',
+      List<Map<String, dynamic>>? attachments}) async {
     try {
       final baseUrl = AppConfig.baseUrl;
       final url = '$baseUrl/chats/rooms/$roomId/messages';
@@ -204,12 +206,16 @@ class ChatApiService {
       print('🔗 URL: $url');
       print('📝 Content: $content');
       print('📝 Type: $type');
+      if (attachments != null) print('📎 Attachments: ${attachments.length}');
 
       // Prepare request body
-      final requestBody = {
+      final requestBody = <String, dynamic>{
         'content': content,
         'type': type,
       };
+      if (attachments != null && attachments.isNotEmpty) {
+        requestBody['attachments'] = attachments;
+      }
 
       final response = await _executeRequest((authHeader) async {
         return await http
@@ -221,7 +227,7 @@ class ChatApiService {
               },
               body: json.encode(requestBody),
             )
-            .timeout(const Duration(seconds: 10));
+            .timeout(const Duration(seconds: 15));
       });
 
       print('📡 Response status: ${response.statusCode}');
@@ -232,10 +238,20 @@ class ChatApiService {
         print('✅ Message sent successfully via API');
         return data;
       } else {
-        final errorData = json.decode(response.body);
-        final errorMessage = errorData is Map<String, dynamic>
-            ? (errorData['message'] ?? 'Unknown error')
-            : 'Unknown error';
+        // 404 often returns plain text (e.g. "Cannot POST /path") from Express
+        if (response.statusCode == 404) {
+          throw Exception(
+              'Cannot POST ${response.body.isNotEmpty ? response.body : url}');
+        }
+        String errorMessage = 'Unknown error';
+        try {
+          final errorData = json.decode(response.body);
+          errorMessage = errorData is Map<String, dynamic>
+              ? (errorData['message'] ?? errorData['error'] ?? errorMessage)
+              : errorMessage;
+        } catch (_) {
+          errorMessage = response.body.isNotEmpty ? response.body : 'Unknown error';
+        }
         throw Exception('Failed to send message: $errorMessage');
       }
     } catch (e) {

@@ -11,6 +11,7 @@ class AuthGuard {
 
   /// List of routes that require authentication
   static const List<String> protectedRoutes = [
+    '/notifications',
     '/profile',
     '/wishlist',
     '/my-ads',

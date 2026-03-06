@@ -192,6 +192,8 @@ class AdDetailMarkAsSoldButton extends StatelessWidget {
           loaded: (ad) => false,
           markingAsSold: () => true,
           markedAsSold: (ad) => false,
+          deleting: () => false,
+          deleted: () => false,
         );
         final isSold = ad.soldOut == true;
 

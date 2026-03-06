@@ -14,6 +14,7 @@ import 'package:ado_dad_user/features/home/ui/edit_add_details/two_wheeler_form_
 import 'package:ado_dad_user/features/home/ui/home.dart';
 import 'package:ado_dad_user/features/home/ui/add_detail_page.dart';
 import 'package:ado_dad_user/features/home/ui/sellerprofile/seller_profile_page.dart';
+import 'package:ado_dad_user/features/home/ui/notifications.dart';
 import 'package:ado_dad_user/features/login/ui/login.dart';
 import 'package:ado_dad_user/features/login/ui/otp_login_page.dart';
 import 'package:ado_dad_user/features/login/ui/otp_verification_page.dart';
@@ -41,11 +42,18 @@ import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:ado_dad_user/repositories/showroom_repo.dart';
 import 'package:ado_dad_user/common/auth_guard.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRoutes {
+  /// Use this context to show dialogs from app-level widgets (e.g. version check)
+  /// that live above the Navigator in the tree.
+  static final GlobalKey<NavigatorState> rootNavigatorKey =
+      GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
+
   static final GoRouter router = GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/',
     redirect: (context, state) async {
       final location = state.uri.toString();
@@ -72,7 +80,17 @@ class AppRoutes {
           );
         },
       ),
-      GoRoute(path: '/home', builder: (context, state) => const Home()),
+      GoRoute(
+        path: '/home',
+        builder: (context, state) => Home(
+          showLoginPromptForNotifications:
+              state.uri.queryParameters['prompt'] == 'notifications',
+        ),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const Notifications(),
+      ),
       GoRoute(path: '/logout', builder: (context, state) => const Login()),
       GoRoute(path: '/signup', builder: (context, state) => const Signup()),
       GoRoute(path: '/profile', builder: (context, state) => const Profile()),
