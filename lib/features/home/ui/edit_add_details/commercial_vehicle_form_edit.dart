@@ -16,6 +16,7 @@ import 'package:ado_dad_user/features/home/ui/edit_add_details/widgets/save_butt
 import 'package:ado_dad_user/features/home/ui/edit_add_details/widgets/section_title_widget.dart';
 import 'package:ado_dad_user/features/home/ui/edit_add_details/widgets/video_upload_section_widget.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+import 'package:ado_dad_user/models/advertisement_post_model/commercial_vehicle_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_fuel_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_manufacturer_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_transmission_type_model.dart';
@@ -57,14 +58,6 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
   late final TextEditingController _descCtrl;
 
   // dropdown & toggle data
-  final Map<String, String> _commercialVehicleTypeMap = const {
-    'truck': 'Truck',
-    'van': 'Van',
-    'bus': 'Bus',
-    'tractor': 'Tractor',
-    'trailer': 'Trailer',
-    'forklift': 'Forklift',
-  };
   final Map<String, String> _bodyTypeMap = const {
     'flatbed': 'flatbed',
     'container': 'container',
@@ -76,7 +69,8 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
     'passenger': 'passenger',
   };
 
-  String? _selectedVehicleType; // e.g. 'truck'
+  CommercialVehicleType? _selectedVehicleType;
+  String? _initialVehicleTypeKey; // e.g. 'truck' (from ad)
   String? _selectedBodyType; // e.g. 'flatbed'
 
   List<VehicleManufacturer> _manufacturers = [];
@@ -122,6 +116,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
   @override
   void initState() {
     super.initState();
+    context.read<AdEditBloc>().add(const AdEditEvent.loadCommercialVehicleTypes());
 
     // ---- Prefill from ad ----
     _titleCtrl = TextEditingController(text: widget.ad.title ?? '');
@@ -147,7 +142,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
 
     _descCtrl = TextEditingController(text: widget.ad.description);
 
-    _selectedVehicleType =
+    _initialVehicleTypeKey =
         widget.ad.commercialVehicleType; // expects key like 'truck'
     _selectedBodyType = widget.ad.bodyType; // expects key like 'flatbed'
 
@@ -365,7 +360,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
 
     final payload = {
       // keep if backend expects an explicit type discriminator inside "data"
-      "commercialVehicleType": _selectedVehicleType,
+      "commercialVehicleType": _selectedVehicleType?.name,
       "bodyType": _selectedBodyType,
       "title": _titleCtrl.text.trim(), // Include title like other fields
 
@@ -543,16 +538,74 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
                   const SizedBox(height: 10),
 
                   // commercial vehicle type
-                  buildDropdown<String>(
-                    labelText: 'Commercial Vehicle Type',
-                    items: _commercialVehicleTypeMap.keys.toList(),
-                    selectedValue: _selectedVehicleType,
-                    errorMsg: 'Please select a vehicle type',
-                    // displayTextBuilder: (key) =>
-                    //     _commercialVehicleTypeMap[key] ?? key,
-                    onChanged: (val) => setState(() {
-                      _selectedVehicleType = val;
-                    }),
+                  BlocBuilder<AdEditBloc, AdEditState>(
+                    builder: (context, state) {
+                      final bool isLoading = state.maybeWhen(
+                        commercialVehicleTypesLoading: () => true,
+                        orElse: () => false,
+                      );
+                      final String? errorText = state.maybeWhen(
+                        commercialVehicleTypesFailure: (m) => m,
+                        orElse: () => null,
+                      );
+                      final List<CommercialVehicleType> items =
+                          state.maybeWhen(
+                                commercialVehicleTypesLoaded: (items) =>
+                                    items.where((t) => t.isActive).toList(),
+                                orElse: () => const [],
+                              );
+
+                      // Prefill selected object once items are available.
+                      if (_selectedVehicleType == null &&
+                          _initialVehicleTypeKey != null &&
+                          _initialVehicleTypeKey!.trim().isNotEmpty &&
+                          items.isNotEmpty) {
+                        final key = _initialVehicleTypeKey!.trim();
+                        final match = items.where((t) => t.name == key);
+                        if (match.isNotEmpty) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (!mounted) return;
+                            setState(() {
+                              _selectedVehicleType = match.first;
+                            });
+                          });
+                        }
+                      }
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          buildDropdown<CommercialVehicleType>(
+                            labelText: 'Commercial Vehicle Type',
+                            items: items,
+                            selectedValue: _selectedVehicleType,
+                            errorMsg: 'Please select a vehicle type',
+                            displayTextBuilder: (t) => t.displayName,
+                            onChanged: isLoading || errorText != null
+                                ? (_) {}
+                                : (val) => setState(() {
+                                      _selectedVehicleType = val;
+                                    }),
+                          ),
+                          if (isLoading)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: Text(
+                                'Loading vehicle types...',
+                                style: TextStyle(color: Colors.grey.shade600),
+                              ),
+                            ),
+                          if (errorText != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: Text(
+                                errorText,
+                                style: TextStyle(color: Colors.red.shade400),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 10),
 

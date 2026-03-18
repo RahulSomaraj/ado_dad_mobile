@@ -1,4 +1,5 @@
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+import 'package:ado_dad_user/models/advertisement_post_model/commercial_vehicle_type_model.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -12,6 +13,15 @@ class AdEditBloc extends Bloc<AdEditEvent, AdEditState> {
   AdEditBloc({required this.repo}) : super(const AdEditState.idle()) {
     on<AdEditEvent>((event, emit) async {
       await event.when(
+        loadCommercialVehicleTypes: () async {
+          emit(const AdEditState.commercialVehicleTypesLoading());
+          try {
+            final items = await repo.fetchCommercialVehicleTypes();
+            emit(AdEditState.commercialVehicleTypesLoaded(items));
+          } catch (e) {
+            emit(AdEditState.commercialVehicleTypesFailure(e.toString()));
+          }
+        },
         submit: (adId, category, payload) async {
           emit(const AdEditState.saving());
           try {

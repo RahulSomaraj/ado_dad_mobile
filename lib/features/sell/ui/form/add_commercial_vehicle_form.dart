@@ -1,5 +1,4 @@
 import 'dart:io' show Platform;
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
@@ -11,6 +10,7 @@ import 'package:ado_dad_user/common/widgets/location_picker_widget.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/features/sell/bloc/bloc/add_post_bloc.dart';
+import 'package:ado_dad_user/models/advertisement_post_model/commercial_vehicle_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_fuel_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_manufacturer_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_transmission_type_model.dart';
@@ -98,15 +98,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
     });
   }
 
-  final Map<String, String> _commercialVehicleTypeMap = {
-    'truck': 'Truck',
-    'van': 'Van',
-    'bus': 'Bus',
-    'tractor': 'Tractor',
-    'trailer': 'Trailer',
-    'forklift': 'Forklift',
-  };
-  String? _selectedVehicleType;
+  CommercialVehicleType? _selectedVehicleType;
   final Map<String, String> _bodyTypeMap = {
     'flatbed': 'flatbed',
     'container': 'container',
@@ -137,6 +129,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
   @override
   void initState() {
     super.initState();
+    context.read<AddPostBloc>().add(const AddPostEvent.loadCommercialVehicleTypes());
     _loadManufacturers();
     _loadTransmissionTypes();
     _loadFuelTypes();
@@ -211,7 +204,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
     await _uploadVideo(); // S3 Video Upload
 
     final ad = {
-      "commercialVehicleType": _selectedVehicleType,
+      "commercialVehicleType": _selectedVehicleType?.name,
       "bodyType": _selectedBodyType,
       "price": _price,
       "location": _location,
@@ -458,15 +451,60 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                               desktop: 28,
                             ),
                           ),
-                          buildDropdown<String>(
-                            labelText: 'Commercial Vehicle Type',
-                            items: _commercialVehicleTypeMap.keys.toList(),
-                            selectedValue: _selectedVehicleType,
-                            errorMsg: 'Please select a vehicle type',
-                            onChanged: (val) {
-                              setState(() {
-                                _selectedVehicleType = val;
-                              });
+                          BlocBuilder<AddPostBloc, AddPostState>(
+                            builder: (context, state) {
+                              final bool isLoading = state.maybeWhen(
+                                commercialVehicleTypesLoading: () => true,
+                                orElse: () => false,
+                              );
+                              final String? errorText = state.maybeWhen(
+                                commercialVehicleTypesFailure: (m) => m,
+                                orElse: () => null,
+                              );
+                              final List<CommercialVehicleType> items =
+                                  state.maybeWhen(
+                                        commercialVehicleTypesLoaded: (items) =>
+                                            items.where((t) => t.isActive).toList(),
+                                        orElse: () => const [],
+                                      );
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  buildDropdown<CommercialVehicleType>(
+                                    labelText: 'Commercial Vehicle Type',
+                                    items: items,
+                                    selectedValue: _selectedVehicleType,
+                                    errorMsg: 'Please select a vehicle type',
+                                    displayTextBuilder: (t) => t.displayName,
+                                    onChanged: isLoading || errorText != null
+                                        ? (_) {}
+                                        : (val) {
+                                            setState(() {
+                                              _selectedVehicleType = val;
+                                            });
+                                          },
+                                  ),
+                                  if (isLoading)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8.0),
+                                      child: Text(
+                                        'Loading vehicle types...',
+                                        style: TextStyle(
+                                            color: Colors.grey.shade600),
+                                      ),
+                                    ),
+                                  if (errorText != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8.0),
+                                      child: Text(
+                                        errorText,
+                                        style: TextStyle(
+                                            color: Colors.red.shade400),
+                                      ),
+                                    ),
+                                ],
+                              );
                             },
                           ),
                           SizedBox(

@@ -4,10 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/features/home/commercial_vehicle_type_filter_bloc/commercial_vehicle_type_filter_bloc.dart';
 import 'package:ado_dad_user/features/home/fuelType_filter_bloc/fuel_type_filter_bloc.dart';
 import 'package:ado_dad_user/features/home/manufacturer_bloc/manufacturer_bloc.dart';
 import 'package:ado_dad_user/features/home/model_filter_bloc/model_filter_bloc.dart';
 import 'package:ado_dad_user/features/home/transmissionType_filter_bloc/transmission_type_filter_bloc.dart';
+import 'package:ado_dad_user/models/advertisement_post_model/commercial_vehicle_type_model.dart';
 import 'package:ado_dad_user/services/filter_state_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,34 +30,40 @@ class CarFiltersPage extends StatefulWidget {
 }
 
 class _CarFiltersPageState extends State<CarFiltersPage> {
-  // Left-pane filter categories – same for all vehicle categories
-  // (including two wheelers). Only the manufacturer list itself is
-  // filtered by vehicleCategory for bikes.
-  final List<String> categories = const [
-    'Brands',
-    'Model',
-    'Price',
-    'Fuel Type',
-    'Transmission',
-    'Year',
-    // 'KM Driven',
-  ];
+  List<String> get categories {
+    final base = <String>[
+      'Brands',
+      'Model',
+      'Price',
+      'Fuel Type',
+      'Transmission',
+      'Year',
+      // 'KM Driven',
+    ];
+    if (widget.categoryId == 'commercial_vehicle') {
+      return ['Type', ...base];
+    }
+    return base;
+  }
 
   int selectedCategoryIndex = 0;
   String brandQuery = '';
   String modelQuery = '';
   String fuelTypeQuery = '';
   String transmissionQuery = '';
+  String commercialTypeQuery = '';
   final Set<String> _selectedManufacturerIds = {};
   final Set<String> _selectedFuelTypeIds = {};
   final Set<String> _selectedTransmissionTypeIds = {};
   final Set<String> _selectedModelIds = {};
+  final Set<String> _selectedCommercialVehicleTypes = {}; // e.g. {'van','truck'}
   final _minYearCtrl = TextEditingController();
   final _maxYearCtrl = TextEditingController();
   final _minPriceCtrl = TextEditingController();
   final _maxPriceCtrl = TextEditingController();
   final _brandSearchCtrl = TextEditingController();
   final _modelSearchCtrl = TextEditingController();
+  final _commercialTypeSearchCtrl = TextEditingController();
 
   // Filter state service
   final FilterStateService _filterStateService = FilterStateService();
@@ -112,6 +120,9 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
               .addAll(savedState.selectedTransmissionTypeIds);
           _selectedModelIds.clear();
           _selectedModelIds.addAll(savedState.selectedModelIds);
+          _selectedCommercialVehicleTypes.clear();
+          _selectedCommercialVehicleTypes
+              .addAll(savedState.selectedCommercialVehicleTypes);
           _minYearCtrl.text = savedState.minYear ?? '';
           _maxYearCtrl.text = savedState.maxYear ?? '';
           _minPriceCtrl.text = savedState.minPrice ?? '';
@@ -158,6 +169,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
         selectedFuelTypeIds: _selectedFuelTypeIds,
         selectedTransmissionTypeIds: _selectedTransmissionTypeIds,
         selectedModelIds: _selectedModelIds,
+        selectedCommercialVehicleTypes: _selectedCommercialVehicleTypes,
         minYear: _minYearCtrl.text.isEmpty ? null : _minYearCtrl.text,
         maxYear: _maxYearCtrl.text.isEmpty ? null : _maxYearCtrl.text,
         minPrice: _minPriceCtrl.text.isEmpty ? null : _minPriceCtrl.text,
@@ -179,6 +191,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
     _maxPriceCtrl.dispose();
     _brandSearchCtrl.dispose();
     _modelSearchCtrl.dispose();
+    _commercialTypeSearchCtrl.dispose();
     super.dispose();
   }
 
@@ -229,6 +242,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
           TextButton(
             onPressed: () {
               setState(() {
+                _selectedCommercialVehicleTypes.clear();
                 _selectedManufacturerIds.clear();
                 _selectedFuelTypeIds.clear();
                 _selectedTransmissionTypeIds.clear();
@@ -326,7 +340,22 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                     return _pricePanel();
                   }
 
-                  if (selectedCategoryIndex == 0) {
+                  // Commercial Vehicle Type filter
+                  if (widget.categoryId == 'commercial_vehicle' &&
+                      selectedCategoryIndex == 0) {
+                    return _commercialTypePanel();
+                  }
+
+                  final brandsIndex =
+                      widget.categoryId == 'commercial_vehicle' ? 1 : 0;
+                  final modelIndex =
+                      widget.categoryId == 'commercial_vehicle' ? 2 : 1;
+                  final fuelIndex =
+                      widget.categoryId == 'commercial_vehicle' ? 4 : 3;
+                  final transmissionIndex =
+                      widget.categoryId == 'commercial_vehicle' ? 5 : 4;
+
+                  if (selectedCategoryIndex == brandsIndex) {
                     return BlocBuilder<ManufacturerBloc, ManufacturerState>(
                       builder: (context, state) {
                         return state.when(
@@ -607,7 +636,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
 
                   //Model Filters
 
-                  if (selectedCategoryIndex == 1) {
+                  if (selectedCategoryIndex == modelIndex) {
                     return BlocBuilder<ModelFilterBloc, ModelFilterState>(
                       builder: (context, state) {
                         return state.when(
@@ -823,7 +852,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                   }
 
                   //Fuel Type Filters
-                  if (selectedCategoryIndex == 3) {
+                  if (selectedCategoryIndex == fuelIndex) {
                     return BlocBuilder<FuelTypeFilterBloc, FuelTypeFilterState>(
                       builder: (context, state) {
                         return state.when(
@@ -1023,7 +1052,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                   }
 
                   //Transmission Type Filters
-                  if (selectedCategoryIndex == 4) {
+                  if (selectedCategoryIndex == transmissionIndex) {
                     return BlocBuilder<TransmissionTypeFilterBloc,
                         TransmissionTypeFilterState>(
                       builder: (context, state) {
@@ -1311,6 +1340,8 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                 _saveFilterState();
 
                 Navigator.pop<Map<String, dynamic>>(context, {
+                  'commercialVehicleTypes': _selectedCommercialVehicleTypes
+                      .toList(growable: false),
                   'manufacturerIds': _selectedManufacturerIds.toList(),
                   'fuelTypeIds': _selectedFuelTypeIds.toList(),
                   'transmissionTypeIds': _selectedTransmissionTypeIds.toList(),
@@ -1648,5 +1679,210 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
     if (t.contains('premium')) return 'Cars';
     if (t.contains('commercial')) return 'Commercial Vehicles';
     return 'Vehicles';
+  }
+
+  Widget _commercialTypePanel() {
+    return BlocBuilder<CommercialVehicleTypeFilterBloc,
+        CommercialVehicleTypeFilterState>(
+      builder: (context, state) {
+        return state.when(
+          initial: () => const SizedBox.shrink(),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (msg) => Center(child: Text(msg)),
+          loaded: (items) {
+            final filtered = items.where((t) {
+              final name = t.displayName.toLowerCase();
+              return commercialTypeQuery.isEmpty ||
+                  name.contains(commercialTypeQuery.toLowerCase());
+            }).toList();
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    GetResponsiveSize.getResponsivePadding(
+                      context,
+                      mobile: 16,
+                      tablet: 20,
+                      largeTablet: 24,
+                      desktop: 28,
+                    ),
+                    GetResponsiveSize.getResponsivePadding(
+                      context,
+                      mobile: 16,
+                      tablet: 20,
+                      largeTablet: 24,
+                      desktop: 28,
+                    ),
+                    GetResponsiveSize.getResponsivePadding(
+                      context,
+                      mobile: 16,
+                      tablet: 20,
+                      largeTablet: 24,
+                      desktop: 28,
+                    ),
+                    GetResponsiveSize.getResponsivePadding(
+                      context,
+                      mobile: 8,
+                      tablet: 10,
+                      largeTablet: 12,
+                      desktop: 14,
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _commercialTypeSearchCtrl,
+                    onChanged: (v) => setState(() => commercialTypeQuery = v),
+                    style: TextStyle(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 16.0,
+                        tablet: 20.0,
+                        largeTablet: 22.0,
+                        desktop: 24.0,
+                      ),
+                    ),
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        size: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 24.0,
+                          tablet: 28.0,
+                          largeTablet: 32.0,
+                          desktop: 36.0,
+                        ),
+                      ),
+                      hintText: 'Search Type',
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: GetResponsiveSize.getResponsivePadding(
+                          context,
+                          mobile: 14,
+                          tablet: 18,
+                          largeTablet: 22,
+                          desktop: 26,
+                        ),
+                        horizontal: GetResponsiveSize.getResponsivePadding(
+                          context,
+                          mobile: 12,
+                          tablet: 16,
+                          largeTablet: 20,
+                          desktop: 24,
+                        ),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          GetResponsiveSize.getResponsiveBorderRadius(
+                            context,
+                            mobile: 6,
+                            tablet: 8,
+                            largeTablet: 10,
+                            desktop: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const Divider(height: 1),
+                // View All option
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    GetResponsiveSize.getResponsivePadding(
+                      context,
+                      mobile: 30,
+                      tablet: 36,
+                      largeTablet: 42,
+                      desktop: 48,
+                    ),
+                    GetResponsiveSize.getResponsivePadding(
+                      context,
+                      mobile: 8,
+                      tablet: 10,
+                      largeTablet: 12,
+                      desktop: 14,
+                    ),
+                    GetResponsiveSize.getResponsivePadding(
+                      context,
+                      mobile: 16,
+                      tablet: 20,
+                      largeTablet: 24,
+                      desktop: 28,
+                    ),
+                    0,
+                  ),
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedCommercialVehicleTypes.clear();
+                      });
+                    },
+                    child: Text(
+                      'View All Types',
+                      style: TextStyle(
+                        decoration: TextDecoration.underline,
+                        color: AppColors.primaryColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 14.0,
+                          tablet: 20.0,
+                          largeTablet: 24.0,
+                          desktop: 28.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(8, 8, 8, 20),
+                    itemCount: filtered.length,
+                    itemBuilder: (_, i) {
+                      final CommercialVehicleType t = filtered[i];
+                      final selected =
+                          _selectedCommercialVehicleTypes.contains(t.name);
+                      return CheckboxListTile(
+                        value: selected,
+                        onChanged: (_) {
+                          setState(() {
+                            if (selected) {
+                              _selectedCommercialVehicleTypes.remove(t.name);
+                            } else {
+                              _selectedCommercialVehicleTypes.add(t.name);
+                            }
+                          });
+                        },
+                        dense: true,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        title: Text(
+                          t.displayName.trim(),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                  context,
+                                  mobile: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.fontSize ??
+                                      16.0,
+                                  tablet: 20.0,
+                                  largeTablet: 24.0,
+                                  desktop: 28.0,
+                                ),
+                                fontWeight:
+                                    selected ? FontWeight.w600 : FontWeight.w500,
+                              ),
+                        ),
+                      );
+                    },
+                    separatorBuilder: (_, __) => const SizedBox(height: 2),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:ado_dad_user/features/home/ad_detail/ad_detail_bloc.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
+import 'package:ado_dad_user/features/home/commercial_vehicle_type_filter_bloc/commercial_vehicle_type_filter_bloc.dart';
 import 'package:ado_dad_user/features/home/fuelType_filter_bloc/fuel_type_filter_bloc.dart';
 import 'package:ado_dad_user/features/home/manufacturer_bloc/manufacturer_bloc.dart';
 import 'package:ado_dad_user/features/home/model_filter_bloc/model_filter_bloc.dart';
@@ -243,6 +244,11 @@ class AppRoutes {
 
           return MultiBlocProvider(
             providers: [
+              if (categoryId == 'commercial_vehicle')
+                BlocProvider(
+                  create: (_) => CommercialVehicleTypeFilterBloc(repository: repo)
+                    ..add(const CommercialVehicleTypeFilterEvent.load()),
+                ),
               BlocProvider(
                 create: (_) => ManufacturerBloc(repository: repo)
                   ..add(

@@ -19,6 +19,7 @@ mixin _$AddPostEvent {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() started,
+    required TResult Function() loadCommercialVehicleTypes,
     required TResult Function(String category, Map<String, dynamic> data)
         postAd,
   }) =>
@@ -26,12 +27,14 @@ mixin _$AddPostEvent {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? started,
+    TResult? Function()? loadCommercialVehicleTypes,
     TResult? Function(String category, Map<String, dynamic> data)? postAd,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? started,
+    TResult Function()? loadCommercialVehicleTypes,
     TResult Function(String category, Map<String, dynamic> data)? postAd,
     required TResult orElse(),
   }) =>
@@ -39,18 +42,24 @@ mixin _$AddPostEvent {
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
     required TResult Function(_Started value) started,
+    required TResult Function(_LoadCommercialVehicleTypes value)
+        loadCommercialVehicleTypes,
     required TResult Function(_PostAd value) postAd,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(_Started value)? started,
+    TResult? Function(_LoadCommercialVehicleTypes value)?
+        loadCommercialVehicleTypes,
     TResult? Function(_PostAd value)? postAd,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
     TResult Function(_Started value)? started,
+    TResult Function(_LoadCommercialVehicleTypes value)?
+        loadCommercialVehicleTypes,
     TResult Function(_PostAd value)? postAd,
     required TResult orElse(),
   }) =>
@@ -120,6 +129,7 @@ class _$StartedImpl implements _Started {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() started,
+    required TResult Function() loadCommercialVehicleTypes,
     required TResult Function(String category, Map<String, dynamic> data)
         postAd,
   }) {
@@ -130,6 +140,7 @@ class _$StartedImpl implements _Started {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? started,
+    TResult? Function()? loadCommercialVehicleTypes,
     TResult? Function(String category, Map<String, dynamic> data)? postAd,
   }) {
     return started?.call();
@@ -139,6 +150,7 @@ class _$StartedImpl implements _Started {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? started,
+    TResult Function()? loadCommercialVehicleTypes,
     TResult Function(String category, Map<String, dynamic> data)? postAd,
     required TResult orElse(),
   }) {
@@ -152,6 +164,8 @@ class _$StartedImpl implements _Started {
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
     required TResult Function(_Started value) started,
+    required TResult Function(_LoadCommercialVehicleTypes value)
+        loadCommercialVehicleTypes,
     required TResult Function(_PostAd value) postAd,
   }) {
     return started(this);
@@ -161,6 +175,8 @@ class _$StartedImpl implements _Started {
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(_Started value)? started,
+    TResult? Function(_LoadCommercialVehicleTypes value)?
+        loadCommercialVehicleTypes,
     TResult? Function(_PostAd value)? postAd,
   }) {
     return started?.call(this);
@@ -170,6 +186,8 @@ class _$StartedImpl implements _Started {
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
     TResult Function(_Started value)? started,
+    TResult Function(_LoadCommercialVehicleTypes value)?
+        loadCommercialVehicleTypes,
     TResult Function(_PostAd value)? postAd,
     required TResult orElse(),
   }) {
@@ -182,6 +200,125 @@ class _$StartedImpl implements _Started {
 
 abstract class _Started implements AddPostEvent {
   const factory _Started() = _$StartedImpl;
+}
+
+/// @nodoc
+abstract class _$$LoadCommercialVehicleTypesImplCopyWith<$Res> {
+  factory _$$LoadCommercialVehicleTypesImplCopyWith(
+          _$LoadCommercialVehicleTypesImpl value,
+          $Res Function(_$LoadCommercialVehicleTypesImpl) then) =
+      __$$LoadCommercialVehicleTypesImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$LoadCommercialVehicleTypesImplCopyWithImpl<$Res>
+    extends _$AddPostEventCopyWithImpl<$Res, _$LoadCommercialVehicleTypesImpl>
+    implements _$$LoadCommercialVehicleTypesImplCopyWith<$Res> {
+  __$$LoadCommercialVehicleTypesImplCopyWithImpl(
+      _$LoadCommercialVehicleTypesImpl _value,
+      $Res Function(_$LoadCommercialVehicleTypesImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of AddPostEvent
+  /// with the given fields replaced by the non-null parameter values.
+}
+
+/// @nodoc
+
+class _$LoadCommercialVehicleTypesImpl implements _LoadCommercialVehicleTypes {
+  const _$LoadCommercialVehicleTypesImpl();
+
+  @override
+  String toString() {
+    return 'AddPostEvent.loadCommercialVehicleTypes()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$LoadCommercialVehicleTypesImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() started,
+    required TResult Function() loadCommercialVehicleTypes,
+    required TResult Function(String category, Map<String, dynamic> data)
+        postAd,
+  }) {
+    return loadCommercialVehicleTypes();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? started,
+    TResult? Function()? loadCommercialVehicleTypes,
+    TResult? Function(String category, Map<String, dynamic> data)? postAd,
+  }) {
+    return loadCommercialVehicleTypes?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? started,
+    TResult Function()? loadCommercialVehicleTypes,
+    TResult Function(String category, Map<String, dynamic> data)? postAd,
+    required TResult orElse(),
+  }) {
+    if (loadCommercialVehicleTypes != null) {
+      return loadCommercialVehicleTypes();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(_Started value) started,
+    required TResult Function(_LoadCommercialVehicleTypes value)
+        loadCommercialVehicleTypes,
+    required TResult Function(_PostAd value) postAd,
+  }) {
+    return loadCommercialVehicleTypes(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(_Started value)? started,
+    TResult? Function(_LoadCommercialVehicleTypes value)?
+        loadCommercialVehicleTypes,
+    TResult? Function(_PostAd value)? postAd,
+  }) {
+    return loadCommercialVehicleTypes?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(_Started value)? started,
+    TResult Function(_LoadCommercialVehicleTypes value)?
+        loadCommercialVehicleTypes,
+    TResult Function(_PostAd value)? postAd,
+    required TResult orElse(),
+  }) {
+    if (loadCommercialVehicleTypes != null) {
+      return loadCommercialVehicleTypes(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class _LoadCommercialVehicleTypes implements AddPostEvent {
+  const factory _LoadCommercialVehicleTypes() =
+      _$LoadCommercialVehicleTypesImpl;
 }
 
 /// @nodoc
@@ -270,6 +407,7 @@ class _$PostAdImpl implements _PostAd {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() started,
+    required TResult Function() loadCommercialVehicleTypes,
     required TResult Function(String category, Map<String, dynamic> data)
         postAd,
   }) {
@@ -280,6 +418,7 @@ class _$PostAdImpl implements _PostAd {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? started,
+    TResult? Function()? loadCommercialVehicleTypes,
     TResult? Function(String category, Map<String, dynamic> data)? postAd,
   }) {
     return postAd?.call(category, data);
@@ -289,6 +428,7 @@ class _$PostAdImpl implements _PostAd {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? started,
+    TResult Function()? loadCommercialVehicleTypes,
     TResult Function(String category, Map<String, dynamic> data)? postAd,
     required TResult orElse(),
   }) {
@@ -302,6 +442,8 @@ class _$PostAdImpl implements _PostAd {
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
     required TResult Function(_Started value) started,
+    required TResult Function(_LoadCommercialVehicleTypes value)
+        loadCommercialVehicleTypes,
     required TResult Function(_PostAd value) postAd,
   }) {
     return postAd(this);
@@ -311,6 +453,8 @@ class _$PostAdImpl implements _PostAd {
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(_Started value)? started,
+    TResult? Function(_LoadCommercialVehicleTypes value)?
+        loadCommercialVehicleTypes,
     TResult? Function(_PostAd value)? postAd,
   }) {
     return postAd?.call(this);
@@ -320,6 +464,8 @@ class _$PostAdImpl implements _PostAd {
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
     TResult Function(_Started value)? started,
+    TResult Function(_LoadCommercialVehicleTypes value)?
+        loadCommercialVehicleTypes,
     TResult Function(_PostAd value)? postAd,
     required TResult orElse(),
   }) {
@@ -351,6 +497,10 @@ mixin _$AddPostState {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
+    required TResult Function() commercialVehicleTypesLoading,
+    required TResult Function(List<CommercialVehicleType> items)
+        commercialVehicleTypesLoaded,
+    required TResult Function(String message) commercialVehicleTypesFailure,
     required TResult Function() success,
     required TResult Function(String message) failure,
   }) =>
@@ -359,6 +509,10 @@ mixin _$AddPostState {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
+    TResult? Function()? commercialVehicleTypesLoading,
+    TResult? Function(List<CommercialVehicleType> items)?
+        commercialVehicleTypesLoaded,
+    TResult? Function(String message)? commercialVehicleTypesFailure,
     TResult? Function()? success,
     TResult? Function(String message)? failure,
   }) =>
@@ -367,6 +521,10 @@ mixin _$AddPostState {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
+    TResult Function()? commercialVehicleTypesLoading,
+    TResult Function(List<CommercialVehicleType> items)?
+        commercialVehicleTypesLoaded,
+    TResult Function(String message)? commercialVehicleTypesFailure,
     TResult Function()? success,
     TResult Function(String message)? failure,
     required TResult orElse(),
@@ -376,6 +534,12 @@ mixin _$AddPostState {
   TResult map<TResult extends Object?>({
     required TResult Function(_Initial value) initial,
     required TResult Function(_Loading value) loading,
+    required TResult Function(_CommercialVehicleTypesLoading value)
+        commercialVehicleTypesLoading,
+    required TResult Function(_CommercialVehicleTypesLoaded value)
+        commercialVehicleTypesLoaded,
+    required TResult Function(_CommercialVehicleTypesFailure value)
+        commercialVehicleTypesFailure,
     required TResult Function(_Success value) success,
     required TResult Function(_Failure value) failure,
   }) =>
@@ -384,6 +548,12 @@ mixin _$AddPostState {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(_Initial value)? initial,
     TResult? Function(_Loading value)? loading,
+    TResult? Function(_CommercialVehicleTypesLoading value)?
+        commercialVehicleTypesLoading,
+    TResult? Function(_CommercialVehicleTypesLoaded value)?
+        commercialVehicleTypesLoaded,
+    TResult? Function(_CommercialVehicleTypesFailure value)?
+        commercialVehicleTypesFailure,
     TResult? Function(_Success value)? success,
     TResult? Function(_Failure value)? failure,
   }) =>
@@ -392,6 +562,12 @@ mixin _$AddPostState {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(_Initial value)? initial,
     TResult Function(_Loading value)? loading,
+    TResult Function(_CommercialVehicleTypesLoading value)?
+        commercialVehicleTypesLoading,
+    TResult Function(_CommercialVehicleTypesLoaded value)?
+        commercialVehicleTypesLoaded,
+    TResult Function(_CommercialVehicleTypesFailure value)?
+        commercialVehicleTypesFailure,
     TResult Function(_Success value)? success,
     TResult Function(_Failure value)? failure,
     required TResult orElse(),
@@ -463,6 +639,10 @@ class _$InitialImpl implements _Initial {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
+    required TResult Function() commercialVehicleTypesLoading,
+    required TResult Function(List<CommercialVehicleType> items)
+        commercialVehicleTypesLoaded,
+    required TResult Function(String message) commercialVehicleTypesFailure,
     required TResult Function() success,
     required TResult Function(String message) failure,
   }) {
@@ -474,6 +654,10 @@ class _$InitialImpl implements _Initial {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
+    TResult? Function()? commercialVehicleTypesLoading,
+    TResult? Function(List<CommercialVehicleType> items)?
+        commercialVehicleTypesLoaded,
+    TResult? Function(String message)? commercialVehicleTypesFailure,
     TResult? Function()? success,
     TResult? Function(String message)? failure,
   }) {
@@ -485,6 +669,10 @@ class _$InitialImpl implements _Initial {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
+    TResult Function()? commercialVehicleTypesLoading,
+    TResult Function(List<CommercialVehicleType> items)?
+        commercialVehicleTypesLoaded,
+    TResult Function(String message)? commercialVehicleTypesFailure,
     TResult Function()? success,
     TResult Function(String message)? failure,
     required TResult orElse(),
@@ -500,6 +688,12 @@ class _$InitialImpl implements _Initial {
   TResult map<TResult extends Object?>({
     required TResult Function(_Initial value) initial,
     required TResult Function(_Loading value) loading,
+    required TResult Function(_CommercialVehicleTypesLoading value)
+        commercialVehicleTypesLoading,
+    required TResult Function(_CommercialVehicleTypesLoaded value)
+        commercialVehicleTypesLoaded,
+    required TResult Function(_CommercialVehicleTypesFailure value)
+        commercialVehicleTypesFailure,
     required TResult Function(_Success value) success,
     required TResult Function(_Failure value) failure,
   }) {
@@ -511,6 +705,12 @@ class _$InitialImpl implements _Initial {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(_Initial value)? initial,
     TResult? Function(_Loading value)? loading,
+    TResult? Function(_CommercialVehicleTypesLoading value)?
+        commercialVehicleTypesLoading,
+    TResult? Function(_CommercialVehicleTypesLoaded value)?
+        commercialVehicleTypesLoaded,
+    TResult? Function(_CommercialVehicleTypesFailure value)?
+        commercialVehicleTypesFailure,
     TResult? Function(_Success value)? success,
     TResult? Function(_Failure value)? failure,
   }) {
@@ -522,6 +722,12 @@ class _$InitialImpl implements _Initial {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(_Initial value)? initial,
     TResult Function(_Loading value)? loading,
+    TResult Function(_CommercialVehicleTypesLoading value)?
+        commercialVehicleTypesLoading,
+    TResult Function(_CommercialVehicleTypesLoaded value)?
+        commercialVehicleTypesLoaded,
+    TResult Function(_CommercialVehicleTypesFailure value)?
+        commercialVehicleTypesFailure,
     TResult Function(_Success value)? success,
     TResult Function(_Failure value)? failure,
     required TResult orElse(),
@@ -580,6 +786,10 @@ class _$LoadingImpl implements _Loading {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
+    required TResult Function() commercialVehicleTypesLoading,
+    required TResult Function(List<CommercialVehicleType> items)
+        commercialVehicleTypesLoaded,
+    required TResult Function(String message) commercialVehicleTypesFailure,
     required TResult Function() success,
     required TResult Function(String message) failure,
   }) {
@@ -591,6 +801,10 @@ class _$LoadingImpl implements _Loading {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
+    TResult? Function()? commercialVehicleTypesLoading,
+    TResult? Function(List<CommercialVehicleType> items)?
+        commercialVehicleTypesLoaded,
+    TResult? Function(String message)? commercialVehicleTypesFailure,
     TResult? Function()? success,
     TResult? Function(String message)? failure,
   }) {
@@ -602,6 +816,10 @@ class _$LoadingImpl implements _Loading {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
+    TResult Function()? commercialVehicleTypesLoading,
+    TResult Function(List<CommercialVehicleType> items)?
+        commercialVehicleTypesLoaded,
+    TResult Function(String message)? commercialVehicleTypesFailure,
     TResult Function()? success,
     TResult Function(String message)? failure,
     required TResult orElse(),
@@ -617,6 +835,12 @@ class _$LoadingImpl implements _Loading {
   TResult map<TResult extends Object?>({
     required TResult Function(_Initial value) initial,
     required TResult Function(_Loading value) loading,
+    required TResult Function(_CommercialVehicleTypesLoading value)
+        commercialVehicleTypesLoading,
+    required TResult Function(_CommercialVehicleTypesLoaded value)
+        commercialVehicleTypesLoaded,
+    required TResult Function(_CommercialVehicleTypesFailure value)
+        commercialVehicleTypesFailure,
     required TResult Function(_Success value) success,
     required TResult Function(_Failure value) failure,
   }) {
@@ -628,6 +852,12 @@ class _$LoadingImpl implements _Loading {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(_Initial value)? initial,
     TResult? Function(_Loading value)? loading,
+    TResult? Function(_CommercialVehicleTypesLoading value)?
+        commercialVehicleTypesLoading,
+    TResult? Function(_CommercialVehicleTypesLoaded value)?
+        commercialVehicleTypesLoaded,
+    TResult? Function(_CommercialVehicleTypesFailure value)?
+        commercialVehicleTypesFailure,
     TResult? Function(_Success value)? success,
     TResult? Function(_Failure value)? failure,
   }) {
@@ -639,6 +869,12 @@ class _$LoadingImpl implements _Loading {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(_Initial value)? initial,
     TResult Function(_Loading value)? loading,
+    TResult Function(_CommercialVehicleTypesLoading value)?
+        commercialVehicleTypesLoading,
+    TResult Function(_CommercialVehicleTypesLoaded value)?
+        commercialVehicleTypesLoaded,
+    TResult Function(_CommercialVehicleTypesFailure value)?
+        commercialVehicleTypesFailure,
     TResult Function(_Success value)? success,
     TResult Function(_Failure value)? failure,
     required TResult orElse(),
@@ -652,6 +888,547 @@ class _$LoadingImpl implements _Loading {
 
 abstract class _Loading implements AddPostState {
   const factory _Loading() = _$LoadingImpl;
+}
+
+/// @nodoc
+abstract class _$$CommercialVehicleTypesLoadingImplCopyWith<$Res> {
+  factory _$$CommercialVehicleTypesLoadingImplCopyWith(
+          _$CommercialVehicleTypesLoadingImpl value,
+          $Res Function(_$CommercialVehicleTypesLoadingImpl) then) =
+      __$$CommercialVehicleTypesLoadingImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$CommercialVehicleTypesLoadingImplCopyWithImpl<$Res>
+    extends _$AddPostStateCopyWithImpl<$Res,
+        _$CommercialVehicleTypesLoadingImpl>
+    implements _$$CommercialVehicleTypesLoadingImplCopyWith<$Res> {
+  __$$CommercialVehicleTypesLoadingImplCopyWithImpl(
+      _$CommercialVehicleTypesLoadingImpl _value,
+      $Res Function(_$CommercialVehicleTypesLoadingImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of AddPostState
+  /// with the given fields replaced by the non-null parameter values.
+}
+
+/// @nodoc
+
+class _$CommercialVehicleTypesLoadingImpl
+    implements _CommercialVehicleTypesLoading {
+  const _$CommercialVehicleTypesLoadingImpl();
+
+  @override
+  String toString() {
+    return 'AddPostState.commercialVehicleTypesLoading()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$CommercialVehicleTypesLoadingImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() initial,
+    required TResult Function() loading,
+    required TResult Function() commercialVehicleTypesLoading,
+    required TResult Function(List<CommercialVehicleType> items)
+        commercialVehicleTypesLoaded,
+    required TResult Function(String message) commercialVehicleTypesFailure,
+    required TResult Function() success,
+    required TResult Function(String message) failure,
+  }) {
+    return commercialVehicleTypesLoading();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? initial,
+    TResult? Function()? loading,
+    TResult? Function()? commercialVehicleTypesLoading,
+    TResult? Function(List<CommercialVehicleType> items)?
+        commercialVehicleTypesLoaded,
+    TResult? Function(String message)? commercialVehicleTypesFailure,
+    TResult? Function()? success,
+    TResult? Function(String message)? failure,
+  }) {
+    return commercialVehicleTypesLoading?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? initial,
+    TResult Function()? loading,
+    TResult Function()? commercialVehicleTypesLoading,
+    TResult Function(List<CommercialVehicleType> items)?
+        commercialVehicleTypesLoaded,
+    TResult Function(String message)? commercialVehicleTypesFailure,
+    TResult Function()? success,
+    TResult Function(String message)? failure,
+    required TResult orElse(),
+  }) {
+    if (commercialVehicleTypesLoading != null) {
+      return commercialVehicleTypesLoading();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(_Initial value) initial,
+    required TResult Function(_Loading value) loading,
+    required TResult Function(_CommercialVehicleTypesLoading value)
+        commercialVehicleTypesLoading,
+    required TResult Function(_CommercialVehicleTypesLoaded value)
+        commercialVehicleTypesLoaded,
+    required TResult Function(_CommercialVehicleTypesFailure value)
+        commercialVehicleTypesFailure,
+    required TResult Function(_Success value) success,
+    required TResult Function(_Failure value) failure,
+  }) {
+    return commercialVehicleTypesLoading(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(_Initial value)? initial,
+    TResult? Function(_Loading value)? loading,
+    TResult? Function(_CommercialVehicleTypesLoading value)?
+        commercialVehicleTypesLoading,
+    TResult? Function(_CommercialVehicleTypesLoaded value)?
+        commercialVehicleTypesLoaded,
+    TResult? Function(_CommercialVehicleTypesFailure value)?
+        commercialVehicleTypesFailure,
+    TResult? Function(_Success value)? success,
+    TResult? Function(_Failure value)? failure,
+  }) {
+    return commercialVehicleTypesLoading?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(_Initial value)? initial,
+    TResult Function(_Loading value)? loading,
+    TResult Function(_CommercialVehicleTypesLoading value)?
+        commercialVehicleTypesLoading,
+    TResult Function(_CommercialVehicleTypesLoaded value)?
+        commercialVehicleTypesLoaded,
+    TResult Function(_CommercialVehicleTypesFailure value)?
+        commercialVehicleTypesFailure,
+    TResult Function(_Success value)? success,
+    TResult Function(_Failure value)? failure,
+    required TResult orElse(),
+  }) {
+    if (commercialVehicleTypesLoading != null) {
+      return commercialVehicleTypesLoading(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class _CommercialVehicleTypesLoading implements AddPostState {
+  const factory _CommercialVehicleTypesLoading() =
+      _$CommercialVehicleTypesLoadingImpl;
+}
+
+/// @nodoc
+abstract class _$$CommercialVehicleTypesLoadedImplCopyWith<$Res> {
+  factory _$$CommercialVehicleTypesLoadedImplCopyWith(
+          _$CommercialVehicleTypesLoadedImpl value,
+          $Res Function(_$CommercialVehicleTypesLoadedImpl) then) =
+      __$$CommercialVehicleTypesLoadedImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({List<CommercialVehicleType> items});
+}
+
+/// @nodoc
+class __$$CommercialVehicleTypesLoadedImplCopyWithImpl<$Res>
+    extends _$AddPostStateCopyWithImpl<$Res, _$CommercialVehicleTypesLoadedImpl>
+    implements _$$CommercialVehicleTypesLoadedImplCopyWith<$Res> {
+  __$$CommercialVehicleTypesLoadedImplCopyWithImpl(
+      _$CommercialVehicleTypesLoadedImpl _value,
+      $Res Function(_$CommercialVehicleTypesLoadedImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of AddPostState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? items = null,
+  }) {
+    return _then(_$CommercialVehicleTypesLoadedImpl(
+      null == items
+          ? _value._items
+          : items // ignore: cast_nullable_to_non_nullable
+              as List<CommercialVehicleType>,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$CommercialVehicleTypesLoadedImpl
+    implements _CommercialVehicleTypesLoaded {
+  const _$CommercialVehicleTypesLoadedImpl(
+      final List<CommercialVehicleType> items)
+      : _items = items;
+
+  final List<CommercialVehicleType> _items;
+  @override
+  List<CommercialVehicleType> get items {
+    if (_items is EqualUnmodifiableListView) return _items;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_items);
+  }
+
+  @override
+  String toString() {
+    return 'AddPostState.commercialVehicleTypesLoaded(items: $items)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$CommercialVehicleTypesLoadedImpl &&
+            const DeepCollectionEquality().equals(other._items, _items));
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(runtimeType, const DeepCollectionEquality().hash(_items));
+
+  /// Create a copy of AddPostState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$CommercialVehicleTypesLoadedImplCopyWith<
+          _$CommercialVehicleTypesLoadedImpl>
+      get copyWith => __$$CommercialVehicleTypesLoadedImplCopyWithImpl<
+          _$CommercialVehicleTypesLoadedImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() initial,
+    required TResult Function() loading,
+    required TResult Function() commercialVehicleTypesLoading,
+    required TResult Function(List<CommercialVehicleType> items)
+        commercialVehicleTypesLoaded,
+    required TResult Function(String message) commercialVehicleTypesFailure,
+    required TResult Function() success,
+    required TResult Function(String message) failure,
+  }) {
+    return commercialVehicleTypesLoaded(items);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? initial,
+    TResult? Function()? loading,
+    TResult? Function()? commercialVehicleTypesLoading,
+    TResult? Function(List<CommercialVehicleType> items)?
+        commercialVehicleTypesLoaded,
+    TResult? Function(String message)? commercialVehicleTypesFailure,
+    TResult? Function()? success,
+    TResult? Function(String message)? failure,
+  }) {
+    return commercialVehicleTypesLoaded?.call(items);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? initial,
+    TResult Function()? loading,
+    TResult Function()? commercialVehicleTypesLoading,
+    TResult Function(List<CommercialVehicleType> items)?
+        commercialVehicleTypesLoaded,
+    TResult Function(String message)? commercialVehicleTypesFailure,
+    TResult Function()? success,
+    TResult Function(String message)? failure,
+    required TResult orElse(),
+  }) {
+    if (commercialVehicleTypesLoaded != null) {
+      return commercialVehicleTypesLoaded(items);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(_Initial value) initial,
+    required TResult Function(_Loading value) loading,
+    required TResult Function(_CommercialVehicleTypesLoading value)
+        commercialVehicleTypesLoading,
+    required TResult Function(_CommercialVehicleTypesLoaded value)
+        commercialVehicleTypesLoaded,
+    required TResult Function(_CommercialVehicleTypesFailure value)
+        commercialVehicleTypesFailure,
+    required TResult Function(_Success value) success,
+    required TResult Function(_Failure value) failure,
+  }) {
+    return commercialVehicleTypesLoaded(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(_Initial value)? initial,
+    TResult? Function(_Loading value)? loading,
+    TResult? Function(_CommercialVehicleTypesLoading value)?
+        commercialVehicleTypesLoading,
+    TResult? Function(_CommercialVehicleTypesLoaded value)?
+        commercialVehicleTypesLoaded,
+    TResult? Function(_CommercialVehicleTypesFailure value)?
+        commercialVehicleTypesFailure,
+    TResult? Function(_Success value)? success,
+    TResult? Function(_Failure value)? failure,
+  }) {
+    return commercialVehicleTypesLoaded?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(_Initial value)? initial,
+    TResult Function(_Loading value)? loading,
+    TResult Function(_CommercialVehicleTypesLoading value)?
+        commercialVehicleTypesLoading,
+    TResult Function(_CommercialVehicleTypesLoaded value)?
+        commercialVehicleTypesLoaded,
+    TResult Function(_CommercialVehicleTypesFailure value)?
+        commercialVehicleTypesFailure,
+    TResult Function(_Success value)? success,
+    TResult Function(_Failure value)? failure,
+    required TResult orElse(),
+  }) {
+    if (commercialVehicleTypesLoaded != null) {
+      return commercialVehicleTypesLoaded(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class _CommercialVehicleTypesLoaded implements AddPostState {
+  const factory _CommercialVehicleTypesLoaded(
+          final List<CommercialVehicleType> items) =
+      _$CommercialVehicleTypesLoadedImpl;
+
+  List<CommercialVehicleType> get items;
+
+  /// Create a copy of AddPostState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$CommercialVehicleTypesLoadedImplCopyWith<
+          _$CommercialVehicleTypesLoadedImpl>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$CommercialVehicleTypesFailureImplCopyWith<$Res> {
+  factory _$$CommercialVehicleTypesFailureImplCopyWith(
+          _$CommercialVehicleTypesFailureImpl value,
+          $Res Function(_$CommercialVehicleTypesFailureImpl) then) =
+      __$$CommercialVehicleTypesFailureImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String message});
+}
+
+/// @nodoc
+class __$$CommercialVehicleTypesFailureImplCopyWithImpl<$Res>
+    extends _$AddPostStateCopyWithImpl<$Res,
+        _$CommercialVehicleTypesFailureImpl>
+    implements _$$CommercialVehicleTypesFailureImplCopyWith<$Res> {
+  __$$CommercialVehicleTypesFailureImplCopyWithImpl(
+      _$CommercialVehicleTypesFailureImpl _value,
+      $Res Function(_$CommercialVehicleTypesFailureImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of AddPostState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? message = null,
+  }) {
+    return _then(_$CommercialVehicleTypesFailureImpl(
+      null == message
+          ? _value.message
+          : message // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$CommercialVehicleTypesFailureImpl
+    implements _CommercialVehicleTypesFailure {
+  const _$CommercialVehicleTypesFailureImpl(this.message);
+
+  @override
+  final String message;
+
+  @override
+  String toString() {
+    return 'AddPostState.commercialVehicleTypesFailure(message: $message)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$CommercialVehicleTypesFailureImpl &&
+            (identical(other.message, message) || other.message == message));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, message);
+
+  /// Create a copy of AddPostState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$CommercialVehicleTypesFailureImplCopyWith<
+          _$CommercialVehicleTypesFailureImpl>
+      get copyWith => __$$CommercialVehicleTypesFailureImplCopyWithImpl<
+          _$CommercialVehicleTypesFailureImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() initial,
+    required TResult Function() loading,
+    required TResult Function() commercialVehicleTypesLoading,
+    required TResult Function(List<CommercialVehicleType> items)
+        commercialVehicleTypesLoaded,
+    required TResult Function(String message) commercialVehicleTypesFailure,
+    required TResult Function() success,
+    required TResult Function(String message) failure,
+  }) {
+    return commercialVehicleTypesFailure(message);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? initial,
+    TResult? Function()? loading,
+    TResult? Function()? commercialVehicleTypesLoading,
+    TResult? Function(List<CommercialVehicleType> items)?
+        commercialVehicleTypesLoaded,
+    TResult? Function(String message)? commercialVehicleTypesFailure,
+    TResult? Function()? success,
+    TResult? Function(String message)? failure,
+  }) {
+    return commercialVehicleTypesFailure?.call(message);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? initial,
+    TResult Function()? loading,
+    TResult Function()? commercialVehicleTypesLoading,
+    TResult Function(List<CommercialVehicleType> items)?
+        commercialVehicleTypesLoaded,
+    TResult Function(String message)? commercialVehicleTypesFailure,
+    TResult Function()? success,
+    TResult Function(String message)? failure,
+    required TResult orElse(),
+  }) {
+    if (commercialVehicleTypesFailure != null) {
+      return commercialVehicleTypesFailure(message);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(_Initial value) initial,
+    required TResult Function(_Loading value) loading,
+    required TResult Function(_CommercialVehicleTypesLoading value)
+        commercialVehicleTypesLoading,
+    required TResult Function(_CommercialVehicleTypesLoaded value)
+        commercialVehicleTypesLoaded,
+    required TResult Function(_CommercialVehicleTypesFailure value)
+        commercialVehicleTypesFailure,
+    required TResult Function(_Success value) success,
+    required TResult Function(_Failure value) failure,
+  }) {
+    return commercialVehicleTypesFailure(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(_Initial value)? initial,
+    TResult? Function(_Loading value)? loading,
+    TResult? Function(_CommercialVehicleTypesLoading value)?
+        commercialVehicleTypesLoading,
+    TResult? Function(_CommercialVehicleTypesLoaded value)?
+        commercialVehicleTypesLoaded,
+    TResult? Function(_CommercialVehicleTypesFailure value)?
+        commercialVehicleTypesFailure,
+    TResult? Function(_Success value)? success,
+    TResult? Function(_Failure value)? failure,
+  }) {
+    return commercialVehicleTypesFailure?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(_Initial value)? initial,
+    TResult Function(_Loading value)? loading,
+    TResult Function(_CommercialVehicleTypesLoading value)?
+        commercialVehicleTypesLoading,
+    TResult Function(_CommercialVehicleTypesLoaded value)?
+        commercialVehicleTypesLoaded,
+    TResult Function(_CommercialVehicleTypesFailure value)?
+        commercialVehicleTypesFailure,
+    TResult Function(_Success value)? success,
+    TResult Function(_Failure value)? failure,
+    required TResult orElse(),
+  }) {
+    if (commercialVehicleTypesFailure != null) {
+      return commercialVehicleTypesFailure(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class _CommercialVehicleTypesFailure implements AddPostState {
+  const factory _CommercialVehicleTypesFailure(final String message) =
+      _$CommercialVehicleTypesFailureImpl;
+
+  String get message;
+
+  /// Create a copy of AddPostState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$CommercialVehicleTypesFailureImplCopyWith<
+          _$CommercialVehicleTypesFailureImpl>
+      get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
@@ -697,6 +1474,10 @@ class _$SuccessImpl implements _Success {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
+    required TResult Function() commercialVehicleTypesLoading,
+    required TResult Function(List<CommercialVehicleType> items)
+        commercialVehicleTypesLoaded,
+    required TResult Function(String message) commercialVehicleTypesFailure,
     required TResult Function() success,
     required TResult Function(String message) failure,
   }) {
@@ -708,6 +1489,10 @@ class _$SuccessImpl implements _Success {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
+    TResult? Function()? commercialVehicleTypesLoading,
+    TResult? Function(List<CommercialVehicleType> items)?
+        commercialVehicleTypesLoaded,
+    TResult? Function(String message)? commercialVehicleTypesFailure,
     TResult? Function()? success,
     TResult? Function(String message)? failure,
   }) {
@@ -719,6 +1504,10 @@ class _$SuccessImpl implements _Success {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
+    TResult Function()? commercialVehicleTypesLoading,
+    TResult Function(List<CommercialVehicleType> items)?
+        commercialVehicleTypesLoaded,
+    TResult Function(String message)? commercialVehicleTypesFailure,
     TResult Function()? success,
     TResult Function(String message)? failure,
     required TResult orElse(),
@@ -734,6 +1523,12 @@ class _$SuccessImpl implements _Success {
   TResult map<TResult extends Object?>({
     required TResult Function(_Initial value) initial,
     required TResult Function(_Loading value) loading,
+    required TResult Function(_CommercialVehicleTypesLoading value)
+        commercialVehicleTypesLoading,
+    required TResult Function(_CommercialVehicleTypesLoaded value)
+        commercialVehicleTypesLoaded,
+    required TResult Function(_CommercialVehicleTypesFailure value)
+        commercialVehicleTypesFailure,
     required TResult Function(_Success value) success,
     required TResult Function(_Failure value) failure,
   }) {
@@ -745,6 +1540,12 @@ class _$SuccessImpl implements _Success {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(_Initial value)? initial,
     TResult? Function(_Loading value)? loading,
+    TResult? Function(_CommercialVehicleTypesLoading value)?
+        commercialVehicleTypesLoading,
+    TResult? Function(_CommercialVehicleTypesLoaded value)?
+        commercialVehicleTypesLoaded,
+    TResult? Function(_CommercialVehicleTypesFailure value)?
+        commercialVehicleTypesFailure,
     TResult? Function(_Success value)? success,
     TResult? Function(_Failure value)? failure,
   }) {
@@ -756,6 +1557,12 @@ class _$SuccessImpl implements _Success {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(_Initial value)? initial,
     TResult Function(_Loading value)? loading,
+    TResult Function(_CommercialVehicleTypesLoading value)?
+        commercialVehicleTypesLoading,
+    TResult Function(_CommercialVehicleTypesLoaded value)?
+        commercialVehicleTypesLoaded,
+    TResult Function(_CommercialVehicleTypesFailure value)?
+        commercialVehicleTypesFailure,
     TResult Function(_Success value)? success,
     TResult Function(_Failure value)? failure,
     required TResult orElse(),
@@ -841,6 +1648,10 @@ class _$FailureImpl implements _Failure {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
+    required TResult Function() commercialVehicleTypesLoading,
+    required TResult Function(List<CommercialVehicleType> items)
+        commercialVehicleTypesLoaded,
+    required TResult Function(String message) commercialVehicleTypesFailure,
     required TResult Function() success,
     required TResult Function(String message) failure,
   }) {
@@ -852,6 +1663,10 @@ class _$FailureImpl implements _Failure {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
+    TResult? Function()? commercialVehicleTypesLoading,
+    TResult? Function(List<CommercialVehicleType> items)?
+        commercialVehicleTypesLoaded,
+    TResult? Function(String message)? commercialVehicleTypesFailure,
     TResult? Function()? success,
     TResult? Function(String message)? failure,
   }) {
@@ -863,6 +1678,10 @@ class _$FailureImpl implements _Failure {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
+    TResult Function()? commercialVehicleTypesLoading,
+    TResult Function(List<CommercialVehicleType> items)?
+        commercialVehicleTypesLoaded,
+    TResult Function(String message)? commercialVehicleTypesFailure,
     TResult Function()? success,
     TResult Function(String message)? failure,
     required TResult orElse(),
@@ -878,6 +1697,12 @@ class _$FailureImpl implements _Failure {
   TResult map<TResult extends Object?>({
     required TResult Function(_Initial value) initial,
     required TResult Function(_Loading value) loading,
+    required TResult Function(_CommercialVehicleTypesLoading value)
+        commercialVehicleTypesLoading,
+    required TResult Function(_CommercialVehicleTypesLoaded value)
+        commercialVehicleTypesLoaded,
+    required TResult Function(_CommercialVehicleTypesFailure value)
+        commercialVehicleTypesFailure,
     required TResult Function(_Success value) success,
     required TResult Function(_Failure value) failure,
   }) {
@@ -889,6 +1714,12 @@ class _$FailureImpl implements _Failure {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(_Initial value)? initial,
     TResult? Function(_Loading value)? loading,
+    TResult? Function(_CommercialVehicleTypesLoading value)?
+        commercialVehicleTypesLoading,
+    TResult? Function(_CommercialVehicleTypesLoaded value)?
+        commercialVehicleTypesLoaded,
+    TResult? Function(_CommercialVehicleTypesFailure value)?
+        commercialVehicleTypesFailure,
     TResult? Function(_Success value)? success,
     TResult? Function(_Failure value)? failure,
   }) {
@@ -900,6 +1731,12 @@ class _$FailureImpl implements _Failure {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(_Initial value)? initial,
     TResult Function(_Loading value)? loading,
+    TResult Function(_CommercialVehicleTypesLoading value)?
+        commercialVehicleTypesLoading,
+    TResult Function(_CommercialVehicleTypesLoaded value)?
+        commercialVehicleTypesLoaded,
+    TResult Function(_CommercialVehicleTypesFailure value)?
+        commercialVehicleTypesFailure,
     TResult Function(_Success value)? success,
     TResult Function(_Failure value)? failure,
     required TResult orElse(),

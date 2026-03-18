@@ -8,6 +8,7 @@ class DropdownWidget<T> extends StatelessWidget {
   final List<T> items;
   final T? selectedValue;
   final ValueChanged<T?> onChanged;
+  final String Function(T value)? displayTextBuilder;
 
   const DropdownWidget({
     super.key,
@@ -16,6 +17,7 @@ class DropdownWidget<T> extends StatelessWidget {
     required this.items,
     this.selectedValue,
     required this.onChanged,
+    this.displayTextBuilder,
   });
 
   @override
@@ -66,7 +68,7 @@ class DropdownWidget<T> extends StatelessWidget {
         return DropdownMenuItem<T>(
           value: value,
           child: Text(
-            value.toString(),
+            (displayTextBuilder ?? (v) => v.toString())(value),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
             style: TextStyle(
@@ -119,6 +121,7 @@ Widget buildDropdown<T>({
   required T? selectedValue,
   required ValueChanged<T?> onChanged,
   required String errorMsg,
+  String Function(T value)? displayTextBuilder,
 }) {
   return DropdownWidget<T>(
     labelText: labelText,
@@ -126,6 +129,7 @@ Widget buildDropdown<T>({
     selectedValue: selectedValue,
     onChanged: onChanged,
     errorMsg: errorMsg,
+    displayTextBuilder: displayTextBuilder,
   );
 }
 

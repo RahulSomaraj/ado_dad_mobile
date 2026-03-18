@@ -237,7 +237,11 @@ class AddModel {
   }
 
   factory AddModel.fromJson(Map<String, dynamic> json) {
-    final vd = _asMap(json['vehicleDetails']);
+    // v2 list response uses different nested keys per category:
+    // - private/two-wheeler: vehicleDetails
+    // - commercial_vehicle: commercialVehicleDetails
+    final vd = _asMap(json['vehicleDetails']) ??
+        _asMap(json['commercialVehicleDetails']);
     final inv = _asMap(vd?['inventory']);
 
     // 🔸 NEW: property nested maps
@@ -359,14 +363,16 @@ class AddModel {
       //     (json['amenities'] as List?)?.map((e) => e.toString()).toList(),
 
       // commercial
-      bodyType: json['bodyType'] as String?,
-      payloadCapacity: _asInt(json['payloadCapacity']),
-      payloadUnit: json['payloadUnit'] as String?,
-      axleCount: _asInt(json['axleCount']),
-      seatingCapacity: _asInt(json['seatingCapacity']),
-      commercialVehicleType: json['commercialVehicleType'] as String?,
-      hasFitness: json['hasFitness'] as bool?,
-      hasPermit: json['hasPermit'] as bool?,
+      bodyType: (json['bodyType'] ?? vd?['bodyType']) as String?,
+      payloadCapacity: _asInt(json['payloadCapacity'] ?? vd?['payloadCapacity']),
+      payloadUnit: (json['payloadUnit'] ?? vd?['payloadUnit']) as String?,
+      axleCount: _asInt(json['axleCount'] ?? vd?['axleCount']),
+      seatingCapacity: _asInt(json['seatingCapacity'] ?? vd?['seatingCapacity']),
+      commercialVehicleType:
+          (json['commercialVehicleType'] ?? vd?['commercialVehicleType'])
+              as String?,
+      hasFitness: (json['hasFitness'] ?? vd?['hasFitness']) as bool?,
+      hasPermit: (json['hasPermit'] ?? vd?['hasPermit']) as bool?,
       // Favorite fields
       isFavorited: json['isFavorite'] as bool? ?? json['isFavorited'] as bool?,
       favoriteId: json['favoriteId'] as String?,

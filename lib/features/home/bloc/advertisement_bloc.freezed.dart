@@ -32,6 +32,7 @@ mixin _$AdvertisementEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -65,6 +66,7 @@ mixin _$AdvertisementEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -97,6 +99,7 @@ mixin _$AdvertisementEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -237,6 +240,7 @@ class _$StartedImpl implements Started {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -273,6 +277,7 @@ class _$StartedImpl implements Started {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -308,6 +313,7 @@ class _$StartedImpl implements Started {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -449,6 +455,7 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -485,6 +492,7 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -520,6 +528,7 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -659,6 +668,7 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -695,6 +705,7 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -730,6 +741,7 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -898,6 +910,7 @@ class _$FetchByCategoryImpl implements FetchByCategory {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -934,6 +947,7 @@ class _$FetchByCategoryImpl implements FetchByCategory {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -969,6 +983,7 @@ class _$FetchByCategoryImpl implements FetchByCategory {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -1078,6 +1093,7 @@ abstract class _$$ApplyFiltersEventImplCopyWith<$Res> {
       List<String>? transmissionTypeIds,
       int? minPrice,
       int? maxPrice,
+      List<String>? commercialVehicleTypes,
       List<String>? propertyTypes,
       int? minBedrooms,
       int? maxBedrooms,
@@ -1109,6 +1125,7 @@ class __$$ApplyFiltersEventImplCopyWithImpl<$Res>
     Object? transmissionTypeIds = freezed,
     Object? minPrice = freezed,
     Object? maxPrice = freezed,
+    Object? commercialVehicleTypes = freezed,
     Object? propertyTypes = freezed,
     Object? minBedrooms = freezed,
     Object? maxBedrooms = freezed,
@@ -1154,6 +1171,10 @@ class __$$ApplyFiltersEventImplCopyWithImpl<$Res>
           ? _value.maxPrice
           : maxPrice // ignore: cast_nullable_to_non_nullable
               as int?,
+      commercialVehicleTypes: freezed == commercialVehicleTypes
+          ? _value._commercialVehicleTypes
+          : commercialVehicleTypes // ignore: cast_nullable_to_non_nullable
+              as List<String>?,
       propertyTypes: freezed == propertyTypes
           ? _value._propertyTypes
           : propertyTypes // ignore: cast_nullable_to_non_nullable
@@ -1199,6 +1220,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
       final List<String>? transmissionTypeIds,
       this.minPrice,
       this.maxPrice,
+      final List<String>? commercialVehicleTypes,
       final List<String>? propertyTypes,
       this.minBedrooms,
       this.maxBedrooms,
@@ -1210,6 +1232,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
         _modelIds = modelIds,
         _fuelTypeIds = fuelTypeIds,
         _transmissionTypeIds = transmissionTypeIds,
+        _commercialVehicleTypes = commercialVehicleTypes,
         _propertyTypes = propertyTypes;
 
   @override
@@ -1263,6 +1286,17 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
   final int? minPrice;
   @override
   final int? maxPrice;
+  final List<String>? _commercialVehicleTypes;
+  @override
+  List<String>? get commercialVehicleTypes {
+    final value = _commercialVehicleTypes;
+    if (value == null) return null;
+    if (_commercialVehicleTypes is EqualUnmodifiableListView)
+      return _commercialVehicleTypes;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
 // Property-specific filters
   final List<String>? _propertyTypes;
 // Property-specific filters
@@ -1290,7 +1324,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
 
   @override
   String toString() {
-    return 'AdvertisementEvent.applyFilters(categoryId: $categoryId, minYear: $minYear, maxYear: $maxYear, manufacturerIds: $manufacturerIds, modelIds: $modelIds, fuelTypeIds: $fuelTypeIds, transmissionTypeIds: $transmissionTypeIds, minPrice: $minPrice, maxPrice: $maxPrice, propertyTypes: $propertyTypes, minBedrooms: $minBedrooms, maxBedrooms: $maxBedrooms, minArea: $minArea, maxArea: $maxArea, isFurnished: $isFurnished, hasParking: $hasParking)';
+    return 'AdvertisementEvent.applyFilters(categoryId: $categoryId, minYear: $minYear, maxYear: $maxYear, manufacturerIds: $manufacturerIds, modelIds: $modelIds, fuelTypeIds: $fuelTypeIds, transmissionTypeIds: $transmissionTypeIds, minPrice: $minPrice, maxPrice: $maxPrice, commercialVehicleTypes: $commercialVehicleTypes, propertyTypes: $propertyTypes, minBedrooms: $minBedrooms, maxBedrooms: $maxBedrooms, minArea: $minArea, maxArea: $maxArea, isFurnished: $isFurnished, hasParking: $hasParking)';
   }
 
   @override
@@ -1313,6 +1347,8 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
                 other.minPrice == minPrice) &&
             (identical(other.maxPrice, maxPrice) ||
                 other.maxPrice == maxPrice) &&
+            const DeepCollectionEquality().equals(
+                other._commercialVehicleTypes, _commercialVehicleTypes) &&
             const DeepCollectionEquality()
                 .equals(other._propertyTypes, _propertyTypes) &&
             (identical(other.minBedrooms, minBedrooms) ||
@@ -1339,6 +1375,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
       const DeepCollectionEquality().hash(_transmissionTypeIds),
       minPrice,
       maxPrice,
+      const DeepCollectionEquality().hash(_commercialVehicleTypes),
       const DeepCollectionEquality().hash(_propertyTypes),
       minBedrooms,
       maxBedrooms,
@@ -1373,6 +1410,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -1399,6 +1437,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
         transmissionTypeIds,
         minPrice,
         maxPrice,
+        commercialVehicleTypes,
         propertyTypes,
         minBedrooms,
         maxBedrooms,
@@ -1425,6 +1464,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -1450,6 +1490,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
         transmissionTypeIds,
         minPrice,
         maxPrice,
+        commercialVehicleTypes,
         propertyTypes,
         minBedrooms,
         maxBedrooms,
@@ -1476,6 +1517,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -1503,6 +1545,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
           transmissionTypeIds,
           minPrice,
           maxPrice,
+          commercialVehicleTypes,
           propertyTypes,
           minBedrooms,
           maxBedrooms,
@@ -1583,6 +1626,7 @@ abstract class ApplyFiltersEvent implements AdvertisementEvent {
       final List<String>? transmissionTypeIds,
       final int? minPrice,
       final int? maxPrice,
+      final List<String>? commercialVehicleTypes,
       final List<String>? propertyTypes,
       final int? minBedrooms,
       final int? maxBedrooms,
@@ -1599,7 +1643,8 @@ abstract class ApplyFiltersEvent implements AdvertisementEvent {
   List<String>? get fuelTypeIds;
   List<String>? get transmissionTypeIds;
   int? get minPrice;
-  int? get maxPrice; // Property-specific filters
+  int? get maxPrice;
+  List<String>? get commercialVehicleTypes; // Property-specific filters
   List<String>? get propertyTypes;
   int? get minBedrooms;
   int? get maxBedrooms;
@@ -1720,6 +1765,7 @@ class _$UpdateAdFavoriteStatusEventImpl implements UpdateAdFavoriteStatusEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -1756,6 +1802,7 @@ class _$UpdateAdFavoriteStatusEventImpl implements UpdateAdFavoriteStatusEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -1791,6 +1838,7 @@ class _$UpdateAdFavoriteStatusEventImpl implements UpdateAdFavoriteStatusEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -1983,6 +2031,7 @@ class _$SearchByLocationEventImpl implements SearchByLocationEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -2019,6 +2068,7 @@ class _$SearchByLocationEventImpl implements SearchByLocationEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -2054,6 +2104,7 @@ class _$SearchByLocationEventImpl implements SearchByLocationEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -2232,6 +2283,7 @@ class _$SearchAdsEventImpl implements SearchAdsEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -2268,6 +2320,7 @@ class _$SearchAdsEventImpl implements SearchAdsEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -2303,6 +2356,7 @@ class _$SearchAdsEventImpl implements SearchAdsEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -2452,6 +2506,7 @@ class _$SearchNextPageEventImpl implements SearchNextPageEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -2488,6 +2543,7 @@ class _$SearchNextPageEventImpl implements SearchNextPageEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -2523,6 +2579,7 @@ class _$SearchNextPageEventImpl implements SearchNextPageEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -2690,6 +2747,7 @@ class _$FetchByUserIdEventImpl implements FetchByUserIdEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -2726,6 +2784,7 @@ class _$FetchByUserIdEventImpl implements FetchByUserIdEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,
@@ -2761,6 +2820,7 @@ class _$FetchByUserIdEventImpl implements FetchByUserIdEvent {
             List<String>? transmissionTypeIds,
             int? minPrice,
             int? maxPrice,
+            List<String>? commercialVehicleTypes,
             List<String>? propertyTypes,
             int? minBedrooms,
             int? maxBedrooms,

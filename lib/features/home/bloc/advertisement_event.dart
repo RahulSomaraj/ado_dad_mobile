@@ -17,6 +17,7 @@ class AdvertisementEvent with _$AdvertisementEvent {
     List<String>? transmissionTypeIds,
     int? minPrice,
     int? maxPrice,
+    List<String>? commercialVehicleTypes,
     // Property-specific filters
     List<String>? propertyTypes,
     int? minBedrooms,

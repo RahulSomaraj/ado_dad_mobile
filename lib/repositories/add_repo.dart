@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:ado_dad_user/common/api_service.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+import 'package:ado_dad_user/models/advertisement_post_model/commercial_vehicle_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_fuel_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_manufacturer_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_transmission_type_model.dart';
@@ -27,6 +28,7 @@ class AddRepository {
     List<String>? transmissionTypeIds,
     int? minPrice,
     int? maxPrice,
+    List<String>? commercialVehicleTypes,
     // Property-specific filters
     List<String>? propertyTypes,
     int? minBedrooms,
@@ -45,6 +47,8 @@ class AddRepository {
         'limit': limit,
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         if (category != null) 'category': category,
+        if (commercialVehicleTypes != null && commercialVehicleTypes.isNotEmpty)
+          'commercialVehicleTypes': commercialVehicleTypes,
         if (minYear != null) 'minYear': minYear,
         if (maxYear != null) 'maxYear': maxYear,
         if (minPrice != null) 'minPrice': minPrice,
@@ -98,7 +102,20 @@ class AddRepository {
 
       print("📡 API returned hasNext: $hasNext, ads: ${ads.length}");
 
-      return PaginatedAdsResponse(data: ads, hasNext: hasNext);
+      // Safety: backend may not apply commercialVehicleTypes filter consistently
+      // since the field lives under commercialVehicleDetails in the v2 list response.
+      // After fixing model mapping, we can also filter client-side when requested.
+      final filteredAds =
+          (commercialVehicleTypes != null && commercialVehicleTypes.isNotEmpty)
+              ? ads
+                  .where((ad) =>
+                      (ad.commercialVehicleType ?? '').trim().isNotEmpty &&
+                      commercialVehicleTypes
+                          .contains((ad.commercialVehicleType ?? '').trim()))
+                  .toList()
+              : ads;
+
+      return PaginatedAdsResponse(data: filteredAds, hasNext: hasNext);
     } catch (e) {
       throw Exception('Failed to fetch ads: $e');
     }
@@ -275,6 +292,38 @@ class AddRepository {
         .whereType<Map<String, dynamic>>()
         .map((e) => VehicleFuelType.fromJson(e))
         .toList();
+  }
+
+  Future<List<CommercialVehicleType>> fetchCommercialVehicleTypes() async {
+    final resp = await _dio.get(
+      '/vehicle-inventory/commercial-vehicle-types',
+      options: Options(responseType: ResponseType.json),
+    );
+
+    dynamic raw = resp.data;
+    if (raw is String) {
+      raw = jsonDecode(raw);
+    }
+
+    // Endpoint returns a top-level list (as per provided example),
+    // but we also accept { data: [...] } for safety.
+    List list;
+    if (raw is List) {
+      list = raw;
+    } else if (raw is Map<String, dynamic> && raw['data'] is List) {
+      list = raw['data'] as List;
+    } else {
+      throw StateError('Unexpected response: ${raw.runtimeType} -> $raw');
+    }
+
+    final items = list
+        .whereType<Map<String, dynamic>>()
+        .map((e) => CommercialVehicleType.fromJson(e))
+        .where((t) => t.name.trim().isNotEmpty)
+        .toList();
+
+    items.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return items;
   }
 
   Future<String?> uploadImageToS3(Uint8List fileBytes) async {

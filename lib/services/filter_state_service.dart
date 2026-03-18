@@ -126,6 +126,7 @@ class CarFilterState {
   final Set<String> selectedFuelTypeIds;
   final Set<String> selectedTransmissionTypeIds;
   final Set<String> selectedModelIds;
+  final Set<String> selectedCommercialVehicleTypes; // commercial-only
   final String? minYear;
   final String? maxYear;
   final String? minPrice;
@@ -138,6 +139,7 @@ class CarFilterState {
     this.selectedFuelTypeIds = const {},
     this.selectedTransmissionTypeIds = const {},
     this.selectedModelIds = const {},
+    this.selectedCommercialVehicleTypes = const {},
     this.minYear,
     this.maxYear,
     this.minPrice,
@@ -151,6 +153,7 @@ class CarFilterState {
     Set<String>? selectedFuelTypeIds,
     Set<String>? selectedTransmissionTypeIds,
     Set<String>? selectedModelIds,
+    Set<String>? selectedCommercialVehicleTypes,
     String? minYear,
     String? maxYear,
     String? minPrice,
@@ -165,6 +168,8 @@ class CarFilterState {
       selectedTransmissionTypeIds:
           selectedTransmissionTypeIds ?? this.selectedTransmissionTypeIds,
       selectedModelIds: selectedModelIds ?? this.selectedModelIds,
+      selectedCommercialVehicleTypes: selectedCommercialVehicleTypes ??
+          this.selectedCommercialVehicleTypes,
       minYear: minYear ?? this.minYear,
       maxYear: maxYear ?? this.maxYear,
       minPrice: minPrice ?? this.minPrice,
@@ -180,6 +185,7 @@ class CarFilterState {
       'fuelTypeIds': selectedFuelTypeIds.toList(),
       'transmissionTypeIds': selectedTransmissionTypeIds.toList(),
       'modelIds': selectedModelIds.toList(),
+      'commercialVehicleTypes': selectedCommercialVehicleTypes.toList(),
       'minYear': minYear,
       'maxYear': maxYear,
       'minPrice': minPrice,
@@ -192,6 +198,7 @@ class CarFilterState {
         selectedFuelTypeIds.isEmpty &&
         selectedTransmissionTypeIds.isEmpty &&
         selectedModelIds.isEmpty &&
+        selectedCommercialVehicleTypes.isEmpty &&
         minYear == null &&
         maxYear == null &&
         minPrice == null &&

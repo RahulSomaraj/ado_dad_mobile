@@ -232,6 +232,9 @@ class _CategoryListPageState extends State<CategoryListPage> {
                             AdvertisementEvent.applyFilters(
                               // For Premium Vehicles, pass null to fetch all categories
                               categoryId: _effectiveCategoryId,
+                              commercialVehicleTypes:
+                                  (result['commercialVehicleTypes'] as List?)
+                                      ?.cast<String>(),
                               minYear: result['minYear'] as int?,
                               maxYear: result['maxYear'] as int?,
                               manufacturerIds:
@@ -575,6 +578,9 @@ class _CategoryListPageState extends State<CategoryListPage> {
                       context.read<AdvertisementBloc>().add(
                             AdvertisementEvent.applyFilters(
                               categoryId: _effectiveCategoryId,
+                              commercialVehicleTypes:
+                                  (_filters['commercialVehicleTypes'] as List?)
+                                      ?.cast<String>(),
                               minYear: _filters['minYear'] as int?,
                               maxYear: _filters['maxYear'] as int?,
                               manufacturerIds:

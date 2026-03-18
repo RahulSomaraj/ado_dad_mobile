@@ -38,6 +38,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
   List<String>? _transmissionTypeIds;
   int? _minPrice;
   int? _maxPrice;
+  List<String>? _commercialVehicleTypes;
   // Property-specific filters
   List<String>? _propertyTypes;
   int? _minBedrooms;
@@ -62,6 +63,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _transmissionTypeIds = null;
     _minPrice = null;
     _maxPrice = null;
+    _commercialVehicleTypes = null;
     _propertyTypes = null;
     _minBedrooms = null;
     _maxBedrooms = null;
@@ -94,6 +96,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
         final result = await repository.fetchAllAds(
             page: _currentPage,
             category: _categoryId,
+            commercialVehicleTypes: _commercialVehicleTypes,
             minYear: _minYear,
             maxYear: _maxYear,
             manufacturerIds: _manufacturerIds,
@@ -138,6 +141,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _currentPage = 1;
     _minPrice = null;
     _maxPrice = null;
+    _commercialVehicleTypes = null;
     _propertyTypes = null;
     _minBedrooms = null;
     _maxBedrooms = null;
@@ -145,6 +149,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _maxArea = null;
     _isFurnished = null;
     _hasParking = null;
+    _commercialVehicleTypes = null;
 
     try {
       final result = await repository.fetchAllAds(
@@ -176,6 +181,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _transmissionTypeIds = event.transmissionTypeIds;
     _minPrice = event.minPrice;
     _maxPrice = event.maxPrice;
+    _commercialVehicleTypes = event.commercialVehicleTypes;
     _propertyTypes = event.propertyTypes;
     _minBedrooms = event.minBedrooms;
     _maxBedrooms = event.maxBedrooms;
@@ -189,6 +195,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
       final result = await repository.fetchAllAds(
           page: _currentPage,
           category: _categoryId,
+          commercialVehicleTypes: _commercialVehicleTypes,
           minYear: _minYear,
           maxYear: _maxYear,
           manufacturerIds: _manufacturerIds,
@@ -254,6 +261,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _transmissionTypeIds = null;
     _minPrice = null;
     _maxPrice = null;
+    _commercialVehicleTypes = null;
     _propertyTypes = null;
     _minBedrooms = null;
     _maxBedrooms = null;
