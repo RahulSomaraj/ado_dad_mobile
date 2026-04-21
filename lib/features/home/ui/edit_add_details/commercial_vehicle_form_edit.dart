@@ -67,6 +67,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
     'pickup': 'pickup',
     'box': 'box',
     'passenger': 'passenger',
+    'others': 'others'
   };
 
   CommercialVehicleType? _selectedVehicleType;
@@ -116,7 +117,9 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
   @override
   void initState() {
     super.initState();
-    context.read<AdEditBloc>().add(const AdEditEvent.loadCommercialVehicleTypes());
+    context
+        .read<AdEditBloc>()
+        .add(const AdEditEvent.loadCommercialVehicleTypes());
 
     // ---- Prefill from ad ----
     _titleCtrl = TextEditingController(text: widget.ad.title ?? '');
@@ -548,12 +551,11 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
                         commercialVehicleTypesFailure: (m) => m,
                         orElse: () => null,
                       );
-                      final List<CommercialVehicleType> items =
-                          state.maybeWhen(
-                                commercialVehicleTypesLoaded: (items) =>
-                                    items.where((t) => t.isActive).toList(),
-                                orElse: () => const [],
-                              );
+                      final List<CommercialVehicleType> items = state.maybeWhen(
+                        commercialVehicleTypesLoaded: (items) =>
+                            items.where((t) => t.isActive).toList(),
+                        orElse: () => const [],
+                      );
 
                       // Prefill selected object once items are available.
                       if (_selectedVehicleType == null &&

@@ -49,7 +49,8 @@ class _HomePageState extends State<HomePage> {
 
     // Opened from notification shade while not logged in: show login popup on home (do not open notifications page)
     if (widget.showLoginPromptForNotifications) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _showLoginPromptIfNeeded());
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _showLoginPromptIfNeeded());
     }
 
     Future.microtask(() async {
@@ -700,77 +701,12 @@ class _HomePageState extends State<HomePage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    ValueListenableBuilder<bool>(
-                      valueListenable: NotificationBadgeService.hasUnread,
-                      builder: (context, hasUnread, _) {
-                        final bool isTab = GetResponsiveSize.isTablet(context);
-                        final double iconSize =
-                            GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 22,
-                          tablet: 28,
-                          largeTablet: 30,
-                          desktop: 30,
-                        );
-                        return GestureDetector(
-                      onTap: () async {
-                        // Do not clear badge here – clear only when user opens the notifications page
-                        final isAuthenticated =
-                            await AuthGuard.isAuthenticated();
-                        if (isAuthenticated) {
-                          context.push('/notifications');
-                        } else {
-                          DialogUtil.showLoginPromptDialog(
-                            context,
-                            message:
-                                'Please login to view notifications.',
-                            redirectPath: '/notifications',
-                          );
-                        }
-                      },
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Icon(
-                                Icons.notifications_outlined,
-                                color: AppColors.whiteColor,
-                                size: isTab ? iconSize : 22,
-                              ),
-                              if (hasUnread)
-                                Positioned(
-                                  top: -2,
-                                  right: -2,
-                                  child: Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                    SizedBox(width: 12),
-                    GestureDetector(
-                      onTap: () async {
-                        final updatedLocation =
-                            await _showLocationInputDialog();
-                        if (updatedLocation != null) {
-                          setState(() {
-                            _userLocation =
-                                updatedLocation; // 🔁 updates UI immediately
-                          });
-                        }
-                      },
-                      child: Builder(
-                        builder: (context) {
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      ValueListenableBuilder<bool>(
+                        valueListenable: NotificationBadgeService.hasUnread,
+                        builder: (context, hasUnread, _) {
                           final bool isTab =
                               GetResponsiveSize.isTablet(context);
                           final double iconSize =
@@ -781,36 +717,102 @@ class _HomePageState extends State<HomePage> {
                             largeTablet: 30,
                             desktop: 30,
                           );
-                          return Image.asset(
-                            'assets/images/Frame.png',
-                            width: isTab ? iconSize : 22,
-                            height: isTab ? iconSize : 22,
-                            fit: BoxFit.contain,
+                          return GestureDetector(
+                            onTap: () async {
+                              // Do not clear badge here – clear only when user opens the notifications page
+                              final isAuthenticated =
+                                  await AuthGuard.isAuthenticated();
+                              if (isAuthenticated) {
+                                context.push('/notifications');
+                              } else {
+                                DialogUtil.showLoginPromptDialog(
+                                  context,
+                                  message:
+                                      'Please login to view notifications.',
+                                  redirectPath: '/notifications',
+                                );
+                              }
+                            },
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Icon(
+                                  Icons.notifications_outlined,
+                                  color: AppColors.whiteColor,
+                                  size: isTab ? iconSize : 22,
+                                ),
+                                if (hasUnread)
+                                  Positioned(
+                                    top: -2,
+                                    right: -2,
+                                    child: Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
                           );
                         },
                       ),
+                      SizedBox(width: 12),
+                      GestureDetector(
+                        onTap: () async {
+                          final updatedLocation =
+                              await _showLocationInputDialog();
+                          if (updatedLocation != null) {
+                            setState(() {
+                              _userLocation =
+                                  updatedLocation; // 🔁 updates UI immediately
+                            });
+                          }
+                        },
+                        child: Builder(
+                          builder: (context) {
+                            final bool isTab =
+                                GetResponsiveSize.isTablet(context);
+                            final double iconSize =
+                                GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 22,
+                              tablet: 28,
+                              largeTablet: 30,
+                              desktop: 30,
+                            );
+                            return Image.asset(
+                              'assets/images/Frame.png',
+                              width: isTab ? iconSize : 22,
+                              height: isTab ? iconSize : 22,
+                              fit: BoxFit.contain,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (_userLocation != null) ...[
+                    SizedBox(height: 4),
+                    Tooltip(
+                      message: _userLocation!,
+                      child: Text(
+                        _userLocation!,
+                        style: TextStyle(
+                          color: AppColors.whiteColor,
+                          fontSize: locationFont,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        softWrap: true,
+                      ),
                     ),
                   ],
-                ),
-                if (_userLocation != null) ...[
-                  SizedBox(height: 4),
-                  Tooltip(
-                    message: _userLocation!,
-                    child: Text(
-                      _userLocation!,
-                      style: TextStyle(
-                        color: AppColors.whiteColor,
-                        fontSize: locationFont,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.end,
-                      softWrap: true,
-                    ),
-                  ),
                 ],
-              ],
-            ),
+              ),
             ),
           ),
         ],

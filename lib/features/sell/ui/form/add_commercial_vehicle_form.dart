@@ -108,6 +108,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
     'pickup': 'pickup',
     'box': 'box',
     'passenger': 'passenger',
+    'others': 'others'
   };
   String? _selectedBodyType;
 
@@ -129,7 +130,9 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
   @override
   void initState() {
     super.initState();
-    context.read<AddPostBloc>().add(const AddPostEvent.loadCommercialVehicleTypes());
+    context
+        .read<AddPostBloc>()
+        .add(const AddPostEvent.loadCommercialVehicleTypes());
     _loadManufacturers();
     _loadTransmissionTypes();
     _loadFuelTypes();
@@ -463,10 +466,10 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                               );
                               final List<CommercialVehicleType> items =
                                   state.maybeWhen(
-                                        commercialVehicleTypesLoaded: (items) =>
-                                            items.where((t) => t.isActive).toList(),
-                                        orElse: () => const [],
-                                      );
+                                commercialVehicleTypesLoaded: (items) =>
+                                    items.where((t) => t.isActive).toList(),
+                                orElse: () => const [],
+                              );
 
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
