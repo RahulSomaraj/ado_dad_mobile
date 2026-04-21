@@ -36,6 +36,7 @@ class _HomePageState extends State<HomePage> {
   String? _userLocation;
   final ScrollController _scrollController = ScrollController();
   late final GooglePlacesService _placesService;
+  bool _isLocationRecommendationsMode = false;
 
   @override
   void initState() {
@@ -66,6 +67,7 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           _userLocation = savedLocation;
         });
+        await _applyLocationBasedRecommendations(savedLocation);
       } else {
         _getLocationAndAddress();
       }
@@ -146,6 +148,7 @@ class _HomePageState extends State<HomePage> {
           setState(() {
             _userLocation = placeDetails;
           });
+          await _applyLocationBasedRecommendations(placeDetails);
           return;
         }
       } catch (e) {
@@ -179,12 +182,76 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _userLocation = newAddress;
       });
+      await _applyLocationBasedRecommendations(newAddress);
     } catch (e) {
       print("Location error: $e");
       setState(() {
         _userLocation = "Location not available";
+        _isLocationRecommendationsMode = false;
       });
     }
+  }
+
+  Future<void> _applyLocationBasedRecommendations(String location) async {
+    final query = location.trim();
+    if (query.isEmpty || query == "Location not available") {
+      if (mounted) {
+        setState(() {
+          _isLocationRecommendationsMode = false;
+        });
+      }
+      context
+          .read<AdvertisementBloc>()
+          .add(const AdvertisementEvent.fetchAllListings());
+      return;
+    }
+
+    try {
+      final predictions = await _placesService.getPlacePredictions(
+        input: query,
+        region: 'in',
+        language: 'en',
+      );
+
+      if (predictions.isNotEmpty) {
+        final selectedPrediction = predictions.firstWhere(
+          (prediction) =>
+              prediction.description.toLowerCase() == query.toLowerCase(),
+          orElse: () => predictions.first,
+        );
+
+        final placeDetails = await _placesService.getPlaceDetails(
+          selectedPrediction.placeId,
+        );
+        final point = placeDetails?.geometry?.location;
+        if (point != null) {
+          if (mounted) {
+            setState(() {
+              _isLocationRecommendationsMode = true;
+            });
+          }
+          print("🔍 Searching by location: ${point.lat}, ${point.lng}");
+          context.read<AdvertisementBloc>().add(
+                AdvertisementEvent.searchByLocation(
+                  latitude: point.lat,
+                  longitude: point.lng,
+                ),
+              );
+          return;
+        }
+      }
+    } catch (e) {
+      print('Error applying location recommendations: $e');
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLocationRecommendationsMode = false;
+      });
+    }
+    context
+        .read<AdvertisementBloc>()
+        .add(const AdvertisementEvent.fetchAllListings());
   }
 
   /// Get detailed address using Google reverse geocoding
@@ -485,9 +552,14 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         body: RefreshIndicator(
           onRefresh: () async {
-            context
-                .read<AdvertisementBloc>()
-                .add(const AdvertisementEvent.fetchAllListings());
+            if (_isLocationRecommendationsMode &&
+                (_userLocation?.trim().isNotEmpty ?? false)) {
+              await _applyLocationBasedRecommendations(_userLocation!);
+            } else {
+              context
+                  .read<AdvertisementBloc>()
+                  .add(const AdvertisementEvent.fetchAllListings());
+            }
           },
           color: AppColors.primaryColor,
           backgroundColor: Colors.white,
@@ -769,6 +841,8 @@ class _HomePageState extends State<HomePage> {
                               _userLocation =
                                   updatedLocation; // 🔁 updates UI immediately
                             });
+                            await _applyLocationBasedRecommendations(
+                                updatedLocation);
                           }
                         },
                         child: Builder(

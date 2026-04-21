@@ -27,6 +27,8 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
   bool _isSearchFetching = false;
   int _searchPage = 1;
   String? _searchQuery;
+  double? _locationLatitude;
+  double? _locationLongitude;
 
   // Active filters remembered by the bloc
   String? _categoryId;
@@ -71,6 +73,8 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _maxArea = null;
     _isFurnished = null;
     _hasParking = null;
+    _locationLatitude = null;
+    _locationLongitude = null;
 
     try {
       final result = await repository.fetchAllAds(page: _currentPage);
@@ -96,6 +100,8 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
         final result = await repository.fetchAllAds(
             page: _currentPage,
             category: _categoryId,
+            latitude: _locationLatitude,
+            longitude: _locationLongitude,
             commercialVehicleTypes: _commercialVehicleTypes,
             minYear: _minYear,
             maxYear: _maxYear,
@@ -150,6 +156,8 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _isFurnished = null;
     _hasParking = null;
     _commercialVehicleTypes = null;
+    _locationLatitude = null;
+    _locationLongitude = null;
 
     try {
       final result = await repository.fetchAllAds(
@@ -190,6 +198,8 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _isFurnished = event.isFurnished;
     _hasParking = event.hasParking;
     _currentPage = 1;
+    _locationLatitude = null;
+    _locationLongitude = null;
 
     try {
       final result = await repository.fetchAllAds(
@@ -269,6 +279,8 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _maxArea = null;
     _isFurnished = null;
     _hasParking = null;
+    _locationLatitude = event.latitude;
+    _locationLongitude = event.longitude;
 
     try {
       final result = await repository.fetchAllAds(
@@ -293,6 +305,8 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     emit(const AdvertisementState.loading());
     _searchQuery = query;
     _searchPage = 1;
+    _locationLatitude = null;
+    _locationLongitude = null;
 
     try {
       print(
@@ -360,6 +374,8 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _maxArea = null;
     _isFurnished = null;
     _hasParking = null;
+    _locationLatitude = null;
+    _locationLongitude = null;
 
     try {
       final result = await repository.fetchAdsByUserId(

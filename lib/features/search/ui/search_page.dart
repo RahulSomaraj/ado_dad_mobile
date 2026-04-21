@@ -57,6 +57,8 @@ class _SearchPageState extends State<SearchPage> {
       if (state is ListingsLoaded && state.hasMore) {
         if (_isSearching && !_isLocationSearchMode) {
           bloc.add(const SearchNextPageEvent());
+        } else if (_isSearching && _isLocationSearchMode) {
+          bloc.add(const FetchNextPageEvent());
         } else if (!_isSearching) {
           bloc.add(const FetchNextPageEvent());
         }
