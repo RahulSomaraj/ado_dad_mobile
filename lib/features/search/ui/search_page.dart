@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/widgets/skeleton.dart';
+import 'package:ado_dad_user/common/widgets/rich_ad_card.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/google_places_service.dart';
@@ -37,13 +38,26 @@ class _SearchPageState extends State<SearchPage> {
   int? _minPrice;
   int? _maxPrice;
   String _sortBy = 'relevance'; // relevance | price_asc | price_desc | newest
+  final Set<String> _selectedFuels = {}; // selected fuelType labels
 
   int get _activeFilterCount {
     var n = 0;
     if (_filterCategory != null) n++;
     if (_minPrice != null || _maxPrice != null) n++;
     if (_sortBy != 'relevance') n++;
+    if (_selectedFuels.isNotEmpty) n++;
     return n;
+  }
+
+  // Distinct fuel types present in the current result set, for the sheet chips.
+  List<String> get _availableFuels {
+    final set = <String>{};
+    for (final a in filteredAds) {
+      final f = (a.fuelType ?? '').trim();
+      if (f.isNotEmpty) set.add(f);
+    }
+    final list = set.toList()..sort();
+    return list;
   }
 
   List<AddModel> _applyFilters(List<AddModel> source) {
@@ -53,6 +67,9 @@ class _SearchPageState extends State<SearchPage> {
     }
     if (_minPrice != null) r = r.where((a) => a.price >= _minPrice!);
     if (_maxPrice != null) r = r.where((a) => a.price <= _maxPrice!);
+    if (_selectedFuels.isNotEmpty) {
+      r = r.where((a) => _selectedFuels.contains((a.fuelType ?? '').trim()));
+    }
     final list = r.toList();
     switch (_sortBy) {
       case 'price_asc':
@@ -74,7 +91,27 @@ class _SearchPageState extends State<SearchPage> {
       _minPrice = null;
       _maxPrice = null;
       _sortBy = 'relevance';
+      _selectedFuels.clear();
     });
+  }
+
+  // Count of results if the given temp filter selections were applied — used
+  // for the sheet's live "Show N results" button.
+  int _previewCount({
+    String? category,
+    int? minPrice,
+    int? maxPrice,
+    required Set<String> fuels,
+  }) {
+    return filteredAds.where((a) {
+      if (category != null && a.category != category) return false;
+      if (minPrice != null && a.price < minPrice) return false;
+      if (maxPrice != null && a.price > maxPrice) return false;
+      if (fuels.isNotEmpty && !fuels.contains((a.fuelType ?? '').trim())) {
+        return false;
+      }
+      return true;
+    }).length;
   }
 
   void _openFilterSheet() {
@@ -82,6 +119,7 @@ class _SearchPageState extends State<SearchPage> {
     var tempSort = _sortBy;
     final minCtrl = TextEditingController(text: _minPrice?.toString() ?? '');
     final maxCtrl = TextEditingController(text: _maxPrice?.toString() ?? '');
+    final Set<String> tempFuels = Set<String>.from(_selectedFuels);
 
     const cats = <Map<String, String?>>[
       {'label': 'All', 'value': null},
@@ -189,6 +227,7 @@ class _SearchPageState extends State<SearchPage> {
                           tempSort = 'relevance';
                           minCtrl.clear();
                           maxCtrl.clear();
+                          tempFuels.clear();
                         }),
                         child: const Text('Clear all'),
                       ),
@@ -214,6 +253,7 @@ class _SearchPageState extends State<SearchPage> {
                         child: TextField(
                           controller: minCtrl,
                           keyboardType: TextInputType.number,
+                          onChanged: (_) => setSheet(() {}),
                           decoration: priceDeco('Min'),
                         ),
                       ),
@@ -222,6 +262,7 @@ class _SearchPageState extends State<SearchPage> {
                         child: TextField(
                           controller: maxCtrl,
                           keyboardType: TextInputType.number,
+                          onChanged: (_) => setSheet(() {}),
                           decoration: priceDeco('Max'),
                         ),
                       ),
@@ -238,6 +279,26 @@ class _SearchPageState extends State<SearchPage> {
                             () => setSheet(() => tempSort = s['value']!)))
                         .toList(),
                   ),
+                  if (_availableFuels.isNotEmpty) ...[
+                    const SizedBox(height: 18),
+                    Text('Fuel', style: labelStyle),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _availableFuels
+                          .map((f) => pill(f, tempFuels.contains(f), () {
+                                setSheet(() {
+                                  if (tempFuels.contains(f)) {
+                                    tempFuels.remove(f);
+                                  } else {
+                                    tempFuels.add(f);
+                                  }
+                                });
+                              }))
+                          .toList(),
+                    ),
+                  ],
                   const SizedBox(height: 22),
                   SizedBox(
                     width: double.infinity,
@@ -254,14 +315,19 @@ class _SearchPageState extends State<SearchPage> {
                           _sortBy = tempSort;
                           _minPrice = int.tryParse(minCtrl.text.trim());
                           _maxPrice = int.tryParse(maxCtrl.text.trim());
+                          _selectedFuels
+                            ..clear()
+                            ..addAll(tempFuels);
                         });
                         Navigator.pop(ctx);
                       },
-                      child: const Text('Apply filters',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15)),
+                      child: Text(
+                        'Show ${_previewCount(category: tempCat, minPrice: int.tryParse(minCtrl.text.trim()), maxPrice: int.tryParse(maxCtrl.text.trim()), fuels: tempFuels)} results',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15),
+                      ),
                     ),
                   ),
                 ],
@@ -1159,17 +1225,21 @@ class _SearchPageState extends State<SearchPage> {
       children: [
         if (_activeFilterCount > 0) _buildActiveFilterBar(ads.length),
         Expanded(
-          child: ListView.builder(
+          child: GridView.builder(
             controller: _scrollController,
+            padding: const EdgeInsets.fromLTRB(15, 10, 15, 100),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 15,
+              mainAxisSpacing: 15,
+              mainAxisExtent: richAdCardMainAxisExtent(context, columns: 2),
+            ),
             itemCount: showLoader ? ads.length + 1 : ads.length,
             itemBuilder: (BuildContext context, int index) {
               if (index >= ads.length) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Center(child: CircularProgressIndicator()),
-                );
+                return const Center(child: CircularProgressIndicator());
               }
-              return _buildAdCard(ads[index]);
+              return RichAdCard(ad: ads[index], favoriteRedirect: '/search');
             },
           ),
         ),

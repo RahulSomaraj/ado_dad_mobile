@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/widgets/rich_ad_card.dart';
 import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
@@ -145,28 +146,18 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
                           desktop: 44)),
                   // Product list
                   Expanded(
-                    child: ListView.separated(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: GetResponsiveSize.getResponsivePadding(
-                            context,
-                            mobile: 16,
-                            tablet: 24,
-                            largeTablet: 32,
-                            desktop: 40),
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 15,
+                        mainAxisSpacing: 15,
+                        mainAxisExtent:
+                            richAdCardMainAxisExtent(context, columns: 2),
                       ),
+                      padding: const EdgeInsets.fromLTRB(15, 10, 15, 100),
                       itemCount: ads.length,
-                      separatorBuilder: (_, __) => SizedBox(
-                          height: GetResponsiveSize.getResponsiveSize(context,
-                              mobile: 12,
-                              tablet: 18,
-                              largeTablet: 24,
-                              desktop: 30)),
-                      itemBuilder: (context, index) => _ProductTile(
-                        ad: ads[index],
-                        onTap: () {
-                          context.push('/add-detail-page', extra: ads[index]);
-                        },
-                      ),
+                      itemBuilder: (context, index) =>
+                          RichAdCard(ad: ads[index]),
                     ),
                   ),
                   // Load more button

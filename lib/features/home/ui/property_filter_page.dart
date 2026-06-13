@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:ado_dad_user/services/filter_state_service.dart';
 import 'package:flutter/material.dart';
 
@@ -22,16 +24,6 @@ class PropertyFiltersPage extends StatefulWidget {
 }
 
 class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
-  final List<String> categories = const [
-    'Property Type',
-    'Bedrooms',
-    'Price',
-    'Area Sqft',
-    'Furnish',
-    'Parking Facility',
-  ];
-
-  int selectedCategoryIndex = 0;
   String propertyTypeQuery = '';
   final Set<String> _selectedPropertyTypes = {};
   final _minBedroomsCtrl = TextEditingController();
@@ -47,6 +39,11 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
 
   // Filter state service
   final FilterStateService _filterStateService = FilterStateService();
+
+  // Live result count
+  final AddRepository _repo = AddRepository();
+  int? _resultCount;
+  Timer? _countTimer;
 
   // Property type options from the add property form
   final Map<String, String> _propertyTypeMap = {
@@ -64,6 +61,7 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
   void initState() {
     super.initState();
     _loadSavedFilterState();
+    _refreshCount();
   }
 
   void _loadSavedFilterState() {
@@ -111,6 +109,7 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
 
   @override
   void dispose() {
+    _countTimer?.cancel();
     _minBedroomsCtrl.dispose();
     _maxBedroomsCtrl.dispose();
     _minPriceCtrl.dispose();
@@ -120,18 +119,128 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
     super.dispose();
   }
 
+  // ===========================================================================
+  // Live result count
+  // ===========================================================================
+  void _refreshCount() {
+    _countTimer?.cancel();
+    _countTimer = Timer(const Duration(milliseconds: 400), () async {
+      try {
+        final count = await _repo.fetchAdsCount(
+          category: widget.categoryId,
+          propertyTypes: _selectedPropertyTypes.toList(),
+          minBedrooms: int.tryParse(_minBedroomsCtrl.text),
+          maxBedrooms: int.tryParse(_maxBedroomsCtrl.text),
+          minPrice: int.tryParse(_minPriceCtrl.text),
+          maxPrice: int.tryParse(_maxPriceCtrl.text),
+          minArea: int.tryParse(_minAreaCtrl.text),
+          maxArea: int.tryParse(_maxAreaCtrl.text),
+          isFurnished: _isFurnished,
+          hasParking: _hasParking,
+        );
+        if (mounted) {
+          setState(() => _resultCount = count);
+        }
+      } catch (_) {
+        // Ignore count errors silently; keep last known count.
+      }
+    });
+  }
+
+  // ===========================================================================
+  // Clear all
+  // ===========================================================================
+  void _clearAll() {
+    setState(() {
+      _selectedPropertyTypes.clear();
+      _minBedroomsCtrl.clear();
+      _maxBedroomsCtrl.clear();
+      _minPriceCtrl.clear();
+      _maxPriceCtrl.clear();
+      _minAreaCtrl.clear();
+      _maxAreaCtrl.clear();
+      _isFurnished = null;
+      _hasParking = null;
+      propertyTypeQuery = '';
+    });
+    // Clear saved state
+    if (widget.categoryId != null) {
+      _filterStateService.clearPropertyFilterState(widget.categoryId!);
+    }
+    _refreshCount();
+  }
+
+  // ===========================================================================
+  // Apply / validate
+  // ===========================================================================
+  void _applyFilters() {
+    final minBedrooms = _minBedroomsCtrl.text.isNotEmpty
+        ? int.tryParse(_minBedroomsCtrl.text)
+        : null;
+    final maxBedrooms = _maxBedroomsCtrl.text.isNotEmpty
+        ? int.tryParse(_maxBedroomsCtrl.text)
+        : null;
+    final minPrice = _minPriceCtrl.text.isNotEmpty
+        ? int.tryParse(_minPriceCtrl.text)
+        : null;
+    final maxPrice = _maxPriceCtrl.text.isNotEmpty
+        ? int.tryParse(_maxPriceCtrl.text)
+        : null;
+    final minArea =
+        _minAreaCtrl.text.isNotEmpty ? int.tryParse(_minAreaCtrl.text) : null;
+    final maxArea =
+        _maxAreaCtrl.text.isNotEmpty ? int.tryParse(_maxAreaCtrl.text) : null;
+
+    // Validation
+    if (minBedrooms != null &&
+        maxBedrooms != null &&
+        minBedrooms > maxBedrooms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Min Bedrooms cannot be greater than Max Bedrooms'),
+        ),
+      );
+      return;
+    }
+
+    if (minPrice != null && maxPrice != null && minPrice > maxPrice) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Min Price cannot be greater than Max Price'),
+        ),
+      );
+      return;
+    }
+
+    if (minArea != null && maxArea != null && minArea > maxArea) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Min Area cannot be greater than Max Area'),
+        ),
+      );
+      return;
+    }
+
+    // Save current filter state before returning
+    _saveFilterState();
+
+    Navigator.pop<Map<String, dynamic>>(context, {
+      'propertyTypes': _selectedPropertyTypes.toList(),
+      'minBedrooms': minBedrooms,
+      'maxBedrooms': maxBedrooms,
+      'minPrice': minPrice,
+      'maxPrice': maxPrice,
+      'minArea': minArea,
+      'maxArea': maxArea,
+      'isFurnished': _isFurnished,
+      'hasParking': _hasParking,
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final leftPaneWidth = GetResponsiveSize.getResponsiveSize(
-      context,
-      mobile: 150.0, // Keep mobile unchanged
-      tablet: 200.0,
-      largeTablet: 260.0,
-      desktop: 300.0,
-    );
-
     return Scaffold(
+      backgroundColor: AppColors.whiteColor,
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(
@@ -140,7 +249,7 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
                 : Icons.arrow_back,
             size: GetResponsiveSize.getResponsiveSize(
               context,
-              mobile: 20.0, // Keep mobile unchanged
+              mobile: 20.0,
               tablet: 26.0,
               largeTablet: 30.0,
               desktop: 34.0,
@@ -149,11 +258,11 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
-          'Property Filters',
+          'Filters',
           style: AppTextstyle.appbarText.copyWith(
             fontSize: GetResponsiveSize.getResponsiveFontSize(
               context,
-              mobile: 18.0, // Keep mobile unchanged
+              mobile: 18.0,
               tablet: 24.0,
               largeTablet: 28.0,
               desktop: 32.0,
@@ -163,31 +272,13 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
         elevation: 0.5,
         actions: [
           TextButton(
-            onPressed: () {
-              setState(() {
-                _selectedPropertyTypes.clear();
-                _minBedroomsCtrl.clear();
-                _maxBedroomsCtrl.clear();
-                _minPriceCtrl.clear();
-                _maxPriceCtrl.clear();
-                _minAreaCtrl.clear();
-                _maxAreaCtrl.clear();
-                _isFurnished = null;
-                _hasParking = null;
-                propertyTypeQuery = '';
-              });
-              // Clear saved state
-              if (widget.categoryId != null) {
-                _filterStateService
-                    .clearPropertyFilterState(widget.categoryId!);
-              }
-            },
+            onPressed: _clearAll,
             child: Text(
-              'Clear All',
+              'Reset',
               style: TextStyle(
                 fontSize: GetResponsiveSize.getResponsiveFontSize(
                   context,
-                  mobile: 14.0, // Keep mobile unchanged
+                  mobile: 14.0,
                   tablet: 20.0,
                   largeTablet: 24.0,
                   desktop: 28.0,
@@ -197,119 +288,87 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
           ),
         ],
       ),
-      body: Row(
+      body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
-          // left categories
-          Container(
-            width: leftPaneWidth,
-            decoration: BoxDecoration(
-              border: Border(
-                right: BorderSide(
-                  color: theme.colorScheme.primary.withOpacity(0.15),
-                  width: 1,
+          // 1. Property type
+          _sectionLabel('Property type'),
+          const SizedBox(height: 10),
+          _propertyTypeChips(),
+          const SizedBox(height: 20),
+
+          // 2. Bedrooms
+          _sectionLabel('Bedrooms'),
+          const SizedBox(height: 10),
+          _bedroomChips(),
+          const SizedBox(height: 20),
+
+          // 3. Price range
+          _sectionLabel('Price range'),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _numberField(
+                  controller: _minPriceCtrl,
+                  hint: '₹ Min',
                 ),
               ),
-            ),
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-              itemBuilder: (context, index) {
-                final isSelected = index == selectedCategoryIndex;
-                return InkWell(
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: () => setState(() => selectedCategoryIndex = index),
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-                    child: Text(
-                      categories[index],
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface.withOpacity(0.8),
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w500,
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: theme.textTheme.titleMedium?.fontSize ??
-                              16.0, // Keep mobile unchanged
-                          tablet: 22.0,
-                          largeTablet: 24.0,
-                          desktop: 28.0,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-              separatorBuilder: (_, __) => const SizedBox(height: 4),
-              itemCount: categories.length,
-            ),
-          ),
-
-          // right panel
-          Expanded(
-            child: Container(
-              color: theme.colorScheme.surface,
-              child: Builder(
-                builder: (_) {
-                  final bedroomsIndex = categories.indexOf('Bedrooms');
-                  final priceIndex = categories.indexOf('Price');
-                  final areaIndex = categories.indexOf('Area Sqft');
-                  final furnishIndex = categories.indexOf('Furnish');
-                  final parkingIndex = categories.indexOf('Parking Facility');
-
-                  if (selectedCategoryIndex == bedroomsIndex) {
-                    return _bedroomsPanel();
-                  }
-
-                  if (selectedCategoryIndex == priceIndex) {
-                    return _pricePanel();
-                  }
-
-                  if (selectedCategoryIndex == areaIndex) {
-                    return _areaPanel();
-                  }
-
-                  if (selectedCategoryIndex == furnishIndex) {
-                    return _furnishPanel();
-                  }
-
-                  if (selectedCategoryIndex == parkingIndex) {
-                    return _parkingPanel();
-                  }
-
-                  if (selectedCategoryIndex == 0) {
-                    return _propertyTypePanel();
-                  }
-
-                  return Center(
-                    child: Text(
-                      'Select "${categories[selectedCategoryIndex]}" filters here',
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                  );
-                },
+              const SizedBox(width: 12),
+              Expanded(
+                child: _numberField(
+                  controller: _maxPriceCtrl,
+                  hint: '₹ Max',
+                ),
               ),
-            ),
+            ],
           ),
+          const SizedBox(height: 20),
+
+          // 4. Area (sqft)
+          _sectionLabel('Area (sqft)'),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _numberField(
+                  controller: _minAreaCtrl,
+                  hint: 'Min',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _numberField(
+                  controller: _maxAreaCtrl,
+                  hint: 'Max',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // 5. Furnishing
+          _sectionLabel('Furnishing'),
+          const SizedBox(height: 10),
+          _furnishingChips(),
+          const SizedBox(height: 20),
+
+          // 6. Parking
+          _sectionLabel('Parking'),
+          const SizedBox(height: 10),
+          _parkingChips(),
+
+          const SizedBox(height: 16),
         ],
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(
-            GetResponsiveSize.getResponsivePadding(
-              context,
-              mobile: 16.0,
-              tablet: 20.0,
-              largeTablet: 24.0,
-              desktop: 28.0,
-            ),
-          ),
+          padding: const EdgeInsets.all(16),
           child: SizedBox(
             width: double.infinity,
             height: GetResponsiveSize.getResponsiveSize(
               context,
-              mobile: 48, // Keep mobile unchanged
+              mobile: 48,
               tablet: 65,
               largeTablet: 75,
               desktop: 85,
@@ -329,81 +388,15 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
                   ),
                 ),
               ),
-              onPressed: () {
-                final minBedrooms = _minBedroomsCtrl.text.isNotEmpty
-                    ? int.tryParse(_minBedroomsCtrl.text)
-                    : null;
-                final maxBedrooms = _maxBedroomsCtrl.text.isNotEmpty
-                    ? int.tryParse(_maxBedroomsCtrl.text)
-                    : null;
-                final minPrice = _minPriceCtrl.text.isNotEmpty
-                    ? int.tryParse(_minPriceCtrl.text)
-                    : null;
-                final maxPrice = _maxPriceCtrl.text.isNotEmpty
-                    ? int.tryParse(_maxPriceCtrl.text)
-                    : null;
-                final minArea = _minAreaCtrl.text.isNotEmpty
-                    ? int.tryParse(_minAreaCtrl.text)
-                    : null;
-                final maxArea = _maxAreaCtrl.text.isNotEmpty
-                    ? int.tryParse(_maxAreaCtrl.text)
-                    : null;
-
-                // Validation
-                if (minBedrooms != null &&
-                    maxBedrooms != null &&
-                    minBedrooms > maxBedrooms) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                          'Min Bedrooms cannot be greater than Max Bedrooms'),
-                    ),
-                  );
-                  return;
-                }
-
-                if (minPrice != null &&
-                    maxPrice != null &&
-                    minPrice > maxPrice) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content:
-                          Text('Min Price cannot be greater than Max Price'),
-                    ),
-                  );
-                  return;
-                }
-
-                if (minArea != null && maxArea != null && minArea > maxArea) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Min Area cannot be greater than Max Area'),
-                    ),
-                  );
-                  return;
-                }
-
-                // Save current filter state before returning
-                _saveFilterState();
-
-                Navigator.pop<Map<String, dynamic>>(context, {
-                  'propertyTypes': _selectedPropertyTypes.toList(),
-                  'minBedrooms': minBedrooms,
-                  'maxBedrooms': maxBedrooms,
-                  'minPrice': minPrice,
-                  'maxPrice': maxPrice,
-                  'minArea': minArea,
-                  'maxArea': maxArea,
-                  'isFurnished': _isFurnished,
-                  'hasParking': _hasParking,
-                });
-              },
+              onPressed: _applyFilters,
               child: Text(
-                'Apply Filters',
+                _resultCount == null
+                    ? 'Show results'
+                    : 'Show $_resultCount results',
                 style: TextStyle(
                   fontSize: GetResponsiveSize.getResponsiveFontSize(
                     context,
-                    mobile: 16.0, // Keep mobile unchanged
+                    mobile: 16.0,
                     tablet: 22.0,
                     largeTablet: 26.0,
                     desktop: 30.0,
@@ -419,899 +412,253 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
     );
   }
 
-  Widget _propertyTypePanel() {
-    final theme = Theme.of(context);
-    final filtered = _propertyTypeMap.entries.where((entry) {
-      final name = entry.value.toLowerCase();
-      return propertyTypeQuery.isEmpty ||
-          name.contains(propertyTypeQuery.toLowerCase());
-    }).toList();
+  // ===========================================================================
+  // Reusable UI helpers
+  // ===========================================================================
+  Widget _sectionLabel(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: GetResponsiveSize.getResponsiveFontSize(
+          context,
+          mobile: 15.0,
+          tablet: 20.0,
+          largeTablet: 22.0,
+          desktop: 24.0,
+        ),
+        fontWeight: FontWeight.w600,
+        color: AppColors.blackColor,
+      ),
+    );
+  }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _numberField({
+    required TextEditingController controller,
+    required String hint,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      onChanged: (_) => _refreshCount(),
+      style: TextStyle(
+        fontSize: GetResponsiveSize.getResponsiveFontSize(
+          context,
+          mobile: 16.0,
+          tablet: 20.0,
+          largeTablet: 22.0,
+          desktop: 24.0,
+        ),
+      ),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(
+          fontSize: GetResponsiveSize.getResponsiveFontSize(
+            context,
+            mobile: 15.0,
+            tablet: 20.0,
+            largeTablet: 22.0,
+            desktop: 24.0,
+          ),
+          color: AppColors.greyColor,
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          vertical: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 14,
+            tablet: 18,
+            largeTablet: 22,
+            desktop: 26,
+          ),
+          horizontal: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 12,
+            tablet: 16,
+            largeTablet: 20,
+            desktop: 24,
+          ),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(
+            GetResponsiveSize.getResponsiveBorderRadius(
+              context,
+              mobile: 9,
+              tablet: 10,
+              largeTablet: 12,
+              desktop: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _filterChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primaryColor : Colors.transparent,
+          border: Border.all(
+            color: selected ? AppColors.primaryColor : AppColors.dividerColor,
+            width: selected ? 1 : 0.5,
+          ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: GetResponsiveSize.getResponsiveFontSize(
+              context,
+              mobile: 14.0,
+              tablet: 18.0,
+              largeTablet: 20.0,
+              desktop: 22.0,
+            ),
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            color: selected ? Colors.white : AppColors.blackColor,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // Property type chips
+  // ===========================================================================
+  Widget _propertyTypeChips() {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: _propertyTypeMap.entries.map((entry) {
+        final key = entry.key;
+        final selected = _selectedPropertyTypes.contains(key);
+        return _filterChip(
+          label: entry.value,
+          selected: selected,
+          onTap: () {
+            setState(() {
+              if (selected) {
+                _selectedPropertyTypes.remove(key);
+              } else {
+                _selectedPropertyTypes.add(key);
+              }
+            });
+            _refreshCount();
+          },
+        );
+      }).toList(),
+    );
+  }
+
+  // ===========================================================================
+  // Bedroom chips (write to controllers as source of truth)
+  // ===========================================================================
+  Widget _bedroomChips() {
+    final min = _minBedroomsCtrl.text;
+    final max = _maxBedroomsCtrl.text;
+
+    bool isExact(String n) => min == n && max == n;
+    final isFourPlus = min == '4' && max.isEmpty;
+    final isAny = min.isEmpty && max.isEmpty;
+
+    void setBedrooms(String? minVal, String? maxVal) {
+      setState(() {
+        _minBedroomsCtrl.text = minVal ?? '';
+        _maxBedroomsCtrl.text = maxVal ?? '';
+      });
+      _refreshCount();
+    }
+
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
       children: [
-        Padding(
-          padding: EdgeInsets.fromLTRB(
-            GetResponsiveSize.getResponsivePadding(
-              context,
-              mobile: 16,
-              tablet: 20,
-              largeTablet: 24,
-              desktop: 28,
-            ),
-            GetResponsiveSize.getResponsivePadding(
-              context,
-              mobile: 16,
-              tablet: 20,
-              largeTablet: 24,
-              desktop: 28,
-            ),
-            GetResponsiveSize.getResponsivePadding(
-              context,
-              mobile: 16,
-              tablet: 20,
-              largeTablet: 24,
-              desktop: 28,
-            ),
-            GetResponsiveSize.getResponsivePadding(
-              context,
-              mobile: 8,
-              tablet: 10,
-              largeTablet: 12,
-              desktop: 14,
-            ),
-          ),
-          child: TextField(
-            onChanged: (v) => setState(() => propertyTypeQuery = v),
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: 16.0, // Keep mobile unchanged
-                tablet: 20.0,
-                largeTablet: 22.0,
-                desktop: 24.0,
-              ),
-            ),
-            decoration: InputDecoration(
-              prefixIcon: Icon(
-                Icons.search_rounded,
-                size: GetResponsiveSize.getResponsiveSize(
-                  context,
-                  mobile: 24.0, // Keep mobile unchanged
-                  tablet: 28.0,
-                  largeTablet: 32.0,
-                  desktop: 36.0,
-                ),
-              ),
-              hintText: 'Search Property Type',
-              hintStyle: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16.0, // Keep mobile unchanged
-                  tablet: 20.0,
-                  largeTablet: 22.0,
-                  desktop: 24.0,
-                ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                vertical: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 14,
-                  tablet: 18,
-                  largeTablet: 22,
-                  desktop: 26,
-                ),
-                horizontal: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 12,
-                  tablet: 16,
-                  largeTablet: 20,
-                  desktop: 24,
-                ),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(
-                    context,
-                    mobile: 6,
-                    tablet: 8,
-                    largeTablet: 10,
-                    desktop: 12,
-                  ),
-                ),
-              ),
-            ),
-          ),
+        _filterChip(
+          label: '1',
+          selected: isExact('1'),
+          onTap: () => setBedrooms('1', '1'),
         ),
-        const Divider(height: 1),
-        // View All option
-        Padding(
-          padding: EdgeInsets.fromLTRB(
-            GetResponsiveSize.getResponsivePadding(
-              context,
-              mobile: 30,
-              tablet: 36,
-              largeTablet: 42,
-              desktop: 48,
-            ),
-            GetResponsiveSize.getResponsivePadding(
-              context,
-              mobile: 8,
-              tablet: 10,
-              largeTablet: 12,
-              desktop: 14,
-            ),
-            GetResponsiveSize.getResponsivePadding(
-              context,
-              mobile: 16,
-              tablet: 20,
-              largeTablet: 24,
-              desktop: 28,
-            ),
-            0,
-          ),
-          child: InkWell(
-            onTap: () {
-              Navigator.pop<Map<String, dynamic>>(context, {});
-            },
-            child: Text(
-              'View All Properties',
-              style: TextStyle(
-                decoration: TextDecoration.underline,
-                color: AppColors.primaryColor,
-                fontWeight: FontWeight.w600,
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 14.0, // Keep mobile unchanged
-                  tablet: 20.0,
-                  largeTablet: 24.0,
-                  desktop: 28.0,
-                ),
-              ),
-            ),
-          ),
+        _filterChip(
+          label: '2',
+          selected: isExact('2'),
+          onTap: () => setBedrooms('2', '2'),
         ),
-        Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(8, 8, 8, 20),
-            itemCount: filtered.length,
-            itemBuilder: (_, i) {
-              final entry = filtered[i];
-              final key = entry.key;
-              final name = entry.value.trim();
-              final checked = _selectedPropertyTypes.contains(key);
-
-              return CheckboxListTile(
-                value: checked,
-                onChanged: (_) {
-                  setState(() {
-                    if (checked) {
-                      _selectedPropertyTypes.remove(key);
-                    } else {
-                      _selectedPropertyTypes.add(key);
-                    }
-                  });
-                },
-                dense: true,
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: GetResponsiveSize.getResponsivePadding(
-                    context,
-                    mobile: 12,
-                    tablet: 16,
-                    largeTablet: 20,
-                    desktop: 24,
-                  ),
-                  vertical: 0,
-                ),
-                title: Text(
-                  name,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(
-                      context,
-                      mobile: theme.textTheme.titleMedium?.fontSize ??
-                          16.0, // Keep mobile unchanged
-                      tablet: 20.0,
-                      largeTablet: 24.0,
-                      desktop: 28.0,
-                    ),
-                  ),
-                ),
-                checkboxShape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    GetResponsiveSize.getResponsiveBorderRadius(
-                      context,
-                      mobile: 4,
-                      tablet: 5,
-                      largeTablet: 6,
-                      desktop: 6,
-                    ),
-                  ),
-                ),
-              );
-            },
-            separatorBuilder: (_, __) => const SizedBox(height: 2),
-          ),
+        _filterChip(
+          label: '3',
+          selected: isExact('3'),
+          onTap: () => setBedrooms('3', '3'),
+        ),
+        _filterChip(
+          label: '4+',
+          selected: isFourPlus,
+          onTap: () => setBedrooms('4', ''),
+        ),
+        _filterChip(
+          label: 'Any',
+          selected: isAny,
+          onTap: () => setBedrooms('', ''),
         ),
       ],
     );
   }
 
-  Widget _bedroomsPanel() {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
+  // ===========================================================================
+  // Furnishing chips
+  // ===========================================================================
+  Widget _furnishingChips() {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        _filterChip(
+          label: 'Furnished',
+          selected: _isFurnished == true,
+          onTap: () {
+            setState(() {
+              _isFurnished = _isFurnished == true ? null : true;
+            });
+            _refreshCount();
+          },
         ),
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
+        _filterChip(
+          label: 'Unfurnished',
+          selected: _isFurnished == false,
+          onTap: () {
+            setState(() {
+              _isFurnished = _isFurnished == false ? null : false;
+            });
+            _refreshCount();
+          },
         ),
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
-        ),
-        0,
-      ),
-      child: Column(
-        children: [
-          TextField(
-            controller: _minBedroomsCtrl,
-            keyboardType: TextInputType.number,
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: 16.0, // Keep mobile unchanged
-                tablet: 20.0,
-                largeTablet: 22.0,
-                desktop: 24.0,
-              ),
-            ),
-            decoration: InputDecoration(
-              labelText: 'Min Bedrooms',
-              labelStyle: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16.0, // Keep mobile unchanged
-                  tablet: 20.0,
-                  largeTablet: 22.0,
-                  desktop: 24.0,
-                ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                vertical: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 14,
-                  tablet: 18,
-                  largeTablet: 22,
-                  desktop: 26,
-                ),
-                horizontal: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 12,
-                  tablet: 16,
-                  largeTablet: 20,
-                  desktop: 24,
-                ),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(
-                    context,
-                    mobile: 6,
-                    tablet: 8,
-                    largeTablet: 10,
-                    desktop: 12,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(
-            height: GetResponsiveSize.getResponsiveSize(
-              context,
-              mobile: 12,
-              tablet: 16,
-              largeTablet: 20,
-              desktop: 24,
-            ),
-          ),
-          TextField(
-            controller: _maxBedroomsCtrl,
-            keyboardType: TextInputType.number,
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: 16.0, // Keep mobile unchanged
-                tablet: 20.0,
-                largeTablet: 22.0,
-                desktop: 24.0,
-              ),
-            ),
-            decoration: InputDecoration(
-              labelText: 'Max Bedrooms',
-              labelStyle: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16.0, // Keep mobile unchanged
-                  tablet: 20.0,
-                  largeTablet: 22.0,
-                  desktop: 24.0,
-                ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                vertical: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 14,
-                  tablet: 18,
-                  largeTablet: 22,
-                  desktop: 26,
-                ),
-                horizontal: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 12,
-                  tablet: 16,
-                  largeTablet: 20,
-                  desktop: 24,
-                ),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(
-                    context,
-                    mobile: 6,
-                    tablet: 8,
-                    largeTablet: 10,
-                    desktop: 12,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 
-  Widget _pricePanel() {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
+  // ===========================================================================
+  // Parking chip
+  // ===========================================================================
+  Widget _parkingChips() {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        _filterChip(
+          label: 'Parking available',
+          selected: _hasParking == true,
+          onTap: () {
+            setState(() {
+              _hasParking = _hasParking == true ? null : true;
+            });
+            _refreshCount();
+          },
         ),
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
-        ),
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
-        ),
-        0,
-      ),
-      child: Column(
-        children: [
-          TextField(
-            controller: _minPriceCtrl,
-            keyboardType: TextInputType.number,
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: 16.0, // Keep mobile unchanged
-                tablet: 20.0,
-                largeTablet: 22.0,
-                desktop: 24.0,
-              ),
-            ),
-            decoration: InputDecoration(
-              labelText: 'Min Price (₹)',
-              labelStyle: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16.0, // Keep mobile unchanged
-                  tablet: 20.0,
-                  largeTablet: 22.0,
-                  desktop: 24.0,
-                ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                vertical: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 14,
-                  tablet: 18,
-                  largeTablet: 22,
-                  desktop: 26,
-                ),
-                horizontal: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 12,
-                  tablet: 16,
-                  largeTablet: 20,
-                  desktop: 24,
-                ),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(
-                    context,
-                    mobile: 6,
-                    tablet: 8,
-                    largeTablet: 10,
-                    desktop: 12,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(
-            height: GetResponsiveSize.getResponsiveSize(
-              context,
-              mobile: 12,
-              tablet: 16,
-              largeTablet: 20,
-              desktop: 24,
-            ),
-          ),
-          TextField(
-            controller: _maxPriceCtrl,
-            keyboardType: TextInputType.number,
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: 16.0, // Keep mobile unchanged
-                tablet: 20.0,
-                largeTablet: 22.0,
-                desktop: 24.0,
-              ),
-            ),
-            decoration: InputDecoration(
-              labelText: 'Max Price (₹)',
-              labelStyle: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16.0, // Keep mobile unchanged
-                  tablet: 20.0,
-                  largeTablet: 22.0,
-                  desktop: 24.0,
-                ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                vertical: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 14,
-                  tablet: 18,
-                  largeTablet: 22,
-                  desktop: 26,
-                ),
-                horizontal: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 12,
-                  tablet: 16,
-                  largeTablet: 20,
-                  desktop: 24,
-                ),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(
-                    context,
-                    mobile: 6,
-                    tablet: 8,
-                    largeTablet: 10,
-                    desktop: 12,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _areaPanel() {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
-        ),
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
-        ),
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
-        ),
-        0,
-      ),
-      child: Column(
-        children: [
-          TextField(
-            controller: _minAreaCtrl,
-            keyboardType: TextInputType.number,
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: 16.0, // Keep mobile unchanged
-                tablet: 20.0,
-                largeTablet: 22.0,
-                desktop: 24.0,
-              ),
-            ),
-            decoration: InputDecoration(
-              labelText: 'Min Area (sqft)',
-              labelStyle: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16.0, // Keep mobile unchanged
-                  tablet: 20.0,
-                  largeTablet: 22.0,
-                  desktop: 24.0,
-                ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                vertical: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 14,
-                  tablet: 18,
-                  largeTablet: 22,
-                  desktop: 26,
-                ),
-                horizontal: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 12,
-                  tablet: 16,
-                  largeTablet: 20,
-                  desktop: 24,
-                ),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(
-                    context,
-                    mobile: 6,
-                    tablet: 8,
-                    largeTablet: 10,
-                    desktop: 12,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(
-            height: GetResponsiveSize.getResponsiveSize(
-              context,
-              mobile: 12,
-              tablet: 16,
-              largeTablet: 20,
-              desktop: 24,
-            ),
-          ),
-          TextField(
-            controller: _maxAreaCtrl,
-            keyboardType: TextInputType.number,
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: 16.0, // Keep mobile unchanged
-                tablet: 20.0,
-                largeTablet: 22.0,
-                desktop: 24.0,
-              ),
-            ),
-            decoration: InputDecoration(
-              labelText: 'Max Area (sqft)',
-              labelStyle: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16.0, // Keep mobile unchanged
-                  tablet: 20.0,
-                  largeTablet: 22.0,
-                  desktop: 24.0,
-                ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                vertical: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 14,
-                  tablet: 18,
-                  largeTablet: 22,
-                  desktop: 26,
-                ),
-                horizontal: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 12,
-                  tablet: 16,
-                  largeTablet: 20,
-                  desktop: 24,
-                ),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(
-                    context,
-                    mobile: 6,
-                    tablet: 8,
-                    largeTablet: 10,
-                    desktop: 12,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _furnishPanel() {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
-        ),
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
-        ),
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
-        ),
-        0,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Furnishing Status',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: theme.textTheme.titleMedium?.fontSize ??
-                    16.0, // Keep mobile unchanged
-                tablet: 20.0,
-                largeTablet: 24.0,
-                desktop: 28.0,
-              ),
-            ),
-          ),
-          SizedBox(
-            height: GetResponsiveSize.getResponsiveSize(
-              context,
-              mobile: 16,
-              tablet: 20,
-              largeTablet: 24,
-              desktop: 28,
-            ),
-          ),
-          RadioListTile<bool>(
-            title: Text(
-              'Furnished',
-              style: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16.0, // Keep mobile unchanged
-                  tablet: 20.0,
-                  largeTablet: 24.0,
-                  desktop: 28.0,
-                ),
-              ),
-            ),
-            value: true,
-            groupValue: _isFurnished,
-            onChanged: (bool? value) {
-              setState(() {
-                _isFurnished = value;
-              });
-            },
-            activeColor: AppColors.primaryColor,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: GetResponsiveSize.getResponsivePadding(
-                context,
-                mobile: 12,
-                tablet: 16,
-                largeTablet: 20,
-                desktop: 24,
-              ),
-            ),
-          ),
-          RadioListTile<bool>(
-            title: Text(
-              'Unfurnished',
-              style: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16.0, // Keep mobile unchanged
-                  tablet: 20.0,
-                  largeTablet: 24.0,
-                  desktop: 28.0,
-                ),
-              ),
-            ),
-            value: false,
-            groupValue: _isFurnished,
-            onChanged: (bool? value) {
-              setState(() {
-                _isFurnished = value;
-              });
-            },
-            activeColor: AppColors.primaryColor,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: GetResponsiveSize.getResponsivePadding(
-                context,
-                mobile: 12,
-                tablet: 16,
-                largeTablet: 20,
-                desktop: 24,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _parkingPanel() {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
-        ),
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
-        ),
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
-        ),
-        0,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Parking Facility',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: theme.textTheme.titleMedium?.fontSize ??
-                    16.0, // Keep mobile unchanged
-                tablet: 20.0,
-                largeTablet: 24.0,
-                desktop: 28.0,
-              ),
-            ),
-          ),
-          SizedBox(
-            height: GetResponsiveSize.getResponsiveSize(
-              context,
-              mobile: 16,
-              tablet: 20,
-              largeTablet: 24,
-              desktop: 28,
-            ),
-          ),
-          RadioListTile<bool>(
-            title: Text(
-              'Available',
-              style: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16.0, // Keep mobile unchanged
-                  tablet: 20.0,
-                  largeTablet: 24.0,
-                  desktop: 28.0,
-                ),
-              ),
-            ),
-            value: true,
-            groupValue: _hasParking,
-            onChanged: (bool? value) {
-              setState(() {
-                _hasParking = value;
-              });
-            },
-            activeColor: AppColors.primaryColor,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: GetResponsiveSize.getResponsivePadding(
-                context,
-                mobile: 12,
-                tablet: 16,
-                largeTablet: 20,
-                desktop: 24,
-              ),
-            ),
-          ),
-          RadioListTile<bool>(
-            title: Text(
-              'Not Available',
-              style: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16.0, // Keep mobile unchanged
-                  tablet: 20.0,
-                  largeTablet: 24.0,
-                  desktop: 28.0,
-                ),
-              ),
-            ),
-            value: false,
-            groupValue: _hasParking,
-            onChanged: (bool? value) {
-              setState(() {
-                _hasParking = value;
-              });
-            },
-            activeColor: AppColors.primaryColor,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: GetResponsiveSize.getResponsivePadding(
-                context,
-                mobile: 12,
-                tablet: 16,
-                largeTablet: 20,
-                desktop: 24,
-              ),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }

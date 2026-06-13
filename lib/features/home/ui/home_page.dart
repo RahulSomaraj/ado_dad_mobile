@@ -1,5 +1,6 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/widgets/app_network_image.dart';
+import 'package:ado_dad_user/common/widgets/rich_ad_card.dart';
 import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/common/notification_badge_service.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
@@ -1291,7 +1292,7 @@ class _HomePageState extends State<HomePage> {
                   itemBuilder: (context, index) {
                     if (index < listings.length) {
                       final ad = listings[index];
-                      return _buildRichAdCard(ad);
+                      return RichAdCard(ad: ad);
                     }
                     return hasMore
                         ? const Padding(

@@ -8,8 +8,9 @@ import 'package:ado_dad_user/features/home/commercial_vehicle_type_filter_bloc/c
 import 'package:ado_dad_user/features/home/fuelType_filter_bloc/fuel_type_filter_bloc.dart';
 import 'package:ado_dad_user/features/home/manufacturer_bloc/manufacturer_bloc.dart';
 import 'package:ado_dad_user/features/home/model_filter_bloc/model_filter_bloc.dart';
+import 'package:ado_dad_user/models/advertisement_post_model/vehilce_model.dart';
 import 'package:ado_dad_user/features/home/transmissionType_filter_bloc/transmission_type_filter_bloc.dart';
-import 'package:ado_dad_user/models/advertisement_post_model/commercial_vehicle_type_model.dart';
+import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:ado_dad_user/services/filter_state_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -73,6 +74,11 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
   // Debounce timer for model search
   Timer? _modelSearchTimer;
 
+  // Live result count
+  final AddRepository _repo = AddRepository();
+  int? _resultCount;
+  Timer? _countTimer;
+
   @override
   void initState() {
     super.initState();
@@ -86,6 +92,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
             );
       }
     });
+    _refreshCount();
   }
 
   /// Get vehicleCategory based on categoryId for filter page
@@ -185,6 +192,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
   void dispose() {
     _manufacturerSearchTimer?.cancel();
     _modelSearchTimer?.cancel();
+    _countTimer?.cancel();
     _minYearCtrl.dispose();
     _maxYearCtrl.dispose();
     _minPriceCtrl.dispose();
@@ -195,18 +203,149 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
     super.dispose();
   }
 
+  // ===========================================================================
+  // Live result count
+  // ===========================================================================
+  void _refreshCount() {
+    _countTimer?.cancel();
+    _countTimer = Timer(const Duration(milliseconds: 400), () async {
+      try {
+        final count = await _repo.fetchAdsCount(
+          category: widget.categoryId,
+          search: brandQuery.isNotEmpty ? null : null,
+          manufacturerIds: _selectedManufacturerIds.toList(),
+          modelIds: _selectedModelIds.toList(),
+          fuelTypeIds: _selectedFuelTypeIds.toList(),
+          transmissionTypeIds: _selectedTransmissionTypeIds.toList(),
+          commercialVehicleTypes: _selectedCommercialVehicleTypes.toList(),
+          minYear: int.tryParse(_minYearCtrl.text),
+          maxYear: int.tryParse(_maxYearCtrl.text),
+          minPrice: int.tryParse(_minPriceCtrl.text),
+          maxPrice: int.tryParse(_maxPriceCtrl.text),
+        );
+        if (mounted) {
+          setState(() => _resultCount = count);
+        }
+      } catch (_) {
+        // Ignore count errors silently; keep last known count.
+      }
+    });
+  }
+
+  // ===========================================================================
+  // Clear all
+  // ===========================================================================
+  void _clearAll() {
+    setState(() {
+      _selectedCommercialVehicleTypes.clear();
+      _selectedManufacturerIds.clear();
+      _selectedFuelTypeIds.clear();
+      _selectedTransmissionTypeIds.clear();
+      _selectedModelIds.clear();
+      _minYearCtrl.clear();
+      _maxYearCtrl.clear();
+      _minPriceCtrl.clear();
+      _maxPriceCtrl.clear();
+      brandQuery = '';
+      _brandSearchCtrl.clear();
+      modelQuery = '';
+      _modelSearchCtrl.clear();
+      fuelTypeQuery = '';
+      transmissionQuery = '';
+      commercialTypeQuery = '';
+      _commercialTypeSearchCtrl.clear();
+    });
+    // Clear saved state
+    if (widget.categoryId != null) {
+      _filterStateService.clearCarFilterState(widget.categoryId!);
+    }
+    _refreshCount();
+  }
+
+  // ===========================================================================
+  // Apply / validate
+  // ===========================================================================
+  void _applyFilters() {
+    final min =
+        _minYearCtrl.text.isNotEmpty ? int.tryParse(_minYearCtrl.text) : null;
+    final max =
+        _maxYearCtrl.text.isNotEmpty ? int.tryParse(_maxYearCtrl.text) : null;
+
+    final minP =
+        _minPriceCtrl.text.isNotEmpty ? int.tryParse(_minPriceCtrl.text) : null;
+    final maxP =
+        _maxPriceCtrl.text.isNotEmpty ? int.tryParse(_maxPriceCtrl.text) : null;
+
+    if (min != null && max != null && min > max) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Min Year cannot be greater than Max Year')),
+      );
+      return;
+    }
+
+    if (minP != null && maxP != null && minP > maxP) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Min Price cannot be greater than Max Price')),
+      );
+      return;
+    }
+
+    // Save current filter state before returning
+    _saveFilterState();
+
+    Navigator.pop<Map<String, dynamic>>(context, {
+      'commercialVehicleTypes':
+          _selectedCommercialVehicleTypes.toList(growable: false),
+      'manufacturerIds': _selectedManufacturerIds.toList(),
+      'fuelTypeIds': _selectedFuelTypeIds.toList(),
+      'transmissionTypeIds': _selectedTransmissionTypeIds.toList(),
+      'modelIds': _selectedModelIds.toList(),
+      'minYear': min,
+      'maxYear': max,
+      'minPrice': minP,
+      'maxPrice': maxP,
+    });
+  }
+
+  // ===========================================================================
+  // Brand / Model search dispatch (debounced)
+  // ===========================================================================
+  void _dispatchBrandSearch(String v) {
+    _manufacturerSearchTimer?.cancel();
+    _manufacturerSearchTimer =
+        Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      final vehicleCategory = _getVehicleCategoryForFilter();
+      if (v.isEmpty) {
+        context.read<ManufacturerBloc>().add(
+              ManufacturerEvent.load(vehicleCategory: vehicleCategory),
+            );
+      } else {
+        context.read<ManufacturerBloc>().add(
+              ManufacturerEvent.search(v, vehicleCategory: vehicleCategory),
+            );
+      }
+    });
+  }
+
+  void _dispatchModelSearch(String v) {
+    _modelSearchTimer?.cancel();
+    _modelSearchTimer = Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      if (v.isEmpty) {
+        context.read<ModelFilterBloc>().add(const ModelFilterEvent.load());
+      } else {
+        context.read<ModelFilterBloc>().add(ModelFilterEvent.search(v));
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final leftPaneWidth = GetResponsiveSize.getResponsiveSize(
-      context,
-      mobile: 170.0, // Increased to accommodate "Transmission" on one line
-      tablet: 200.0,
-      largeTablet: 260.0,
-      desktop: 300.0,
-    );
-
     return Scaffold(
+      backgroundColor: AppColors.whiteColor,
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(
@@ -215,8 +354,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                 : Icons.arrow_back,
             size: GetResponsiveSize.getResponsiveSize(
               context,
-              mobile:
-                  20.0, // Keep mobile unchanged (assuming default iOS back arrow size)
+              mobile: 20.0,
               tablet: 26.0,
               largeTablet: 30.0,
               desktop: 34.0,
@@ -229,8 +367,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
           style: AppTextstyle.appbarText.copyWith(
             fontSize: GetResponsiveSize.getResponsiveFontSize(
               context,
-              mobile:
-                  18.0, // Keep mobile unchanged (AppTextstyle.appbarText fontSize)
+              mobile: 18.0,
               tablet: 24.0,
               largeTablet: 28.0,
               desktop: 32.0,
@@ -240,31 +377,13 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
         elevation: 0.5,
         actions: [
           TextButton(
-            onPressed: () {
-              setState(() {
-                _selectedCommercialVehicleTypes.clear();
-                _selectedManufacturerIds.clear();
-                _selectedFuelTypeIds.clear();
-                _selectedTransmissionTypeIds.clear();
-                _selectedModelIds.clear();
-                _minYearCtrl.clear();
-                _maxYearCtrl.clear();
-                _minPriceCtrl.clear();
-                _maxPriceCtrl.clear();
-                brandQuery = '';
-                modelQuery = '';
-              });
-              // Clear saved state
-              if (widget.categoryId != null) {
-                _filterStateService.clearCarFilterState(widget.categoryId!);
-              }
-            },
+            onPressed: _clearAll,
             child: Text(
-              'Clear All',
+              'Reset',
               style: TextStyle(
                 fontSize: GetResponsiveSize.getResponsiveFontSize(
                   context,
-                  mobile: 14.0, // Keep mobile unchanged
+                  mobile: 14.0,
                   tablet: 20.0,
                   largeTablet: 24.0,
                   desktop: 28.0,
@@ -274,1016 +393,103 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
           ),
         ],
       ),
-      body: Row(
+      body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
-          // left categories
-          Container(
-            width: leftPaneWidth,
-            decoration: BoxDecoration(
-              border: Border(
-                right: BorderSide(
-                  color: theme.colorScheme.primary.withOpacity(0.15),
-                  width: 1,
+          // 1. Brand
+          _selectorRow(
+            label: 'Brand',
+            subtitle: _selectedManufacturerIds.isEmpty
+                ? 'Any'
+                : '${_selectedManufacturerIds.length} selected',
+            onTap: _openBrandSheet,
+          ),
+          const SizedBox(height: 12),
+
+          // 2. Model
+          _selectorRow(
+            label: 'Model',
+            subtitle: _selectedModelIds.isEmpty
+                ? 'Any'
+                : '${_selectedModelIds.length} selected',
+            onTap: _openModelSheet,
+          ),
+          const SizedBox(height: 20),
+
+          // 3. Price range
+          _sectionLabel('Price range'),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _numberField(
+                  controller: _minPriceCtrl,
+                  hint: '₹ Min',
                 ),
               ),
-            ),
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-              itemBuilder: (context, index) {
-                final isSelected = index == selectedCategoryIndex;
-                return InkWell(
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: () => setState(() => selectedCategoryIndex = index),
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-                    child: Text(
-                      categories[index],
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface.withOpacity(0.8),
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w500,
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: theme.textTheme.titleMedium?.fontSize ??
-                              16.0, // Keep mobile unchanged
-                          tablet: 22.0,
-                          largeTablet: 24.0,
-                          desktop: 28.0,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-              separatorBuilder: (_, __) => const SizedBox(height: 4),
-              itemCount: categories.length,
-            ),
-          ),
-
-          // right panel
-          Expanded(
-            child: Container(
-              color: theme.colorScheme.surface,
-              child: Builder(
-                builder: (_) {
-                  final yearIndex = categories.indexOf('Year');
-                  final priceIndex = categories.indexOf('Price');
-
-                  if (selectedCategoryIndex == yearIndex) {
-                    return _yearPanel();
-                  }
-
-                  if (selectedCategoryIndex == priceIndex) {
-                    return _pricePanel();
-                  }
-
-                  // Commercial Vehicle Type filter
-                  if (widget.categoryId == 'commercial_vehicle' &&
-                      selectedCategoryIndex == 0) {
-                    return _commercialTypePanel();
-                  }
-
-                  final brandsIndex =
-                      widget.categoryId == 'commercial_vehicle' ? 1 : 0;
-                  final modelIndex =
-                      widget.categoryId == 'commercial_vehicle' ? 2 : 1;
-                  final fuelIndex =
-                      widget.categoryId == 'commercial_vehicle' ? 4 : 3;
-                  final transmissionIndex =
-                      widget.categoryId == 'commercial_vehicle' ? 5 : 4;
-
-                  if (selectedCategoryIndex == brandsIndex) {
-                    return BlocBuilder<ManufacturerBloc, ManufacturerState>(
-                      builder: (context, state) {
-                        return state.when(
-                          initial: () => const SizedBox.shrink(),
-                          loading: () => const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                          error: (msg) => Center(child: Text(msg)),
-                          loaded: (items) {
-                            // No client-side filtering needed - already filtered by API
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.fromLTRB(
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 16,
-                                      tablet: 20,
-                                      largeTablet: 24,
-                                      desktop: 28,
-                                    ),
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 16,
-                                      tablet: 20,
-                                      largeTablet: 24,
-                                      desktop: 28,
-                                    ),
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 16,
-                                      tablet: 20,
-                                      largeTablet: 24,
-                                      desktop: 28,
-                                    ),
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 8,
-                                      tablet: 10,
-                                      largeTablet: 12,
-                                      desktop: 14,
-                                    ),
-                                  ),
-                                  child: TextField(
-                                    controller: _brandSearchCtrl,
-                                    onChanged: (v) {
-                                      setState(() => brandQuery = v);
-                                      // Cancel previous timer
-                                      _manufacturerSearchTimer?.cancel();
-
-                                      // Create new timer with 500ms delay for debouncing
-                                      _manufacturerSearchTimer = Timer(
-                                          const Duration(milliseconds: 500),
-                                          () {
-                                        if (mounted) {
-                                          final vehicleCategory =
-                                              _getVehicleCategoryForFilter();
-                                          // If search is empty, load all manufacturers, otherwise search
-                                          if (v.isEmpty) {
-                                            context
-                                                .read<ManufacturerBloc>()
-                                                .add(
-                                                  ManufacturerEvent.load(
-                                                    vehicleCategory:
-                                                        vehicleCategory,
-                                                  ),
-                                                );
-                                          } else {
-                                            context
-                                                .read<ManufacturerBloc>()
-                                                .add(
-                                                  ManufacturerEvent.search(
-                                                    v,
-                                                    vehicleCategory:
-                                                        vehicleCategory,
-                                                  ),
-                                                );
-                                          }
-                                        }
-                                      });
-                                    },
-                                    style: TextStyle(
-                                      fontSize: GetResponsiveSize
-                                          .getResponsiveFontSize(
-                                        context,
-                                        mobile: 16.0, // Keep mobile unchanged
-                                        tablet: 20.0,
-                                        largeTablet: 22.0,
-                                        desktop: 24.0,
-                                      ),
-                                    ),
-                                    decoration: InputDecoration(
-                                      prefixIcon: Icon(
-                                        Icons.search_rounded,
-                                        size:
-                                            GetResponsiveSize.getResponsiveSize(
-                                          context,
-                                          mobile: 24.0, // Keep mobile unchanged
-                                          tablet: 28.0,
-                                          largeTablet: 32.0,
-                                          desktop: 36.0,
-                                        ),
-                                      ),
-                                      hintText: 'Search Brand',
-                                      hintStyle: TextStyle(
-                                        fontSize: GetResponsiveSize
-                                            .getResponsiveFontSize(
-                                          context,
-                                          mobile: 16.0, // Keep mobile unchanged
-                                          tablet: 20.0,
-                                          largeTablet: 22.0,
-                                          desktop: 24.0,
-                                        ),
-                                      ),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: GetResponsiveSize
-                                            .getResponsivePadding(
-                                          context,
-                                          mobile: 14,
-                                          tablet: 18,
-                                          largeTablet: 22,
-                                          desktop: 26,
-                                        ),
-                                        horizontal: GetResponsiveSize
-                                            .getResponsivePadding(
-                                          context,
-                                          mobile: 12,
-                                          tablet: 16,
-                                          largeTablet: 20,
-                                          desktop: 24,
-                                        ),
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          GetResponsiveSize
-                                              .getResponsiveBorderRadius(
-                                            context,
-                                            mobile: 6,
-                                            tablet: 8,
-                                            largeTablet: 10,
-                                            desktop: 12,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const Divider(height: 1),
-                                // View All option
-                                Padding(
-                                  padding: EdgeInsets.fromLTRB(
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 30,
-                                      tablet: 36,
-                                      largeTablet: 42,
-                                      desktop: 48,
-                                    ),
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 8,
-                                      tablet: 10,
-                                      largeTablet: 12,
-                                      desktop: 14,
-                                    ),
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 16,
-                                      tablet: 20,
-                                      largeTablet: 24,
-                                      desktop: 28,
-                                    ),
-                                    0,
-                                  ),
-                                  child: InkWell(
-                                    onTap: () {
-                                      Navigator.pop<Map<String, dynamic>>(
-                                          context, {});
-                                    },
-                                    child: Text(
-                                      'View All ${_categoryPluralLabel()}',
-                                      style: TextStyle(
-                                        decoration: TextDecoration.underline,
-                                        color: AppColors.primaryColor,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: GetResponsiveSize
-                                            .getResponsiveFontSize(
-                                          context,
-                                          mobile: 14.0, // Keep mobile unchanged
-                                          tablet: 20.0,
-                                          largeTablet: 24.0,
-                                          desktop: 28.0,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: ListView.separated(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(8, 8, 8, 20),
-                                    itemCount: items.length,
-                                    itemBuilder: (_, i) {
-                                      final m = items[i];
-                                      final id = m.id;
-                                      final name = m.displayName.trim();
-                                      final checked =
-                                          _selectedManufacturerIds.contains(id);
-
-                                      return CheckboxListTile(
-                                        value: checked,
-                                        onChanged: (_) {
-                                          setState(() {
-                                            if (checked) {
-                                              _selectedManufacturerIds
-                                                  .remove(id);
-                                            } else {
-                                              _selectedManufacturerIds.add(id);
-                                            }
-                                          });
-                                        },
-                                        dense: true,
-                                        controlAffinity:
-                                            ListTileControlAffinity.leading,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: GetResponsiveSize
-                                              .getResponsivePadding(
-                                            context,
-                                            mobile: 12,
-                                            tablet: 16,
-                                            largeTablet: 20,
-                                            desktop: 24,
-                                          ),
-                                          vertical: 0,
-                                        ),
-                                        title: Text(
-                                          name,
-                                          style: theme.textTheme.titleMedium
-                                              ?.copyWith(
-                                            fontSize: GetResponsiveSize
-                                                .getResponsiveFontSize(
-                                              context,
-                                              mobile: theme.textTheme
-                                                      .titleMedium?.fontSize ??
-                                                  16.0, // Keep mobile unchanged
-                                              tablet: 20.0,
-                                              largeTablet: 24.0,
-                                              desktop: 28.0,
-                                            ),
-                                          ),
-                                        ),
-                                        checkboxShape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            GetResponsiveSize
-                                                .getResponsiveBorderRadius(
-                                              context,
-                                              mobile: 4,
-                                              tablet: 5,
-                                              largeTablet: 6,
-                                              desktop: 6,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    separatorBuilder: (_, __) =>
-                                        const SizedBox(height: 2),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                    );
-                  }
-
-                  //Model Filters
-
-                  if (selectedCategoryIndex == modelIndex) {
-                    return BlocBuilder<ModelFilterBloc, ModelFilterState>(
-                      builder: (context, state) {
-                        return state.when(
-                          initial: () => const SizedBox.shrink(),
-                          loading: () => const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                          error: (msg) => Center(child: Text(msg)),
-                          loaded: (items) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.fromLTRB(
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 16,
-                                      tablet: 20,
-                                      largeTablet: 24,
-                                      desktop: 28,
-                                    ),
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 16,
-                                      tablet: 20,
-                                      largeTablet: 24,
-                                      desktop: 28,
-                                    ),
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 16,
-                                      tablet: 20,
-                                      largeTablet: 24,
-                                      desktop: 28,
-                                    ),
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 8,
-                                      tablet: 10,
-                                      largeTablet: 12,
-                                      desktop: 14,
-                                    ),
-                                  ),
-                                  child: TextField(
-                                    controller: _modelSearchCtrl,
-                                    onChanged: (v) {
-                                      setState(() => modelQuery = v);
-                                      // Cancel previous timer
-                                      _modelSearchTimer?.cancel();
-
-                                      // Create new timer with 500ms delay for debouncing
-                                      _modelSearchTimer = Timer(
-                                          const Duration(milliseconds: 500),
-                                          () {
-                                        if (mounted) {
-                                          // If search is empty, load all models, otherwise search
-                                          if (v.isEmpty) {
-                                            context.read<ModelFilterBloc>().add(
-                                                  const ModelFilterEvent.load(),
-                                                );
-                                          } else {
-                                            context.read<ModelFilterBloc>().add(
-                                                  ModelFilterEvent.search(v),
-                                                );
-                                          }
-                                        }
-                                      });
-                                    },
-                                    style: TextStyle(
-                                      fontSize: GetResponsiveSize
-                                          .getResponsiveFontSize(
-                                        context,
-                                        mobile: 16.0, // Keep mobile unchanged
-                                        tablet: 20.0,
-                                        largeTablet: 22.0,
-                                        desktop: 24.0,
-                                      ),
-                                    ),
-                                    decoration: InputDecoration(
-                                      prefixIcon: Icon(
-                                        Icons.search_rounded,
-                                        size:
-                                            GetResponsiveSize.getResponsiveSize(
-                                          context,
-                                          mobile: 24.0, // Keep mobile unchanged
-                                          tablet: 28.0,
-                                          largeTablet: 32.0,
-                                          desktop: 36.0,
-                                        ),
-                                      ),
-                                      hintText: 'Search Model',
-                                      hintStyle: TextStyle(
-                                        fontSize: GetResponsiveSize
-                                            .getResponsiveFontSize(
-                                          context,
-                                          mobile: 16.0, // Keep mobile unchanged
-                                          tablet: 20.0,
-                                          largeTablet: 22.0,
-                                          desktop: 24.0,
-                                        ),
-                                      ),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: GetResponsiveSize
-                                            .getResponsivePadding(
-                                          context,
-                                          mobile: 14,
-                                          tablet: 18,
-                                          largeTablet: 22,
-                                          desktop: 26,
-                                        ),
-                                        horizontal: GetResponsiveSize
-                                            .getResponsivePadding(
-                                          context,
-                                          mobile: 12,
-                                          tablet: 16,
-                                          largeTablet: 20,
-                                          desktop: 24,
-                                        ),
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          GetResponsiveSize
-                                              .getResponsiveBorderRadius(
-                                            context,
-                                            mobile: 6,
-                                            tablet: 8,
-                                            largeTablet: 10,
-                                            desktop: 12,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const Divider(height: 1),
-                                Expanded(
-                                  child: ListView.separated(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(8, 8, 8, 20),
-                                    itemCount: items.length,
-                                    itemBuilder: (_, i) {
-                                      final m = items[i];
-                                      final id = m.id;
-                                      final name = m.displayName.trim();
-                                      final checked =
-                                          _selectedModelIds.contains(id);
-
-                                      return CheckboxListTile(
-                                        value: checked,
-                                        onChanged: (_) {
-                                          setState(() {
-                                            if (checked) {
-                                              _selectedModelIds.remove(id);
-                                            } else {
-                                              _selectedModelIds.add(id);
-                                            }
-                                          });
-                                        },
-                                        dense: true,
-                                        controlAffinity:
-                                            ListTileControlAffinity.leading,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: GetResponsiveSize
-                                              .getResponsivePadding(
-                                            context,
-                                            mobile: 12,
-                                            tablet: 16,
-                                            largeTablet: 20,
-                                            desktop: 24,
-                                          ),
-                                          vertical: 0,
-                                        ),
-                                        title: Text(
-                                          name,
-                                          style: theme.textTheme.titleMedium
-                                              ?.copyWith(
-                                            fontSize: GetResponsiveSize
-                                                .getResponsiveFontSize(
-                                              context,
-                                              mobile: theme.textTheme
-                                                      .titleMedium?.fontSize ??
-                                                  16.0, // Keep mobile unchanged
-                                              tablet: 20.0,
-                                              largeTablet: 24.0,
-                                              desktop: 28.0,
-                                            ),
-                                          ),
-                                        ),
-                                        checkboxShape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            GetResponsiveSize
-                                                .getResponsiveBorderRadius(
-                                              context,
-                                              mobile: 4,
-                                              tablet: 5,
-                                              largeTablet: 6,
-                                              desktop: 6,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    separatorBuilder: (_, __) =>
-                                        const SizedBox(height: 2),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                    );
-                  }
-
-                  //Fuel Type Filters
-                  if (selectedCategoryIndex == fuelIndex) {
-                    return BlocBuilder<FuelTypeFilterBloc, FuelTypeFilterState>(
-                      builder: (context, state) {
-                        return state.when(
-                          initial: () => const SizedBox.shrink(),
-                          loading: () => const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                          error: (msg) => Center(child: Text(msg)),
-                          loaded: (items) {
-                            final filtered = items.where((m) {
-                              final name = m.displayName.toLowerCase();
-                              return fuelTypeQuery.isEmpty ||
-                                  name.contains(fuelTypeQuery.toLowerCase());
-                            }).toList();
-
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.fromLTRB(
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 16,
-                                      tablet: 20,
-                                      largeTablet: 24,
-                                      desktop: 28,
-                                    ),
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 16,
-                                      tablet: 20,
-                                      largeTablet: 24,
-                                      desktop: 28,
-                                    ),
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 16,
-                                      tablet: 20,
-                                      largeTablet: 24,
-                                      desktop: 28,
-                                    ),
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 8,
-                                      tablet: 10,
-                                      largeTablet: 12,
-                                      desktop: 14,
-                                    ),
-                                  ),
-                                  child: TextField(
-                                    onChanged: (v) =>
-                                        setState(() => fuelTypeQuery = v),
-                                    style: TextStyle(
-                                      fontSize: GetResponsiveSize
-                                          .getResponsiveFontSize(
-                                        context,
-                                        mobile: 16.0, // Keep mobile unchanged
-                                        tablet: 20.0,
-                                        largeTablet: 22.0,
-                                        desktop: 24.0,
-                                      ),
-                                    ),
-                                    decoration: InputDecoration(
-                                      prefixIcon: Icon(
-                                        Icons.search_rounded,
-                                        size:
-                                            GetResponsiveSize.getResponsiveSize(
-                                          context,
-                                          mobile: 24.0, // Keep mobile unchanged
-                                          tablet: 28.0,
-                                          largeTablet: 32.0,
-                                          desktop: 36.0,
-                                        ),
-                                      ),
-                                      hintText: 'Search Fuel Type',
-                                      hintStyle: TextStyle(
-                                        fontSize: GetResponsiveSize
-                                            .getResponsiveFontSize(
-                                          context,
-                                          mobile: 16.0, // Keep mobile unchanged
-                                          tablet: 20.0,
-                                          largeTablet: 22.0,
-                                          desktop: 24.0,
-                                        ),
-                                      ),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: GetResponsiveSize
-                                            .getResponsivePadding(
-                                          context,
-                                          mobile: 14,
-                                          tablet: 18,
-                                          largeTablet: 22,
-                                          desktop: 26,
-                                        ),
-                                        horizontal: GetResponsiveSize
-                                            .getResponsivePadding(
-                                          context,
-                                          mobile: 12,
-                                          tablet: 16,
-                                          largeTablet: 20,
-                                          desktop: 24,
-                                        ),
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          GetResponsiveSize
-                                              .getResponsiveBorderRadius(
-                                            context,
-                                            mobile: 6,
-                                            tablet: 8,
-                                            largeTablet: 10,
-                                            desktop: 12,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const Divider(height: 1),
-                                Expanded(
-                                  child: ListView.separated(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(8, 8, 8, 20),
-                                    itemCount: filtered.length,
-                                    itemBuilder: (_, i) {
-                                      final m = filtered[i];
-                                      final id = m.id;
-                                      final name = m.displayName.trim();
-                                      final checked =
-                                          _selectedFuelTypeIds.contains(id);
-
-                                      return CheckboxListTile(
-                                        value: checked,
-                                        onChanged: (_) {
-                                          setState(() {
-                                            if (checked) {
-                                              _selectedFuelTypeIds.remove(id);
-                                            } else {
-                                              _selectedFuelTypeIds.add(id);
-                                            }
-                                          });
-                                        },
-                                        dense: true,
-                                        controlAffinity:
-                                            ListTileControlAffinity.leading,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: GetResponsiveSize
-                                              .getResponsivePadding(
-                                            context,
-                                            mobile: 12,
-                                            tablet: 16,
-                                            largeTablet: 20,
-                                            desktop: 24,
-                                          ),
-                                          vertical: 0,
-                                        ),
-                                        title: Text(
-                                          name,
-                                          style: theme.textTheme.titleMedium
-                                              ?.copyWith(
-                                            fontSize: GetResponsiveSize
-                                                .getResponsiveFontSize(
-                                              context,
-                                              mobile: theme.textTheme
-                                                      .titleMedium?.fontSize ??
-                                                  16.0, // Keep mobile unchanged
-                                              tablet: 20.0,
-                                              largeTablet: 24.0,
-                                              desktop: 28.0,
-                                            ),
-                                          ),
-                                        ),
-                                        checkboxShape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            GetResponsiveSize
-                                                .getResponsiveBorderRadius(
-                                              context,
-                                              mobile: 4,
-                                              tablet: 5,
-                                              largeTablet: 6,
-                                              desktop: 6,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    separatorBuilder: (_, __) =>
-                                        const SizedBox(height: 2),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                    );
-                  }
-
-                  //Transmission Type Filters
-                  if (selectedCategoryIndex == transmissionIndex) {
-                    return BlocBuilder<TransmissionTypeFilterBloc,
-                        TransmissionTypeFilterState>(
-                      builder: (context, state) {
-                        return state.when(
-                          initial: () => const SizedBox.shrink(),
-                          loading: () => const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                          error: (msg) => Center(child: Text(msg)),
-                          loaded: (items) {
-                            final filtered = items.where((m) {
-                              final name = m.displayName.toLowerCase();
-                              return transmissionQuery.isEmpty ||
-                                  name.contains(
-                                      transmissionQuery.toLowerCase());
-                            }).toList();
-
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.fromLTRB(
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 16,
-                                      tablet: 20,
-                                      largeTablet: 24,
-                                      desktop: 28,
-                                    ),
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 16,
-                                      tablet: 20,
-                                      largeTablet: 24,
-                                      desktop: 28,
-                                    ),
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 16,
-                                      tablet: 20,
-                                      largeTablet: 24,
-                                      desktop: 28,
-                                    ),
-                                    GetResponsiveSize.getResponsivePadding(
-                                      context,
-                                      mobile: 8,
-                                      tablet: 10,
-                                      largeTablet: 12,
-                                      desktop: 14,
-                                    ),
-                                  ),
-                                  child: TextField(
-                                    onChanged: (v) =>
-                                        setState(() => transmissionQuery = v),
-                                    style: TextStyle(
-                                      fontSize: GetResponsiveSize
-                                          .getResponsiveFontSize(
-                                        context,
-                                        mobile: 16.0, // Keep mobile unchanged
-                                        tablet: 20.0,
-                                        largeTablet: 22.0,
-                                        desktop: 24.0,
-                                      ),
-                                    ),
-                                    decoration: InputDecoration(
-                                      prefixIcon: Icon(
-                                        Icons.search_rounded,
-                                        size:
-                                            GetResponsiveSize.getResponsiveSize(
-                                          context,
-                                          mobile: 24.0, // Keep mobile unchanged
-                                          tablet: 28.0,
-                                          largeTablet: 32.0,
-                                          desktop: 36.0,
-                                        ),
-                                      ),
-                                      hintText: 'Search Transmission',
-                                      hintStyle: TextStyle(
-                                        fontSize: GetResponsiveSize
-                                            .getResponsiveFontSize(
-                                          context,
-                                          mobile: 16.0, // Keep mobile unchanged
-                                          tablet: 20.0,
-                                          largeTablet: 22.0,
-                                          desktop: 24.0,
-                                        ),
-                                      ),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: GetResponsiveSize
-                                            .getResponsivePadding(
-                                          context,
-                                          mobile: 14,
-                                          tablet: 18,
-                                          largeTablet: 22,
-                                          desktop: 26,
-                                        ),
-                                        horizontal: GetResponsiveSize
-                                            .getResponsivePadding(
-                                          context,
-                                          mobile: 12,
-                                          tablet: 16,
-                                          largeTablet: 20,
-                                          desktop: 24,
-                                        ),
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          GetResponsiveSize
-                                              .getResponsiveBorderRadius(
-                                            context,
-                                            mobile: 6,
-                                            tablet: 8,
-                                            largeTablet: 10,
-                                            desktop: 12,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const Divider(height: 1),
-                                Expanded(
-                                  child: ListView.separated(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(8, 8, 8, 20),
-                                    itemCount: filtered.length,
-                                    itemBuilder: (_, i) {
-                                      final m = filtered[i];
-                                      final id = m.id;
-                                      final name = m.displayName.trim();
-                                      final checked =
-                                          _selectedTransmissionTypeIds
-                                              .contains(id);
-
-                                      return CheckboxListTile(
-                                        value: checked,
-                                        onChanged: (_) {
-                                          setState(() {
-                                            if (checked) {
-                                              _selectedTransmissionTypeIds
-                                                  .remove(id);
-                                            } else {
-                                              _selectedTransmissionTypeIds
-                                                  .add(id);
-                                            }
-                                          });
-                                        },
-                                        dense: true,
-                                        controlAffinity:
-                                            ListTileControlAffinity.leading,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: GetResponsiveSize
-                                              .getResponsivePadding(
-                                            context,
-                                            mobile: 12,
-                                            tablet: 16,
-                                            largeTablet: 20,
-                                            desktop: 24,
-                                          ),
-                                          vertical: 0,
-                                        ),
-                                        title: Text(
-                                          name,
-                                          style: theme.textTheme.titleMedium
-                                              ?.copyWith(
-                                            fontSize: GetResponsiveSize
-                                                .getResponsiveFontSize(
-                                              context,
-                                              mobile: theme.textTheme
-                                                      .titleMedium?.fontSize ??
-                                                  16.0, // Keep mobile unchanged
-                                              tablet: 20.0,
-                                              largeTablet: 24.0,
-                                              desktop: 28.0,
-                                            ),
-                                          ),
-                                        ),
-                                        checkboxShape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            GetResponsiveSize
-                                                .getResponsiveBorderRadius(
-                                              context,
-                                              mobile: 4,
-                                              tablet: 5,
-                                              largeTablet: 6,
-                                              desktop: 6,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    separatorBuilder: (_, __) =>
-                                        const SizedBox(height: 2),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                    );
-                  }
-
-                  return Center(
-                    child: Text(
-                      'Select "${categories[selectedCategoryIndex]}" filters here',
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                  );
-                },
+              const SizedBox(width: 12),
+              Expanded(
+                child: _numberField(
+                  controller: _maxPriceCtrl,
+                  hint: '₹ Max',
+                ),
               ),
-            ),
+            ],
           ),
+          const SizedBox(height: 20),
+
+          // 4. Year
+          _sectionLabel('Year'),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _numberField(
+                  controller: _minYearCtrl,
+                  hint: 'From',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _numberField(
+                  controller: _maxYearCtrl,
+                  hint: 'To',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // 5. Fuel
+          _sectionLabel('Fuel'),
+          const SizedBox(height: 10),
+          _fuelChips(),
+          const SizedBox(height: 20),
+
+          // 6. Transmission
+          _sectionLabel('Transmission'),
+          const SizedBox(height: 10),
+          _transmissionChips(),
+
+          // 7. Body type (commercial only)
+          if (widget.categoryId == 'commercial_vehicle') ...[
+            const SizedBox(height: 20),
+            _sectionLabel('Body type'),
+            const SizedBox(height: 10),
+            _bodyTypeChips(),
+          ],
+
+          const SizedBox(height: 16),
         ],
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(
-            GetResponsiveSize.getResponsivePadding(
-              context,
-              mobile: 16.0,
-              tablet: 20.0,
-              largeTablet: 24.0,
-              desktop: 28.0,
-            ),
-          ),
+          padding: const EdgeInsets.all(16),
           child: SizedBox(
             width: double.infinity,
             height: GetResponsiveSize.getResponsiveSize(
               context,
-              mobile: 48, // Keep mobile unchanged
+              mobile: 48,
               tablet: 65,
               largeTablet: 75,
               desktop: 85,
@@ -1303,61 +509,15 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                   ),
                 ),
               ),
-              onPressed: () {
-                final min = _minYearCtrl.text.isNotEmpty
-                    ? int.tryParse(_minYearCtrl.text)
-                    : null;
-                final max = _maxYearCtrl.text.isNotEmpty
-                    ? int.tryParse(_maxYearCtrl.text)
-                    : null;
-
-                final minP = _minPriceCtrl.text.isNotEmpty
-                    ? int.tryParse(_minPriceCtrl.text)
-                    : null;
-                final maxP = _maxPriceCtrl.text.isNotEmpty
-                    ? int.tryParse(_maxPriceCtrl.text)
-                    : null;
-
-                if (min != null && max != null && min > max) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content:
-                            Text('Min Year cannot be greater than Max Year')),
-                  );
-                  return;
-                }
-
-                if (minP != null && maxP != null && minP > maxP) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content:
-                            Text('Min Price cannot be greater than Max Price')),
-                  );
-                  return;
-                }
-
-                // Save current filter state before returning
-                _saveFilterState();
-
-                Navigator.pop<Map<String, dynamic>>(context, {
-                  'commercialVehicleTypes': _selectedCommercialVehicleTypes
-                      .toList(growable: false),
-                  'manufacturerIds': _selectedManufacturerIds.toList(),
-                  'fuelTypeIds': _selectedFuelTypeIds.toList(),
-                  'transmissionTypeIds': _selectedTransmissionTypeIds.toList(),
-                  'modelIds': _selectedModelIds.toList(),
-                  'minYear': min,
-                  'maxYear': max,
-                  'minPrice': minP,
-                  'maxPrice': maxP
-                });
-              },
+              onPressed: _applyFilters,
               child: Text(
-                'Apply Filters',
+                _resultCount == null
+                    ? 'Show results'
+                    : 'Show $_resultCount results',
                 style: TextStyle(
                   fontSize: GetResponsiveSize.getResponsiveFontSize(
                     context,
-                    mobile: 16.0, // Keep mobile unchanged
+                    mobile: 16.0,
                     tablet: 22.0,
                     largeTablet: 26.0,
                     desktop: 30.0,
@@ -1373,516 +533,732 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
     );
   }
 
-  Widget _yearPanel() {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        GetResponsiveSize.getResponsivePadding(
+  // ===========================================================================
+  // Reusable UI helpers
+  // ===========================================================================
+  Widget _sectionLabel(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: GetResponsiveSize.getResponsiveFontSize(
           context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
+          mobile: 15.0,
+          tablet: 20.0,
+          largeTablet: 22.0,
+          desktop: 24.0,
         ),
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
-        ),
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
-        ),
-        0,
-      ),
-      child: Column(
-        children: [
-          TextField(
-            controller: _minYearCtrl,
-            keyboardType: TextInputType.number,
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: 16.0, // Keep mobile unchanged
-                tablet: 20.0,
-                largeTablet: 22.0,
-                desktop: 24.0,
-              ),
-            ),
-            decoration: InputDecoration(
-              labelText: 'Min Year',
-              labelStyle: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16.0, // Keep mobile unchanged
-                  tablet: 20.0,
-                  largeTablet: 22.0,
-                  desktop: 24.0,
-                ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                vertical: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 14,
-                  tablet: 18,
-                  largeTablet: 22,
-                  desktop: 26,
-                ),
-                horizontal: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 12,
-                  tablet: 16,
-                  largeTablet: 20,
-                  desktop: 24,
-                ),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(
-                    context,
-                    mobile: 6,
-                    tablet: 8,
-                    largeTablet: 10,
-                    desktop: 12,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(
-            height: GetResponsiveSize.getResponsiveSize(
-              context,
-              mobile: 12,
-              tablet: 16,
-              largeTablet: 20,
-              desktop: 24,
-            ),
-          ),
-          TextField(
-            controller: _maxYearCtrl,
-            keyboardType: TextInputType.number,
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: 16.0, // Keep mobile unchanged
-                tablet: 20.0,
-                largeTablet: 22.0,
-                desktop: 24.0,
-              ),
-            ),
-            decoration: InputDecoration(
-              labelText: 'Max Year',
-              labelStyle: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16.0, // Keep mobile unchanged
-                  tablet: 20.0,
-                  largeTablet: 22.0,
-                  desktop: 24.0,
-                ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                vertical: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 14,
-                  tablet: 18,
-                  largeTablet: 22,
-                  desktop: 26,
-                ),
-                horizontal: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 12,
-                  tablet: 16,
-                  largeTablet: 20,
-                  desktop: 24,
-                ),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(
-                    context,
-                    mobile: 6,
-                    tablet: 8,
-                    largeTablet: 10,
-                    desktop: 12,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+        fontWeight: FontWeight.w600,
+        color: AppColors.blackColor,
       ),
     );
   }
 
-  Widget _pricePanel() {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
+  Widget _selectorRow({
+    required String label,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(9),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.dividerColor, width: 0.5),
+          borderRadius: BorderRadius.circular(9),
         ),
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
-        ),
-        GetResponsiveSize.getResponsivePadding(
-          context,
-          mobile: 16,
-          tablet: 20,
-          largeTablet: 24,
-          desktop: 28,
-        ),
-        0,
-      ),
-      child: Column(
-        children: [
-          TextField(
-            controller: _minPriceCtrl,
-            keyboardType: TextInputType.number,
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: 16.0, // Keep mobile unchanged
-                tablet: 20.0,
-                largeTablet: 22.0,
-                desktop: 24.0,
-              ),
-            ),
-            decoration: InputDecoration(
-              labelText: 'Min Price',
-              labelStyle: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16.0, // Keep mobile unchanged
-                  tablet: 20.0,
-                  largeTablet: 22.0,
-                  desktop: 24.0,
-                ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                vertical: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 14,
-                  tablet: 18,
-                  largeTablet: 22,
-                  desktop: 26,
-                ),
-                horizontal: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 12,
-                  tablet: 16,
-                  largeTablet: 20,
-                  desktop: 24,
-                ),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(
-                    context,
-                    mobile: 6,
-                    tablet: 8,
-                    largeTablet: 10,
-                    desktop: 12,
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 15.0,
+                        tablet: 20.0,
+                        largeTablet: 22.0,
+                        desktop: 24.0,
+                      ),
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.blackColor,
+                    ),
                   ),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(
-            height: GetResponsiveSize.getResponsiveSize(
-              context,
-              mobile: 12,
-              tablet: 16,
-              largeTablet: 20,
-              desktop: 24,
-            ),
-          ),
-          TextField(
-            controller: _maxPriceCtrl,
-            keyboardType: TextInputType.number,
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: 16.0, // Keep mobile unchanged
-                tablet: 20.0,
-                largeTablet: 22.0,
-                desktop: 24.0,
-              ),
-            ),
-            decoration: InputDecoration(
-              labelText: 'Max Price',
-              labelStyle: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 16.0, // Keep mobile unchanged
-                  tablet: 20.0,
-                  largeTablet: 22.0,
-                  desktop: 24.0,
-                ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                vertical: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 14,
-                  tablet: 18,
-                  largeTablet: 22,
-                  desktop: 26,
-                ),
-                horizontal: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 12,
-                  tablet: 16,
-                  largeTablet: 20,
-                  desktop: 24,
-                ),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(
-                    context,
-                    mobile: 6,
-                    tablet: 8,
-                    largeTablet: 10,
-                    desktop: 12,
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 13.0,
+                        tablet: 18.0,
+                        largeTablet: 20.0,
+                        desktop: 22.0,
+                      ),
+                      color: AppColors.greyColor,
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
-          ),
-        ],
+            Icon(
+              Icons.chevron_right,
+              color: AppColors.greyColor,
+              size: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 24.0,
+                tablet: 28.0,
+                largeTablet: 32.0,
+                desktop: 36.0,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  String _categoryPluralLabel() {
-    // Prefer categoryId mapping; fallback to title if provided
-    final id = widget.categoryId;
-    if (id == 'two_wheeler') return 'Bikes';
-    if (id == 'private_vehicle') return 'Cars';
-    if (id == 'premium_vehicle') return 'Cars';
-    if (id == 'commercial_vehicle') return 'Commercial Vehicles';
-    // Fallback based on provided title
-    final t = (widget.categoryTitle ?? '').toLowerCase();
-    if (t.contains('bike')) return 'Bikes';
-    if (t.contains('car')) return 'Cars';
-    if (t.contains('premium')) return 'Cars';
-    if (t.contains('commercial')) return 'Commercial Vehicles';
-    return 'Vehicles';
+  Widget _numberField({
+    required TextEditingController controller,
+    required String hint,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      onChanged: (_) => _refreshCount(),
+      style: TextStyle(
+        fontSize: GetResponsiveSize.getResponsiveFontSize(
+          context,
+          mobile: 16.0,
+          tablet: 20.0,
+          largeTablet: 22.0,
+          desktop: 24.0,
+        ),
+      ),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(
+          fontSize: GetResponsiveSize.getResponsiveFontSize(
+            context,
+            mobile: 15.0,
+            tablet: 20.0,
+            largeTablet: 22.0,
+            desktop: 24.0,
+          ),
+          color: AppColors.greyColor,
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          vertical: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 14,
+            tablet: 18,
+            largeTablet: 22,
+            desktop: 26,
+          ),
+          horizontal: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 12,
+            tablet: 16,
+            largeTablet: 20,
+            desktop: 24,
+          ),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(
+            GetResponsiveSize.getResponsiveBorderRadius(
+              context,
+              mobile: 9,
+              tablet: 10,
+              largeTablet: 12,
+              desktop: 14,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
-  Widget _commercialTypePanel() {
+  Widget _filterChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primaryColor : Colors.transparent,
+          border: Border.all(
+            color: selected ? AppColors.primaryColor : AppColors.dividerColor,
+            width: selected ? 1 : 0.5,
+          ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: GetResponsiveSize.getResponsiveFontSize(
+              context,
+              mobile: 14.0,
+              tablet: 18.0,
+              largeTablet: 20.0,
+              desktop: 22.0,
+            ),
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            color: selected ? Colors.white : AppColors.blackColor,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // Fuel chips
+  // ===========================================================================
+  Widget _fuelChips() {
+    return BlocBuilder<FuelTypeFilterBloc, FuelTypeFilterState>(
+      builder: (context, state) {
+        return state.when(
+          initial: () => const SizedBox.shrink(),
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+          error: (_) => const SizedBox.shrink(),
+          loaded: (items) {
+            if (items.isEmpty) return const SizedBox.shrink();
+            return Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: items.map((m) {
+                final id = m.id;
+                final selected = _selectedFuelTypeIds.contains(id);
+                return _filterChip(
+                  label: m.displayName.trim(),
+                  selected: selected,
+                  onTap: () {
+                    setState(() {
+                      if (selected) {
+                        _selectedFuelTypeIds.remove(id);
+                      } else {
+                        _selectedFuelTypeIds.add(id);
+                      }
+                    });
+                    _refreshCount();
+                  },
+                );
+              }).toList(),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ===========================================================================
+  // Transmission chips
+  // ===========================================================================
+  Widget _transmissionChips() {
+    return BlocBuilder<TransmissionTypeFilterBloc, TransmissionTypeFilterState>(
+      builder: (context, state) {
+        return state.when(
+          initial: () => const SizedBox.shrink(),
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+          error: (_) => const SizedBox.shrink(),
+          loaded: (items) {
+            if (items.isEmpty) return const SizedBox.shrink();
+            return Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: items.map((m) {
+                final id = m.id;
+                final selected = _selectedTransmissionTypeIds.contains(id);
+                return _filterChip(
+                  label: m.displayName.trim(),
+                  selected: selected,
+                  onTap: () {
+                    setState(() {
+                      if (selected) {
+                        _selectedTransmissionTypeIds.remove(id);
+                      } else {
+                        _selectedTransmissionTypeIds.add(id);
+                      }
+                    });
+                    _refreshCount();
+                  },
+                );
+              }).toList(),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ===========================================================================
+  // Body type chips (commercial vehicle only)
+  // ===========================================================================
+  Widget _bodyTypeChips() {
     return BlocBuilder<CommercialVehicleTypeFilterBloc,
         CommercialVehicleTypeFilterState>(
       builder: (context, state) {
         return state.when(
           initial: () => const SizedBox.shrink(),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (msg) => Center(child: Text(msg)),
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+          error: (_) => const SizedBox.shrink(),
           loaded: (items) {
-            final filtered = items.where((t) {
-              final name = t.displayName.toLowerCase();
-              return commercialTypeQuery.isEmpty ||
-                  name.contains(commercialTypeQuery.toLowerCase());
-            }).toList();
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    GetResponsiveSize.getResponsivePadding(
-                      context,
-                      mobile: 16,
-                      tablet: 20,
-                      largeTablet: 24,
-                      desktop: 28,
-                    ),
-                    GetResponsiveSize.getResponsivePadding(
-                      context,
-                      mobile: 16,
-                      tablet: 20,
-                      largeTablet: 24,
-                      desktop: 28,
-                    ),
-                    GetResponsiveSize.getResponsivePadding(
-                      context,
-                      mobile: 16,
-                      tablet: 20,
-                      largeTablet: 24,
-                      desktop: 28,
-                    ),
-                    GetResponsiveSize.getResponsivePadding(
-                      context,
-                      mobile: 8,
-                      tablet: 10,
-                      largeTablet: 12,
-                      desktop: 14,
-                    ),
-                  ),
-                  child: TextField(
-                    controller: _commercialTypeSearchCtrl,
-                    onChanged: (v) => setState(() => commercialTypeQuery = v),
-                    style: TextStyle(
-                      fontSize: GetResponsiveSize.getResponsiveFontSize(
-                        context,
-                        mobile: 16.0,
-                        tablet: 20.0,
-                        largeTablet: 22.0,
-                        desktop: 24.0,
-                      ),
-                    ),
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(
-                        Icons.search_rounded,
-                        size: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 24.0,
-                          tablet: 28.0,
-                          largeTablet: 32.0,
-                          desktop: 36.0,
-                        ),
-                      ),
-                      hintText: 'Search Type',
-                      contentPadding: EdgeInsets.symmetric(
-                        vertical: GetResponsiveSize.getResponsivePadding(
-                          context,
-                          mobile: 14,
-                          tablet: 18,
-                          largeTablet: 22,
-                          desktop: 26,
-                        ),
-                        horizontal: GetResponsiveSize.getResponsivePadding(
-                          context,
-                          mobile: 12,
-                          tablet: 16,
-                          largeTablet: 20,
-                          desktop: 24,
-                        ),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                          GetResponsiveSize.getResponsiveBorderRadius(
-                            context,
-                            mobile: 6,
-                            tablet: 8,
-                            largeTablet: 10,
-                            desktop: 12,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const Divider(height: 1),
-                // View All option
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    GetResponsiveSize.getResponsivePadding(
-                      context,
-                      mobile: 30,
-                      tablet: 36,
-                      largeTablet: 42,
-                      desktop: 48,
-                    ),
-                    GetResponsiveSize.getResponsivePadding(
-                      context,
-                      mobile: 8,
-                      tablet: 10,
-                      largeTablet: 12,
-                      desktop: 14,
-                    ),
-                    GetResponsiveSize.getResponsivePadding(
-                      context,
-                      mobile: 16,
-                      tablet: 20,
-                      largeTablet: 24,
-                      desktop: 28,
-                    ),
-                    0,
-                  ),
-                  child: InkWell(
-                    onTap: () {
-                      setState(() {
-                        _selectedCommercialVehicleTypes.clear();
-                      });
-                    },
-                    child: Text(
-                      'View All Types',
-                      style: TextStyle(
-                        decoration: TextDecoration.underline,
-                        color: AppColors.primaryColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: 14.0,
-                          tablet: 20.0,
-                          largeTablet: 24.0,
-                          desktop: 28.0,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(8, 8, 8, 20),
-                    itemCount: filtered.length,
-                    itemBuilder: (_, i) {
-                      final CommercialVehicleType t = filtered[i];
-                      final selected =
-                          _selectedCommercialVehicleTypes.contains(t.name);
-                      return CheckboxListTile(
-                        value: selected,
-                        onChanged: (_) {
-                          setState(() {
-                            if (selected) {
-                              _selectedCommercialVehicleTypes.remove(t.name);
-                            } else {
-                              _selectedCommercialVehicleTypes.add(t.name);
-                            }
-                          });
-                        },
-                        dense: true,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        title: Text(
-                          t.displayName.trim(),
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                                  context,
-                                  mobile: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.fontSize ??
-                                      16.0,
-                                  tablet: 20.0,
-                                  largeTablet: 24.0,
-                                  desktop: 28.0,
-                                ),
-                                fontWeight:
-                                    selected ? FontWeight.w600 : FontWeight.w500,
-                              ),
-                        ),
-                      );
-                    },
-                    separatorBuilder: (_, __) => const SizedBox(height: 2),
-                  ),
-                ),
-              ],
+            if (items.isEmpty) return const SizedBox.shrink();
+            return Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: items.map((t) {
+                final selected =
+                    _selectedCommercialVehicleTypes.contains(t.name);
+                return _filterChip(
+                  label: t.displayName.trim(),
+                  selected: selected,
+                  onTap: () {
+                    setState(() {
+                      if (selected) {
+                        _selectedCommercialVehicleTypes.remove(t.name);
+                      } else {
+                        _selectedCommercialVehicleTypes.add(t.name);
+                      }
+                    });
+                    _refreshCount();
+                  },
+                );
+              }).toList(),
             );
           },
         );
       },
+    );
+  }
+
+  // ===========================================================================
+  // Brand bottom sheet
+  // ===========================================================================
+  Future<void> _openBrandSheet() async {
+    final manufacturerBloc = context.read<ManufacturerBloc>();
+    manufacturerBloc.state.maybeWhen(
+      loaded: (_) {},
+      orElse: () => manufacturerBloc.add(ManufacturerEvent.load(
+          vehicleCategory: _getVehicleCategoryForFilter())),
+    );
+    var brandVisible = 20;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.whiteColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        return BlocProvider.value(
+          value: manufacturerBloc,
+          child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+          ),
+          child: SizedBox(
+            height: MediaQuery.of(sheetContext).size.height * 0.8,
+            child: StatefulBuilder(
+              builder: (context, setSheetState) {
+                return Column(
+                  children: [
+                    _sheetHeader('Select Brand'),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      child: _searchField(
+                        controller: _brandSearchCtrl,
+                        hint: 'Search Brand',
+                        onChanged: (v) {
+                          setSheetState(() {});
+                          setState(() => brandQuery = v);
+                          _dispatchBrandSearch(v);
+                        },
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: BlocBuilder<ManufacturerBloc, ManufacturerState>(
+                        builder: (context, state) {
+                          return state.when(
+                            initial: () => const SizedBox.shrink(),
+                            loading: () => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                            error: (msg) => Center(child: Text(msg)),
+                            loaded: (items) {
+                              return NotificationListener<ScrollNotification>(
+                                onNotification: (n) {
+                                  if (n.metrics.pixels >=
+                                          n.metrics.maxScrollExtent - 200 &&
+                                      brandVisible < items.length) {
+                                    setSheetState(() => brandVisible += 20);
+                                  }
+                                  return false;
+                                },
+                                child: ListView.separated(
+                                padding:
+                                    const EdgeInsets.fromLTRB(8, 8, 8, 20),
+                                itemCount: brandVisible.clamp(0, items.length),
+                                itemBuilder: (_, i) {
+                                  final m = items[i];
+                                  final id = m.id;
+                                  final checked =
+                                      _selectedManufacturerIds.contains(id);
+                                  return CheckboxListTile(
+                                    value: checked,
+                                    onChanged: (_) {
+                                      setSheetState(() {
+                                        if (checked) {
+                                          _selectedManufacturerIds.remove(id);
+                                        } else {
+                                          _selectedManufacturerIds.add(id);
+                                        }
+                                      });
+                                    },
+                                    dense: true,
+                                    controlAffinity:
+                                        ListTileControlAffinity.leading,
+                                    title: Text(
+                                      m.displayName.trim(),
+                                      style: TextStyle(
+                                        fontSize: GetResponsiveSize
+                                            .getResponsiveFontSize(
+                                          context,
+                                          mobile: 16.0,
+                                          tablet: 20.0,
+                                          largeTablet: 24.0,
+                                          desktop: 28.0,
+                                        ),
+                                      ),
+                                    ),
+                                    checkboxShape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  );
+                                },
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 2),
+                              ));
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ));
+      },
+    );
+    // Sheet dismissed: sync the outer page + count.
+    if (mounted) {
+      setState(() {});
+      _refreshCount();
+    }
+  }
+
+  // ===========================================================================
+  // Model bottom sheet
+  // ===========================================================================
+  Future<void> _openModelSheet() async {
+    final brandIds = _selectedManufacturerIds.toList();
+    // Models are scoped to the selected brand(s) and fetched once per open.
+    final Future<List<VehicleModel>> modelsFuture = brandIds.isEmpty
+        ? Future.value(<VehicleModel>[])
+        : _fetchModelsForBrands(brandIds);
+    var modelQ = '';
+    var modelVisible = 20;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.whiteColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+          ),
+          child: SizedBox(
+            height: MediaQuery.of(sheetContext).size.height * 0.8,
+            child: StatefulBuilder(
+              builder: (context, setSheetState) {
+                if (brandIds.isEmpty) {
+                  return Column(
+                    children: [
+                      _sheetHeader('Select Model'),
+                      const Expanded(
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(24),
+                            child: Text(
+                              'Select a brand first to see its models.',
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }
+                return Column(
+                  children: [
+                    _sheetHeader('Select Model'),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      child: _searchField(
+                        controller: _modelSearchCtrl,
+                        hint: 'Search Model',
+                        onChanged: (v) {
+                          setSheetState(() {
+                            modelQ = v;
+                            modelVisible = 20;
+                          });
+                          setState(() => modelQuery = v);
+                        },
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: FutureBuilder<List<VehicleModel>>(
+                        future: modelsFuture,
+                        builder: (context, snap) {
+                          if (snap.connectionState != ConnectionState.done) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+                          final all = snap.data ?? const <VehicleModel>[];
+                          final q = modelQ.trim().toLowerCase();
+                          final items = q.isEmpty
+                              ? all
+                              : all
+                                  .where((m) =>
+                                      m.displayName.toLowerCase().contains(q))
+                                  .toList();
+                          if (items.isEmpty) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(24),
+                                child: Text('No models found.'),
+                              ),
+                            );
+                          }
+                          final count = modelVisible.clamp(0, items.length);
+                          return NotificationListener<ScrollNotification>(
+                            onNotification: (n) {
+                              if (n.metrics.pixels >=
+                                      n.metrics.maxScrollExtent - 200 &&
+                                  modelVisible < items.length) {
+                                setSheetState(() => modelVisible += 20);
+                              }
+                              return false;
+                            },
+                            child: ListView.separated(
+                              padding: const EdgeInsets.fromLTRB(8, 8, 8, 20),
+                              itemCount: count,
+                              itemBuilder: (_, i) {
+                                final m = items[i];
+                                final id = m.id;
+                                final checked =
+                                    _selectedModelIds.contains(id);
+                                return CheckboxListTile(
+                                  value: checked,
+                                  onChanged: (_) {
+                                    setSheetState(() {
+                                      if (checked) {
+                                        _selectedModelIds.remove(id);
+                                      } else {
+                                        _selectedModelIds.add(id);
+                                      }
+                                    });
+                                  },
+                                  dense: true,
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
+                                  title: Text(
+                                    m.displayName.trim(),
+                                    style: TextStyle(
+                                      fontSize: GetResponsiveSize
+                                          .getResponsiveFontSize(
+                                        context,
+                                        mobile: 16.0,
+                                        tablet: 20.0,
+                                        largeTablet: 24.0,
+                                        desktop: 28.0,
+                                      ),
+                                    ),
+                                  ),
+                                  checkboxShape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                );
+                              },
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 2),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+    // Sheet dismissed: sync the outer page + count.
+    if (mounted) {
+      setState(() {});
+      _refreshCount();
+    }
+  }
+
+  Future<List<VehicleModel>> _fetchModelsForBrands(List<String> brandIds) async {
+    final all = <VehicleModel>[];
+    final seen = <String>{};
+    for (final id in brandIds) {
+      try {
+        final list = await _repo.fetchModelsByManufacturer(id);
+        for (final m in list) {
+          if (seen.add(m.id)) all.add(m);
+        }
+      } catch (_) {
+        // Ignore per-brand fetch failures; show whatever loaded.
+      }
+    }
+    return all;
+  }
+
+  Widget _sheetHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 8, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  context,
+                  mobile: 17.0,
+                  tablet: 22.0,
+                  largeTablet: 26.0,
+                  desktop: 30.0,
+                ),
+                fontWeight: FontWeight.w600,
+                color: AppColors.blackColor,
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _searchField({
+    required TextEditingController controller,
+    required String hint,
+    required ValueChanged<String> onChanged,
+  }) {
+    return TextField(
+      controller: controller,
+      onChanged: onChanged,
+      style: TextStyle(
+        fontSize: GetResponsiveSize.getResponsiveFontSize(
+          context,
+          mobile: 16.0,
+          tablet: 20.0,
+          largeTablet: 22.0,
+          desktop: 24.0,
+        ),
+      ),
+      decoration: InputDecoration(
+        prefixIcon: Icon(
+          Icons.search_rounded,
+          size: GetResponsiveSize.getResponsiveSize(
+            context,
+            mobile: 24.0,
+            tablet: 28.0,
+            largeTablet: 32.0,
+            desktop: 36.0,
+          ),
+        ),
+        hintText: hint,
+        hintStyle: TextStyle(
+          fontSize: GetResponsiveSize.getResponsiveFontSize(
+            context,
+            mobile: 16.0,
+            tablet: 20.0,
+            largeTablet: 22.0,
+            desktop: 24.0,
+          ),
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          vertical: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 14,
+            tablet: 18,
+            largeTablet: 22,
+            desktop: 26,
+          ),
+          horizontal: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 12,
+            tablet: 16,
+            largeTablet: 20,
+            desktop: 24,
+          ),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(
+            GetResponsiveSize.getResponsiveBorderRadius(
+              context,
+              mobile: 9,
+              tablet: 10,
+              largeTablet: 12,
+              desktop: 14,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

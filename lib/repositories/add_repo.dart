@@ -123,6 +123,67 @@ class AddRepository {
     }
   }
 
+  /// Lightweight count for the filter screens' live "Show N results" CTA.
+  /// Reuses the same /v2/ads/list endpoint (which already returns `total`)
+  /// with limit:1 so we only transfer one row.
+  Future<int> fetchAdsCount({
+    String? search,
+    String? category,
+    int? minYear,
+    int? maxYear,
+    List<String>? manufacturerIds,
+    List<String>? modelIds,
+    List<String>? fuelTypeIds,
+    List<String>? transmissionTypeIds,
+    int? minPrice,
+    int? maxPrice,
+    List<String>? commercialVehicleTypes,
+    List<String>? propertyTypes,
+    int? minBedrooms,
+    int? maxBedrooms,
+    int? minArea,
+    int? maxArea,
+    bool? isFurnished,
+    bool? hasParking,
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        'page': 1,
+        'limit': 1,
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+        if (category != null) 'category': category,
+        if (commercialVehicleTypes != null && commercialVehicleTypes.isNotEmpty)
+          'commercialVehicleTypes': commercialVehicleTypes,
+        if (minYear != null) 'minYear': minYear,
+        if (maxYear != null) 'maxYear': maxYear,
+        if (minPrice != null) 'minPrice': minPrice,
+        if (maxPrice != null) 'maxPrice': maxPrice,
+        if (manufacturerIds != null && manufacturerIds.isNotEmpty)
+          'manufacturerIds': manufacturerIds,
+        if (modelIds != null && modelIds.isNotEmpty) 'modelIds': modelIds,
+        if (fuelTypeIds != null && fuelTypeIds.isNotEmpty)
+          'fuelTypeIds': fuelTypeIds,
+        if (transmissionTypeIds != null && transmissionTypeIds.isNotEmpty)
+          'transmissionTypeIds': transmissionTypeIds,
+        if (propertyTypes != null && propertyTypes.isNotEmpty)
+          'propertyTypes': propertyTypes,
+        if (minBedrooms != null) 'minBedrooms': minBedrooms,
+        if (maxBedrooms != null) 'maxBedrooms': maxBedrooms,
+        if (minArea != null) 'minArea': minArea,
+        if (maxArea != null) 'maxArea': maxArea,
+        if (isFurnished != null) 'isFurnished': isFurnished,
+        if (hasParking != null) 'hasParking': hasParking,
+      };
+      final response = await _dio.post('/v2/ads/list', data: body);
+      final total = response.data['total'];
+      if (total is int) return total;
+      if (total is num) return total.toInt();
+      return int.tryParse('${total ?? 0}') ?? 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
   Future<List<VehicleManufacturer>> fetchManufacturers({
     String? search,
     String? vehicleCategory,

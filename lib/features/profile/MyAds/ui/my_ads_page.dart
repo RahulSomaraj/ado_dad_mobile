@@ -10,6 +10,7 @@ import 'package:ado_dad_user/models/my_ads_model.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ado_dad_user/repositories/add_repo.dart';
 
 class MyAdsPage extends StatefulWidget {
   final bool embedded;
@@ -689,9 +690,153 @@ class _AdTile extends StatelessWidget {
                   ],
                 ),
               ),
+              _buildActionsMenu(context),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildActionsMenu(BuildContext context) {
+    final isSold = ad.soldOut == true;
+    return SizedBox(
+      width: 28,
+      child: PopupMenuButton<String>(
+        icon: Icon(Icons.more_vert, size: 20, color: AppColors.greyColor),
+        padding: EdgeInsets.zero,
+        onSelected: (value) {
+          switch (value) {
+            case 'edit':
+              _handleEdit(context);
+              break;
+            case 'sold':
+              _handleMarkSold(context);
+              break;
+            case 'delete':
+              _handleDelete(context);
+              break;
+          }
+        },
+        itemBuilder: (_) => [
+          const PopupMenuItem<String>(
+            value: 'edit',
+            child: Row(children: [
+              Icon(Icons.edit_outlined, size: 18),
+              SizedBox(width: 10),
+              Text('Edit'),
+            ]),
+          ),
+          if (!isSold)
+            const PopupMenuItem<String>(
+              value: 'sold',
+              child: Row(children: [
+                Icon(Icons.check_circle_outline, size: 18),
+                SizedBox(width: 10),
+                Text('Mark as sold'),
+              ]),
+            ),
+          const PopupMenuItem<String>(
+            value: 'delete',
+            child: Row(children: [
+              Icon(Icons.delete_outline, size: 18, color: Colors.red),
+              SizedBox(width: 10),
+              Text('Delete', style: TextStyle(color: Colors.red)),
+            ]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String? _editRouteFor(String category) {
+    switch (category) {
+      case 'two_wheeler':
+        return '/edit-two-wheeler';
+      case 'private_vehicle':
+        return '/edit-private-vehicle';
+      case 'commercial_vehicle':
+        return '/edit-commercial-vehicle';
+      case 'property':
+        return '/edit-property';
+      default:
+        return null;
+    }
+  }
+
+  Future<void> _handleEdit(BuildContext context) async {
+    final route = _editRouteFor(ad.category);
+    if (route == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Editing not available for this category')),
+      );
+      return;
+    }
+    final changed =
+        await context.push<bool>(route, extra: _convertMyAdToAddModel(ad));
+    if (changed == true && context.mounted) {
+      context.read<MyAdsBloc>().add(const MyAdsEvent.load(page: 1, limit: 20));
+    }
+  }
+
+  Future<void> _handleMarkSold(BuildContext context) async {
+    final ok = await _confirm(
+        context, 'Mark as sold?', 'Buyers will see this listing as sold.');
+    if (ok != true || !context.mounted) return;
+    try {
+      await AddRepository().markAdAsSold(ad.id);
+      if (!context.mounted) return;
+      context.read<MyAdsBloc>().add(const MyAdsEvent.load(page: 1, limit: 20));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Marked as sold')),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not mark as sold: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleDelete(BuildContext context) async {
+    final ok = await _confirm(context, 'Delete advertisement?',
+        'This action cannot be undone.');
+    if (ok != true || !context.mounted) return;
+    try {
+      await AddRepository().deleteAd(ad.id);
+      if (!context.mounted) return;
+      context.read<MyAdsBloc>().add(const MyAdsEvent.load(page: 1, limit: 20));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Advertisement deleted')),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not delete: $e')),
+        );
+      }
+    }
+  }
+
+  Future<bool?> _confirm(
+      BuildContext context, String title, String message) {
+    return showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text('Confirm'),
+          ),
+        ],
       ),
     );
   }

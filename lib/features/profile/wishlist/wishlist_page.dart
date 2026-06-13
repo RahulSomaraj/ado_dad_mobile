@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/widgets/rich_ad_card.dart';
 import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
@@ -294,20 +295,22 @@ class _WishlistPageState extends State<WishlistPage> {
                         .read<FavoriteBloc>()
                         .add(const FavoriteEvent.refreshFavorites());
                   },
-                  child: ListView.builder(
-                    padding: EdgeInsets.all(
-                      GetResponsiveSize.getResponsivePadding(
-                        context,
-                        mobile: 16,
-                        tablet: 24,
-                        largeTablet: 32,
-                        desktop: 40,
-                      ),
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 15,
+                      mainAxisSpacing: 15,
+                      mainAxisExtent:
+                          richAdCardMainAxisExtent(context, columns: 2),
                     ),
+                    padding: const EdgeInsets.fromLTRB(15, 10, 15, 100),
                     itemCount: state.favorites.length,
                     itemBuilder: (context, index) {
                       final favorite = state.favorites[index];
-                      return buildFavoriteCard(favorite);
+                      return RichAdCard(
+                        ad: _convertFavoriteAdToAddModel(favorite),
+                        favoriteRedirect: '/my-activity',
+                      );
                     },
                   ),
                 );

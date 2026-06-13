@@ -30,6 +30,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
+import 'package:ado_dad_user/common/widgets/rich_ad_card.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:share_plus/share_plus.dart';
@@ -2221,13 +2222,14 @@ class _SimilarAdsSectionState extends State<_SimilarAdsSection> {
           ),
         ),
         SizedBox(
-          height: 210,
+          height: 240,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: _items.length,
             separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (_, i) => _card(_items[i]),
+            itemBuilder: (_, i) =>
+                SizedBox(width: 190, child: RichAdCard(ad: _items[i])),
           ),
         ),
       ],
