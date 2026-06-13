@@ -65,6 +65,9 @@ class AddModel {
   // Status fields
   final bool? soldOut;
 
+  // Distance in km from the searched location (present on geo/location queries).
+  final double? distance;
+
   // Video field
   final String? link; // Video URL
 
@@ -120,6 +123,7 @@ class AddModel {
     this.favoritedAt,
     // Status fields
     this.soldOut,
+    this.distance,
     // Video field
     this.link,
     String? postedAt,
@@ -176,6 +180,7 @@ class AddModel {
     String? favoritedAt,
     // Status fields
     bool? soldOut,
+    double? distance,
     // Video field
     String? link,
   }) {
@@ -230,6 +235,7 @@ class AddModel {
       favoritedAt: favoritedAt ?? this.favoritedAt,
       // Status fields
       soldOut: soldOut ?? this.soldOut,
+      distance: distance ?? this.distance,
       // Video field
       link: link ?? this.link,
       postedAt: postedAt ?? this.postedAt,
@@ -379,6 +385,7 @@ class AddModel {
       favoritedAt: json['favoritedAt'] as String?,
       // Status fields
       soldOut: json['soldOut'] as bool?,
+      distance: _asDouble(json['distance']),
       // Video field
       link: json['link'] as String?,
       postedAt: (json['postedAt'] ?? '').toString(),
@@ -473,6 +480,13 @@ int? _asInt(dynamic v) {
   return null;
 }
 
+double? _asDouble(dynamic v) {
+  if (v == null) return null;
+  if (v is num) return v.toDouble();
+  if (v is String) return double.tryParse(v);
+  return null;
+}
+
 String? _extractTransmissionName(
     Map<String, dynamic> json, Map<String, dynamic>? vd) {
   // First try to get from nested transmissionType object
@@ -561,6 +575,7 @@ class AdUser {
   final String? profilePic;
   final String? phone;
   final String? countryCode;
+  final bool? isVerified;
 
   const AdUser({
     required this.id,
@@ -569,6 +584,7 @@ class AdUser {
     this.profilePic,
     this.phone,
     this.countryCode,
+    this.isVerified,
   });
 
   factory AdUser.fromJson(Map<String, dynamic> json) => AdUser(
@@ -578,6 +594,7 @@ class AdUser {
         profilePic: (json['profilePic'] ?? '').toString(),
         phone: (json['phone'] ?? json['phoneNumber'] ?? '').toString(),
         countryCode: json['countryCode']?.toString(),
+        isVerified: json['isVerified'] as bool?,
       );
 
   Map<String, dynamic> toJson() => {

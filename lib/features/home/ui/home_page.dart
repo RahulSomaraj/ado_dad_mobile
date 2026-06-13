@@ -551,158 +551,57 @@ class _HomePageState extends State<HomePage> {
         }
       },
       child: Scaffold(
-        body: RefreshIndicator(
-          onRefresh: () async {
-            if (_isLocationRecommendationsMode &&
-                (_userLocation?.trim().isNotEmpty ?? false)) {
-              await _applyLocationBasedRecommendations(_userLocation!);
-            } else {
-              context
-                  .read<AdvertisementBloc>()
-                  .add(const AdvertisementEvent.fetchAllListings());
-            }
-          },
-          color: AppColors.primaryColor,
-          backgroundColor: Colors.white,
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            physics: const BouncingScrollPhysics(), // iOS-style bouncing scroll
-
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height,
+        body: Column(
+          children: [
+            // 🔷 STICKY HEADER — logo, location, notifications + search bar
+            Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: AppColors.primaryColor,
+                borderRadius:
+                    BorderRadius.vertical(bottom: Radius.circular(24)),
+              ),
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 8,
+                bottom: 12,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // 🔷 HEADER PART
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      // 🔹 Blue curved header with content
-                      Container(
-                        height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: (140 * scale),
-                              tablet: 300,
-                              largeTablet: 350,
-                              desktop: 400,
-                            ) +
-                            MediaQuery.of(context).padding.top,
-                        width: double.infinity,
-                        decoration: const BoxDecoration(
-                          color: AppColors.primaryColor,
-                          borderRadius: BorderRadius.vertical(
-                            bottom: Radius.circular(30),
-                          ),
-                        ),
-                        padding: EdgeInsets.only(
-                          top: MediaQuery.of(context).padding.top +
-                              8, // Add status bar height
-                          bottom: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 95,
-                            tablet: 140,
-                            largeTablet: 170,
-                            desktop: 190,
-                          ),
-                        ),
-                        child: buildTopBar(), // 🔹 AdoDad logo + location
-                      ),
-
-                      // 🔹 Positioned Banner (slightly below blue container)
-                      Positioned(
-                        bottom: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: -85,
-                          tablet: -100,
-                          largeTablet: -115,
-                          desktop: -130,
-                        ), // Controls how much overlaps
-                        left: 0,
-                        right: 0,
-                        child: BlocBuilder<BannerBloc, BannerState>(
-                          builder: (context, state) {
-                            return state.when(
-                              initial: () => const SizedBox(),
-                              loading: () => Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 20),
-                                child: SkeletonBox(
-                                  height: GetResponsiveSize.getResponsiveSize(
-                                    context,
-                                    mobile: 140,
-                                    tablet: 250,
-                                    largeTablet: 320,
-                                    desktop: 360,
-                                  ),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              error: (message) =>
-                                  const SizedBox(), // Hide banner error UI - don't show error to user
-                              loaded: (banners) => Column(
-                                children: [
-                                  CarouselSlider(
-                                    carouselController: _carouselController,
-                                    options: CarouselOptions(
-                                      height:
-                                          GetResponsiveSize.getResponsiveSize(
-                                        context,
-                                        mobile: 140,
-                                        tablet: 250,
-                                        largeTablet: 320,
-                                        desktop: 360,
-                                      ),
-                                      autoPlay: true,
-                                      enlargeCenterPage: true,
-                                      viewportFraction: 0.9,
-                                      onPageChanged: (index, _) {
-                                        setState(() {
-                                          BuildIndicator.currentIndex = index;
-                                        });
-                                      },
-                                    ),
-                                    items: banners.map((banner) {
-                                      return buildPromoCard(
-                                          banner.phoneImage, banner.link);
-                                    }).toList(),
-                                  ),
-                                  SizedBox(
-                                    height: GetResponsiveSize.getResponsiveSize(
-                                      context,
-                                      mobile: 10, // unchanged on phones
-                                      tablet: 24,
-                                      largeTablet: 30,
-                                      desktop: 30,
-                                    ),
-                                  ),
-                                  BuildIndicator(
-                                    controller: _carouselController,
-                                    itemCount: banners.length,
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                      height: GetResponsiveSize.getResponsiveSize(
-                    context,
-                    mobile: 100, // unchanged for phones
-                    tablet: 150,
-                    largeTablet: 180,
-                    desktop: 200,
-                  )),
-
-                  // 🔷 SEARCH BAR (tap to open full search)
+                  buildTopBar(),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 6),
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
                     child: _buildHomeSearchBar(context),
                   ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  if (_isLocationRecommendationsMode &&
+                      (_userLocation?.trim().isNotEmpty ?? false)) {
+                    await _applyLocationBasedRecommendations(_userLocation!);
+                  } else {
+                    context
+                        .read<AdvertisementBloc>()
+                        .add(const AdvertisementEvent.fetchAllListings());
+                  }
+                },
+                color: AppColors.primaryColor,
+                backgroundColor: Colors.white,
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 🔷 PROMO BANNER
+                      Padding(
+                        padding: const EdgeInsets.only(top: 14),
+                        child: _buildPromoBanner(),
+                      ),
+                      const SizedBox(height: 8),
 
                   // 🔷 CATEGORIES
                   Padding(
@@ -726,7 +625,29 @@ class _HomePageState extends State<HomePage> {
                   // 🔷 RECOMMENDATIONS TITLE
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: buildSectionTitle("Recommendations"),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(child: buildSectionTitle("Fresh near you")),
+                        GestureDetector(
+                          onTap: () => context.push('/search?from=/home'),
+                          child: Text(
+                            "See all",
+                            style: TextStyle(
+                              color: AppColors.primaryColor,
+                              fontWeight: FontWeight.w500,
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: 12,
+                                tablet: 16,
+                                largeTablet: 18,
+                                desktop: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 10),
 
@@ -735,10 +656,15 @@ class _HomePageState extends State<HomePage> {
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: buildGridView(),
                   ),
-                ],
+                  // Clear the floating bottom nav bar so the last row of ads
+                  // and the load-more indicator are not hidden behind it.
+                  const SizedBox(height: 100),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
         ),
         floatingActionButton: SafeArea(
           minimum: const EdgeInsets.only(bottom: 20),
@@ -746,6 +672,70 @@ class _HomePageState extends State<HomePage> {
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       ),
+    );
+  }
+
+  Widget _buildPromoBanner() {
+    return BlocBuilder<BannerBloc, BannerState>(
+      builder: (context, state) {
+        return state.when(
+          initial: () => const SizedBox(),
+          loading: () => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: SkeletonBox(
+              height: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 140,
+                tablet: 250,
+                largeTablet: 320,
+                desktop: 360,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          error: (message) => const SizedBox(),
+          loaded: (banners) => Column(
+            children: [
+              CarouselSlider(
+                carouselController: _carouselController,
+                options: CarouselOptions(
+                  height: GetResponsiveSize.getResponsiveSize(
+                    context,
+                    mobile: 140,
+                    tablet: 250,
+                    largeTablet: 320,
+                    desktop: 360,
+                  ),
+                  autoPlay: true,
+                  enlargeCenterPage: true,
+                  viewportFraction: 0.9,
+                  onPageChanged: (index, _) {
+                    setState(() {
+                      BuildIndicator.currentIndex = index;
+                    });
+                  },
+                ),
+                items: banners.map((banner) {
+                  return buildPromoCard(banner.phoneImage, banner.link);
+                }).toList(),
+              ),
+              SizedBox(
+                height: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 10,
+                  tablet: 24,
+                  largeTablet: 30,
+                  desktop: 30,
+                ),
+              ),
+              BuildIndicator(
+                controller: _carouselController,
+                itemCount: banners.length,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -767,17 +757,17 @@ class _HomePageState extends State<HomePage> {
         children: [
           Builder(
             builder: (context) {
-              final bool isTab = GetResponsiveSize.isTablet(context);
-              final double logoWidth = GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 0, // keep phone layout unchanged
-                tablet: 200,
-                largeTablet: 230,
-                desktop: 230,
-              );
+              // White wordmark sized by height so it is clearly visible on the
+              // purple header (the old asset was only 108x16 and rendered tiny).
               return Image.asset(
-                'assets/images/Ado-dad-home.png',
-                width: isTab ? logoWidth : null,
+                'assets/images/Ado-dad-white.png',
+                height: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 28,
+                  tablet: 44,
+                  largeTablet: 52,
+                  desktop: 56,
+                ),
                 fit: BoxFit.contain,
               );
             },
@@ -1034,20 +1024,16 @@ class _HomePageState extends State<HomePage> {
             : 8.0, // Reduced from 12.0 to give more width to categories
         vertical: 10,
       ),
-      child: Wrap(
-        spacing: 10, // Reduced from 15 to give more width to each item
-        runSpacing: GetResponsiveSize.getResponsiveSize(
-          context,
-          mobile: 15,
-          tablet: 20,
-          largeTablet: 25,
-          desktop: 25,
-        ), // Vertical spacing between rows
-        alignment: WrapAlignment.start,
-        children: categories.map((category) {
-          return SizedBox(
-            width: itemWidth,
-            child: GestureDetector(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: categories.map((category) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: SizedBox(
+                width: itemWidth,
+                child: GestureDetector(
               onTap: () async {
                 // Special handling for Showroom category
                 if (category.categoryId == 'showroom') {
@@ -1149,8 +1135,10 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-          );
-        }).toList(),
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -1165,35 +1153,21 @@ class _HomePageState extends State<HomePage> {
 
   double _cardMainAxisExtent(BuildContext context, int columns) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final textScale = MediaQuery.of(context).textScaleFactor.clamp(1.0, 1.3);
-    const horizontalPagePadding = 15.0; // matches your padding
+    const horizontalPagePadding = 15.0;
     const spacing = 15.0;
 
-    // available width for grid content
     final available =
         screenWidth - (horizontalPagePadding * 2) - (spacing * (columns - 1));
-
     final cardWidth = available / columns;
 
-    // make image height proportional to width for a stable look
-    final imageHeight = cardWidth * 0.60; // base estimate for image area
+    final aspectRatio =
+        GetResponsiveSize.isTablet(context) ? (16 / 9) : (16 / 10);
+    final imageHeight = cardWidth / aspectRatio;
 
-    // estimate text height (3 lines: price, 2-line desc, location)
-    const baseLine = 16.0; // base font size used in your Texts
-    // 1 line price + 2 lines desc + 1 line location = 4 lines
-    final textBlockHeight = (baseLine * 4) * textScale;
+    // Matches _buildRichAdCard: padding + price + title + chips + footer
+    const textBlockHeight = 15 + 18 + 3 + 16 + 6 + 22 + 14 + 6;
 
-    // paddings + image + text + extra breathing space
-    const outerPadding = 8.0 /* card inner */ + 8.0 /* bottom padding */;
-    final extra = GetResponsiveSize.getResponsiveSize(
-      context,
-      mobile: 10.0,
-      tablet: 40.0,
-      largeTablet: 60.0,
-      desktop: 60.0,
-    ); // more space for larger content on tablets
-
-    return imageHeight + textBlockHeight + outerPadding + extra;
+    return imageHeight + textBlockHeight;
   }
 
   Widget buildSliverGridView() {
@@ -1319,7 +1293,7 @@ class _HomePageState extends State<HomePage> {
                   itemBuilder: (context, index) {
                     if (index < listings.length) {
                       final ad = listings[index];
-                      return buildAdCard(ad);
+                      return _buildRichAdCard(ad);
                     }
                     return hasMore
                         ? const Padding(
@@ -1361,6 +1335,402 @@ class _HomePageState extends State<HomePage> {
           return const Center(child: Text("No data available"));
         }
       },
+    );
+  }
+
+  // Compact per-category spec line built from fields the API already returns.
+  String _adSpecLine(AddModel ad) {
+    final parts = <String>[];
+    final cat = ad.category.toLowerCase();
+    if (cat.contains('propert')) {
+      if (ad.bedrooms != null) parts.add('${ad.bedrooms} BHK');
+      if (ad.areaSqft != null) parts.add('${ad.areaSqft} sqft');
+      if (ad.isFurnished == true) parts.add('Furnished');
+    } else {
+      if (ad.year != null) parts.add('${ad.year}');
+      if (ad.mileage != null) parts.add('${ad.mileage} km');
+      if (ad.fuelType != null && ad.fuelType!.trim().isNotEmpty) {
+        parts.add(ad.fuelType!);
+      }
+      if (ad.transmission != null && ad.transmission!.trim().isNotEmpty) {
+        parts.add(ad.transmission!);
+      }
+    }
+    return parts.join(' · ');
+  }
+
+  // ---- Detailed (wireframe) ad card helpers ----
+
+  String _inr(int n) {
+    final str = n.abs().toString();
+    if (str.length <= 3) return n.toString();
+    final last3 = str.substring(str.length - 3);
+    String rest = str.substring(0, str.length - 3);
+    final parts = <String>[];
+    while (rest.length > 2) {
+      parts.insert(0, rest.substring(rest.length - 2));
+      rest = rest.substring(0, rest.length - 2);
+    }
+    if (rest.isNotEmpty) parts.insert(0, rest);
+    return '${n < 0 ? '-' : ''}${parts.join(',')},$last3';
+  }
+
+  bool _isProperty(AddModel ad) => ad.category.toLowerCase().contains('propert');
+
+  bool _isRent(AddModel ad) => (ad.listingType ?? '').toLowerCase() == 'rent';
+
+  String _priceText(AddModel ad) {
+    final base = '₹ ${_inr(ad.price)}';
+    return _isRent(ad) ? '$base/mo' : base;
+  }
+
+  String _emiText(int price) => '₹${_inr((price * 0.018).round())}/mo';
+
+  String _cardTitle(AddModel ad) {
+    if ((ad.title ?? '').trim().isNotEmpty) return ad.title!.trim();
+    final parts = <String>[];
+    if ((ad.manufacturer?.name ?? '').isNotEmpty) parts.add(ad.manufacturer!.name!);
+    if ((ad.model?.name ?? '').isNotEmpty) parts.add(ad.model!.name);
+    if (ad.year != null) parts.add('${ad.year}');
+    if (parts.isNotEmpty) return parts.join(' ');
+    if ((ad.propertyType ?? '').isNotEmpty) return ad.propertyType!;
+    return 'Listing';
+  }
+
+  bool _isNew(AddModel ad) {
+    final dt = DateTime.tryParse(ad.postedAt);
+    if (dt == null) return false;
+    return DateTime.now().difference(dt).inDays < 3;
+  }
+
+  String _relTime(String iso) {
+    final dt = DateTime.tryParse(iso);
+    if (dt == null) return '';
+    final d = DateTime.now().difference(dt);
+    if (d.inDays >= 365) return '${(d.inDays / 365).floor()}y';
+    if (d.inDays >= 30) return '${(d.inDays / 30).floor()}mo';
+    if (d.inDays >= 7) return '${(d.inDays / 7).floor()}w';
+    if (d.inDays >= 1) return '${d.inDays}d';
+    if (d.inHours >= 1) return '${d.inHours}h';
+    if (d.inMinutes >= 1) return '${d.inMinutes}m';
+    return 'now';
+  }
+
+  Widget _chip(IconData icon, String label) {
+    final display = label.length > 14 ? '${label.substring(0, 14)}…' : label;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppColors.scaffoldBackground,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: AppColors.dividerColor),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: AppColors.greyColor),
+          const SizedBox(width: 3),
+          Text(
+            display,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 9.5, color: AppColors.blackColor1),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _cardSpecChips(AddModel ad) {
+    final chips = <Widget>[];
+    if (_isProperty(ad)) {
+      if (ad.bedrooms != null) chips.add(_chip(Icons.bed_outlined, '${ad.bedrooms} Bed'));
+      if (ad.bathrooms != null) chips.add(_chip(Icons.bathtub_outlined, '${ad.bathrooms} Bath'));
+      if (ad.areaSqft != null) chips.add(_chip(Icons.straighten, '${_inr(ad.areaSqft!)} sqft'));
+      if (ad.isFurnished == true) chips.add(_chip(Icons.chair_outlined, 'Furnished'));
+    } else {
+      if (ad.mileage != null) chips.add(_chip(Icons.route_outlined, '${_inr(ad.mileage!)} km'));
+      if ((ad.fuelType ?? '').trim().isNotEmpty) chips.add(_chip(Icons.local_gas_station_outlined, ad.fuelType!));
+      if ((ad.transmission ?? '').trim().isNotEmpty) chips.add(_chip(Icons.settings_outlined, ad.transmission!));
+      if (ad.isFirstOwner == true) chips.add(_chip(Icons.person_outline, '1st owner'));
+    }
+    if (chips.isEmpty) return const SizedBox.shrink();
+    return SizedBox(
+      height: 22,
+      child: ClipRect(
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Row(
+            children: [
+              for (var i = 0; i < chips.length && i < 2; i++) ...[
+                if (i > 0) const SizedBox(width: 5),
+                Flexible(child: chips[i]),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _imgTag(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+          color: color, borderRadius: BorderRadius.circular(5)),
+      child: Text(text,
+          style: const TextStyle(
+              color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.w600)),
+    );
+  }
+
+  Widget _imgPill(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.55),
+          borderRadius: BorderRadius.circular(5)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: Colors.white),
+          const SizedBox(width: 3),
+          Text(text, style: const TextStyle(color: Colors.white, fontSize: 9)),
+        ],
+      ),
+    );
+  }
+
+  Widget _richFavorite(AddModel ad) {
+    return BlocBuilder<FavoriteBloc, FavoriteState>(
+      builder: (context, state) {
+        final bool isFav = ad.isFavorited ?? false;
+        final bool loading =
+            state is FavoriteToggleLoading && state.adId == ad.id;
+        return GestureDetector(
+          onTap: () async {
+            final isAuth = await AuthGuard.isAuthenticated();
+            if (!context.mounted) return;
+            if (!isAuth) {
+              DialogUtil.showLoginPromptDialog(
+                context,
+                message: "Please login to add this ad to your favorites.",
+                redirectPath: '/home',
+              );
+              return;
+            }
+            context.read<FavoriteBloc>().add(
+                  FavoriteEvent.toggleFavorite(
+                    adId: ad.id,
+                    isCurrentlyFavorited: isFav,
+                  ),
+                );
+          },
+          child: Container(
+            width: 28,
+            height: 28,
+            decoration:
+                const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            child: loading
+                ? const Padding(
+                    padding: EdgeInsets.all(7),
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    isFav ? Icons.favorite : Icons.favorite_border,
+                    size: 16,
+                    color: isFav ? AppColors.redColor : AppColors.greyColor,
+                  ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRichAdCard(AddModel ad) {
+    final bool isPremium = ad.manufacturer?.isPremium == true;
+    final bool property = _isProperty(ad);
+    return GestureDetector(
+      onTap: () => context.push('/add-detail-page', extra: ad),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.whiteColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.dividerColor),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AspectRatio(
+              aspectRatio: GetResponsiveSize.isTablet(context) ? (16 / 9) : (16 / 10),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ad.images.isNotEmpty
+                      ? Image.network(
+                          ad.images.first,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: AppColors.scaffoldBackground,
+                            child: Icon(Icons.image_not_supported_outlined,
+                                color: AppColors.greyColor),
+                          ),
+                        )
+                      : Container(
+                          color: AppColors.scaffoldBackground,
+                          child: Icon(Icons.image_not_supported_outlined,
+                              color: AppColors.greyColor),
+                        ),
+                  if (isPremium)
+                    Positioned(
+                      top: 6,
+                      left: 6,
+                      child: _imgTag('PREMIUM', AppColors.primaryColor),
+                    )
+                  else if (property)
+                    Positioned(
+                      top: 6,
+                      left: 6,
+                      child: _imgTag(
+                          _isRent(ad) ? 'FOR RENT' : 'FOR SALE',
+                          const Color(0xFF1565C0)),
+                    )
+                  else if (_isNew(ad))
+                    Positioned(
+                      top: 6,
+                      left: 6,
+                      child: _imgTag('NEW', const Color(0xFF19A463)),
+                    ),
+                  Positioned(top: 5, right: 5, child: _richFavorite(ad)),
+                  if (ad.images.length > 1)
+                    Positioned(
+                      bottom: 6,
+                      right: 6,
+                      child: _imgPill(
+                          Icons.photo_library_outlined, '${ad.images.length}'),
+                    ),
+                  if ((ad.link ?? '').trim().isNotEmpty)
+                    Positioned(
+                      bottom: 6,
+                      left: 6,
+                      child: _imgPill(Icons.play_circle_outline, 'Video'),
+                    ),
+                  if (ad.soldOut == true)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withOpacity(0.45),
+                        alignment: Alignment.center,
+                        child: const Text('SOLD',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                letterSpacing: 1.5)),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(9, 7, 9, 8),
+                child: ClipRect(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _priceText(ad),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: AppColors.blackColor),
+                            ),
+                          ),
+                          if (!property && ad.price > 0) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              'EMI ${_emiText(ad.price)}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontSize: 9, color: AppColors.greyColor),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _cardTitle(ad),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontSize: 12.5, color: AppColors.blackColor),
+                            ),
+                          ),
+                          if (ad.user?.isVerified == true) ...[
+                            const SizedBox(width: 3),
+                            Icon(Icons.verified,
+                                size: 13, color: AppColors.primaryColor),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      _cardSpecChips(ad),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          Icon(Icons.location_on_outlined,
+                              size: 12, color: AppColors.greyColor),
+                          const SizedBox(width: 2),
+                          Expanded(
+                            child: Text(
+                              ad.location,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontSize: 10, color: AppColors.greyColor),
+                            ),
+                          ),
+                          if (ad.distance != null) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              '${ad.distance!.toStringAsFixed(1)} km',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontSize: 9.5, color: AppColors.greyColor),
+                            ),
+                            Text(' · ',
+                                style: TextStyle(
+                                    fontSize: 9.5, color: AppColors.greyColor)),
+                          ],
+                          Text(
+                            _relTime(ad.postedAt),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontSize: 9.5, color: AppColors.greyColor),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1451,22 +1821,23 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: DefaultTextStyle(
-                style: TextStyle(
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(
-                    context,
-                    mobile: 13,
-                    tablet: 16,
-                    largeTablet: 18,
-                    desktop: 18,
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: DefaultTextStyle(
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(
+                      context,
+                      mobile: 13,
+                      tablet: 16,
+                      largeTablet: 18,
+                      desktop: 18,
+                    ),
+                    color: Colors.black,
                   ),
-                  color: Colors.black,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -1621,6 +1992,29 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ),
+                    Builder(builder: (context) {
+                      final spec = _adSpecLine(ad);
+                      if (spec.isEmpty) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 3),
+                        child: Text(
+                          spec,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: AppColors.greyColor,
+                            fontWeight: FontWeight.w400,
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 11,
+                              tablet: 16,
+                              largeTablet: 18,
+                              desktop: 18,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
                     const SizedBox(height: 2),
                     Row(
                       children: [
@@ -1666,6 +2060,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
+            ),
             ),
           ],
         ),
@@ -1761,139 +2156,145 @@ class _BuildIndicatorState extends State<BuildIndicator> {
 
 class BottomNavBar extends StatelessWidget {
   const BottomNavBar({super.key});
-  static const double _vPad = 10;
 
   @override
   Widget build(BuildContext context) {
-    // Responsive sizes for bar and icons (phones unchanged)
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double horizontalMargin = GetResponsiveSize.getResponsiveSize(
-      context,
-      mobile: 0,
-      tablet: 24,
-      largeTablet: 32,
-      desktop: 40,
-    );
-    final double barWidth = GetResponsiveSize.getResponsiveSize(
-      context,
-      mobile: 300,
-      tablet: screenWidth - (horizontalMargin * 2),
-      largeTablet: screenWidth - (horizontalMargin * 2),
-      desktop: screenWidth - (horizontalMargin * 2),
-    );
-    final double barHeight = GetResponsiveSize.getResponsiveSize(
-      context,
-      mobile: 60,
-      tablet: 80,
-      largeTablet: 85,
-      desktop: 90,
-    );
-    final double baseIconSize = GetResponsiveSize.getResponsiveSize(
-      context,
-      mobile: 20,
-      tablet: 35,
-      largeTablet: 40,
-      desktop: 40,
-    );
-    final double addIconSize = GetResponsiveSize.getResponsiveSize(
-      context,
-      mobile: 36,
-      tablet: 50,
-      largeTablet: 50,
-      desktop: 54,
-    );
+    final double width = MediaQuery.of(context).size.width - 24;
+    String current = '';
+    try {
+      current = GoRouterState.of(context).uri.path;
+    } catch (_) {}
     return Container(
-      height: barHeight,
-      width: barWidth,
+      width: width,
+      height: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
-        color: AppColors.primaryColor,
-        borderRadius: BorderRadius.circular(50),
-      ),
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: 10,
-          vertical: GetResponsiveSize.getResponsiveSize(
-            context,
-            mobile: _vPad,
-            tablet: 15,
-            largeTablet: 17,
-            desktop: 17,
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.dividerColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.10),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
           ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _navItem(context, current,
+              icon: Icons.home_rounded, label: 'Home', route: '/home'),
+          _navItem(context, current,
+              icon: Icons.favorite_border,
+              label: 'Favorites',
+              route: '/wishlist'),
+          _sellButton(context),
+          _navItem(context, current,
+              icon: Icons.chat_bubble_outline,
+              label: 'Chat',
+              route: '/chat-rooms?from=home'),
+          _navItem(context, current,
+              icon: Icons.person_outline,
+              label: 'Profile',
+              route: '/profile'),
+        ],
+      ),
+    );
+  }
+
+  bool _isActive(String current, String route) =>
+      current == route.split('?').first;
+
+  Widget _navItem(
+    BuildContext context,
+    String current, {
+    required IconData icon,
+    required String label,
+    required String route,
+  }) {
+    final bool active = _isActive(current, route);
+    final Color color = active ? AppColors.primaryColor : AppColors.greyColor;
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _go(context, route),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _navItem(context, 'assets/images/home-icon.png', '/home',
-                iconSize: baseIconSize),
-            _navItem(
-                context, 'assets/images/search-icon.png', '/search?from=/home',
-                iconSize: baseIconSize),
-            _navItem(context, 'assets/images/add-icon.png', '/seller',
-                iconSize: addIconSize),
-            _navItem(
-                context, 'assets/images/chat-icon.png', '/chat-rooms?from=home',
-                iconSize: baseIconSize),
-            _navItem(context, 'assets/images/profile-icon.png', '/profile',
-                iconSize: baseIconSize),
+            Icon(icon, size: 23, color: color),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                color: color,
+                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _navItem(
-    BuildContext context,
-    String image,
-    String? route, {
-    double iconSize = 20,
-  }) {
-    return GestureDetector(
-      onTap: () async {
-        if (route == null) return;
-
-        // Routes that don't require authentication
-        final publicRoutes = ['/home', '/search'];
-        final isPublicRoute = publicRoutes.any((r) => route.startsWith(r));
-
-        if (isPublicRoute) {
-          // Allow navigation without authentication
-          if (route.contains('/chat-rooms')) {
-            context.go(route);
-          } else {
-            context.push(route);
-          }
-        } else {
-          // Protected routes - check authentication
-          final isAuthenticated = await AuthGuard.isAuthenticated();
-          if (isAuthenticated) {
-            // User is authenticated, allow navigation
-            if (route.contains('/chat-rooms')) {
-              context.go(route);
-            } else {
-              context.push(route);
-            }
-          } else {
-            // User is not authenticated, show login prompt
-            final routePath =
-                route.split('?').first; // Remove query params for redirect
-            DialogUtil.showLoginPromptDialog(
-              context,
-              message: "Please login to access this feature.",
-              redirectPath: routePath,
-            );
-          }
-        }
-      },
-      child: Center(
-        // Fix the rendered size exactly
-        child: SizedBox.square(
-          dimension: iconSize,
-          child: Image.asset(
-            image,
-            fit: BoxFit.contain,
+  Widget _sellButton(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _go(context, '/seller'),
+        child: Center(
+          child: Transform.translate(
+            offset: const Offset(0, -16),
+            child: Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: AppColors.primaryColor,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.whiteColor, width: 4),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primaryColor.withOpacity(0.4),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.add, color: Colors.white, size: 26),
+            ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _go(BuildContext context, String route) async {
+    final publicRoutes = ['/home', '/search'];
+    final isPublicRoute = publicRoutes.any((r) => route.startsWith(r));
+    if (isPublicRoute) {
+      if (route.contains('/chat-rooms')) {
+        context.go(route);
+      } else {
+        context.push(route);
+      }
+      return;
+    }
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!context.mounted) return;
+    if (isAuthenticated) {
+      if (route.contains('/chat-rooms')) {
+        context.go(route);
+      } else {
+        context.push(route);
+      }
+    } else {
+      DialogUtil.showLoginPromptDialog(
+        context,
+        message: "Please login to access this feature.",
+        redirectPath: route.split('?').first,
+      );
+    }
   }
 }

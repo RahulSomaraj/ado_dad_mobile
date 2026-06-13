@@ -30,6 +30,14 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
   double? _locationLatitude;
   double? _locationLongitude;
 
+  // Location-recommendation pagination: a generous radius, sorted nearest-first
+  // by the backend ($geoNear), so each page returns progressively farther ads.
+  // Once that feed is exhausted, fall back to the full all-ads feed.
+  static const double _locationRadiusKm = 200;
+  bool _locationFallbackToAll = false;
+  bool _locationQueryHasNext = false;
+  int _allAdsPage = 1;
+
   // Active filters remembered by the bloc
   String? _categoryId;
   int? _minYear;
@@ -49,6 +57,15 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
   int? _maxArea;
   bool? _isFurnished;
   bool? _hasParking;
+
+  List<AddModel> _mergeDedupe(
+      List<AddModel> current, List<AddModel> incoming) {
+    final ids = current.map((a) => a.id).toSet();
+    return [
+      ...current,
+      ...incoming.where((a) => !ids.contains(a.id)),
+    ];
+  }
 
   Future<void> _onFetchAllListings(
       FetchAllListingsEvent event, Emitter<AdvertisementState> emit) async {
@@ -75,6 +92,8 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _hasParking = null;
     _locationLatitude = null;
     _locationLongitude = null;
+    _locationFallbackToAll = false;
+    _locationQueryHasNext = false;
 
     try {
       final result = await repository.fetchAllAds(page: _currentPage);
@@ -95,32 +114,74 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     final currentState = state;
     if (currentState is ListingsLoaded && currentState.hasMore) {
       try {
-        _currentPage += 1;
-        print("📥 Fetching page $_currentPage");
-        final result = await repository.fetchAllAds(
+        final bool inLocationMode =
+            _locationLatitude != null && !_locationFallbackToAll;
+
+        if (inLocationMode && _locationQueryHasNext) {
+          // (a) More pages within the location radius. $geoNear sorts
+          // nearest-first, so each page returns progressively farther ads.
+          _currentPage += 1;
+          print("📥 Location page $_currentPage @ ${_locationRadiusKm}km");
+          final result = await repository.fetchAllAds(
             page: _currentPage,
-            category: _categoryId,
             latitude: _locationLatitude,
             longitude: _locationLongitude,
-            commercialVehicleTypes: _commercialVehicleTypes,
-            minYear: _minYear,
-            maxYear: _maxYear,
-            manufacturerIds: _manufacturerIds,
-            modelIds: _modelIds,
-            fuelTypeIds: _fuelTypeIds,
-            transmissionTypeIds: _transmissionTypeIds,
-            minPrice: _minPrice,
-            maxPrice: _maxPrice,
-            propertyTypes: _propertyTypes,
-            minBedrooms: _minBedrooms,
-            maxBedrooms: _maxBedrooms,
-            minArea: _minArea,
-            maxArea: _maxArea);
-        print(
-            "📦 Received ${result.data.length} ads | hasNext: ${result.hasNext}");
-        final updatedList = [...currentState.listings, ...result.data];
-
-        emit(ListingsLoaded(listings: updatedList, hasMore: result.hasNext));
+            maxDistance: _locationRadiusKm,
+          );
+          _locationQueryHasNext = result.hasNext;
+          emit(ListingsLoaded(
+            listings: _mergeDedupe(currentState.listings, result.data),
+            hasMore: true,
+          ));
+        } else if (inLocationMode) {
+          // (b) Location feed exhausted → start the full all-ads fallback feed.
+          _locationFallbackToAll = true;
+          _allAdsPage = 1;
+          print("📥 Location exhausted → all-ads fallback page $_allAdsPage");
+          final result = await repository.fetchAllAds(page: _allAdsPage);
+          emit(ListingsLoaded(
+            listings: _mergeDedupe(currentState.listings, result.data),
+            hasMore: result.hasNext,
+          ));
+        } else if (_locationFallbackToAll) {
+          // (d) Continue the all-ads fallback feed.
+          _allAdsPage += 1;
+          print("📥 All-ads fallback page $_allAdsPage");
+          final result = await repository.fetchAllAds(page: _allAdsPage);
+          emit(ListingsLoaded(
+            listings: _mergeDedupe(currentState.listings, result.data),
+            hasMore: result.hasNext,
+          ));
+        } else {
+          // (e) Normal all-ads / filtered pagination (unchanged behaviour).
+          _currentPage += 1;
+          print("📥 Fetching page $_currentPage");
+          final result = await repository.fetchAllAds(
+              page: _currentPage,
+              category: _categoryId,
+              latitude: _locationLatitude,
+              longitude: _locationLongitude,
+              commercialVehicleTypes: _commercialVehicleTypes,
+              minYear: _minYear,
+              maxYear: _maxYear,
+              manufacturerIds: _manufacturerIds,
+              modelIds: _modelIds,
+              fuelTypeIds: _fuelTypeIds,
+              transmissionTypeIds: _transmissionTypeIds,
+              minPrice: _minPrice,
+              maxPrice: _maxPrice,
+              propertyTypes: _propertyTypes,
+              minBedrooms: _minBedrooms,
+              maxBedrooms: _maxBedrooms,
+              minArea: _minArea,
+              maxArea: _maxArea);
+          print(
+              "📦 Received ${result.data.length} ads | hasNext: ${result.hasNext}");
+          emit(ListingsLoaded(
+            listings: [...currentState.listings, ...result.data],
+            hasMore: result.hasNext,
+          ));
+        }
       } catch (e) {
         // Emit user-friendly message instead of raw exception
         emit(AdvertisementState.error(
@@ -281,15 +342,20 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _hasParking = null;
     _locationLatitude = event.latitude;
     _locationLongitude = event.longitude;
+    _locationFallbackToAll = false;
 
     try {
       final result = await repository.fetchAllAds(
         page: _currentPage,
         latitude: event.latitude,
         longitude: event.longitude,
+        maxDistance: _locationRadiusKm,
       );
+      _locationQueryHasNext = result.hasNext;
+      // Keep hasMore=true so scrolling can widen the radius and then fall back
+      // to the full all-ads feed once nearby results are exhausted.
       emit(AdvertisementState.listingsLoaded(
-          listings: result.data, hasMore: result.hasNext));
+          listings: result.data, hasMore: true));
     } catch (e) {
       // Emit user-friendly message instead of raw exception
       emit(AdvertisementState.error(

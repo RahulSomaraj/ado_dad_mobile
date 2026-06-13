@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ado·dad — UI/UX Wireframes (reference)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css"/>
+<style>
+:root{
+  --brand:#4F48EC;
+  --color-background-primary:#ffffff;
+  --color-background-secondary:#f3f4f7;
+  --color-background-tertiary:#e7e8ec;
+  --color-background-info:#E6F1FB;
+  --color-background-danger:#FCEBEB;
+  --color-text-primary:#1a1a1c;
+  --color-text-secondary:#5f5e5a;
+  --color-text-tertiary:#8b8a86;
+  --color-text-info:#0C447C;
+  --color-text-danger:#A32D2D;
+  --color-border-tertiary:rgba(0,0,0,.12);
+  --color-border-secondary:rgba(0,0,0,.24);
+  --border-radius-md:8px; --border-radius-lg:12px; --border-radius-xl:16px;
+  --page:#e9eaee;
+}
+body.dark{
+  --color-background-primary:#1b1f27;
+  --color-background-secondary:#232833;
+  --color-background-tertiary:#2c3340;
+  --color-background-info:#14304a;
+  --color-background-danger:#4a1616;
+  --color-text-primary:#ECEEF3;
+  --color-text-secondary:#9aa1af;
+  --color-text-tertiary:#6f7785;
+  --color-text-info:#85B7EB;
+  --color-text-danger:#F09595;
+  --color-border-tertiary:rgba(255,255,255,.12);
+  --color-border-secondary:rgba(255,255,255,.24);
+  --page:#0f1115;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--color-text-primary);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;}
+header.top{position:sticky;top:0;z-index:50;background:var(--page);border-bottom:0.5px solid var(--color-border-secondary);
+  display:flex;align-items:center;justify-content:space-between;padding:14px 20px;}
+header.top h1{font-size:18px;font-weight:500;margin:0}
+header.top h1 b{color:var(--brand)}
+.toggle{border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-primary);
+  border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.intro{max-width:1100px;margin:0 auto;padding:16px 20px 0;color:var(--color-text-secondary);font-size:13.5px;line-height:1.6}
+.index{max-width:1100px;margin:6px auto 0;padding:0 20px;display:flex;flex-wrap:wrap;gap:8px}
+.index a{font-size:12.5px;color:var(--brand);text-decoration:none;border:0.5px solid var(--color-border-tertiary);
+  border-radius:20px;padding:5px 12px}
+.grid{max-width:1100px;margin:0 auto;padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:26px;align-items:start}
+section.wf{scroll-margin-top:70px}
+section.wf > h2{font-size:15px;font-weight:500;margin:0 0 4px}
+section.wf > p{font-size:12.5px;color:var(--color-text-secondary);margin:0 0 12px;line-height:1.5}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+footer{max-width:1100px;margin:0 auto;padding:10px 20px 50px;color:var(--color-text-tertiary);font-size:12px}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>ado<b>·</b>dad — wireframes</h1>
+  <button class="toggle" onclick="document.body.classList.toggle('dark')"><i class="ti ti-moon"></i> Light / Dark</button>
+</header>
+
+<div class="intro">
+  Reference set for implementation. Brand accent <b style="color:var(--brand)">#4F48EC</b>, Poppins type in-app, bottom bar = Home · Favorites · Sell (FAB) · Chat · Profile. Follow these layouts exactly. Toggle light/dark above.
+</div>
+<nav class="index">
+  <a href="#nav">Bottom navbar</a>
+  <a href="#home">Home</a>
+  <a href="#card">Ad card (detail)</a>
+  <a href="#search">Search & Filters</a>
+  <a href="#detail">Ad detail</a>
+  <a href="#sell">Sell flow</a>
+  <a href="#profile">Profile</a>
+  <a href="#myads">My Ads & Wishlist</a>
+  <a href="#chat">Chat</a>
+  <a href="#showroom">Showroom</a>
+  <a href="#auth">Onboarding & Auth</a>
+</nav>
+
+<div class="grid">
+
+<section class="wf" id="nav">
+<h2>Bottom navbar</h2>
+<p>Home · Favorites · Sell (raised FAB) · Chat (unread badge) · Profile. Search is global, not a tab.</p>
+<div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1.25rem 1rem; --brand:#4F48EC;">
+  <div style="max-width:300px; margin:0 auto; background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-xl); overflow:hidden;">
+    <div style="padding:16px; display:flex; flex-direction:column; gap:10px;">
+      <div style="height:10px; width:55%; background:var(--color-background-tertiary); border-radius:6px;"></div>
+      <div style="display:flex; gap:10px;">
+        <div style="flex:1; height:64px; background:var(--color-background-tertiary); border-radius:8px;"></div>
+        <div style="flex:1; height:64px; background:var(--color-background-tertiary); border-radius:8px;"></div>
+      </div>
+    </div>
+    <div style="position:relative; display:flex; align-items:flex-end; justify-content:space-between; padding:8px 12px 12px; border-top:0.5px solid var(--color-border-tertiary);">
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--brand);"><i class="ti ti-home" style="font-size:22px;"></i><span style="font-size:11px;">Home</span></div>
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--color-text-tertiary);"><i class="ti ti-heart" style="font-size:22px;"></i><span style="font-size:11px;">Favorites</span></div>
+      <div style="flex:1; display:flex; justify-content:center;"><div style="width:52px; height:52px; margin-top:-30px; border-radius:50%; background:var(--brand); color:#fff; display:flex; align-items:center; justify-content:center; border:4px solid var(--color-background-primary);"><i class="ti ti-plus" style="font-size:26px;"></i></div></div>
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--color-text-tertiary);"><div style="position:relative;"><i class="ti ti-message-circle" style="font-size:22px;"></i><span style="position:absolute; top:-5px; right:-9px; background:var(--color-background-danger); color:var(--color-text-danger); font-size:10px; min-width:15px; height:15px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0 3px;">2</span></div><span style="font-size:11px;">Chat</span></div>
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--color-text-tertiary);"><i class="ti ti-user" style="font-size:22px;"></i><span style="font-size:11px;">Profile</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="wf" id="home">
+<h2>Home</h2>
+<p>Logo header with location, notifications and search; category rail; promo carousel; 2-up listing grid.</p>
+<div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1rem; --brand:#4F48EC;">
+  <div style="max-width:300px; margin:0 auto; background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-xl); overflow:hidden;">
+    <div style="background:var(--brand); padding:14px 14px 16px; color:#fff;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-size:18px; font-weight:500; letter-spacing:.5px; color:#fff;">ado<span style="opacity:.7;">·</span>dad</span>
+        <i class="ti ti-bell" style="font-size:20px;"></i>
+      </div>
+      <div style="display:flex; align-items:center; gap:5px; margin-top:10px; font-size:12px; color:#fff; opacity:.95;"><i class="ti ti-map-pin" style="font-size:15px;"></i><span>Bengaluru</span><i class="ti ti-chevron-down" style="font-size:13px;"></i></div>
+      <div style="margin-top:10px; background:var(--color-background-primary); border-radius:10px; padding:10px 12px; display:flex; align-items:center; gap:8px; color:var(--color-text-tertiary);"><i class="ti ti-search" style="font-size:18px;"></i><span style="font-size:12px;">Search cars, bikes, property…</span></div>
+    </div>
+    <div style="display:flex; gap:8px; padding:14px 12px 4px; overflow-x:auto;">
+      <div style="flex:0 0 auto; width:56px; display:flex; flex-direction:column; align-items:center; gap:5px;"><div style="width:46px; height:46px; border-radius:14px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); display:flex; align-items:center; justify-content:center; color:var(--brand);"><i class="ti ti-car" style="font-size:22px;"></i></div><span style="font-size:10px; color:var(--color-text-secondary);">Cars</span></div>
+      <div style="flex:0 0 auto; width:56px; display:flex; flex-direction:column; align-items:center; gap:5px;"><div style="width:46px; height:46px; border-radius:14px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); display:flex; align-items:center; justify-content:center; color:var(--brand);"><i class="ti ti-motorbike" style="font-size:22px;"></i></div><span style="font-size:10px; color:var(--color-text-secondary);">Bikes</span></div>
+      <div style="flex:0 0 auto; width:56px; display:flex; flex-direction:column; align-items:center; gap:5px;"><div style="width:46px; height:46px; border-radius:14px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); display:flex; align-items:center; justify-content:center; color:var(--brand);"><i class="ti ti-truck" style="font-size:22px;"></i></div><span style="font-size:10px; color:var(--color-text-secondary);">Commercial</span></div>
+      <div style="flex:0 0 auto; width:56px; display:flex; flex-direction:column; align-items:center; gap:5px;"><div style="width:46px; height:46px; border-radius:14px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); display:flex; align-items:center; justify-content:center; color:var(--brand);"><i class="ti ti-building" style="font-size:22px;"></i></div><span style="font-size:10px; color:var(--color-text-secondary);">Property</span></div>
+      <div style="flex:0 0 auto; width:56px; display:flex; flex-direction:column; align-items:center; gap:5px;"><div style="width:46px; height:46px; border-radius:14px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); display:flex; align-items:center; justify-content:center; color:var(--brand);"><i class="ti ti-building-store" style="font-size:22px;"></i></div><span style="font-size:10px; color:var(--color-text-secondary);">Showroom</span></div>
+    </div>
+    <div style="margin:8px 14px 0; height:60px; background:var(--color-background-tertiary); border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--color-text-tertiary);"><span style="font-size:11px;">promo banner</span></div>
+    <div style="display:flex; gap:5px; justify-content:center; margin-top:7px;"><span style="width:14px; height:4px; border-radius:2px; background:var(--brand);"></span><span style="width:4px; height:4px; border-radius:2px; background:var(--color-border-secondary);"></span><span style="width:4px; height:4px; border-radius:2px; background:var(--color-border-secondary);"></span></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 14px 8px;"><span style="font-size:13px; color:var(--color-text-primary);">Fresh near you</span><span style="font-size:11px; color:var(--brand);">See all</span></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 14px 14px;">
+      <div style="border:0.5px solid var(--color-border-tertiary); border-radius:10px; overflow:hidden;"><div style="height:72px; background:var(--color-background-tertiary); position:relative;"><span style="position:absolute; top:6px; left:6px; background:var(--brand); color:#fff; font-size:9px; padding:2px 6px; border-radius:5px;">NEW</span><span style="position:absolute; top:5px; right:6px; color:var(--color-text-secondary);"><i class="ti ti-heart" style="font-size:15px;"></i></span></div><div style="padding:8px;"><div style="font-size:13px; color:var(--color-text-primary);">₹ 5,40,000</div><div style="font-size:11px; color:var(--color-text-secondary); margin-top:2px;">Swift VXI · 2021</div><div style="font-size:10px; color:var(--color-text-tertiary); margin-top:3px;">32k km · Petrol · 2d</div></div></div>
+      <div style="border:0.5px solid var(--color-border-tertiary); border-radius:10px; overflow:hidden;"><div style="height:72px; background:var(--color-background-tertiary); position:relative;"><span style="position:absolute; top:5px; right:6px; color:var(--color-text-secondary);"><i class="ti ti-heart" style="font-size:15px;"></i></span></div><div style="padding:8px;"><div style="font-size:13px; color:var(--color-text-primary);">₹ 25,000<span style="font-size:9px; color:var(--color-text-tertiary);">/mo</span></div><div style="font-size:11px; color:var(--color-text-secondary); margin-top:2px;">2 BHK Apartment</div><div style="font-size:10px; color:var(--color-text-tertiary); margin-top:3px;">1200 sqft · Furnished</div></div></div>
+    </div>
+    <div style="position:relative; display:flex; align-items:flex-end; justify-content:space-between; padding:8px 12px 12px; border-top:0.5px solid var(--color-border-tertiary);">
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--brand);"><i class="ti ti-home" style="font-size:21px;"></i><span style="font-size:10px;">Home</span></div>
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--color-text-tertiary);"><i class="ti ti-heart" style="font-size:21px;"></i><span style="font-size:10px;">Favorites</span></div>
+      <div style="flex:1; display:flex; justify-content:center;"><div style="width:48px; height:48px; margin-top:-28px; border-radius:50%; background:var(--brand); color:#fff; display:flex; align-items:center; justify-content:center; border:4px solid var(--color-background-primary);"><i class="ti ti-plus" style="font-size:24px;"></i></div></div>
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--color-text-tertiary);"><div style="position:relative;"><i class="ti ti-message-circle" style="font-size:21px;"></i><span style="position:absolute; top:-5px; right:-9px; background:var(--color-background-danger); color:var(--color-text-danger); font-size:9px; min-width:14px; height:14px; border-radius:7px; display:flex; align-items:center; justify-content:center; padding:0 3px;">2</span></div><span style="font-size:10px;">Chat</span></div>
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--color-text-tertiary);"><i class="ti ti-user" style="font-size:21px;"></i><span style="font-size:10px;">Profile</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="wf" id="card">
+<h2>Ad card — detailed (vehicle & property)</h2>
+<p>Badges (PREMIUM / FOR RENT), heart, photo/video count, price + EMI, spec chips, location + time.</p>
+<div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1rem; --brand:#4F48EC;">
+  <div style="max-width:290px; margin:0 auto; display:flex; flex-direction:column; gap:16px;">
+    <div style="background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); overflow:hidden;">
+      <div style="height:120px; background:var(--color-background-tertiary); position:relative;">
+        <span style="position:absolute; top:8px; left:8px; background:var(--brand); color:#fff; font-size:9px; font-weight:500; padding:3px 7px; border-radius:5px;">PREMIUM</span>
+        <span style="position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%; background:var(--color-background-primary); display:flex; align-items:center; justify-content:center; color:var(--color-text-secondary);"><i class="ti ti-heart" style="font-size:15px;"></i></span>
+        <span style="position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,.6); color:#fff; font-size:10px; padding:2px 6px; border-radius:5px; display:flex; align-items:center; gap:4px;"><i class="ti ti-photo" style="font-size:12px;"></i>1/5</span>
+        <span style="position:absolute; bottom:8px; left:8px; background:rgba(0,0,0,.6); color:#fff; font-size:10px; padding:2px 6px; border-radius:5px; display:flex; align-items:center; gap:4px;"><i class="ti ti-player-play" style="font-size:12px;"></i>Video</span>
+      </div>
+      <div style="padding:10px 12px 12px;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between;"><span style="font-size:16px; font-weight:500; color:var(--color-text-primary);">₹ 5,40,000</span><span style="font-size:10px; color:var(--color-text-tertiary);">EMI ₹9,800/mo</span></div>
+        <div style="font-size:13px; color:var(--color-text-primary); margin-top:3px;">Maruti Swift VXI · 2021</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
+          <span style="display:inline-flex; align-items:center; gap:4px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:6px; padding:3px 7px; font-size:10.5px; color:var(--color-text-secondary);"><i class="ti ti-road" style="font-size:12px;"></i>32,000 km</span>
+          <span style="display:inline-flex; align-items:center; gap:4px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:6px; padding:3px 7px; font-size:10.5px; color:var(--color-text-secondary);"><i class="ti ti-gas-station" style="font-size:12px;"></i>Petrol</span>
+          <span style="display:inline-flex; align-items:center; gap:4px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:6px; padding:3px 7px; font-size:10.5px; color:var(--color-text-secondary);"><i class="ti ti-manual-gearbox" style="font-size:12px;"></i>Manual</span>
+          <span style="display:inline-flex; align-items:center; gap:4px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:6px; padding:3px 7px; font-size:10.5px; color:var(--color-text-secondary);"><i class="ti ti-user" style="font-size:12px;"></i>1st owner</span>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; padding-top:9px; border-top:0.5px solid var(--color-border-tertiary);"><span style="font-size:10.5px; color:var(--color-text-tertiary); display:inline-flex; align-items:center; gap:4px;"><i class="ti ti-map-pin" style="font-size:12px;"></i>Indiranagar · 3.2 km</span><span style="font-size:10.5px; color:var(--color-text-tertiary);">2 days ago</span></div>
+      </div>
+    </div>
+    <div style="background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); overflow:hidden;">
+      <div style="height:120px; background:var(--color-background-tertiary); position:relative;">
+        <span style="position:absolute; top:8px; left:8px; background:var(--color-background-info); color:var(--color-text-info); font-size:9px; font-weight:500; padding:3px 7px; border-radius:5px;">FOR RENT</span>
+        <span style="position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%; background:var(--color-background-primary); display:flex; align-items:center; justify-content:center; color:var(--brand);"><i class="ti ti-heart" style="font-size:15px;"></i></span>
+        <span style="position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,.6); color:#fff; font-size:10px; padding:2px 6px; border-radius:5px; display:flex; align-items:center; gap:4px;"><i class="ti ti-photo" style="font-size:12px;"></i>1/8</span>
+      </div>
+      <div style="padding:10px 12px 12px;">
+        <div style="font-size:16px; font-weight:500; color:var(--color-text-primary);">₹ 25,000<span style="font-size:11px; color:var(--color-text-tertiary);">/mo</span></div>
+        <div style="font-size:13px; color:var(--color-text-primary); margin-top:3px;">2 BHK Apartment</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
+          <span style="display:inline-flex; align-items:center; gap:4px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:6px; padding:3px 7px; font-size:10.5px; color:var(--color-text-secondary);"><i class="ti ti-bed" style="font-size:12px;"></i>2 Beds</span>
+          <span style="display:inline-flex; align-items:center; gap:4px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:6px; padding:3px 7px; font-size:10.5px; color:var(--color-text-secondary);"><i class="ti ti-bath" style="font-size:12px;"></i>2 Baths</span>
+          <span style="display:inline-flex; align-items:center; gap:4px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:6px; padding:3px 7px; font-size:10.5px; color:var(--color-text-secondary);"><i class="ti ti-ruler-2" style="font-size:12px;"></i>1200 sqft</span>
+          <span style="display:inline-flex; align-items:center; gap:4px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:6px; padding:3px 7px; font-size:10.5px; color:var(--color-text-secondary);"><i class="ti ti-sofa" style="font-size:12px;"></i>Furnished</span>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; padding-top:9px; border-top:0.5px solid var(--color-border-tertiary);"><span style="font-size:10.5px; color:var(--color-text-tertiary); display:inline-flex; align-items:center; gap:4px;"><i class="ti ti-map-pin" style="font-size:12px;"></i>Bandra West, Mumbai</span><span style="font-size:10.5px; color:var(--color-text-tertiary);">1 week ago</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="wf" id="search">
+<h2>Search & Filters</h2>
+<p>Recent + Trending chips (typing → live suggestions), Save-search alert, and a filter bottom sheet.</p>
+<div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1rem; --brand:#4F48EC;">
+  <div style="max-width:300px; margin:0 auto; display:flex; flex-direction:column; gap:16px;">
+    <div style="background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-xl); overflow:hidden;">
+      <div style="display:flex; align-items:center; gap:10px; padding:12px 12px 0;"><i class="ti ti-arrow-left" style="font-size:20px; color:var(--color-text-secondary);"></i><div style="flex:1; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:10px; padding:9px 12px; display:flex; align-items:center; gap:8px; color:var(--color-text-tertiary);"><i class="ti ti-search" style="font-size:17px;"></i><span style="font-size:12.5px;">Search ads…</span></div></div>
+      <div style="padding:14px 14px 6px;"><div style="font-size:11px; font-weight:500; color:var(--color-text-tertiary); letter-spacing:.5px;">RECENT</div><div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;"><span style="display:inline-flex; align-items:center; gap:5px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:20px; padding:6px 10px; font-size:12px; color:var(--color-text-primary);"><i class="ti ti-history" style="font-size:13px; color:var(--color-text-tertiary);"></i>Swift VXI<i class="ti ti-x" style="font-size:12px; color:var(--color-text-tertiary);"></i></span><span style="display:inline-flex; align-items:center; gap:5px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:20px; padding:6px 10px; font-size:12px; color:var(--color-text-primary);"><i class="ti ti-history" style="font-size:13px; color:var(--color-text-tertiary);"></i>2BHK rent<i class="ti ti-x" style="font-size:12px; color:var(--color-text-tertiary);"></i></span></div></div>
+      <div style="padding:8px 14px 16px;"><div style="font-size:11px; font-weight:500; color:var(--color-text-tertiary); letter-spacing:.5px;">TRENDING</div><div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;"><span style="display:inline-flex; align-items:center; gap:5px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:20px; padding:6px 10px; font-size:12px; color:var(--color-text-primary);"><i class="ti ti-flame" style="font-size:13px; color:var(--brand);"></i>Creta</span><span style="display:inline-flex; align-items:center; gap:5px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:20px; padding:6px 10px; font-size:12px; color:var(--color-text-primary);"><i class="ti ti-flame" style="font-size:13px; color:var(--brand);"></i>Scorpio</span><span style="display:inline-flex; align-items:center; gap:5px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:20px; padding:6px 10px; font-size:12px; color:var(--color-text-primary);"><i class="ti ti-flame" style="font-size:13px; color:var(--brand);"></i>Tata Ace</span></div>
+        <div style="margin-top:16px; border:0.5px dashed var(--color-border-secondary); border-radius:10px; padding:11px 12px; display:flex; align-items:center; gap:10px;"><i class="ti ti-bell-plus" style="font-size:20px; color:var(--brand);"></i><div style="flex:1;"><div style="font-size:12.5px; color:var(--color-text-primary);">Save this search</div><div style="font-size:11px; color:var(--color-text-secondary);">Get alerts on new matches</div></div><i class="ti ti-plus" style="font-size:18px; color:var(--brand);"></i></div>
+      </div>
+    </div>
+    <div style="background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-xl); overflow:hidden;">
+      <div style="display:flex; justify-content:center; padding-top:8px;"><span style="width:36px; height:4px; border-radius:2px; background:var(--color-border-secondary);"></span></div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px 4px;"><span style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Filters</span><span style="font-size:12px; color:var(--brand);">Reset</span></div>
+      <div style="padding:8px 14px 0;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:12.5px; color:var(--color-text-secondary);">Sort by</span><span style="font-size:12.5px; color:var(--color-text-primary);">Newest <i class="ti ti-chevron-down" style="font-size:13px;"></i></span></div>
+        <div style="padding:12px 0 4px;"><div style="font-size:12px; color:var(--color-text-secondary); margin-bottom:8px;">Price range</div><div style="display:flex; align-items:center; gap:8px;"><span style="flex:1; border:0.5px solid var(--color-border-tertiary); border-radius:8px; padding:8px 10px; font-size:12px; color:var(--color-text-tertiary);">₹ Min</span><span style="color:var(--color-text-tertiary);">–</span><span style="flex:1; border:0.5px solid var(--color-border-tertiary); border-radius:8px; padding:8px 10px; font-size:12px; color:var(--color-text-tertiary);">₹ Max</span></div></div>
+        <div style="padding:12px 0 0;"><div style="font-size:12px; color:var(--color-text-secondary); margin-bottom:8px;">Fuel</div><div style="display:flex; flex-wrap:wrap; gap:8px;"><span style="background:var(--brand); color:#fff; border-radius:20px; padding:6px 12px; font-size:12px;">Petrol</span><span style="border:0.5px solid var(--color-border-tertiary); border-radius:20px; padding:6px 12px; font-size:12px; color:var(--color-text-primary);">Diesel</span><span style="border:0.5px solid var(--color-border-tertiary); border-radius:20px; padding:6px 12px; font-size:12px; color:var(--color-text-primary);">EV</span><span style="border:0.5px solid var(--color-border-tertiary); border-radius:20px; padding:6px 12px; font-size:12px; color:var(--color-text-primary);">CNG</span></div></div>
+        <div style="padding:12px 0 0;"><div style="font-size:12px; color:var(--color-text-secondary); margin-bottom:8px;">Transmission</div><div style="display:flex; flex-wrap:wrap; gap:8px;"><span style="border:0.5px solid var(--color-border-tertiary); border-radius:20px; padding:6px 12px; font-size:12px; color:var(--color-text-primary);">Manual</span><span style="background:var(--brand); color:#fff; border-radius:20px; padding:6px 12px; font-size:12px;">Automatic</span></div></div>
+      </div>
+      <div style="padding:14px; margin-top:12px; border-top:0.5px solid var(--color-border-tertiary);"><div style="background:var(--brand); color:#fff; border-radius:10px; padding:12px; text-align:center; font-size:13px; font-weight:500;">Show 248 results</div></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="wf" id="detail">
+<h2>Ad detail</h2>
+<p>Gallery with floating actions, price + EMI, spec chips, verified seller, similar, sticky Call · Make Offer · Chat.</p>
+<div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1rem; --brand:#4F48EC;">
+  <div style="max-width:300px; margin:0 auto; background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-xl); overflow:hidden;">
+    <div style="height:150px; background:var(--color-background-tertiary); position:relative;">
+      <div style="position:absolute; top:10px; left:10px; right:10px; display:flex; justify-content:space-between;"><span style="width:30px; height:30px; border-radius:50%; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; color:#fff;"><i class="ti ti-arrow-left" style="font-size:17px;"></i></span><div style="display:flex; gap:8px;"><span style="width:30px; height:30px; border-radius:50%; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; color:#fff;"><i class="ti ti-share" style="font-size:16px;"></i></span><span style="width:30px; height:30px; border-radius:50%; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; color:#fff;"><i class="ti ti-heart" style="font-size:16px;"></i></span></div></div>
+      <span style="position:absolute; bottom:10px; left:10px; background:var(--brand); color:#fff; font-size:9px; font-weight:500; padding:3px 7px; border-radius:5px;">PREMIUM</span>
+      <span style="position:absolute; bottom:10px; right:10px; background:rgba(0,0,0,.6); color:#fff; font-size:10px; padding:2px 7px; border-radius:5px; display:flex; align-items:center; gap:4px;"><i class="ti ti-photo" style="font-size:12px;"></i>1/5</span>
+      <span style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:38px; height:38px; border-radius:50%; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; color:#fff;"><i class="ti ti-player-play" style="font-size:20px;"></i></span>
+    </div>
+    <div style="padding:12px 14px 6px;">
+      <div style="display:flex; align-items:baseline; justify-content:space-between;"><span style="font-size:20px; font-weight:500; color:var(--color-text-primary);">₹ 5,40,000</span><span style="font-size:10.5px; color:var(--color-text-tertiary); border:0.5px solid var(--color-border-tertiary); border-radius:6px; padding:3px 7px;">EMI ₹9,800/mo</span></div>
+      <div style="font-size:14px; color:var(--color-text-primary); margin-top:4px;">Maruti Swift VXI · 2021</div>
+      <div style="font-size:11px; color:var(--color-text-tertiary); margin-top:3px; display:flex; align-items:center; gap:4px;"><i class="ti ti-map-pin" style="font-size:12px;"></i>Indiranagar, Bengaluru · 2 days ago</div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
+        <span style="display:inline-flex; align-items:center; gap:4px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:6px; padding:4px 8px; font-size:11px; color:var(--color-text-secondary);"><i class="ti ti-calendar" style="font-size:13px;"></i>2021</span>
+        <span style="display:inline-flex; align-items:center; gap:4px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:6px; padding:4px 8px; font-size:11px; color:var(--color-text-secondary);"><i class="ti ti-road" style="font-size:13px;"></i>32,000 km</span>
+        <span style="display:inline-flex; align-items:center; gap:4px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:6px; padding:4px 8px; font-size:11px; color:var(--color-text-secondary);"><i class="ti ti-gas-station" style="font-size:13px;"></i>Petrol</span>
+        <span style="display:inline-flex; align-items:center; gap:4px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:6px; padding:4px 8px; font-size:11px; color:var(--color-text-secondary);"><i class="ti ti-manual-gearbox" style="font-size:13px;"></i>Manual</span>
+        <span style="display:inline-flex; align-items:center; gap:4px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:6px; padding:4px 8px; font-size:11px; color:var(--color-text-secondary);"><i class="ti ti-user" style="font-size:13px;"></i>1st owner</span>
+      </div>
+    </div>
+    <div style="margin:8px 14px; border:0.5px solid var(--color-border-tertiary); border-radius:10px; padding:10px; display:flex; align-items:center; gap:10px;"><span style="width:36px; height:36px; border-radius:50%; background:var(--color-background-info); color:var(--color-text-info); display:flex; align-items:center; justify-content:center; font-size:13px;">RS</span><div style="flex:1;"><div style="font-size:12.5px; color:var(--color-text-primary); display:flex; align-items:center; gap:4px;">Rahul S. <i class="ti ti-rosette-discount-check" style="font-size:14px; color:var(--brand);"></i></div><div style="font-size:10.5px; color:var(--color-text-secondary);">Member since 2023 · 12 ads</div></div><i class="ti ti-chevron-right" style="font-size:18px; color:var(--color-text-tertiary);"></i></div>
+    <div style="display:flex; gap:8px; padding:10px 12px 12px; border-top:0.5px solid var(--color-border-tertiary);">
+      <span style="width:46px; height:42px; border-radius:10px; background:#19A463; color:#fff; display:flex; align-items:center; justify-content:center;"><i class="ti ti-phone" style="font-size:20px;"></i></span>
+      <span style="flex:1; height:42px; border:1px solid var(--brand); color:var(--brand); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:500;">Make Offer</span>
+      <span style="flex:1; height:42px; background:var(--brand); color:#fff; border-radius:10px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12.5px; font-weight:500;"><i class="ti ti-message-circle" style="font-size:16px;"></i>Chat</span>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="wf" id="sell">
+<h2>Sell flow</h2>
+<p>Category cards with subtitles + dealer upsell, then a 3-step stepper (Details → Photos → Review) with progress.</p>
+<div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1rem; --brand:#4F48EC;">
+  <div style="max-width:300px; margin:0 auto; display:flex; flex-direction:column; gap:16px;">
+    <div style="background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-xl); overflow:hidden;">
+      <div style="display:flex; align-items:center; gap:10px; padding:12px 14px;"><i class="ti ti-arrow-left" style="font-size:20px; color:var(--color-text-secondary);"></i><span style="font-size:14px; font-weight:500; color:var(--color-text-primary);">What are you listing?</span></div>
+      <div style="padding:0 14px 10px; font-size:11.5px; color:var(--color-text-secondary);">Pick a category — we'll only ask what matters.</div>
+      <div style="padding:0 14px 14px; display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; align-items:center; gap:12px; border:0.5px solid var(--color-border-tertiary); border-radius:12px; padding:11px 12px;"><span style="width:40px; height:40px; border-radius:11px; background:var(--color-background-secondary); display:flex; align-items:center; justify-content:center; color:var(--brand);"><i class="ti ti-car" style="font-size:21px;"></i></span><div style="flex:1;"><div style="font-size:13px; color:var(--color-text-primary);">Car</div><div style="font-size:11px; color:var(--color-text-secondary);">Cars & premium vehicles</div></div><i class="ti ti-chevron-right" style="font-size:17px; color:var(--color-text-tertiary);"></i></div>
+        <div style="display:flex; align-items:center; gap:12px; border:0.5px solid var(--color-border-tertiary); border-radius:12px; padding:11px 12px;"><span style="width:40px; height:40px; border-radius:11px; background:var(--color-background-secondary); display:flex; align-items:center; justify-content:center; color:var(--brand);"><i class="ti ti-motorbike" style="font-size:21px;"></i></span><div style="flex:1;"><div style="font-size:13px; color:var(--color-text-primary);">Bike</div><div style="font-size:11px; color:var(--color-text-secondary);">Bikes & scooters</div></div><i class="ti ti-chevron-right" style="font-size:17px; color:var(--color-text-tertiary);"></i></div>
+        <div style="display:flex; align-items:center; gap:12px; border:0.5px solid var(--color-border-tertiary); border-radius:12px; padding:11px 12px;"><span style="width:40px; height:40px; border-radius:11px; background:var(--color-background-secondary); display:flex; align-items:center; justify-content:center; color:var(--brand);"><i class="ti ti-truck" style="font-size:21px;"></i></span><div style="flex:1;"><div style="font-size:13px; color:var(--color-text-primary);">Commercial</div><div style="font-size:11px; color:var(--color-text-secondary);">Trucks, autos & buses</div></div><i class="ti ti-chevron-right" style="font-size:17px; color:var(--color-text-tertiary);"></i></div>
+        <div style="display:flex; align-items:center; gap:12px; border:0.5px solid var(--color-border-tertiary); border-radius:12px; padding:11px 12px;"><span style="width:40px; height:40px; border-radius:11px; background:var(--color-background-secondary); display:flex; align-items:center; justify-content:center; color:var(--brand);"><i class="ti ti-building" style="font-size:21px;"></i></span><div style="flex:1;"><div style="font-size:13px; color:var(--color-text-primary);">Property</div><div style="font-size:11px; color:var(--color-text-secondary);">Sell or rent your property</div></div><i class="ti ti-chevron-right" style="font-size:17px; color:var(--color-text-tertiary);"></i></div>
+      </div>
+    </div>
+    <div style="background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-xl); overflow:hidden;">
+      <div style="display:flex; align-items:center; gap:10px; padding:12px 14px 6px;"><i class="ti ti-arrow-left" style="font-size:20px; color:var(--color-text-secondary);"></i><span style="font-size:14px; font-weight:500; color:var(--color-text-primary);">List your car</span></div>
+      <div style="padding:6px 14px 0;"><div style="display:flex; justify-content:space-between; font-size:11px; color:var(--color-text-secondary); margin-bottom:6px;"><span>Step 1 of 3 · Details</span><span>33%</span></div><div style="height:5px; background:var(--color-background-tertiary); border-radius:3px; overflow:hidden;"><div style="width:33%; height:5px; background:var(--brand);"></div></div></div>
+      <div style="padding:12px 14px 0;"><div style="border:0.5px dashed var(--color-border-secondary); border-radius:10px; padding:18px; text-align:center; color:var(--color-text-secondary);"><i class="ti ti-camera" style="font-size:22px; color:var(--brand);"></i><div style="font-size:11.5px; margin-top:6px;">Add photos — first one is the cover</div></div></div>
+      <div style="padding:12px 14px 0; display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; border:0.5px solid var(--color-border-tertiary); border-radius:9px; padding:11px 12px; font-size:12.5px; color:var(--color-text-primary);">Brand · Maruti Suzuki <i class="ti ti-chevron-down" style="font-size:14px; color:var(--color-text-tertiary);"></i></div>
+        <div style="display:flex; align-items:center; justify-content:space-between; border:0.5px solid var(--color-border-tertiary); border-radius:9px; padding:11px 12px; font-size:12.5px; color:var(--color-text-primary);">Model · Swift <i class="ti ti-chevron-down" style="font-size:14px; color:var(--color-text-tertiary);"></i></div>
+        <div style="display:flex; gap:10px;"><div style="flex:1; border:0.5px solid var(--color-border-tertiary); border-radius:9px; padding:11px 12px; font-size:12.5px; color:var(--color-text-tertiary);">Year</div><div style="flex:1; border:0.5px solid var(--color-border-tertiary); border-radius:9px; padding:11px 12px; font-size:12.5px; color:var(--color-text-tertiary);">KM driven</div></div>
+        <div style="display:flex; gap:6px; background:var(--color-background-secondary); border-radius:9px; padding:4px;"><span style="flex:1; text-align:center; background:var(--brand); color:#fff; border-radius:7px; padding:7px; font-size:11.5px;">Petrol</span><span style="flex:1; text-align:center; color:var(--color-text-secondary); padding:7px; font-size:11.5px;">Diesel</span><span style="flex:1; text-align:center; color:var(--color-text-secondary); padding:7px; font-size:11.5px;">EV</span><span style="flex:1; text-align:center; color:var(--color-text-secondary); padding:7px; font-size:11.5px;">CNG</span></div>
+        <div style="border:0.5px solid var(--color-border-tertiary); border-radius:9px; padding:11px 12px; font-size:12.5px; color:var(--color-text-tertiary);">Expected price ₹</div>
+      </div>
+      <div style="padding:14px; margin-top:12px; border-top:0.5px solid var(--color-border-tertiary);"><div style="background:var(--brand); color:#fff; border-radius:10px; padding:12px; text-align:center; font-size:13px; font-weight:500;">Save draft & continue ›</div></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="wf" id="profile">
+<h2>Profile</h2>
+<p>Header with verified + edit, stats strip (shortcuts), single icon menu incl. Appearance, logout in danger.</p>
+<div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1rem; --brand:#4F48EC;">
+  <div style="max-width:300px; margin:0 auto; background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-xl); overflow:hidden;">
+    <div style="background:var(--brand); padding:14px; color:#fff; display:flex; align-items:center; justify-content:space-between;"><span style="font-size:15px; font-weight:500;">Profile</span><i class="ti ti-settings" style="font-size:19px;"></i></div>
+    <div style="padding:14px; display:flex; align-items:center; gap:12px;"><span style="width:52px; height:52px; border-radius:50%; background:var(--color-background-info); color:var(--color-text-info); display:flex; align-items:center; justify-content:center; font-size:16px;">RS</span><div style="flex:1;"><div style="font-size:14px; color:var(--color-text-primary); display:flex; align-items:center; gap:5px;">Rahul Somraj <i class="ti ti-rosette-discount-check" style="font-size:15px; color:var(--brand);"></i></div><div style="font-size:11px; color:var(--color-text-secondary); margin-top:2px;">rahul.tech@newshop.in</div></div><span style="font-size:11px; color:var(--brand); border:0.5px solid var(--color-border-tertiary); border-radius:8px; padding:5px 10px;">Edit</span></div>
+    <div style="margin:0 14px 6px; display:flex; border:0.5px solid var(--color-border-tertiary); border-radius:12px; overflow:hidden;"><div style="flex:1; text-align:center; padding:10px 0;"><div style="font-size:17px; font-weight:500; color:var(--color-text-primary);">5</div><div style="font-size:10.5px; color:var(--color-text-secondary);">My ads</div></div><div style="width:0.5px; background:var(--color-border-tertiary);"></div><div style="flex:1; text-align:center; padding:10px 0;"><div style="font-size:17px; font-weight:500; color:var(--color-text-primary);">18</div><div style="font-size:10.5px; color:var(--color-text-secondary);">Wishlist</div></div><div style="width:0.5px; background:var(--color-border-tertiary);"></div><div style="flex:1; text-align:center; padding:10px 0;"><div style="font-size:17px; font-weight:500; color:var(--color-text-primary);">3</div><div style="font-size:10.5px; color:var(--color-text-secondary);">Chats</div></div></div>
+    <div style="padding:8px 6px 12px;">
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><i class="ti ti-clipboard-list" style="font-size:19px; color:var(--brand);"></i><span style="flex:1; font-size:13px; color:var(--color-text-primary);">My Ads</span><i class="ti ti-chevron-right" style="font-size:16px; color:var(--color-text-tertiary);"></i></div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><i class="ti ti-heart" style="font-size:19px; color:var(--brand);"></i><span style="flex:1; font-size:13px; color:var(--color-text-primary);">Wishlist</span><i class="ti ti-chevron-right" style="font-size:16px; color:var(--color-text-tertiary);"></i></div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><i class="ti ti-building-store" style="font-size:19px; color:var(--brand);"></i><span style="flex:1; font-size:13px; color:var(--color-text-primary);">My Showroom</span><i class="ti ti-chevron-right" style="font-size:16px; color:var(--color-text-tertiary);"></i></div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><i class="ti ti-moon" style="font-size:19px; color:var(--brand);"></i><span style="flex:1; font-size:13px; color:var(--color-text-primary);">Appearance</span><span style="font-size:11px; color:var(--color-text-tertiary); margin-right:4px;">System</span><i class="ti ti-chevron-right" style="font-size:16px; color:var(--color-text-tertiary);"></i></div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><i class="ti ti-help-circle" style="font-size:19px; color:var(--brand);"></i><span style="flex:1; font-size:13px; color:var(--color-text-primary);">Help & Support</span><i class="ti ti-chevron-right" style="font-size:16px; color:var(--color-text-tertiary);"></i></div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><i class="ti ti-logout" style="font-size:19px; color:var(--color-text-danger);"></i><span style="flex:1; font-size:13px; color:var(--color-text-danger);">Log out</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="wf" id="myads">
+<h2>My Ads & Wishlist</h2>
+<p>Tabs (My Ads / Wishlist / Drafts), status chips, per-ad stats and inline actions (Edit · Mark sold · Boost).</p>
+<div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1rem; --brand:#4F48EC;">
+  <div style="max-width:300px; margin:0 auto; background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-xl); overflow:hidden;">
+    <div style="display:flex; align-items:center; gap:10px; padding:12px 14px;"><i class="ti ti-arrow-left" style="font-size:20px; color:var(--color-text-secondary);"></i><span style="font-size:14px; font-weight:500; color:var(--color-text-primary);">My activity</span></div>
+    <div style="margin:0 14px; display:flex; background:var(--color-background-secondary); border-radius:9px; padding:4px;"><span style="flex:1; text-align:center; background:var(--brand); color:#fff; border-radius:7px; padding:7px; font-size:12px;">My Ads</span><span style="flex:1; text-align:center; color:var(--color-text-secondary); padding:7px; font-size:12px;">Wishlist</span><span style="flex:1; text-align:center; color:var(--color-text-secondary); padding:7px; font-size:12px;">Drafts</span></div>
+    <div style="display:flex; gap:7px; padding:12px 14px 6px; overflow-x:auto;"><span style="flex:0 0 auto; background:var(--brand); color:#fff; border-radius:20px; padding:5px 12px; font-size:11.5px;">Active</span><span style="flex:0 0 auto; border:0.5px solid var(--color-border-tertiary); border-radius:20px; padding:5px 12px; font-size:11.5px; color:var(--color-text-primary);">Pending</span><span style="flex:0 0 auto; border:0.5px solid var(--color-border-tertiary); border-radius:20px; padding:5px 12px; font-size:11.5px; color:var(--color-text-primary);">Sold</span><span style="flex:0 0 auto; border:0.5px solid var(--color-border-tertiary); border-radius:20px; padding:5px 12px; font-size:11.5px; color:var(--color-text-primary);">Expired</span></div>
+    <div style="padding:4px 14px 12px; display:flex; flex-direction:column; gap:11px;">
+      <div style="border:0.5px solid var(--color-border-tertiary); border-radius:12px; padding:10px;"><div style="display:flex; gap:10px;"><div style="width:74px; height:58px; border-radius:8px; background:var(--color-background-tertiary);"></div><div style="flex:1;"><div style="font-size:13px; font-weight:500; color:var(--color-text-primary);">₹ 5,40,000</div><div style="font-size:11px; color:var(--color-text-secondary); margin-top:1px;">Maruti Swift VXI 2021</div><div style="display:flex; gap:12px; margin-top:6px; color:var(--color-text-tertiary); font-size:10.5px;"><span style="display:inline-flex; align-items:center; gap:3px;"><i class="ti ti-eye" style="font-size:13px;"></i>1.2k</span><span style="display:inline-flex; align-items:center; gap:3px;"><i class="ti ti-heart" style="font-size:13px;"></i>34</span><span style="display:inline-flex; align-items:center; gap:3px;"><i class="ti ti-message-circle" style="font-size:13px;"></i>8</span></div></div></div><div style="display:flex; gap:8px; margin-top:10px;"><span style="flex:1; text-align:center; border:0.5px solid var(--color-border-tertiary); border-radius:8px; padding:7px; font-size:11.5px; color:var(--color-text-primary);"><i class="ti ti-edit" style="font-size:13px;"></i> Edit</span><span style="flex:1; text-align:center; background:#19A463; color:#fff; border-radius:8px; padding:7px; font-size:11.5px;"><i class="ti ti-circle-check" style="font-size:13px;"></i> Mark sold</span><span style="flex:1; text-align:center; border:0.5px solid var(--brand); color:var(--brand); border-radius:8px; padding:7px; font-size:11.5px;"><i class="ti ti-bolt" style="font-size:13px;"></i> Boost</span></div></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="wf" id="chat">
+<h2>Chat</h2>
+<p>Inbox with unread badges + previews; thread pins the listing card, with quick-reply chips and Call in header.</p>
+<div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1rem; --brand:#4F48EC;">
+  <div style="max-width:300px; margin:0 auto; display:flex; flex-direction:column; gap:16px;">
+    <div style="background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-xl); overflow:hidden;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 14px; border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:15px; font-weight:500; color:var(--color-text-primary);">Messages</span><i class="ti ti-search" style="font-size:19px; color:var(--color-text-secondary);"></i></div>
+      <div style="display:flex; align-items:center; gap:11px; padding:11px 14px;"><span style="width:40px; height:40px; border-radius:50%; background:var(--color-background-tertiary);"></span><div style="flex:1; min-width:0;"><div style="display:flex; justify-content:space-between;"><span style="font-size:13px; font-weight:500; color:var(--color-text-primary);">Rahul S.</span><span style="font-size:10px; color:var(--color-text-tertiary);">2m</span></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;"><span style="font-size:11.5px; color:var(--color-text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:170px;">Is it still available?</span><span style="background:var(--brand); color:#fff; font-size:10px; border-radius:10px; padding:1px 7px;">2</span></div></div></div>
+      <div style="display:flex; align-items:center; gap:11px; padding:11px 14px; border-top:0.5px solid var(--color-border-tertiary);"><span style="width:40px; height:40px; border-radius:50%; background:var(--color-background-tertiary);"></span><div style="flex:1; min-width:0;"><div style="display:flex; justify-content:space-between;"><span style="font-size:13px; color:var(--color-text-primary);">Auto Hub</span><span style="font-size:10px; color:var(--color-text-tertiary);">3h</span></div><div style="font-size:11.5px; color:var(--color-text-tertiary); margin-top:2px;">Sent you 3 cars</div></div></div>
+    </div>
+    <div style="background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-xl); overflow:hidden;">
+      <div style="display:flex; align-items:center; gap:10px; padding:11px 14px; border-bottom:0.5px solid var(--color-border-tertiary);"><i class="ti ti-arrow-left" style="font-size:19px; color:var(--color-text-secondary);"></i><span style="width:32px; height:32px; border-radius:50%; background:var(--color-background-tertiary);"></span><span style="flex:1; font-size:13px; font-weight:500; color:var(--color-text-primary);">Rahul S.</span><i class="ti ti-phone" style="font-size:19px; color:#19A463;"></i></div>
+      <div style="margin:10px 14px 0; display:flex; align-items:center; gap:9px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:9px; padding:7px 9px;"><span style="width:34px; height:30px; border-radius:6px; background:var(--color-background-tertiary);"></span><div style="flex:1; min-width:0;"><div style="font-size:11px; color:var(--color-text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Maruti Swift VXI</div><div style="font-size:11px; font-weight:500; color:var(--color-text-primary);">₹ 5,40,000</div></div><span style="font-size:10.5px; color:var(--brand);">View</span></div>
+      <div style="padding:12px 14px 6px; display:flex; flex-direction:column; gap:8px;"><div style="align-self:flex-start; max-width:78%; background:var(--color-background-secondary); border-radius:12px; border-bottom-left-radius:3px; padding:8px 11px; font-size:12px; color:var(--color-text-primary);">Hi, is the Swift still available?</div><div style="align-self:flex-end; max-width:78%; background:var(--brand); color:#fff; border-radius:12px; border-bottom-right-radius:3px; padding:8px 11px; font-size:12px;">Yes! Want to see it this weekend?</div></div>
+      <div style="display:flex; gap:7px; padding:6px 14px 4px; overflow-x:auto;"><span style="flex:0 0 auto; border:0.5px solid var(--brand); color:var(--brand); border-radius:16px; padding:5px 11px; font-size:11px;">Yes, available</span><span style="flex:0 0 auto; border:0.5px solid var(--brand); color:var(--brand); border-radius:16px; padding:5px 11px; font-size:11px;">Share location</span><span style="flex:0 0 auto; border:0.5px solid var(--brand); color:var(--brand); border-radius:16px; padding:5px 11px; font-size:11px;">Price is firm</span></div>
+      <div style="display:flex; align-items:center; gap:9px; padding:10px 14px 12px; border-top:0.5px solid var(--color-border-tertiary);"><div style="flex:1; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:20px; padding:9px 14px; font-size:12px; color:var(--color-text-tertiary);">Message…</div><span style="width:38px; height:38px; border-radius:50%; background:var(--brand); color:#fff; display:flex; align-items:center; justify-content:center;"><i class="ti ti-send" style="font-size:17px;"></i></span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="wf" id="showroom">
+<h2>Showroom</h2>
+<p>Dealer directory with filter chips and trust signals (verified, rating, listings), plus featured stock grid.</p>
+<div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1rem; --brand:#4F48EC;">
+  <div style="max-width:300px; margin:0 auto; background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-xl); overflow:hidden;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 14px;"><div style="display:flex; align-items:center; gap:10px;"><i class="ti ti-arrow-left" style="font-size:20px; color:var(--color-text-secondary);"></i><span style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Showrooms</span></div><i class="ti ti-search" style="font-size:19px; color:var(--color-text-secondary);"></i></div>
+    <div style="display:flex; gap:7px; padding:0 14px 8px; overflow-x:auto;"><span style="flex:0 0 auto; background:var(--brand); color:#fff; border-radius:20px; padding:5px 12px; font-size:11.5px;">All</span><span style="flex:0 0 auto; border:0.5px solid var(--color-border-tertiary); border-radius:20px; padding:5px 12px; font-size:11.5px; color:var(--color-text-primary);">Cars</span><span style="flex:0 0 auto; border:0.5px solid var(--color-border-tertiary); border-radius:20px; padding:5px 12px; font-size:11.5px; color:var(--color-text-primary);">Verified</span><span style="flex:0 0 auto; border:0.5px solid var(--color-border-tertiary); border-radius:20px; padding:5px 12px; font-size:11.5px; color:var(--color-text-primary);">Near me</span></div>
+    <div style="padding:0 14px; display:flex; flex-direction:column; gap:10px;">
+      <div style="border:0.5px solid var(--color-border-tertiary); border-radius:12px; padding:11px; display:flex; gap:11px;"><span style="width:44px; height:44px; border-radius:11px; background:var(--color-background-tertiary);"></span><div style="flex:1;"><div style="font-size:13px; color:var(--color-text-primary); display:flex; align-items:center; gap:4px;">Auto Hub <i class="ti ti-rosette-discount-check" style="font-size:14px; color:var(--brand);"></i></div><div style="font-size:11px; color:var(--color-text-secondary); margin-top:1px;">Cars · Bengaluru · 142 listings</div><div style="display:flex; gap:6px; margin-top:6px;"><span style="display:inline-flex; align-items:center; gap:3px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; padding:3px 8px; font-size:10px; color:var(--color-text-secondary);"><i class="ti ti-star" style="font-size:11px; color:var(--brand);"></i>4.6</span><span style="display:inline-flex; align-items:center; gap:3px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; padding:3px 8px; font-size:10px; color:var(--color-text-secondary);"><i class="ti ti-bolt" style="font-size:11px; color:var(--brand);"></i>Replies fast</span></div></div><i class="ti ti-chevron-right" style="font-size:17px; color:var(--color-text-tertiary);"></i></div>
+    </div>
+    <div style="padding:14px 14px 8px; font-size:13px; color:var(--color-text-primary);">Featured stock</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 14px 14px;">
+      <div style="border:0.5px solid var(--color-border-tertiary); border-radius:10px; overflow:hidden;"><div style="height:66px; background:var(--color-background-tertiary); position:relative;"><span style="position:absolute; top:5px; left:5px; background:var(--color-background-info); color:var(--color-text-info); font-size:8.5px; font-weight:500; padding:2px 6px; border-radius:5px;">DEALER</span></div><div style="padding:7px;"><div style="font-size:12px; color:var(--color-text-primary);">₹ 7,20,000</div><div style="font-size:10px; color:var(--color-text-tertiary); margin-top:2px;">Creta · 2022</div></div></div>
+      <div style="border:0.5px solid var(--color-border-tertiary); border-radius:10px; overflow:hidden;"><div style="height:66px; background:var(--color-background-tertiary); position:relative;"><span style="position:absolute; top:5px; left:5px; background:var(--color-background-info); color:var(--color-text-info); font-size:8.5px; font-weight:500; padding:2px 6px; border-radius:5px;">DEALER</span></div><div style="padding:7px;"><div style="font-size:12px; color:var(--color-text-primary);">₹ 1,35,000</div><div style="font-size:10px; color:var(--color-text-tertiary); margin-top:2px;">Classic 350 · 2021</div></div></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="wf" id="auth">
+<h2>Onboarding & Auth</h2>
+<p>One splash carousel + browse-first, phone-first OTP login (email/Google), and SMS auto-read verification.</p>
+<div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1rem; --brand:#4F48EC;">
+  <div style="max-width:300px; margin:0 auto; display:flex; flex-direction:column; gap:16px;">
+    <div style="background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-xl); overflow:hidden;">
+      <div style="height:120px; background:var(--brand); display:flex; align-items:center; justify-content:center; gap:14px; color:#fff;"><i class="ti ti-car" style="font-size:32px;"></i><i class="ti ti-motorbike" style="font-size:32px;"></i><i class="ti ti-building" style="font-size:32px;"></i></div>
+      <div style="padding:16px 16px 6px; text-align:center;"><div style="display:flex; gap:5px; justify-content:center; margin-bottom:12px;"><span style="width:5px; height:5px; border-radius:50%; background:var(--color-border-secondary);"></span><span style="width:16px; height:5px; border-radius:3px; background:var(--brand);"></span><span style="width:5px; height:5px; border-radius:50%; background:var(--color-border-secondary);"></span></div><div style="font-size:16px; font-weight:500; color:var(--color-text-primary);">Buy & sell, near you</div><div style="font-size:12px; color:var(--color-text-secondary); margin-top:5px;">Cars, bikes, commercial vehicles & property.</div></div>
+      <div style="padding:12px 16px 16px; display:flex; flex-direction:column; gap:10px;"><div style="background:var(--brand); color:#fff; border-radius:10px; padding:12px; text-align:center; font-size:13px; font-weight:500;">Continue with phone</div><div style="border:0.5px solid var(--color-border-secondary); border-radius:10px; padding:12px; text-align:center; font-size:13px; color:var(--color-text-primary);">Skip · browse first</div></div>
+    </div>
+    <div style="background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-xl); overflow:hidden;">
+      <div style="display:flex; align-items:center; gap:10px; padding:12px 14px;"><i class="ti ti-arrow-left" style="font-size:19px; color:var(--color-text-secondary);"></i><span style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Log in</span></div>
+      <div style="padding:4px 16px 16px;"><div style="font-size:15px; color:var(--color-text-primary);">Enter your number</div><div style="font-size:11.5px; color:var(--color-text-secondary); margin:4px 0 14px;">We'll text a 6-digit code. No password.</div><div style="display:flex; align-items:center; gap:8px; border:0.5px solid var(--color-border-tertiary); border-radius:10px; padding:11px 12px; font-size:13px; color:var(--color-text-primary);"><span>+91</span><span style="width:0.5px; height:16px; background:var(--color-border-secondary);"></span><span style="color:var(--color-text-tertiary);">98765 43210</span></div><div style="background:var(--brand); color:#fff; border-radius:10px; padding:12px; text-align:center; font-size:13px; font-weight:500; margin-top:12px;">Send code</div><div style="text-align:center; font-size:11px; color:var(--color-text-tertiary); margin:14px 0;">or</div><div style="display:flex; flex-direction:column; gap:10px;"><div style="border:0.5px solid var(--color-border-secondary); border-radius:10px; padding:11px; display:flex; align-items:center; justify-content:center; gap:8px; font-size:12.5px; color:var(--color-text-primary);"><i class="ti ti-mail" style="font-size:16px;"></i>Continue with email</div><div style="border:0.5px solid var(--color-border-secondary); border-radius:10px; padding:11px; display:flex; align-items:center; justify-content:center; gap:8px; font-size:12.5px; color:var(--color-text-primary);"><i class="ti ti-brand-google" style="font-size:16px;"></i>Continue with Google</div></div></div>
+    </div>
+    <div style="background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-xl); overflow:hidden;">
+      <div style="display:flex; align-items:center; gap:10px; padding:12px 14px;"><i class="ti ti-arrow-left" style="font-size:19px; color:var(--color-text-secondary);"></i><span style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Verify</span></div>
+      <div style="padding:4px 16px 16px;"><div style="font-size:15px; color:var(--color-text-primary);">Enter the 6-digit code</div><div style="font-size:11.5px; color:var(--color-text-secondary); margin-top:4px;">Sent to +91 98765 43210 · <span style="color:var(--brand);">Change</span></div><div style="display:flex; gap:8px; justify-content:space-between; margin:18px 0 12px;"><span style="flex:1; aspect-ratio:1; border:0.5px solid var(--brand); border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--color-text-primary);">●</span><span style="flex:1; aspect-ratio:1; border:0.5px solid var(--brand); border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--color-text-primary);">●</span><span style="flex:1; aspect-ratio:1; border:0.5px solid var(--brand); border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--color-text-primary);">●</span><span style="flex:1; aspect-ratio:1; border:0.5px solid var(--color-border-tertiary); border-radius:9px;"></span><span style="flex:1; aspect-ratio:1; border:0.5px solid var(--color-border-tertiary); border-radius:9px;"></span><span style="flex:1; aspect-ratio:1; border:0.5px solid var(--color-border-tertiary); border-radius:9px;"></span></div><div style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--color-text-secondary);"><i class="ti ti-message-2" style="font-size:14px; color:#19A463;"></i>Auto-detecting SMS…</div><div style="background:var(--brand); color:#fff; border-radius:10px; padding:12px; text-align:center; font-size:13px; font-weight:500; margin-top:14px;">Verify & continue</div></div>
+    </div>
+  </div>
+</section>
+
+</div>
+<footer>ado·dad wireframe reference · brand #4F48EC · bottom bar: Home · Favorites · Sell · Chat · Profile · search is global.</footer>
+</body>
+</html>

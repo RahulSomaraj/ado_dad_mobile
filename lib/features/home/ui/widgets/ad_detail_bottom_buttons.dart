@@ -8,6 +8,7 @@ class AdDetailBottomButtons extends StatelessWidget {
   final Future<bool> Function(AddModel) isCurrentUserOwner;
   final VoidCallback onMakeOffer;
   final VoidCallback onChat;
+  final VoidCallback? onCall;
 
   const AdDetailBottomButtons({
     super.key,
@@ -15,6 +16,7 @@ class AdDetailBottomButtons extends StatelessWidget {
     required this.isCurrentUserOwner,
     required this.onMakeOffer,
     required this.onChat,
+    this.onCall,
   });
 
   @override
@@ -28,8 +30,16 @@ class AdDetailBottomButtons extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
+        final bool hasPhone = (ad.user?.phone?.trim().isNotEmpty ?? false);
+
         return Row(
           children: [
+            if (hasPhone && onCall != null) ...[
+              _CallButton(onTap: onCall!),
+              SizedBox(
+                  width: GetResponsiveSize.getResponsiveSize(context,
+                      mobile: 12, tablet: 16, largeTablet: 20, desktop: 24)),
+            ],
             Expanded(
               child: _MakeOfferButton(
                 label: 'Make an Offer',
@@ -48,6 +58,42 @@ class AdDetailBottomButtons extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _CallButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _CallButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final double size = GetResponsiveSize.getResponsiveSize(context,
+        mobile: 48, tablet: 65, largeTablet: 75, desktop: 85);
+    return SizedBox(
+      height: size,
+      width: size,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF19A463),
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              GetResponsiveSize.getResponsiveBorderRadius(context,
+                  mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
+            ),
+          ),
+        ),
+        onPressed: onTap,
+        child: Icon(
+          Icons.call,
+          color: Colors.white,
+          size: GetResponsiveSize.getResponsiveSize(context,
+              mobile: 22, tablet: 28, largeTablet: 32, desktop: 36),
+        ),
+      ),
     );
   }
 }

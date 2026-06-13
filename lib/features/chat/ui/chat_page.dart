@@ -294,6 +294,44 @@ class _ChatPageState extends State<ChatPage> {
 
             return Column(
               children: [
+                // Pinned listing context (tap to open the ad)
+                if (widget.adId != null)
+                  GestureDetector(
+                    onTap: _navigateToAdDetail,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        border: Border(
+                          bottom: BorderSide(color: Colors.grey[300]!),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.sell_outlined,
+                              size: 18, color: AppColors.primaryColor),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              widget.adTitle ?? 'View listing',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontSize: 13, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                          Text('View',
+                              style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: AppColors.primaryColor)),
+                          Icon(Icons.chevron_right,
+                              size: 18, color: AppColors.primaryColor),
+                        ],
+                      ),
+                    ),
+                  ),
                 // Messages list
                 Expanded(
                   child: _messages.isEmpty
@@ -656,6 +694,49 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
+  void _sendQuickReply(String text) {
+    context.read<ChatBloc>().add(SendMessage(text));
+  }
+
+  Widget _buildQuickReplies() {
+    const replies = [
+      'Is it still available?',
+      'Yes, available',
+      'Can we negotiate?',
+      'Share location',
+      'Price is firm',
+    ];
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: SizedBox(
+        height: 34,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: replies.length,
+          separatorBuilder: (context, _) => const SizedBox(width: 8),
+          itemBuilder: (context, i) {
+            return GestureDetector(
+              onTap: () => _sendQuickReply(replies[i]),
+              child: Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.primaryColor),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Text(
+                  replies[i],
+                  style: TextStyle(
+                      color: AppColors.primaryColor, fontSize: 12.5),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _buildMessageInput() {
     return Container(
       padding: EdgeInsets.all(
@@ -685,6 +766,7 @@ class _ChatPageState extends State<ChatPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          _buildQuickReplies(),
           if (_stagedVoicePath != null) ...[
             Padding(
               padding: const EdgeInsets.only(bottom: 8),

@@ -172,6 +172,60 @@ class SkeletonListCard extends StatelessWidget {
   }
 }
 
+/// A skeleton shaped like a product detail screen: a large image area, then
+/// price / title / spec chips / description lines.
+class SkeletonDetail extends StatelessWidget {
+  const SkeletonDetail({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SkeletonBox(height: 230, borderRadius: BorderRadius.zero),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SkeletonBox(height: 24, width: 160),
+                const SizedBox(height: 12),
+                const SkeletonBox(height: 16, width: 220),
+                const SizedBox(height: 20),
+                Row(
+                  children: const [
+                    SkeletonBox(
+                        height: 30,
+                        width: 70,
+                        borderRadius: BorderRadius.all(Radius.circular(20))),
+                    SizedBox(width: 8),
+                    SkeletonBox(
+                        height: 30,
+                        width: 70,
+                        borderRadius: BorderRadius.all(Radius.circular(20))),
+                    SizedBox(width: 8),
+                    SkeletonBox(
+                        height: 30,
+                        width: 70,
+                        borderRadius: BorderRadius.all(Radius.circular(20))),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const SkeletonBox(height: 12, width: double.infinity),
+                const SizedBox(height: 8),
+                const SkeletonBox(height: 12, width: double.infinity),
+                const SizedBox(height: 8),
+                const SkeletonBox(height: 12, width: 200),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// A vertical list of skeleton rows. Drop-in replacement for a full-screen
 /// loading spinner on list-style screens.
 class SkeletonList extends StatelessWidget {

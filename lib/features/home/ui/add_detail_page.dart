@@ -1,5 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/auth_guard.dart';
@@ -208,7 +210,7 @@ Download Ado Dad app to contact the seller and view more details!
               return state.when(
                 initial: () =>
                     const Center(child: Text('Waiting for details...')),
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const SkeletonDetail(),
                 error: (e) => Center(child: Text('Error: $e')),
                 loaded: (ad) => CustomScrollView(
                   slivers: [
@@ -367,18 +369,21 @@ Download Ado Dad app to contact the seller and view more details!
                 isCurrentUserOwner: _isCurrentUserOwner,
                 onMakeOffer: () => _handleMakeOffer(context),
                 onChat: () => _handleChat(context),
+                onCall: () => _handleCall(context, ad),
               ),
               markingAsSold: () => AdDetailBottomButtons(
                 ad: widget.ad,
                 isCurrentUserOwner: _isCurrentUserOwner,
                 onMakeOffer: () => _handleMakeOffer(context),
                 onChat: () => _handleChat(context),
+                onCall: () => _handleCall(context, widget.ad),
               ),
               markedAsSold: (ad) => AdDetailBottomButtons(
                 ad: ad,
                 isCurrentUserOwner: _isCurrentUserOwner,
                 onMakeOffer: () => _handleMakeOffer(context),
                 onChat: () => _handleChat(context),
+                onCall: () => _handleCall(context, ad),
               ),
               deleting: () => const SizedBox.shrink(),
               deleted: () => const SizedBox.shrink(),
@@ -1688,6 +1693,20 @@ Download Ado Dad app to contact the seller and view more details!
       deleting: () {},
       deleted: () {},
     );
+  }
+
+  // Place a phone call to the seller using the device dialer.
+  Future<void> _handleCall(BuildContext context, AddModel ad) async {
+    final rawPhone = ad.user?.phone?.trim() ?? '';
+    if (rawPhone.isEmpty) return;
+    final uri = Uri(scheme: 'tel', path: rawPhone);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to open phone app')),
+      );
+    }
   }
 
   Future<void> _handleChat(BuildContext context) async {

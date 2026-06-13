@@ -10,6 +10,22 @@ import 'package:go_router/go_router.dart';
 class ItemCategory extends StatelessWidget {
   const ItemCategory({super.key});
 
+  // Plain-language description for each category so users pick the right one.
+  String _subtitleFor(String categoryId) {
+    switch (categoryId) {
+      case 'two_wheeler':
+        return 'Bikes & scooters';
+      case 'private_vehicle':
+        return 'Cars & premium vehicles';
+      case 'commercial_vehicle':
+        return 'Trucks, autos & buses';
+      case 'property':
+        return 'Sell or rent your property';
+      default:
+        return '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Filter out showroom category
@@ -162,7 +178,8 @@ class ItemCategory extends StatelessWidget {
                               desktop: 120,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.greyColor.withValues(alpha: 1.6),
+                              color:
+                                  AppColors.primaryColor.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(
                                 GetResponsiveSize.getResponsiveBorderRadius(
                                   context,
@@ -197,6 +214,23 @@ class ItemCategory extends StatelessWidget {
                                 desktop: 34,
                               ),
                               fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              _subtitleFor(category.categoryId),
+                              style: TextStyle(
+                                color: AppColors.greyColor,
+                                fontSize:
+                                    GetResponsiveSize.getResponsiveFontSize(
+                                  context,
+                                  mobile: 12,
+                                  tablet: 16,
+                                  largeTablet: 20,
+                                  desktop: 24,
+                                ),
+                              ),
                             ),
                           ),
                           trailing: Image.asset(

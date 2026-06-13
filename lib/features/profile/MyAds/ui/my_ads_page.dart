@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/features/profile/MyAds/bloc/my_ads_bloc.dart';
 import 'package:ado_dad_user/models/my_ads_model.dart';
@@ -19,6 +20,63 @@ class MyAdsPage extends StatefulWidget {
 
 class _MyAdsPageState extends State<MyAdsPage> {
   final ScrollController _scrollController = ScrollController();
+  String _statusFilter = 'all';
+
+  List<MyAd> _filterByStatus(List<MyAd> ads) {
+    switch (_statusFilter) {
+      case 'active':
+        return ads.where((a) => a.isActive && a.soldOut != true).toList();
+      case 'sold':
+        return ads.where((a) => a.soldOut == true).toList();
+      case 'inactive':
+        return ads.where((a) => !a.isActive && a.soldOut != true).toList();
+      default:
+        return ads;
+    }
+  }
+
+  Widget _buildStatusChips() {
+    const items = [
+      ['all', 'All'],
+      ['active', 'Active'],
+      ['sold', 'Sold'],
+      ['inactive', 'Inactive'],
+    ];
+    return SizedBox(
+      height: 44,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        itemCount: items.length,
+        separatorBuilder: (context, _) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final selected = _statusFilter == items[i][0];
+          return GestureDetector(
+            onTap: () => setState(() => _statusFilter = items[i][0]),
+            child: Container(
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: selected ? AppColors.primaryColor : Colors.transparent,
+                border: Border.all(
+                  color:
+                      selected ? AppColors.primaryColor : Colors.grey.shade400,
+                ),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                items[i][1],
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: selected ? Colors.white : AppColors.blackColor,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -273,8 +331,20 @@ class _MyAdsPageState extends State<MyAdsPage> {
                     ),
                   );
                 }
-                return ListView.separated(
-                  controller: _scrollController,
+                final ads = _filterByStatus(loaded.ads);
+                return Column(
+                  children: [
+                    _buildStatusChips(),
+                    Expanded(
+                      child: ads.isEmpty
+                          ? Center(
+                              child: Text(
+                                'No ads in this filter',
+                                style: TextStyle(color: Colors.grey.shade600),
+                              ),
+                            )
+                          : ListView.separated(
+                              controller: _scrollController,
                   padding: EdgeInsets.fromLTRB(
                     GetResponsiveSize.getResponsivePadding(
                       context,
@@ -305,7 +375,7 @@ class _MyAdsPageState extends State<MyAdsPage> {
                       desktop: 48,
                     ),
                   ),
-                  itemCount: loaded.ads.length +
+                  itemCount: ads.length +
                       (loaded.isPaging ? 1 : 0) +
                       (loaded.hasNext ? 0 : 1),
                   separatorBuilder: (_, __) => SizedBox(
@@ -319,7 +389,7 @@ class _MyAdsPageState extends State<MyAdsPage> {
                   ),
                   itemBuilder: (context, i) {
                     // Show loading indicator at the bottom when loading more
-                    if (i == loaded.ads.length && loaded.isPaging) {
+                    if (i == ads.length && loaded.isPaging) {
                       return Padding(
                         padding: EdgeInsets.all(
                           GetResponsiveSize.getResponsivePadding(
@@ -336,7 +406,7 @@ class _MyAdsPageState extends State<MyAdsPage> {
                       );
                     }
                     // Show end message when no more items
-                    if (i == loaded.ads.length && !loaded.hasNext) {
+                    if (i == ads.length && !loaded.hasNext) {
                       return Padding(
                         padding: EdgeInsets.all(
                           GetResponsiveSize.getResponsivePadding(
@@ -364,8 +434,11 @@ class _MyAdsPageState extends State<MyAdsPage> {
                         ),
                       );
                     }
-                    return _AdTile(ad: loaded.ads[i]);
-                  },
+                              return _AdTile(ad: ads[i]);
+                            },
+                          ),
+                    ),
+                  ],
                 );
               },
               orElse: () => const SizedBox.shrink(),

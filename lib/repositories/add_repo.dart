@@ -40,6 +40,7 @@ class AddRepository {
     // Location-based filters
     double? latitude,
     double? longitude,
+    double? maxDistance,
   }) async {
     try {
       final body = <String, dynamic>{
@@ -72,6 +73,7 @@ class AddRepository {
         // Location-based filters
         if (latitude != null) 'latitude': latitude,
         if (longitude != null) 'longitude': longitude,
+        if (maxDistance != null) 'maxDistance': maxDistance,
       };
 
       // if (manufacturerIds != null && manufacturerIds.isNotEmpty) {

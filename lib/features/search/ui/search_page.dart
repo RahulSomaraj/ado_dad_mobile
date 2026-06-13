@@ -1041,6 +1041,29 @@ class _SearchPageState extends State<SearchPage> {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          Builder(builder: (context) {
+                            final sub = _getAdSubtitle(ad);
+                            if (sub.isEmpty) return const SizedBox.shrink();
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 3),
+                              child: Text(
+                                sub,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: AppColors.greyColor,
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                    context,
+                                    mobile: 11,
+                                    tablet: 16,
+                                    largeTablet: 20,
+                                    desktop: 24,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
                           Row(
                             children: [
                               Icon(
