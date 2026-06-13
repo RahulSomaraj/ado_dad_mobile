@@ -12,7 +12,8 @@ import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:go_router/go_router.dart';
 
 class MyAdsPage extends StatefulWidget {
-  const MyAdsPage({super.key});
+  final bool embedded;
+  const MyAdsPage({super.key, this.embedded = false});
 
   @override
   State<MyAdsPage> createState() => _MyAdsPageState();
@@ -143,10 +144,12 @@ class _MyAdsPageState extends State<MyAdsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F4FC),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: const Color(0xFFF6F4FC),
-        leading: IconButton(
+      appBar: widget.embedded
+          ? null
+          : AppBar(
+              elevation: 0,
+              backgroundColor: const Color(0xFFF6F4FC),
+              leading: IconButton(
           icon: Icon(
             (!kIsWeb && Platform.isIOS)
                 ? Icons.arrow_back_ios

@@ -25,7 +25,6 @@ import 'package:ado_dad_user/features/profile/ui/widgets/profile_avatar.dart';
 import 'package:ado_dad_user/features/profile/ui/widgets/profile_menu_item.dart';
 import 'package:ado_dad_user/common/widgets/theme_mode_tile.dart';
 import 'package:ado_dad_user/features/profile/ui/widgets/change_password_dialog.dart';
-import 'package:ado_dad_user/features/profile/ui/widgets/bottom_nav_bar.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -2596,11 +2595,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
           ],
         ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        floatingActionButton: SafeArea(
-          minimum: const EdgeInsets.only(bottom: 20),
-          child: const BottomNavBar(),
-        ),
+        // Bottom navigation is now provided by the persistent shell.
       ),
     );
   }

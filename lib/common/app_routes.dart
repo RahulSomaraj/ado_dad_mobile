@@ -21,6 +21,8 @@ import 'package:ado_dad_user/features/login/ui/otp_login_page.dart';
 import 'package:ado_dad_user/features/login/ui/otp_verification_page.dart';
 import 'package:ado_dad_user/features/profile/MyAds/ui/my_ads_page.dart';
 import 'package:ado_dad_user/features/profile/ui/profile.dart';
+import 'package:ado_dad_user/features/profile/ui/my_activity_page.dart';
+import 'package:ado_dad_user/common/widgets/scaffold_with_nav_bar.dart';
 import 'package:ado_dad_user/features/profile/help/help.dart';
 import 'package:ado_dad_user/features/profile/wishlist/wishlist_page.dart';
 import 'package:ado_dad_user/features/search/ui/search.dart';
@@ -81,12 +83,50 @@ class AppRoutes {
           );
         },
       ),
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => Home(
-          showLoginPromptForNotifications:
-              state.uri.queryParameters['prompt'] == 'notifications',
-        ),
+      // Persistent bottom-nav shell: Home · My Activity · Chat · Profile.
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            ScaffoldWithNavBar(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => Home(
+                  showLoginPromptForNotifications:
+                      state.uri.queryParameters['prompt'] == 'notifications',
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/my-activity',
+                builder: (context, state) => const MyActivityPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/chat-rooms',
+                builder: (context, state) {
+                  final fromPage = state.uri.queryParameters['from'];
+                  return ChatRoomsPage(fromPage: fromPage);
+                },
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const Profile(),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: '/notifications',
@@ -94,7 +134,6 @@ class AppRoutes {
       ),
       GoRoute(path: '/logout', builder: (context, state) => const Login()),
       GoRoute(path: '/signup', builder: (context, state) => const Signup()),
-      GoRoute(path: '/profile', builder: (context, state) => const Profile()),
       GoRoute(
           path: '/wishlist', builder: (context, state) => const WishlistPage()),
       GoRoute(path: '/help', builder: (context, state) => const Help()),
@@ -288,13 +327,7 @@ class AppRoutes {
       ),
       GoRoute(path: '/my-ads', builder: (context, state) => const MyAdsPage()),
 
-      // Chat routes
-      GoRoute(
-          path: '/chat-rooms',
-          builder: (context, state) {
-            final fromPage = state.uri.queryParameters['from'];
-            return ChatRoomsPage(fromPage: fromPage);
-          }),
+      // Chat routes ('/chat-rooms' lives in the nav shell above)
       GoRoute(
           path: '/chat/:roomId',
           builder: (context, state) {

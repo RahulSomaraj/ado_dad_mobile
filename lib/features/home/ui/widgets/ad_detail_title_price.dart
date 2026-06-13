@@ -15,6 +15,29 @@ String toTitleCase(String text) {
       .join(' ');
 }
 
+String _formatInr(num n) {
+  final s = n.round().toString();
+  if (s.length <= 3) return s;
+  final last3 = s.substring(s.length - 3);
+  var rest = s.substring(0, s.length - 3);
+  final buf = <String>[];
+  while (rest.length > 2) {
+    buf.insert(0, rest.substring(rest.length - 2));
+    rest = rest.substring(0, rest.length - 2);
+  }
+  if (rest.isNotEmpty) buf.insert(0, rest);
+  return '${buf.join(',')},$last3';
+}
+
+// EMI is only meaningful for financeable items (vehicles), not property/rentals.
+bool _isFinanceable(AddModel ad) {
+  final c = ad.category.toLowerCase();
+  return !c.contains('propert') && !c.contains('rent') && ad.price > 0;
+}
+
+// Indicative EMI ~1.8% of price per month (matches the listing card estimate).
+String _emiEstimate(int price) => '₹${_formatInr(price * 0.018)}/mo';
+
 String _niceDate(String iso) {
   try {
     final dt = DateTime.tryParse(iso) ?? DateTime.now();
@@ -154,19 +177,75 @@ class AdDetailTitlePrice extends StatelessWidget {
                 desktop: 16,
               ),
             ),
-          Text(
-            '₹ ${(ad.price)}',
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                  mobile: isIOS ? 13 : 16,
-                  tablet: 25,
-                  largeTablet: 29,
-                  desktop: 33),
-              fontWeight: FontWeight.w800,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Flexible(
+                child: Text(
+                  '₹ ${(ad.price)}',
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: isIOS ? 13 : 16,
+                        tablet: 25,
+                        largeTablet: 29,
+                        desktop: 33),
+                    fontWeight: FontWeight.w800,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (_isFinanceable(ad)) ...[
+                const SizedBox(width: 8),
+                Text(
+                  'EMI from ${_emiEstimate(ad.price)}',
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: isIOS ? 10 : 12,
+                        tablet: 16,
+                        largeTablet: 18,
+                        desktop: 20),
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ],
           ),
+          if (ad.distance != null && ad.distance! > 0) ...[
+            SizedBox(
+              height: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: isIOS ? 6 : 8,
+                  tablet: 12,
+                  largeTablet: 14,
+                  desktop: 16),
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.location_on_outlined,
+                  size: GetResponsiveSize.getResponsiveSize(context,
+                      mobile: 14, tablet: 18, largeTablet: 20, desktop: 22),
+                  color: Colors.grey.shade600,
+                ),
+                const SizedBox(width: 3),
+                Text(
+                  '${ad.distance!.toStringAsFixed(ad.distance! < 10 ? 1 : 0)} km away',
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: isIOS ? 11 : 13,
+                        tablet: 18,
+                        largeTablet: 20,
+                        desktop: 22),
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

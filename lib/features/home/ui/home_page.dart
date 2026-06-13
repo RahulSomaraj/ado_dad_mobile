@@ -1,4 +1,5 @@
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/widgets/app_network_image.dart';
 import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/common/notification_badge_service.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
@@ -666,11 +667,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-        floatingActionButton: SafeArea(
-          minimum: const EdgeInsets.only(bottom: 20),
-          child: const BottomNavBar(),
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        // Bottom navigation is now provided by the persistent shell.
       ),
     );
   }
@@ -919,11 +916,11 @@ class _HomePageState extends State<HomePage> {
             width: double.infinity,
             // color: Colors.red,
             // alignment: Alignment.center,
-            child: Image.network(
-              imagePath,
+            child: AppNetworkImage(
+              url: imagePath,
               fit: BoxFit.fill,
-              errorBuilder: (_, __, ___) =>
-                  const ColoredBox(color: Colors.black12),
+              height: 150,
+              width: double.infinity,
             ),
           ),
         ),
@@ -1164,8 +1161,9 @@ class _HomePageState extends State<HomePage> {
         GetResponsiveSize.isTablet(context) ? (16 / 9) : (16 / 10);
     final imageHeight = cardWidth / aspectRatio;
 
-    // Matches _buildRichAdCard: padding + price + title + chips + footer
-    const textBlockHeight = 15 + 18 + 3 + 16 + 6 + 22 + 14 + 6;
+    // Matches _buildRichAdCard: padding + price + title + chips + footer,
+    // plus a small safety buffer so font-metric rounding can't overflow.
+    const textBlockHeight = 15 + 18 + 3 + 16 + 6 + 22 + 14 + 6 + 10;
 
     return imageHeight + textBlockHeight;
   }
@@ -1568,14 +1566,9 @@ class _HomePageState extends State<HomePage> {
                 fit: StackFit.expand,
                 children: [
                   ad.images.isNotEmpty
-                      ? Image.network(
-                          ad.images.first,
+                      ? AppNetworkImage(
+                          url: ad.images.first,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            color: AppColors.scaffoldBackground,
-                            child: Icon(Icons.image_not_supported_outlined,
-                                color: AppColors.greyColor),
-                          ),
                         )
                       : Container(
                           color: AppColors.scaffoldBackground,
@@ -1761,11 +1754,9 @@ class _HomePageState extends State<HomePage> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.network(
-                        ad.images.first,
+                      AppNetworkImage(
+                        url: ad.images.first,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            const ColoredBox(color: Colors.black12),
                       ),
                       if (ad.manufacturer?.isPremium == true)
                         Positioned(

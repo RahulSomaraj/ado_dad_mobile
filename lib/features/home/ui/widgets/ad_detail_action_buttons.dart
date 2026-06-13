@@ -175,21 +175,21 @@ class AdDetailShareButton extends StatelessWidget {
     }
 
     final shareText = '''
-🚗 Check out this amazing listing on Ado Dad!
+🚗 Check out this amazing listing on Adodad!
 
 ${toTitleCase(title)}
 📍 Location: ${ad.location}
 💰 Price: ₹${ad.price}
 📝 Description: ${ad.description}
 
-🔗 Visit: https://ado-dad.com/
+🔗 Visit: https://adodad.com/
 
-Download Ado Dad app to contact the seller and view more details!
+Download Adodad app to contact the seller and view more details!
 ''';
 
     Share.share(
       shareText,
-      subject: 'Amazing listing on Ado Dad - ${toTitleCase(title)}',
+      subject: 'Amazing listing on Adodad - ${toTitleCase(title)}',
     );
   }
 

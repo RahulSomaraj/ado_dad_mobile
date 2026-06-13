@@ -32,6 +32,247 @@ class _SearchPageState extends State<SearchPage> {
   late GooglePlacesService _placesService;
   late ScrollController _scrollController;
 
+  // --- Filters (applied client-side over the loaded results) ---
+  String? _filterCategory; // null = all
+  int? _minPrice;
+  int? _maxPrice;
+  String _sortBy = 'relevance'; // relevance | price_asc | price_desc | newest
+
+  int get _activeFilterCount {
+    var n = 0;
+    if (_filterCategory != null) n++;
+    if (_minPrice != null || _maxPrice != null) n++;
+    if (_sortBy != 'relevance') n++;
+    return n;
+  }
+
+  List<AddModel> _applyFilters(List<AddModel> source) {
+    Iterable<AddModel> r = source;
+    if (_filterCategory != null) {
+      r = r.where((a) => a.category == _filterCategory);
+    }
+    if (_minPrice != null) r = r.where((a) => a.price >= _minPrice!);
+    if (_maxPrice != null) r = r.where((a) => a.price <= _maxPrice!);
+    final list = r.toList();
+    switch (_sortBy) {
+      case 'price_asc':
+        list.sort((a, b) => a.price.compareTo(b.price));
+        break;
+      case 'price_desc':
+        list.sort((a, b) => b.price.compareTo(a.price));
+        break;
+      case 'newest':
+        list.sort((a, b) => (b.postedAt ?? '').compareTo(a.postedAt ?? ''));
+        break;
+    }
+    return list;
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _filterCategory = null;
+      _minPrice = null;
+      _maxPrice = null;
+      _sortBy = 'relevance';
+    });
+  }
+
+  void _openFilterSheet() {
+    String? tempCat = _filterCategory;
+    var tempSort = _sortBy;
+    final minCtrl = TextEditingController(text: _minPrice?.toString() ?? '');
+    final maxCtrl = TextEditingController(text: _maxPrice?.toString() ?? '');
+
+    const cats = <Map<String, String?>>[
+      {'label': 'All', 'value': null},
+      {'label': 'Cars', 'value': 'private_vehicle'},
+      {'label': 'Bikes', 'value': 'two_wheeler'},
+      {'label': 'Commercial', 'value': 'commercial_vehicle'},
+      {'label': 'Property', 'value': 'property'},
+    ];
+    const sorts = <Map<String, String>>[
+      {'label': 'Relevance', 'value': 'relevance'},
+      {'label': 'Price: Low to High', 'value': 'price_asc'},
+      {'label': 'Price: High to Low', 'value': 'price_desc'},
+      {'label': 'Newest first', 'value': 'newest'},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.whiteColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheet) {
+            Widget pill(String label, bool selected, VoidCallback onTap) {
+              return GestureDetector(
+                onTap: onTap,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color:
+                        selected ? AppColors.primaryColor : Colors.transparent,
+                    border: Border.all(
+                        color: selected
+                            ? AppColors.primaryColor
+                            : AppColors.dividerColor),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: selected ? Colors.white : AppColors.blackColor,
+                      fontSize: 13,
+                      fontWeight:
+                          selected ? FontWeight.w600 : FontWeight.w500,
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            final labelStyle = TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.blackColor);
+            InputDecoration priceDeco(String hint) => InputDecoration(
+                  hintText: hint,
+                  prefixText: '₹ ',
+                  isDense: true,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: AppColors.dividerColor),
+                  ),
+                );
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 14,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.dividerColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Filters',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.blackColor)),
+                      TextButton(
+                        onPressed: () => setSheet(() {
+                          tempCat = null;
+                          tempSort = 'relevance';
+                          minCtrl.clear();
+                          maxCtrl.clear();
+                        }),
+                        child: const Text('Clear all'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text('Category', style: labelStyle),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: cats
+                        .map((c) => pill(c['label']!, tempCat == c['value'],
+                            () => setSheet(() => tempCat = c['value'])))
+                        .toList(),
+                  ),
+                  const SizedBox(height: 18),
+                  Text('Price range', style: labelStyle),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: minCtrl,
+                          keyboardType: TextInputType.number,
+                          decoration: priceDeco('Min'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: maxCtrl,
+                          keyboardType: TextInputType.number,
+                          decoration: priceDeco('Max'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  Text('Sort by', style: labelStyle),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: sorts
+                        .map((s) => pill(s['label']!, tempSort == s['value'],
+                            () => setSheet(() => tempSort = s['value']!)))
+                        .toList(),
+                  ),
+                  const SizedBox(height: 22),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryColor,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _filterCategory = tempCat;
+                          _sortBy = tempSort;
+                          _minPrice = int.tryParse(minCtrl.text.trim());
+                          _maxPrice = int.tryParse(maxCtrl.text.trim());
+                        });
+                        Navigator.pop(ctx);
+                      },
+                      child: const Text('Apply filters',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   // Quick-search chips: persisted recents + a curated trending list.
   List<String> _recentSearches = [];
   static const List<String> _trendingSearches = [
@@ -648,6 +889,50 @@ class _SearchPageState extends State<SearchPage> {
                 ),
               ),
             ),
+            IconButton(
+              padding: EdgeInsets.all(
+                GetResponsiveSize.getResponsivePadding(context,
+                    mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+              ),
+              iconSize: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 24, tablet: 36, largeTablet: 44, desktop: 52),
+              onPressed: _openFilterSheet,
+              icon: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    Icons.tune,
+                    size: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 24, tablet: 36, largeTablet: 44, desktop: 52),
+                    color: _activeFilterCount > 0
+                        ? AppColors.primaryColor
+                        : AppColors.greyColor,
+                  ),
+                  if (_activeFilterCount > 0)
+                    Positioned(
+                      right: -4,
+                      top: -4,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        constraints:
+                            const BoxConstraints(minWidth: 16, minHeight: 16),
+                        decoration: const BoxDecoration(
+                          color: AppColors.primaryColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '$_activeFilterCount',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -823,48 +1108,105 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildAdsList({required bool hasMore}) {
-    if (filteredAds.isEmpty) {
+    final ads = _applyFilters(filteredAds);
+
+    if (ads.isEmpty) {
+      final filtered = _activeFilterCount > 0;
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              _isSearching ? Icons.search_off : Icons.inventory_2_outlined,
+              (_isSearching || filtered)
+                  ? Icons.search_off
+                  : Icons.inventory_2_outlined,
               size: 64,
               color: Colors.grey[400],
             ),
             const SizedBox(height: 16),
             Text(
-              _isSearching ? 'No results found' : 'No ads available',
+              filtered
+                  ? 'No results for these filters'
+                  : (_isSearching ? 'No results found' : 'No ads available'),
               style: TextStyle(fontSize: 18, color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
             Text(
-              _isSearching
-                  ? 'Try searching with different keywords'
-                  : 'Check back later for new listings',
+              filtered
+                  ? 'Try widening your price range or category'
+                  : (_isSearching
+                      ? 'Try searching with different keywords'
+                      : 'Check back later for new listings'),
               style: TextStyle(color: Colors.grey[500]),
               textAlign: TextAlign.center,
             ),
+            if (filtered) ...[
+              const SizedBox(height: 12),
+              TextButton.icon(
+                onPressed: _clearFilters,
+                icon: const Icon(Icons.close, size: 16),
+                label: const Text('Clear filters'),
+              ),
+            ],
           ],
         ),
       );
     }
 
-    return ListView.builder(
-      controller: _scrollController,
-      // itemCount: filteredAds.length + 1,
-      itemCount: hasMore ? filteredAds.length + 1 : filteredAds.length,
-      itemBuilder: (BuildContext context, int index) {
-        if (index >= filteredAds.length) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-        final ad = filteredAds[index];
-        return _buildAdCard(ad);
-      },
+    // Server pagination only applies to the unfiltered stream.
+    final showLoader = hasMore && _activeFilterCount == 0;
+    return Column(
+      children: [
+        if (_activeFilterCount > 0) _buildActiveFilterBar(ads.length),
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            itemCount: showLoader ? ads.length + 1 : ads.length,
+            itemBuilder: (BuildContext context, int index) {
+              if (index >= ads.length) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              return _buildAdCard(ads[index]);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActiveFilterBar(int count) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      color: AppColors.primaryColor.withOpacity(0.06),
+      child: Row(
+        children: [
+          Icon(Icons.tune, size: 15, color: AppColors.primaryColor),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              '$count result${count == 1 ? '' : 's'} · $_activeFilterCount filter${_activeFilterCount == 1 ? '' : 's'} applied',
+              style: TextStyle(
+                  fontSize: 12.5,
+                  color: AppColors.blackColor,
+                  fontWeight: FontWeight.w500),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          GestureDetector(
+            onTap: _clearFilters,
+            child: Text('Clear',
+                style: TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.primaryColor,
+                    fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
     );
   }
 

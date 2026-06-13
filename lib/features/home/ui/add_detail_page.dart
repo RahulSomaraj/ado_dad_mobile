@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:ado_dad_user/common/widgets/app_network_image.dart';
 import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
@@ -16,7 +17,6 @@ import 'package:ado_dad_user/features/home/ui/report_ad_dialog.dart';
 import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_title_price.dart';
 import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_description.dart';
 import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_seller_tile.dart';
-import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_tabs_section.dart';
 import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_bottom_buttons.dart';
 import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_action_buttons.dart';
 import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_report_button.dart';
@@ -29,6 +29,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:share_plus/share_plus.dart';
@@ -55,18 +56,25 @@ class _AdDetailPageState extends State<AdDetailPage> {
   final Map<String, VideoPlayerController?> _videoControllers = {};
   final Map<String, VoidCallback?> _onVideoCompleteCallbacks = {};
 
+  // Cache the current user id so repeated owner-checks (many FutureBuilders,
+  // re-run on every rebuild) don't hit SharedPreferences each time.
+  String? _cachedUserId;
+  bool _userIdLoaded = false;
+
   @override
   void initState() {
     super.initState();
-    print('isPremium: ${widget.ad.manufacturer?.isPremium}');
   }
 
   // Check if current user is the owner of the ad
   Future<bool> _isCurrentUserOwner(AddModel ad) async {
-    final currentUserId = await SharedPrefs().getUserId();
-    return currentUserId != null &&
+    if (!_userIdLoaded) {
+      _cachedUserId = await SharedPrefs().getUserId();
+      _userIdLoaded = true;
+    }
+    return _cachedUserId != null &&
         ad.user?.id != null &&
-        currentUserId == ad.user!.id;
+        _cachedUserId == ad.user!.id;
   }
 
   // Share ad functionality
@@ -91,21 +99,21 @@ class _AdDetailPageState extends State<AdDetailPage> {
     }
 
     final shareText = '''
-🚗 Check out this amazing listing on Ado Dad!
+🚗 Check out this amazing listing on Adodad!
 
 ${toTitleCase(title)}
 📍 Location: ${ad.location}
 💰 Price: ₹${ad.price}
 📝 Description: ${ad.description}
 
-🔗 Visit: https://ado-dad.com/
+🔗 Visit: https://adodad.com/
 
-Download Ado Dad app to contact the seller and view more details!
+Download Adodad app to contact the seller and view more details!
 ''';
 
     Share.share(
       shareText,
-      subject: 'Amazing listing on Ado Dad - ${toTitleCase(title)}',
+      subject: 'Amazing listing on Adodad - ${toTitleCase(title)}',
     );
   }
 
@@ -123,6 +131,9 @@ Download Ado Dad app to contact the seller and view more details!
     _autoPlayTimer?.cancel();
 
     final totalItems = _getTotalCarouselItems(ad);
+    // Nothing to advance to when there's a single item — avoid an endless
+    // 3s timer → nextPage → rebuild loop that spams logs and wastes CPU.
+    if (totalItems <= 1) return;
     if (_currentIndex >= totalItems) return;
 
     // Check if current item is video (video is always first item if exists)
@@ -228,10 +239,7 @@ Download Ado Dad app to contact the seller and view more details!
                     SliverToBoxAdapter(child: Divider()),
 
                     SliverToBoxAdapter(
-                        child: AdDetailTabsSection(
-                      ad: ad,
-                      isCurrentUserOwner: _isCurrentUserOwner,
-                    )),
+                        child: _specsCard(ad)),
                     SliverToBoxAdapter(child: AdDetailDescription(ad: ad)),
                     SliverToBoxAdapter(
                         child: AdDetailReportButton(
@@ -239,8 +247,9 @@ Download Ado Dad app to contact the seller and view more details!
                       isCurrentUserOwner: _isCurrentUserOwner,
                     )),
                     SliverToBoxAdapter(child: AdDetailSellerTile(ad: ad)),
-                    // SliverToBoxAdapter(child: _recommendationsSection()),
-                    // const SliverPadding(padding: EdgeInsets.only(bottom: 90)),
+                    SliverToBoxAdapter(child: _ownerActionsCard(ad)),
+                    SliverToBoxAdapter(child: _SimilarAdsSection(ad: ad)),
+                    const SliverToBoxAdapter(child: SizedBox(height: 100)),
                   ],
                 ),
                 markingAsSold: () => CustomScrollView(
@@ -258,10 +267,7 @@ Download Ado Dad app to contact the seller and view more details!
                     )),
                     SliverToBoxAdapter(child: Divider()),
                     SliverToBoxAdapter(
-                        child: AdDetailTabsSection(
-                      ad: widget.ad,
-                      isCurrentUserOwner: _isCurrentUserOwner,
-                    )),
+                        child: _specsCard(widget.ad)),
                     SliverToBoxAdapter(
                         child: AdDetailDescription(ad: widget.ad)),
                     SliverToBoxAdapter(
@@ -307,10 +313,7 @@ Download Ado Dad app to contact the seller and view more details!
                       ),
                     ),
                     SliverToBoxAdapter(
-                        child: AdDetailTabsSection(
-                      ad: ad,
-                      isCurrentUserOwner: _isCurrentUserOwner,
-                    )),
+                        child: _specsCard(ad)),
                     SliverToBoxAdapter(child: AdDetailDescription(ad: ad)),
                     SliverToBoxAdapter(
                         child: AdDetailReportButton(
@@ -318,6 +321,7 @@ Download Ado Dad app to contact the seller and view more details!
                       isCurrentUserOwner: _isCurrentUserOwner,
                     )),
                     SliverToBoxAdapter(child: AdDetailSellerTile(ad: ad)),
+                    SliverToBoxAdapter(child: _ownerActionsCard(ad)),
                   ],
                 ),
                 deleting: () => CustomScrollView(
@@ -335,10 +339,7 @@ Download Ado Dad app to contact the seller and view more details!
                     )),
                     SliverToBoxAdapter(child: Divider()),
                     SliverToBoxAdapter(
-                        child: AdDetailTabsSection(
-                      ad: widget.ad,
-                      isCurrentUserOwner: _isCurrentUserOwner,
-                    )),
+                        child: _specsCard(widget.ad)),
                     SliverToBoxAdapter(
                         child: AdDetailDescription(ad: widget.ad)),
                     SliverToBoxAdapter(
@@ -680,7 +681,97 @@ Download Ado Dad app to contact the seller and view more details!
             ],
           ),
         ),
+        // bottom-left: PREMIUM / FOR RENT / FOR SALE tag
+        Positioned(
+          left: 12,
+          bottom: 12,
+          child: Builder(
+            builder: (_) {
+              final bool isPremium = ad.manufacturer?.isPremium == true;
+              final bool isRent =
+                  (ad.listingType ?? '').toLowerCase() == 'rent';
+              final String? tag = isPremium
+                  ? 'PREMIUM'
+                  : (ad.category == 'property'
+                      ? (isRent ? 'FOR RENT' : 'FOR SALE')
+                      : null);
+              if (tag == null) return const SizedBox.shrink();
+              return _detailImgTag(
+                tag,
+                isPremium
+                    ? const Color(0xFF4F48EC)
+                    : Colors.black.withOpacity(0.6),
+              );
+            },
+          ),
+        ),
+        // bottom-right: photo / item count
+        if (_getTotalCarouselItems(ad) > 1)
+          Positioned(
+            right: 12,
+            bottom: 12,
+            child: _detailImgPill(
+              Icons.photo_outlined,
+              '${_currentIndex + 1}/${_getTotalCarouselItems(ad)}',
+            ),
+          ),
+        // SOLD overlay
+        if (ad.soldOut == true)
+          Positioned.fill(
+            child: Container(
+              alignment: Alignment.center,
+              color: Colors.black.withOpacity(0.35),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  'SOLD',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+            ),
+          ),
       ],
+    );
+  }
+
+  Widget _detailImgTag(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration:
+          BoxDecoration(color: color, borderRadius: BorderRadius.circular(5)),
+      child: Text(
+        text,
+        style: const TextStyle(
+            color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
+  Widget _detailImgPill(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(5)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: Colors.white),
+          const SizedBox(width: 4),
+          Text(text,
+              style: const TextStyle(color: Colors.white, fontSize: 10)),
+        ],
+      ),
     );
   }
 
@@ -698,26 +789,13 @@ Download Ado Dad app to contact the seller and view more details!
     // Add video as first item if it exists
     if (ad.link != null && ad.link!.isNotEmpty) {
       final videoUrl = ad.link!.trim();
-      print('🎥 Adding video to carousel: $videoUrl');
-      print('🎥 Video URL length: ${videoUrl.length}');
-      print('🎥 Video URL starts with http: ${videoUrl.startsWith('http')}');
-
-      // Validate video URL format
       if (videoUrl.isNotEmpty) {
         items.add(_buildVideoItem(videoUrl));
-      } else {
-        print('⚠️ Video URL is empty after trimming');
       }
-    } else {
-      print('🎥 No video URL found in ad - link is null or empty');
-      print('🎥 Ad link value: ${ad.link}');
     }
 
     // Add all images
     items.addAll(ad.images.map((img) => _buildImageItem(img, ad)));
-
-    print('🎥 Total carousel items: ${items.length}');
-    print('🎥 Images count: ${ad.images.length}');
 
     // Start auto-play after building items
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -741,14 +819,10 @@ Download Ado Dad app to contact the seller and view more details!
       behavior: HitTestBehavior.opaque,
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(24),
-              bottomRight: Radius.circular(24)),
+          borderRadius: BorderRadius.zero,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(24),
-              bottomRight: Radius.circular(24)),
+          borderRadius: BorderRadius.zero,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -876,22 +950,16 @@ Download Ado Dad app to contact the seller and view more details!
         children: [
           Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(24),
-                    bottomRight: Radius.circular(24)),
+                borderRadius: BorderRadius.zero,
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(24),
-                    bottomRight: Radius.circular(24)),
-                child: Image.network(img, fit: BoxFit.cover),
+                borderRadius: BorderRadius.zero,
+                child: AppNetworkImage(url: img, fit: BoxFit.cover),
               )),
           // dark gradient overlay (top+bottom)
           Container(
             decoration: const BoxDecoration(
-              borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24)),
+              borderRadius: BorderRadius.zero,
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -1011,39 +1079,24 @@ Download Ado Dad app to contact the seller and view more details!
         _Spec('Property Type', ad.propertyType ?? '-', icon: Icons.home_work),
         _Spec('Listing Type', toTitleCase(ad.listingType ?? '-'),
             icon: Icons.sell),
-        _Spec('Bedrooms', ad.bedrooms?.toString() ?? '-', icon: Icons.bed),
-        _Spec('Bathrooms', ad.bathrooms?.toString() ?? '-',
+        _Spec('Bedrooms', ad.bedrooms != null ? '${ad.bedrooms} Beds' : '-',
+            icon: Icons.bed),
+        _Spec('Bathrooms', ad.bathrooms != null ? '${ad.bathrooms} Baths' : '-',
             icon: Icons.bathtub),
-        _Spec('Area (sqft)', ad.areaSqft?.toString() ?? '-',
+        _Spec('Area', ad.areaSqft != null ? '${ad.areaSqft} sqft' : '-',
             icon: Icons.square_foot),
-        _Spec('Floor', ad.floor?.toString() ?? '-', icon: Icons.apartment),
-        _Spec('Furnished', ad.isFurnished == true ? 'Yes' : 'No',
+        _Spec('Floor', ad.floor != null ? 'Floor ${ad.floor}' : '-',
+            icon: Icons.apartment),
+        _Spec('Furnished',
+            ad.isFurnished == true ? 'Furnished' : 'Unfurnished',
             icon: Icons.chair_alt),
-        _Spec('Parking', ad.hasParking == true ? 'Yes' : 'No',
+        _Spec('Parking', ad.hasParking == true ? 'Parking' : 'No Parking',
             icon: Icons.local_parking),
-        _Spec('Garden', ad.hasGarden == true ? 'Yes' : 'No', icon: Icons.park),
+        _Spec('Garden', ad.hasGarden == true ? 'Garden' : 'No Garden',
+            icon: Icons.park),
       ];
 
-      return _cardShell(
-        child: GridView.builder(
-          padding: EdgeInsets.all(
-            GetResponsiveSize.getResponsivePadding(context,
-                mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
-          ),
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisExtent: GetResponsiveSize.getResponsiveSize(context,
-                mobile: 55, tablet: 90, largeTablet: 110, desktop: 130),
-            crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
-                mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
-            mainAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
-                mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
-          ),
-          itemCount: items.length,
-          itemBuilder: (_, i) => _specTile(items[i]),
-        ),
-      );
+      return _specChips(items, amenities: ad.amenities);
     }
 
     // VEHICLE SPECS (default)
@@ -1058,30 +1111,231 @@ Download Ado Dad app to contact the seller and view more details!
           icon: Icons.directions_car),
       _Spec('Transmission', ad.transmission ?? '-', icon: Icons.settings),
       _Spec('Fuel Type', ad.fuelType ?? '-', icon: Icons.local_gas_station),
-      _Spec('Registration Year', (ad.year ?? 0).toString(),
+      _Spec(
+          'Registration Year',
+          (ad.year != null && ad.year != 0) ? '${ad.year}' : '-',
           icon: Icons.calendar_today),
       _Spec('Mileage', (ad.mileage != null) ? '${ad.mileage} Kmpl' : '-',
           icon: Icons.speed),
+      if (ad.isFirstOwner != null)
+        _Spec('Owner', ad.isFirstOwner == true ? '1st owner' : '2nd+ owner',
+            icon: Icons.person_outline),
     ];
 
+    return _specChips(items);
+  }
+
+  // Compact spec chips (year · km · fuel · transmission · owner) to match the
+  // ad-detail wireframe. Unknown values ('-') are filtered out.
+  Widget _specChips(List<_Spec> items, {List<String>? amenities}) {
+    final visible = items
+        .where((s) => s.value.trim().isNotEmpty && s.value.trim() != '-')
+        .toList();
+    final amenityList = (amenities ?? [])
+        .where((a) => a.trim().isNotEmpty)
+        .toList();
+    if (visible.isEmpty && amenityList.isEmpty) return const SizedBox.shrink();
+    final gap = GetResponsiveSize.getResponsiveSize(context,
+        mobile: 12, tablet: 16, largeTablet: 18, desktop: 20);
+    final chipSpacing = GetResponsiveSize.getResponsiveSize(context,
+        mobile: 8, tablet: 12, largeTablet: 14, desktop: 16);
+    Widget header(String text) => Text(
+          text,
+          style: TextStyle(
+            fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                mobile: 15, tablet: 22, largeTablet: 26, desktop: 30),
+            fontWeight: FontWeight.w700,
+            color: AppColors.blackColor,
+          ),
+        );
     return _cardShell(
-      child: GridView.builder(
+      child: Padding(
         padding: EdgeInsets.all(
           GetResponsiveSize.getResponsivePadding(context,
               mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
         ),
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisExtent: GetResponsiveSize.getResponsiveSize(context,
-              mobile: 64, tablet: 95, largeTablet: 110, desktop: 125),
-          crossAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
-              mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
-          mainAxisSpacing: GetResponsiveSize.getResponsiveSize(context,
-              mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (visible.isNotEmpty) ...[
+              header('Specifications'),
+              SizedBox(height: gap),
+              Wrap(
+                spacing: chipSpacing,
+                runSpacing: chipSpacing,
+                children: visible.map(_specChip).toList(),
+              ),
+            ],
+            if (amenityList.isNotEmpty) ...[
+              SizedBox(height: visible.isNotEmpty ? gap + 6 : 0),
+              header('Amenities'),
+              SizedBox(height: gap),
+              Wrap(
+                spacing: chipSpacing,
+                runSpacing: chipSpacing,
+                children: amenityList
+                    .map((a) => _specChip(
+                        _Spec('', toTitleCase(a), icon: Icons.check_circle_outline)))
+                    .toList(),
+              ),
+            ],
+          ],
         ),
-        itemCount: items.length,
-        itemBuilder: (_, i) => _specTile(items[i]),
+      ),
+    );
+  }
+
+  Widget _specChip(_Spec s) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: GetResponsiveSize.getResponsiveSize(context,
+            mobile: 10, tablet: 14, largeTablet: 16, desktop: 18),
+        vertical: GetResponsiveSize.getResponsiveSize(context,
+            mobile: 7, tablet: 10, largeTablet: 12, desktop: 14),
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.isDark
+            ? Colors.white.withOpacity(0.06)
+            : const Color(0xFFF4F6FA),
+        border: Border.all(color: AppColors.dividerColor, width: 0.5),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            s.icon,
+            size: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 14, tablet: 20, largeTablet: 24, desktop: 28),
+            color: AppColors.greyColor,
+          ),
+          SizedBox(
+              width: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 5, tablet: 8, largeTablet: 10, desktop: 12)),
+          Text(
+            s.value,
+            style: TextStyle(
+              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                  mobile: 12, tablet: 18, largeTablet: 22, desktop: 26),
+              fontWeight: FontWeight.w500,
+              color: AppColors.blackColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Owner-only actions (Mark as Sold + Delete). Restored after the tabbed
+  // "Other Details" section was replaced by the spec chips.
+  Widget _ownerActionsCard(AddModel ad) {
+    return FutureBuilder<bool>(
+      future: _isCurrentUserOwner(ad),
+      builder: (context, snapshot) {
+        final isOwner = snapshot.data ?? false;
+        if (!isOwner) return const SizedBox.shrink();
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+            0,
+          ),
+          child: _cardShell(
+            child: Padding(
+              padding: EdgeInsets.all(
+                GetResponsiveSize.getResponsivePadding(context,
+                    mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AdDetailMarkAsSoldButton(ad: ad),
+                  SizedBox(
+                      height: GetResponsiveSize.getResponsiveSize(context,
+                          mobile: 10,
+                          tablet: 12,
+                          largeTablet: 14,
+                          desktop: 16)),
+                  SizedBox(
+                    width: double.infinity,
+                    height: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 44, tablet: 65, largeTablet: 75, desktop: 85),
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: AppColors.redColor),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            GetResponsiveSize.getResponsiveBorderRadius(context,
+                                mobile: 12,
+                                tablet: 14,
+                                largeTablet: 16,
+                                desktop: 18),
+                          ),
+                        ),
+                      ),
+                      onPressed: () => _showDeleteConfirmDialog(context, ad),
+                      icon: Icon(Icons.delete_outline,
+                          color: AppColors.redColor,
+                          size: GetResponsiveSize.getResponsiveSize(context,
+                              mobile: 18,
+                              tablet: 26,
+                              largeTablet: 30,
+                              desktop: 34)),
+                      label: Text(
+                        'Delete Advertisement',
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.redColor,
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 14,
+                              tablet: 22,
+                              largeTablet: 26,
+                              desktop: 30),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmDialog(BuildContext context, AddModel ad) {
+    final bloc = context.read<AdDetailBloc>();
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Advertisement',
+            style: TextStyle(fontWeight: FontWeight.w700)),
+        content: const Text(
+            'Are you sure you want to delete this advertisement? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              bloc.add(AdDetailEvent.deleteAd(ad.id));
+            },
+            child: Text('Delete',
+                style: TextStyle(
+                    color: AppColors.redColor, fontWeight: FontWeight.w700)),
+          ),
+        ],
       ),
     );
   }
@@ -1397,7 +1651,13 @@ Download Ado Dad app to contact the seller and view more details!
           leading: CircleAvatar(
             radius: GetResponsiveSize.getResponsiveSize(context,
                 mobile: 24, tablet: 32, largeTablet: 38, desktop: 44),
-            backgroundImage: NetworkImage(ad.user?.profilePic ?? ''),
+            backgroundColor: AppColors.scaffoldBackground,
+            backgroundImage: ad.user?.profilePic?.trim().isNotEmpty == true
+                ? NetworkImage(ad.user!.profilePic!)
+                : null,
+            child: ad.user?.profilePic?.trim().isNotEmpty == true
+                ? null
+                : Icon(Icons.person, color: AppColors.greyColor),
           ),
           title: Text(
             ad.user?.name?.trim().isNotEmpty == true
@@ -1854,65 +2114,6 @@ Download Ado Dad app to contact the seller and view more details!
     );
   }
 
-  Widget _specTile(_Spec spec) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(
-          height: GetResponsiveSize.getResponsiveSize(context,
-              mobile: 36, tablet: 56, largeTablet: 68, desktop: 80),
-          width: GetResponsiveSize.getResponsiveSize(context,
-              mobile: 36, tablet: 56, largeTablet: 68, desktop: 80),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF4F6FA),
-            borderRadius: BorderRadius.circular(
-              GetResponsiveSize.getResponsiveBorderRadius(context,
-                  mobile: 10, tablet: 14, largeTablet: 16, desktop: 18),
-            ),
-          ),
-          child: Icon(
-            spec.icon,
-            size: GetResponsiveSize.getResponsiveSize(context,
-                mobile: 18, tablet: 28, largeTablet: 34, desktop: 40),
-            color: const Color(0xFF475569),
-          ),
-        ),
-        SizedBox(
-            width: GetResponsiveSize.getResponsiveSize(context,
-                mobile: 10, tablet: 14, largeTablet: 16, desktop: 18)),
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                spec.label,
-                style: TextStyle(
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                      mobile: 11, tablet: 18, largeTablet: 22, desktop: 26),
-                  color: const Color(0xFF6B7280),
-                ),
-              ),
-              SizedBox(
-                  height: GetResponsiveSize.getResponsiveSize(context,
-                      mobile: 2, tablet: 4, largeTablet: 5, desktop: 6)),
-              Text(
-                spec.value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                      mobile: 13, tablet: 20, largeTablet: 24, desktop: 28),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        )
-      ],
-    );
-  }
-
   // String _vehicleTitle(AddModel ad) {
   //   // e.g. "Hyundai i20 (2020), Magna"
   //   final brand = ad.manufacturer ?? '';
@@ -1945,6 +2146,178 @@ Download Ado Dad app to contact the seller and view more details!
     } catch (_) {
       return iso;
     }
+  }
+}
+
+/// "Similar near you" — fetches ads of the same category and shows a compact
+/// horizontal rail. Reuses the existing list endpoint (no backend changes).
+class _SimilarAdsSection extends StatefulWidget {
+  final AddModel ad;
+  const _SimilarAdsSection({required this.ad});
+
+  @override
+  State<_SimilarAdsSection> createState() => _SimilarAdsSectionState();
+}
+
+class _SimilarAdsSectionState extends State<_SimilarAdsSection> {
+  final AddRepository _repo = AddRepository();
+  List<AddModel> _items = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final res = await _repo.fetchAllAds(
+        category: widget.ad.category,
+        limit: 12,
+      );
+      final filtered =
+          res.data.where((a) => a.id != widget.ad.id).take(10).toList();
+      if (!mounted) return;
+      setState(() {
+        _items = filtered;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
+  }
+
+  String _inr(num n) {
+    final s = n.round().toString();
+    if (s.length <= 3) return s;
+    final last3 = s.substring(s.length - 3);
+    var rest = s.substring(0, s.length - 3);
+    final buf = <String>[];
+    while (rest.length > 2) {
+      buf.insert(0, rest.substring(rest.length - 2));
+      rest = rest.substring(0, rest.length - 2);
+    }
+    if (rest.isNotEmpty) buf.insert(0, rest);
+    return '${buf.join(',')},$last3';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading || _items.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+          child: Text(
+            'Similar near you',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.blackColor,
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 210,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: _items.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (_, i) => _card(_items[i]),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _card(AddModel ad) {
+    final img = ad.images.isNotEmpty ? ad.images.first : null;
+    return GestureDetector(
+      onTap: () => context.push('/add-detail-page', extra: ad),
+      child: Container(
+        width: 160,
+        decoration: BoxDecoration(
+          color: AppColors.whiteColor,
+          border: Border.all(color: AppColors.dividerColor, width: 0.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 110,
+              width: double.infinity,
+              child: img != null
+                  ? AppNetworkImage(
+                      url: img,
+                      fit: BoxFit.cover,
+                      height: 110,
+                      width: double.infinity,
+                    )
+                  : Container(
+                      color: AppColors.scaffoldBackground,
+                      child: Icon(Icons.image_outlined,
+                          color: AppColors.greyColor),
+                    ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '₹ ${_inr(ad.price)}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.blackColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    (ad.title != null && ad.title!.trim().isNotEmpty)
+                        ? ad.title!
+                        : ad.category,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.blackColor1,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_outlined,
+                          size: 12, color: AppColors.greyColor),
+                      const SizedBox(width: 2),
+                      Expanded(
+                        child: Text(
+                          ad.location,
+                          style: TextStyle(
+                              fontSize: 10.5, color: AppColors.greyColor),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

@@ -12,7 +12,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class WishlistPage extends StatefulWidget {
-  const WishlistPage({super.key});
+  final bool embedded;
+  const WishlistPage({super.key, this.embedded = false});
 
   @override
   State<WishlistPage> createState() => _WishlistPageState();
@@ -98,9 +99,11 @@ class _WishlistPageState extends State<WishlistPage> {
       },
       child: Scaffold(
         backgroundColor: Colors.grey[50],
-        appBar: AppBar(
-          backgroundColor: AppColors.primaryColor,
-          elevation: 0,
+        appBar: widget.embedded
+            ? null
+            : AppBar(
+                backgroundColor: AppColors.primaryColor,
+                elevation: 0,
           leading: IconButton(
             icon: Icon(
               (!kIsWeb && Platform.isIOS)

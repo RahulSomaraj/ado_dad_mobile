@@ -13,6 +13,7 @@ class AuthGuard {
   static const List<String> protectedRoutes = [
     '/notifications',
     '/profile',
+    '/my-activity',
     '/wishlist',
     '/my-ads',
     '/seller',
