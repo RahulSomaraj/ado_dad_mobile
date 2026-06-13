@@ -143,13 +143,13 @@ class _LoginWidgetState extends State<LoginWidget> {
             const SizedBox(width: 10),
             SizedBox(
               height: 25,
-              child: const VerticalDivider(
+              child: VerticalDivider(
                   width: 10, thickness: 1.5, color: AppColors.greyColor),
             ),
             const SizedBox(width: 10),
             Text(_selectedCountryCode,
                 style:
-                    const TextStyle(fontSize: 16, color: AppColors.greyColor)),
+                    TextStyle(fontSize: 16, color: AppColors.greyColor)),
             const Icon(Icons.arrow_drop_down, size: 20),
           ],
         ),

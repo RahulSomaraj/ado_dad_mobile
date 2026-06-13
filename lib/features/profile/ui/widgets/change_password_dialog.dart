@@ -293,7 +293,7 @@ class ChangePasswordDialog {
                         ),
                         child: TextButton(
                           style: ButtonStyle(
-                            backgroundColor: const WidgetStatePropertyAll(
+                            backgroundColor: WidgetStatePropertyAll(
                                 AppColors.whiteColor),
                             side: WidgetStatePropertyAll(BorderSide(
                                 color: Colors.grey[400]!, width: 1.0)),

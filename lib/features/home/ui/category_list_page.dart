@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/api_service.dart';
@@ -288,7 +289,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
             builder: (context, state) {
               if (state is AdvertisementLoading ||
                   state is AdvertisementInitial) {
-                return const Center(child: CircularProgressIndicator());
+                return const SkeletonList();
               }
               if (state is AdvertisementError) {
                 return Center(

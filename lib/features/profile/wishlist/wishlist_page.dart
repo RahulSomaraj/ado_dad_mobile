@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
@@ -137,12 +138,7 @@ class _WishlistPageState extends State<WishlistPage> {
           child: BlocBuilder<FavoriteBloc, FavoriteState>(
             builder: (context, state) {
               if (state is FavoriteLoading || state is FavoriteToggleLoading) {
-                return const Center(
-                  child: CircularProgressIndicator(
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
-                  ),
-                );
+                return const SkeletonList();
               } else if (state is FavoriteError) {
                 return Center(
                   child: Column(

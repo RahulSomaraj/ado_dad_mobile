@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/features/home/ui/sellerprofile/bloc/bloc/seller_profile_bloc.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 
@@ -109,18 +110,8 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
               BlocBuilder<SellerProfileBloc, SellerProfileState>(
                 builder: (context, state) {
                   return state.when(
-                    initial: () => const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(20.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    ),
-                    loading: () => const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(20.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    ),
+                    initial: () => const SkeletonList(itemCount: 3),
+                    loading: () => const SkeletonList(itemCount: 3),
                     loaded: (ads, hasNext, page, isPaging) => Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

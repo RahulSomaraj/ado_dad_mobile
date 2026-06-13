@@ -162,7 +162,7 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
+                      Text(
                         'Enter your Email',
                         style: TextStyle(
                           fontSize: 16,
@@ -206,7 +206,7 @@ class _LoginPageState extends State<LoginPage> {
                         Navigator.of(context).pop();
                         _forgotPasswordEmailController.clear();
                       },
-                      child: const Text(
+                      child: Text(
                         'Cancel',
                         style: TextStyle(color: AppColors.greyColor),
                       ),
@@ -538,7 +538,7 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(width: 10),
                       SizedBox(
                         height: 25,
-                        child: const VerticalDivider(
+                        child: VerticalDivider(
                           width: 10,
                           thickness: 1.5,
                           color: AppColors.greyColor,

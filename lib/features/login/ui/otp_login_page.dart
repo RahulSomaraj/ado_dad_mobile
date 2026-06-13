@@ -385,7 +385,7 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
                       const SizedBox(width: 10),
                       SizedBox(
                         height: 25,
-                        child: const VerticalDivider(
+                        child: VerticalDivider(
                           width: 10,
                           thickness: 1.5,
                           color: AppColors.greyColor,

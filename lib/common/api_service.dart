@@ -49,6 +49,8 @@ class ApiService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          print('🌐 API ${options.method} ${options.uri}');
+
           // Get token from SharedPreferences - if it exists, use it
           // Token from login should work directly - only refresh when we get 401 (token expired)
           // After token refresh, new token is saved and will be used for subsequent requests
@@ -57,7 +59,7 @@ class ApiService {
             // API expects "Bearer <token>" format in Authorization header
             final authHeader = _prepareAuthHeader(token);
             options.headers['Authorization'] = authHeader;
-            print('🔑 Using token for request to: ${options.path}');
+            print('🔑 Using token for request to: ${options.uri}');
             print('🔑 Token length: ${token.length} chars');
             print(
                 '🔑 Token first 30 chars: ${token.substring(0, token.length > 30 ? 30 : token.length)}...');
@@ -67,18 +69,27 @@ class ApiService {
             // No token found - proceed without Authorization header
             // Public endpoints like /v2/ads/list work without authentication
             print(
-                'ℹ️ No token found for request to: ${options.path} - proceeding without authentication');
+                'ℹ️ No token found for request to: ${options.uri} - proceeding without authentication');
           }
           // If no token, proceed without Authorization header (public endpoints don't need it)
           // This allows unauthenticated users to browse listings
           return handler.next(options);
         },
+        onResponse: (response, handler) {
+          print(
+            '✅ ${response.statusCode} ${response.requestOptions.method} ${response.requestOptions.uri}',
+          );
+          return handler.next(response);
+        },
         onError: (DioException e, handler) async {
+          print(
+            '❌ ${e.response?.statusCode ?? 'ERR'} ${e.requestOptions.method} ${e.requestOptions.uri} — ${e.message}',
+          );
           if (e.response?.statusCode == 401) {
             // Token expired or invalid - try to refresh it
             final authService = AuthService();
 
-            print('🔄 Received 401 Unauthorized for: ${e.requestOptions.path}');
+            print('🔄 Received 401 Unauthorized for: ${e.requestOptions.uri}');
             print('📋 401 Response details:');
             print('   Status Code: ${e.response?.statusCode}');
             print('   Response Data: ${e.response?.data}');

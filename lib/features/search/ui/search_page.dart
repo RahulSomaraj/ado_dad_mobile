@@ -1,10 +1,12 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/google_places_service.dart';
 import 'package:ado_dad_user/config/app_config.dart';
+import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +32,19 @@ class _SearchPageState extends State<SearchPage> {
   late GooglePlacesService _placesService;
   late ScrollController _scrollController;
 
+  // Quick-search chips: persisted recents + a curated trending list.
+  List<String> _recentSearches = [];
+  static const List<String> _trendingSearches = [
+    'Swift',
+    'Activa',
+    'Creta',
+    'Royal Enfield',
+    'Bolero',
+    'Pulsar',
+    '2BHK',
+    'Scorpio',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -39,6 +54,8 @@ class _SearchPageState extends State<SearchPage> {
     _placesService = GooglePlacesService(apiKey: AppConfig.googlePlacesApiKey);
     // Initialize with all ads from the bloc
     _loadAllAds();
+    // Load saved recent searches for the quick-search chips
+    _loadRecentSearches();
     // Ensure initial state shows all ads
     _isSearching = false;
   }
@@ -82,12 +99,15 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _handleBackNavigation() {
-    // If previousRoute is provided, navigate to that specific route
-    if (widget.previousRoute != null) {
-      context.go(widget.previousRoute!);
-    } else {
-      // Fallback to pop if no previous route is specified
+    // Navigate to the previous route only if it's a valid absolute path
+    // (go_router requires a leading '/'); otherwise fall back to pop.
+    final prev = widget.previousRoute;
+    if (prev != null && prev.startsWith('/')) {
+      context.go(prev);
+    } else if (context.canPop()) {
       context.pop();
+    } else {
+      context.go('/home');
     }
   }
 
@@ -294,6 +314,105 @@ class _SearchPageState extends State<SearchPage> {
     super.dispose();
   }
 
+  Future<void> _loadRecentSearches() async {
+    final raw = SharedPrefs().getString('recent_searches');
+    if (raw != null && raw.trim().isNotEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _recentSearches =
+            raw.split('|').where((e) => e.trim().isNotEmpty).toList();
+      });
+    }
+  }
+
+  Future<void> _saveRecentSearch(String query) async {
+    final q = query.trim();
+    if (q.isEmpty) return;
+    final list = List<String>.from(_recentSearches);
+    list.removeWhere((e) => e.toLowerCase() == q.toLowerCase());
+    list.insert(0, q);
+    final trimmed = list.take(8).toList();
+    setState(() => _recentSearches = trimmed);
+    await SharedPrefs().setString('recent_searches', trimmed.join('|'));
+  }
+
+  void _applySearchChip(String value) {
+    _searchController.text = value;
+    _searchController.selection = TextSelection.fromPosition(
+      TextPosition(offset: value.length),
+    );
+    _filterAds(value);
+    _saveRecentSearch(value);
+    setState(() {});
+  }
+
+  // Quick-search shortcuts shown when the field is empty (text mode only).
+  Widget _buildSearchChips() {
+    if (_isLocationSearchMode || _searchController.text.trim().isNotEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    Widget chip(String label, IconData icon) {
+      return GestureDetector(
+        onTap: () => _applySearchChip(label),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.whiteColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.dividerColor),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: AppColors.greyColor),
+              const SizedBox(width: 6),
+              Text(label,
+                  style: TextStyle(fontSize: 13, color: AppColors.blackColor)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    Widget section(String title, List<String> items, IconData icon) {
+      if (items.isEmpty) return const SizedBox.shrink();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 14, 4, 8),
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.greyColor,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: items.map((e) => chip(e, icon)).toList(),
+          ),
+        ],
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          section('RECENT', _recentSearches, Icons.history),
+          section('TRENDING', _trendingSearches, Icons.trending_up),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -463,6 +582,9 @@ class _SearchPageState extends State<SearchPage> {
                   _filterAds(value);
                   setState(() {});
                 },
+                onSubmitted: (value) {
+                  if (!_isLocationSearchMode) _saveRecentSearch(value);
+                },
               ),
             ),
             SizedBox(
@@ -541,9 +663,13 @@ class _SearchPageState extends State<SearchPage> {
               });
             }
           },
-          child: Stack(
+          child: Column(
             children: [
-              BlocConsumer<AdvertisementBloc, AdvertisementState>(
+              _buildSearchChips(),
+              Expanded(
+                child: Stack(
+                  children: [
+                    BlocConsumer<AdvertisementBloc, AdvertisementState>(
                 listener: (context, state) {
                   state.when(
                     initial: () {},
@@ -657,15 +783,16 @@ class _SearchPageState extends State<SearchPage> {
                 ),
             ],
           ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildLoadingState() {
-    return const Center(
-      child: CircularProgressIndicator(),
-    );
+    return const SkeletonList();
   }
 
   Widget _buildErrorState(String message) {

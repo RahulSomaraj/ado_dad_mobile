@@ -23,6 +23,7 @@ import 'package:ado_dad_user/features/profile/ui/widgets/profile_header.dart';
 import 'package:ado_dad_user/features/profile/ui/widgets/profile_card.dart';
 import 'package:ado_dad_user/features/profile/ui/widgets/profile_avatar.dart';
 import 'package:ado_dad_user/features/profile/ui/widgets/profile_menu_item.dart';
+import 'package:ado_dad_user/common/widgets/theme_mode_tile.dart';
 import 'package:ado_dad_user/features/profile/ui/widgets/change_password_dialog.dart';
 import 'package:ado_dad_user/features/profile/ui/widgets/bottom_nav_bar.dart';
 
@@ -648,6 +649,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   image: 'assets/images/help-profile-icon.png',
                                   title: "Help and Support",
                                   onTap: () => context.push('/help')),
+                              const ThemeModeTile(),
                               ProfileMenuItem(
                                   image: 'assets/images/profile-edit-icon.png',
                                   title: "Change Password",

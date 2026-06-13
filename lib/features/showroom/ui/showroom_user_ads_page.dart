@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/features/showroom/bloc/showroom_bloc.dart';
@@ -85,18 +86,8 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
       body: BlocBuilder<ShowroomBloc, ShowroomState>(
         builder: (context, state) {
           return state.when(
-            initial: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(20.0),
-                child: CircularProgressIndicator(),
-              ),
-            ),
-            loading: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(20.0),
-                child: CircularProgressIndicator(),
-              ),
-            ),
+            initial: () => const SkeletonList(itemCount: 4),
+            loading: () => const SkeletonList(itemCount: 4),
             adsLoaded: (ads, hasMore, userId) {
               // Check if showroom user has no ads
               if (ads.isEmpty) {

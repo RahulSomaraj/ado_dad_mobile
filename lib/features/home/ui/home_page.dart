@@ -1,4 +1,5 @@
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/common/notification_badge_service.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/google_places_service.dart';
@@ -624,8 +625,20 @@ class _HomePageState extends State<HomePage> {
                           builder: (context, state) {
                             return state.when(
                               initial: () => const SizedBox(),
-                              loading: () => const Center(
-                                  child: CircularProgressIndicator()),
+                              loading: () => Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                child: SkeletonBox(
+                                  height: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 140,
+                                    tablet: 250,
+                                    largeTablet: 320,
+                                    desktop: 360,
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
                               error: (message) =>
                                   const SizedBox(), // Hide banner error UI - don't show error to user
                               loaded: (banners) => Column(
@@ -684,6 +697,12 @@ class _HomePageState extends State<HomePage> {
                     largeTablet: 180,
                     desktop: 200,
                   )),
+
+                  // 🔷 SEARCH BAR (tap to open full search)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 6),
+                    child: _buildHomeSearchBar(context),
+                  ),
 
                   // 🔷 CATEGORIES
                   Padding(
@@ -946,6 +965,41 @@ class _HomePageState extends State<HomePage> {
         title,
         style: AppTextstyle.sectionTitleTextStyle
             .copyWith(fontSize: responsiveSize),
+      ),
+    );
+  }
+
+  // Tappable search pill on Home; opens the full search screen in one tap.
+  Widget _buildHomeSearchBar(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/search?from=/home'),
+      child: Container(
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: AppColors.whiteColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.dividerColor),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.search, color: AppColors.greyColor),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Search cars, bikes, property…',
+                style: TextStyle(color: AppColors.greyColor, fontSize: 14),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1218,7 +1272,18 @@ class _HomePageState extends State<HomePage> {
     return BlocBuilder<AdvertisementBloc, AdvertisementState>(
       builder: (context, state) {
         if (state is AdvertisementLoading) {
-          return const Center(child: CircularProgressIndicator());
+          // Skeleton grid that matches the real card layout for a fast feel.
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final cols = _columnsForWidth(constraints.maxWidth);
+              final mainExtent = _cardMainAxisExtent(context, cols);
+              return SkeletonAdGrid(
+                crossAxisCount: cols,
+                mainAxisExtent: mainExtent,
+                itemCount: cols * 3,
+              );
+            },
+          );
         } else if (state is ListingsLoaded) {
           final listings = state.listings;
           final hasMore = state.hasMore;

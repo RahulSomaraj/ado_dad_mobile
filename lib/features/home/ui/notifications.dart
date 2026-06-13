@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/notification_badge_service.dart';
@@ -95,8 +96,8 @@ class _NotificationsState extends State<Notifications> {
       body: BlocBuilder<NotificationBloc, NotificationState>(
         builder: (context, state) {
           return state.when(
-            initial: () => const Center(child: CircularProgressIndicator()),
-            loading: () => const Center(child: CircularProgressIndicator()),
+            initial: () => const SkeletonList(),
+            loading: () => const SkeletonList(),
             loadingMore: (items, _, __, ___, ____) => _notificationList(
               context,
               items: items,

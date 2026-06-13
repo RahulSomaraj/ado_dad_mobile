@@ -1,4 +1,7 @@
 import 'package:ado_dad_user/common/app_routes.dart';
+import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/app_theme.dart';
+import 'package:ado_dad_user/common/theme_controller.dart';
 import 'package:ado_dad_user/common/auth_guard.dart';
 import 'package:ado_dad_user/common/local_notification_service.dart';
 import 'package:ado_dad_user/common/notification_badge_service.dart';
@@ -133,6 +136,9 @@ void main() async {
 
   await SharedPrefs().init();
 
+  // Load the saved light/dark theme preference before building the app.
+  await ThemeController.instance.load();
+
   // Initialize Firebase
   await Firebase.initializeApp();
 
@@ -231,25 +237,28 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ],
-      child: MaterialApp.router(
-        title: 'ADO-DAD',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-          // iOS-specific scrolling configurations
-          scrollbarTheme: ScrollbarThemeData(
-            thumbVisibility: WidgetStateProperty.all(true),
-          ),
-        ),
-        routerConfig: AppRoutes.router,
-        // ✅ This wraps every page with a connectivity gate
-        // ✅ Shows only at first app open, before login, until real internet is available
-        builder: (context, child) => StartupConnectivityGate(
-          child: child ?? const SizedBox.shrink(),
-          onBackOnline: () {
-            // Optional warm-ups once online (before login UI proceeds)
-            // context.read<BannerBloc>().add(BannerEvent.fetchBanners());
+      child: AnimatedBuilder(
+        animation: ThemeController.instance,
+        builder: (context, _) => MaterialApp.router(
+          title: 'ADO-DAD',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: ThemeController.instance.mode,
+          routerConfig: AppRoutes.router,
+          // ✅ This wraps every page with a connectivity gate
+          // ✅ Shows only at first app open, before login, until real internet is available
+          builder: (context, child) {
+            // Keep the brightness-aware AppColors in sync with the theme that
+            // is actually applied (covers light, dark and system modes).
+            AppColors.brightness = Theme.of(context).brightness;
+            return StartupConnectivityGate(
+              child: child ?? const SizedBox.shrink(),
+              onBackOnline: () {
+                // Optional warm-ups once online (before login UI proceeds)
+                // context.read<BannerBloc>().add(BannerEvent.fetchBanners());
+              },
+            );
           },
         ),
       ),

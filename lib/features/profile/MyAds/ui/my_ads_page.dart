@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/features/profile/MyAds/bloc/my_ads_bloc.dart';
 import 'package:ado_dad_user/models/my_ads_model.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
@@ -132,8 +133,8 @@ class _MyAdsPageState extends State<MyAdsPage> {
         child: BlocBuilder<MyAdsBloc, MyAdsState>(
           builder: (context, state) {
             return state.maybeMap(
-              loading: (_) => const Center(child: CircularProgressIndicator()),
-              initial: (_) => const Center(child: CircularProgressIndicator()),
+              loading: (_) => const SkeletonList(),
+              initial: (_) => const SkeletonList(),
               error: (e) => Center(
                 child: Padding(
                   padding: EdgeInsets.all(

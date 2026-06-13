@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -163,9 +164,7 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
             child: BlocBuilder<ChatBloc, ChatState>(
               builder: (context, state) {
                 if (state is ChatLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
+                  return const SkeletonList();
                 }
 
                 if (state is ChatErrorState) {

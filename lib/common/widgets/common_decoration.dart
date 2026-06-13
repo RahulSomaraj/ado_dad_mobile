@@ -28,14 +28,14 @@ class CommonDecoration {
       prefixText: prefixText,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
+        borderSide: BorderSide(
           color: AppColors.greyColor,
           width: 0.5,
         ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
+        borderSide: BorderSide(
           color: AppColors.greyColor,
           width: 1.5,
         ),
