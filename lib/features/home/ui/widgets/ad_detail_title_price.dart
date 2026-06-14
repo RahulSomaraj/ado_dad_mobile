@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
+import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_action_buttons.dart';
@@ -163,91 +164,4 @@ class AdDetailTitlePrice extends StatelessWidget {
                   largeTablet: 20,
                   desktop: 22,
                 ),
-                fontWeight: FontWeight.w500,
-                color: Colors.grey.shade700,
-              ),
-            ),
-          if (postedAt.isNotEmpty)
-            SizedBox(
-              height: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: isIOS ? 6 : 8,
-                tablet: 12,
-                largeTablet: 14,
-                desktop: 16,
-              ),
-            ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Flexible(
-                child: Text(
-                  '₹ ${(ad.price)}',
-                  style: TextStyle(
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                        mobile: isIOS ? 13 : 16,
-                        tablet: 25,
-                        largeTablet: 29,
-                        desktop: 33),
-                    fontWeight: FontWeight.w800,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (_isFinanceable(ad)) ...[
-                const SizedBox(width: 8),
-                Text(
-                  'EMI from ${_emiEstimate(ad.price)}',
-                  style: TextStyle(
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                        mobile: isIOS ? 10 : 12,
-                        tablet: 16,
-                        largeTablet: 18,
-                        desktop: 20),
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ],
-          ),
-          if (ad.distance != null && ad.distance! > 0) ...[
-            SizedBox(
-              height: GetResponsiveSize.getResponsiveSize(context,
-                  mobile: isIOS ? 6 : 8,
-                  tablet: 12,
-                  largeTablet: 14,
-                  desktop: 16),
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.location_on_outlined,
-                  size: GetResponsiveSize.getResponsiveSize(context,
-                      mobile: 14, tablet: 18, largeTablet: 20, desktop: 22),
-                  color: Colors.grey.shade600,
-                ),
-                const SizedBox(width: 3),
-                Text(
-                  '${ad.distance!.toStringAsFixed(ad.distance! < 10 ? 1 : 0)} km away',
-                  style: TextStyle(
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                        mobile: isIOS ? 11 : 13,
-                        tablet: 18,
-                        largeTablet: 20,
-                        desktop: 22),
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
+                fontWeight: FontWeight.w50

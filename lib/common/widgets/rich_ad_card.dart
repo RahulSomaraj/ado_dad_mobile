@@ -382,31 +382,26 @@ class RichAdCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      // Footer line 2 — distance + how long ago it was posted.
+                      // Footer line 2 — distance on the far left, posted time
+                      // on the far right (same style as the rest of the column).
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          if (ad.distance != null) ...[
-                            Icon(Icons.navigation_outlined,
-                                size: 11, color: AppColors.primaryColor),
-                            const SizedBox(width: 2),
-                            Text(
-                              '${ad.distance!.toStringAsFixed(1)} km away',
-                              style: TextStyle(
-                                  fontSize: 9.5, color: AppColors.primaryColor),
-                            ),
-                            const SizedBox(width: 6),
-                          ],
-                          Icon(Icons.schedule,
-                              size: 10, color: AppColors.greyColor),
-                          const SizedBox(width: 2),
-                          Expanded(
-                            child: Text(
-                              _relTime(ad.postedAt),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  fontSize: 9.5, color: AppColors.greyColor),
-                            ),
+                          Text(
+                            ad.distance != null
+                                ? '${ad.distance!.toStringAsFixed(1)} km away'
+                                : '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontSize: 10, color: AppColors.greyColor),
+                          ),
+                          Text(
+                            _relTime(ad.postedAt),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontSize: 10, color: AppColors.greyColor),
                           ),
                         ],
                       ),
@@ -438,6 +433,6 @@ double richAdCardMainAxisExtent(
   final aspectRatio = GetResponsiveSize.isTablet(context) ? (16 / 9) : (16 / 10);
   final imageHeight = cardWidth / aspectRatio;
   // price + title + chips + footer (now two lines: place, then distance/time).
-  const textBlockHeight = 15 + 18 + 3 + 16 + 6 + 22 + 14 + 13 + 6 + 10;
+  const textBlockHeight = 15 + 18 + 3 + 16 + 6 + 22 + 14 + 18 + 6 + 10;
   return imageHeight + textBlockHeight;
 }
