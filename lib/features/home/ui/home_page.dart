@@ -1702,18 +1702,22 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 4),
                       // Footer line 2 — distance on the far left, posted time
                       // on the far right (same style as the rest of the column).
+                      // km is wrapped in Expanded so a long value ellipsises
+                      // instead of overflowing the row.
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            ad.distance != null
-                                ? '${ad.distance!.toStringAsFixed(1)} km away'
-                                : '',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontSize: 10, color: AppColors.greyColor),
+                          Expanded(
+                            child: Text(
+                              ad.distance != null
+                                  ? '${ad.distance!.toStringAsFixed(1)} km away'
+                                  : '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontSize: 10, color: AppColors.greyColor),
+                            ),
                           ),
+                          const SizedBox(width: 6),
                           Text(
                             _relTime(ad.postedAt),
                             maxLines: 1,

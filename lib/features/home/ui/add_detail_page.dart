@@ -2290,7 +2290,7 @@ class _SimilarAdsSectionState extends State<_SimilarAdsSection> {
           ),
         ),
         SizedBox(
-          height: 240,
+          height: 256,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -2298,7 +2298,7 @@ class _SimilarAdsSectionState extends State<_SimilarAdsSection> {
             separatorBuilder: (_, __) => const SizedBox(width: 12),
             itemBuilder: (_, i) => SizedBox(
               width: 190,
-              height: 240,
+              height: 256,
               child: RichAdCard(ad: _items[i]),
             ),
           ),
