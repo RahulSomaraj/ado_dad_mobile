@@ -58,20 +58,56 @@ class _HomePageState extends State<HomePage> {
     }
 
     Future.microtask(() async {
-      context
-          .read<AdvertisementBloc>()
-          .add(const AdvertisementEvent.fetchAllListings());
-
       context.read<BannerBloc>().add(const BannerEvent.fetchBanners());
 
+      // Show cached address immediately while we fetch fresh location
       final prefs = await SharedPreferences.getInstance();
       final savedLocation = prefs.getString('user_location');
-      if (savedLocation != null) {
+      if (savedLocation != null && mounted) {
         setState(() {
           _userLocation = savedLocation;
         });
+      }
+
+      // Try GPS first with short timeout — so ads load with distance baked in
+      Position? position;
+      try {
+        final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+        if (serviceEnabled) {
+          final permission = await Geolocator.checkPermission();
+          if (permission != LocationPermission.denied &&
+              permission != LocationPermission.deniedForever) {
+            position = await Geolocator.getCurrentPosition(
+              desiredAccuracy: LocationAccuracy.low,
+              timeLimit: const Duration(seconds: 6),
+            );
+          }
+        }
+      } catch (_) {}
+
+      if (!mounted) return;
+
+      if (position != null) {
+        // GPS available — load ads with location so distance shows on cards
+        setState(() {
+          _isLocationRecommendationsMode = true;
+        });
+        context.read<AdvertisementBloc>().add(
+              AdvertisementEvent.searchByLocation(
+                latitude: position.latitude,
+                longitude: position.longitude,
+              ),
+            );
+        // Reverse geocode for address display without blocking the ad load
+        _updateAddressDisplay(position);
+      } else if (savedLocation != null) {
+        // No fresh GPS but have a saved address — geocode it to get coords
         await _applyLocationBasedRecommendations(savedLocation);
       } else {
+        // No location at all — load without distance, request permission in background
+        context
+            .read<AdvertisementBloc>()
+            .add(const AdvertisementEvent.fetchAllListings());
         _getLocationAndAddress();
       }
     });
@@ -193,6 +229,21 @@ class _HomePageState extends State<HomePage> {
         _isLocationRecommendationsMode = false;
       });
     }
+  }
+
+  /// Reverse-geocode [position] and update the address chip without reloading ads.
+  Future<void> _updateAddressDisplay(Position position) async {
+    try {
+      final address = await _getDetailedAddressFromCoordinates(
+          position.latitude, position.longitude);
+      if (address != null && address.isNotEmpty && mounted) {
+        setState(() {
+          _userLocation = address;
+        });
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_location', address);
+      }
+    } catch (_) {}
   }
 
   Future<void> _applyLocationBasedRecommendations(String location) async {

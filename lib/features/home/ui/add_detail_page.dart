@@ -2222,7 +2222,8 @@ class _SimilarAdsSectionState extends State<_SimilarAdsSection> {
       if (permission != LocationPermission.denied &&
           permission != LocationPermission.deniedForever) {
         final pos = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.low);
+            desiredAccuracy: LocationAccuracy.low,
+            timeLimit: const Duration(seconds: 5));
         lat = pos.latitude;
         lng = pos.longitude;
       }

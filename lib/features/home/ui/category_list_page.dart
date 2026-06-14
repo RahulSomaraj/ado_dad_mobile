@@ -68,7 +68,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
       if (permission != LocationPermission.denied &&
           permission != LocationPermission.deniedForever) {
         final pos = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.low);
+            desiredAccuracy: LocationAccuracy.low,
+            timeLimit: const Duration(seconds: 5));
         _lat = pos.latitude;
         _lng = pos.longitude;
       }
