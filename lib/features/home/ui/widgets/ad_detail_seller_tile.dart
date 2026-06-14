@@ -36,15 +36,6 @@ class _AdDetailSellerTileState extends State<AdDetailSellerTile> {
     }
   }
 
-  String _maskPhoneNumber(String phone) {
-    final digitsOnly = phone.replaceAll(RegExp(r'\D'), '');
-    if (digitsOnly.isEmpty) return '';
-    final visible = digitsOnly.length >= 3
-        ? digitsOnly.substring(digitsOnly.length - 3)
-        : digitsOnly;
-    return '+ **  *******$visible';
-  }
-
   /// Compact trust-signals line: ⭐ rating · replies in ~5m · N ads · member-since.
   /// Each piece is omitted when its data isn't available yet.
   Widget? _trustRow(BuildContext context) {
@@ -79,12 +70,6 @@ class _AdDetailSellerTileState extends State<AdDetailSellerTile> {
 
     if (s.adCount > 0) {
       parts.add(Text('${s.adCount} ${s.adCount == 1 ? 'ad' : 'ads'}',
-          style: TextStyle(fontSize: fontSize, color: color)));
-    }
-
-    final member = s.memberSinceLabel;
-    if (member != null) {
-      parts.add(Text(member,
           style: TextStyle(fontSize: fontSize, color: color)));
     }
 
@@ -182,30 +167,24 @@ class _AdDetailSellerTileState extends State<AdDetailSellerTile> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (ad.user?.email?.trim().isNotEmpty == true)
-                Text(
-                  ad.user!.email!,
+              // Trust signals lead — what decides whether to message.
+              if (trust != null) trust,
+              // Member-since · city on its own line (matches the design).
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  _stats?.memberSinceLabel != null
+                      ? '${_stats!.memberSinceLabel} · ${ad.location}'
+                      : ad.location,
                   style: TextStyle(
                     fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                         mobile: 14, tablet: 20, largeTablet: 24, desktop: 28),
+                    color: Colors.grey.shade600,
                   ),
-                ),
-              if (ad.user?.phone?.trim().isNotEmpty == true)
-                Text(
-                  _maskPhoneNumber(ad.user!.phone!),
-                  style: TextStyle(
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                        mobile: 14, tablet: 20, largeTablet: 24, desktop: 28),
-                  ),
-                ),
-              Text(
-                ad.location,
-                style: TextStyle(
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                      mobile: 14, tablet: 20, largeTablet: 24, desktop: 28),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (trust != null) trust,
             ],
           ),
           trailing: Icon(

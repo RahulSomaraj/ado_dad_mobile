@@ -199,16 +199,50 @@ class AdDetailTitlePrice extends StatelessWidget {
               ),
               if (_isFinanceable(ad)) ...[
                 const SizedBox(width: 8),
-                Text(
-                  'EMI from ${_emiEstimate(ad.price)}',
-                  style: TextStyle(
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                        mobile: isIOS ? 10 : 12,
-                        tablet: 16,
-                        largeTablet: 18,
-                        desktop: 20),
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
+                // EMI promoted to a chip so it reads as a feature, not fine
+                // print, beside the price.
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 8, tablet: 12, largeTablet: 14, desktop: 16),
+                    vertical: GetResponsiveSize.getResponsiveSize(context,
+                        mobile: 4, tablet: 6, largeTablet: 7, desktop: 8),
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryColor.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppColors.primaryColor.withOpacity(0.25),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.credit_card,
+                        size: GetResponsiveSize.getResponsiveSize(context,
+                            mobile: 13,
+                            tablet: 17,
+                            largeTablet: 19,
+                            desktop: 21),
+                        color: AppColors.primaryColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'EMI ${_emiEstimate(ad.price)}',
+                        style: TextStyle(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: isIOS ? 10 : 12,
+                              tablet: 16,
+                              largeTablet: 18,
+                              desktop: 20),
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primaryColor,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
