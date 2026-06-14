@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:ado_dad_user/common/widgets/app_network_image.dart';
 import 'package:ado_dad_user/common/widgets/skeleton.dart';
@@ -2215,10 +2216,24 @@ class _SimilarAdsSectionState extends State<_SimilarAdsSection> {
   }
 
   Future<void> _load() async {
+    double? lat, lng;
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (permission != LocationPermission.denied &&
+          permission != LocationPermission.deniedForever) {
+        final pos = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.low);
+        lat = pos.latitude;
+        lng = pos.longitude;
+      }
+    } catch (_) {}
+
     try {
       final res = await _repo.fetchAllAds(
         category: widget.ad.category,
         limit: 12,
+        latitude: lat,
+        longitude: lng,
       );
       final filtered =
           res.data.where((a) => a.id != widget.ad.id).take(10).toList();
