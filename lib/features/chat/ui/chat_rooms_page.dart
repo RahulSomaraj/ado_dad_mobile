@@ -23,6 +23,11 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
 
   bool _hasInitialized = false;
 
+  // ---- Search ----
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
@@ -110,40 +115,15 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
       canPop: false, // Prevent default back behavior
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return; // System already handled the pop
+        if (_isSearching) {
+          _stopSearch();
+          return;
+        }
         _handleBackNavigation(); // Use our custom navigation
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Chats',
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: 20,
-                tablet: 24,
-                largeTablet: 28,
-                desktop: 32,
-              ),
-            ),
-          ),
-          backgroundColor: AppColors.primaryColor,
-          foregroundColor: Colors.white,
-          leading: IconButton(
-            icon: Icon(
-              (!kIsWeb && Platform.isIOS)
-                  ? Icons.arrow_back_ios
-                  : Icons.arrow_back,
-              size: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 24,
-                tablet: 30,
-                largeTablet: 32,
-                desktop: 36,
-              ),
-            ),
-            onPressed: () => _handleBackNavigation(),
-          ),
-        ),
+        backgroundColor: AppColors.scaffoldBackground,
+        appBar: _buildAppBar(),
         body: SafeArea(
           top: false,
           minimum: const EdgeInsets.only(bottom: 30),
@@ -213,6 +193,87 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // App bar (title + search)
+  // ---------------------------------------------------------------------------
+  PreferredSizeWidget _buildAppBar() {
+    final titleFontSize = GetResponsiveSize.getResponsiveFontSize(
+      context,
+      mobile: 20,
+      tablet: 24,
+      largeTablet: 28,
+      desktop: 32,
+    );
+    final iconSize = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 24,
+      tablet: 30,
+      largeTablet: 32,
+      desktop: 36,
+    );
+
+    return AppBar(
+      backgroundColor: AppColors.primaryColor,
+      foregroundColor: Colors.white,
+      elevation: 0,
+      titleSpacing: 0,
+      leading: IconButton(
+        icon: Icon(
+          (!kIsWeb && Platform.isIOS) ? Icons.arrow_back_ios : Icons.arrow_back,
+          size: iconSize,
+        ),
+        onPressed: () {
+          if (_isSearching) {
+            _stopSearch();
+          } else {
+            _handleBackNavigation();
+          }
+        },
+      ),
+      title: _isSearching
+          ? TextField(
+              controller: _searchController,
+              autofocus: true,
+              style: const TextStyle(color: Colors.white, fontSize: 17),
+              cursorColor: Colors.white,
+              decoration: const InputDecoration(
+                hintText: 'Search messages…',
+                hintStyle: TextStyle(color: Colors.white70),
+                border: InputBorder.none,
+              ),
+              onChanged: (value) =>
+                  setState(() => _searchQuery = value.trim().toLowerCase()),
+            )
+          : Text(
+              'Messages',
+              style: TextStyle(
+                fontSize: titleFontSize,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+      actions: [
+        IconButton(
+          icon: Icon(_isSearching ? Icons.close : Icons.search, size: iconSize),
+          onPressed: () {
+            if (_isSearching) {
+              _stopSearch();
+            } else {
+              setState(() => _isSearching = true);
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  void _stopSearch() {
+    setState(() {
+      _isSearching = false;
+      _searchQuery = '';
+      _searchController.clear();
+    });
+  }
+
   Widget _buildErrorState(String error) {
     return Center(
       child: Padding(
@@ -222,14 +283,18 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
           children: [
             Icon(Icons.wifi_off, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Connection Failed',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.blackColor,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               error,
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(fontSize: 14, color: AppColors.greyColor),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -254,33 +319,91 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
   }
 
   Widget _buildRoomsList(List<Map<String, dynamic>> rooms) {
+    // Apply search filter (name or last message)
+    final filtered = _searchQuery.isEmpty
+        ? rooms
+        : rooms.where((room) {
+            final otherUser = room['otherUser'] as Map<String, dynamic>?;
+            final name = (otherUser?['name'] ?? '').toString().toLowerCase();
+            final lastMessage =
+                (room['lastMessage'] ?? '').toString().toLowerCase();
+            return name.contains(_searchQuery) ||
+                lastMessage.contains(_searchQuery);
+          }).toList();
+
     if (rooms.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              'No messages yet',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
-            ),
-          ],
-        ),
+      return _buildEmptyState(
+        icon: Icons.chat_bubble_outline,
+        title: 'No messages yet',
+        subtitle: 'Conversations with buyers and sellers appear here.',
+      );
+    }
+
+    if (filtered.isEmpty) {
+      return _buildEmptyState(
+        icon: Icons.search_off,
+        title: 'No results',
+        subtitle: 'No chats match "${_searchController.text.trim()}".',
       );
     }
 
     return RefreshIndicator(
+      color: AppColors.primaryColor,
       onRefresh: () async {
         print('🔄 Manual refresh triggered');
         context.read<ChatBloc>().add(LoadChatRooms());
       },
-      child: ListView.builder(
-        itemCount: rooms.length,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        itemCount: filtered.length,
+        separatorBuilder: (context, index) => Divider(
+          height: 0.5,
+          thickness: 0.5,
+          indent: GetResponsiveSize.getResponsivePadding(
+            context,
+            mobile: 67,
+            tablet: 87,
+            largeTablet: 107,
+            desktop: 125,
+          ),
+          color: AppColors.dividerColor,
+        ),
         itemBuilder: (context, index) {
-          final room = rooms[index];
-          return _buildRoomCard(room);
+          return _buildRoomCard(filtered[index]);
         },
+      ),
+    );
+  }
+
+  Widget _buildEmptyState({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 64, color: AppColors.greyColor),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppColors.blackColor,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13.5, color: AppColors.greyColor),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -290,248 +413,310 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
     final otherUser = room['otherUser'] as Map<String, dynamic>?;
     final lastMessage = room['lastMessage'] as String;
     final lastMessageType = room['lastMessageType'] as String? ?? 'text';
+    final unreadCount = (room['unreadCount'] as int?) ?? 0;
+    final hasUnread = unreadCount > 0;
+    // Wireframe avatar (.av) is a 42px circle → radius 21.
+    final avatarRadius = GetResponsiveSize.getResponsiveSize(
+      context,
+      mobile: 21,
+      tablet: 28,
+      largeTablet: 34,
+      desktop: 40,
+    );
 
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFE0E0E0), width: 0.5),
-        ),
-      ),
-      child: ListTile(
-        contentPadding: EdgeInsets.symmetric(
+    return InkWell(
+      onTap: () => _openRoom(room),
+      child: Padding(
+        // Wireframe .list-it padding: 11px 14px.
+        padding: EdgeInsets.symmetric(
           horizontal: GetResponsiveSize.getResponsivePadding(
             context,
-            mobile: 16,
-            tablet: 24,
-            largeTablet: 32,
-            desktop: 40,
+            mobile: 14,
+            tablet: 22,
+            largeTablet: 30,
+            desktop: 38,
           ),
           vertical: GetResponsiveSize.getResponsivePadding(
             context,
-            mobile: 8,
-            tablet: 12,
-            largeTablet: 16,
-            desktop: 20,
+            mobile: 11,
+            tablet: 13,
+            largeTablet: 15,
+            desktop: 18,
           ),
         ),
-        leading: CircleAvatar(
-          radius: GetResponsiveSize.getResponsiveSize(
-            context,
-            mobile: 28,
-            tablet: 36,
-            largeTablet: 42,
-            desktop: 48,
-          ),
-          backgroundColor: Colors.grey[300],
-          backgroundImage: otherUser?['profilePic'] != null &&
-                  otherUser!['profilePic'] != 'default-profile-pic-url'
-              ? NetworkImage(otherUser['profilePic'])
-              : null,
-          child: otherUser?['profilePic'] == null ||
-                  otherUser!['profilePic'] == 'default-profile-pic-url'
-              ? Text(
-                  (otherUser?['name'] ?? 'U').substring(0, 1).toUpperCase(),
-                  style: TextStyle(
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(
-                      context,
-                      mobile: 20,
-                      tablet: 24,
-                      largeTablet: 28,
-                      desktop: 32,
-                    ),
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                )
-              : null,
-        ),
-        title: Row(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Expanded(
-              child: Text(
-                otherUser?['name'] ?? 'Unknown User',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(
-                    context,
-                    mobile: 16,
-                    tablet: 20,
-                    largeTablet: 24,
-                    desktop: 28,
-                  ),
-                ),
-                overflow: TextOverflow.ellipsis,
+            CircleAvatar(
+              radius: avatarRadius,
+              backgroundColor: AppColors.primaryColor.withOpacity(0.12),
+              backgroundImage: otherUser?['profilePic'] != null &&
+                      otherUser!['profilePic'] != 'default-profile-pic-url'
+                  ? NetworkImage(otherUser['profilePic'])
+                  : null,
+              child: otherUser?['profilePic'] == null ||
+                      otherUser!['profilePic'] == 'default-profile-pic-url'
+                  ? Text(
+                      (otherUser?['name'] ?? 'U').substring(0, 1).toUpperCase(),
+                      style: TextStyle(
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 20,
+                          tablet: 24,
+                          largeTablet: 28,
+                          desktop: 32,
+                        ),
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryColor,
+                      ),
+                    )
+                  : null,
+            ),
+            SizedBox(
+              width: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 11,
+                tablet: 15,
+                largeTablet: 19,
+                desktop: 23,
               ),
             ),
-            Text(
-              _formatTime(timestamp),
-              style: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(
-                  context,
-                  mobile: 12,
-                  tablet: 16,
-                  largeTablet: 18,
-                  desktop: 20,
-                ),
-                color: Colors.grey[600],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Row 1: name (bold) + time — matches wireframe .list-it top row.
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          otherUser?['name'] ?? 'Unknown User',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 13.5,
+                              tablet: 18,
+                              largeTablet: 22,
+                              desktop: 26,
+                            ),
+                            color: AppColors.blackColor,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _formatTime(timestamp),
+                        style: TextStyle(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 12,
+                            tablet: 16,
+                            largeTablet: 18,
+                            desktop: 20,
+                          ),
+                          color: hasUnread
+                              ? AppColors.primaryColor
+                              : AppColors.greyColor,
+                          fontWeight:
+                              hasUnread ? FontWeight.w600 : FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  // Row 2: last-message preview + unread badge — wireframe bottom row.
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildPreview(
+                          lastMessage: lastMessage,
+                          lastMessageType: lastMessageType,
+                          hasUnread: hasUnread,
+                        ),
+                      ),
+                      if (hasUnread) ...[
+                        const SizedBox(width: 8),
+                        // Accent pill: bg accent, white, 10px, radius 10, padding 1x7.
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            unreadCount > 99 ? '99+' : '$unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
         ),
-        subtitle: lastMessageType == 'image'
-            ? Row(
-                children: [
-                  Icon(
-                    Icons.image,
-                    size: GetResponsiveSize.getResponsiveSize(
-                      context,
-                      mobile: 16,
-                      tablet: 20,
-                      largeTablet: 22,
-                      desktop: 26,
-                    ),
-                    color: Colors.grey[600],
-                  ),
-                  SizedBox(
-                    width: GetResponsiveSize.getResponsiveSize(
-                      context,
-                      mobile: 6,
-                      tablet: 8,
-                      largeTablet: 10,
-                      desktop: 12,
-                    ),
-                  ),
-                  Text(
-                    'Photo',
-                    style: TextStyle(
-                      fontSize: GetResponsiveSize.getResponsiveFontSize(
-                        context,
-                        mobile: 14,
-                        tablet: 18,
-                        largeTablet: 20,
-                        desktop: 24,
-                      ),
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              )
-            : lastMessageType == 'audio'
-                ? Row(
-                    children: [
-                      Icon(
-                        Icons.mic,
-                        size: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 16,
-                          tablet: 20,
-                          largeTablet: 22,
-                          desktop: 26,
-                        ),
-                        color: Colors.grey[600],
-                      ),
-                      SizedBox(
-                        width: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 6,
-                          tablet: 8,
-                          largeTablet: 10,
-                          desktop: 12,
-                        ),
-                      ),
-                      Text(
-                        'Voice message',
-                        style: TextStyle(
-                          fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile: 14,
-                            tablet: 18,
-                            largeTablet: 20,
-                            desktop: 24,
-                          ),
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  )
-                : Text(
-                    lastMessage,
-                    style: TextStyle(
-                      fontSize: GetResponsiveSize.getResponsiveFontSize(
-                        context,
-                        mobile: 14,
-                        tablet: 18,
-                        largeTablet: 20,
-                        desktop: 24,
-                      ),
-                      color: Colors.grey[600],
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-        onTap: () {
-          // Navigate to chat page
-          final roomId = room['id'] as String;
-          final otherUser = room['otherUser'] as Map<String, dynamic>?;
-          final otherUserName = otherUser?['name'] ?? 'Chat';
-          final otherUserProfilePic = otherUser?['profilePic'];
-          final countryCode = otherUser?['countryCode']?.toString().trim();
-          final rawPhone = (otherUser?['phoneNumber'] ??
-                  otherUser?['phone'] ??
-                  otherUser?['mobile'])
-              ?.toString()
-              .trim();
-          String? otherUserPhone;
-          if (rawPhone != null && rawPhone.isNotEmpty) {
-            if (countryCode != null && countryCode.isNotEmpty) {
-              otherUserPhone = '$countryCode$rawPhone';
-            } else {
-              otherUserPhone = rawPhone;
-            }
-          }
-          final adId = room['adId'] as String?;
-          final adTitle = room['adTitle'] as String?;
+      ),
+    );
+  }
 
-          print('🖱️ Navigating to chat page for room: $roomId');
-          print('👤 Other user: $otherUserName');
-          print('🏷️ Ad ID: $adId');
-          print('📝 Ad Title: $adTitle');
-          print('📍 From page: ${widget.fromPage}');
+  Widget _buildPreview({
+    required String lastMessage,
+    required String lastMessageType,
+    required bool hasUnread,
+  }) {
+    final previewColor =
+        hasUnread ? AppColors.blackColor1 : AppColors.greyColor;
+    final fontSize = GetResponsiveSize.getResponsiveFontSize(
+      context,
+      mobile: 12.5,
+      tablet: 16,
+      largeTablet: 18,
+      desktop: 22,
+    );
+    final fontWeight = hasUnread ? FontWeight.w600 : FontWeight.w400;
 
-          // Build query parameters
-          final queryParams = <String, String>{
-            'name': otherUserName,
-            'profilePic': otherUserProfilePic ?? '',
-          };
+    if (lastMessageType == 'image' || lastMessageType == 'audio') {
+      final isImage = lastMessageType == 'image';
+      return Row(
+        children: [
+          Icon(
+            isImage ? Icons.image : Icons.mic,
+            size: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 16,
+              tablet: 20,
+              largeTablet: 22,
+              desktop: 26,
+            ),
+            color: previewColor,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            isImage ? 'Photo' : 'Voice message',
+            style: TextStyle(
+              fontSize: fontSize,
+              color: previewColor,
+              fontWeight: fontWeight,
+            ),
+          ),
+        ],
+      );
+    }
 
-          // Add adId parameter if available
-          if (adId != null) {
-            queryParams['adId'] = adId;
-          }
+    return Text(
+      lastMessage,
+      style: TextStyle(
+        fontSize: fontSize,
+        color: previewColor,
+        fontWeight: fontWeight,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
 
-          // Add adTitle parameter if available
-          if (adTitle != null) {
-            queryParams['adTitle'] = adTitle;
-          }
+  void _openRoom(Map<String, dynamic> room) {
+    // Resolve the room id defensively. Different sources/payloads may key it
+    // differently ('id', 'roomId', '_id'); an empty value cannot be routed to
+    // (it would produce '/chat/' which GoRouter can't match) so we stop early
+    // with a clear message instead of throwing an unreadable exception.
+    final roomId = (room['id'] ?? room['roomId'] ?? room['_id'] ?? '')
+        .toString()
+        .trim();
+    if (roomId.isEmpty) {
+      print('❌ Cannot open chat: missing room id in $room');
+      _showOpenError('This conversation can’t be opened right now.');
+      return;
+    }
 
-          // Add phone parameter if available
-          if (otherUserPhone != null &&
-              otherUserPhone.toString().trim().isNotEmpty) {
-            queryParams['phone'] = otherUserPhone.toString();
-          }
+    final otherUser = room['otherUser'] as Map<String, dynamic>?;
+    final otherUserName = otherUser?['name'] ?? 'Chat';
+    final otherUserProfilePic = otherUser?['profilePic'];
+    final countryCode = otherUser?['countryCode']?.toString().trim();
+    final rawPhone = (otherUser?['phoneNumber'] ??
+            otherUser?['phone'] ??
+            otherUser?['mobile'])
+        ?.toString()
+        .trim();
+    String? otherUserPhone;
+    if (rawPhone != null && rawPhone.isNotEmpty) {
+      if (countryCode != null && countryCode.isNotEmpty) {
+        otherUserPhone = '$countryCode$rawPhone';
+      } else {
+        otherUserPhone = rawPhone;
+      }
+    }
+    final adId = room['adId'] as String?;
+    final adTitle = room['adTitle'] as String?;
 
-          // Add fromPage parameter if available
-          if (widget.fromPage != null) {
-            queryParams['from'] = widget.fromPage!;
-          }
+    print('🖱️ Navigating to chat page for room: $roomId');
+    print('👤 Other user: $otherUserName');
+    print('🏷️ Ad ID: $adId');
+    print('📝 Ad Title: $adTitle');
+    print('📍 From page: ${widget.fromPage}');
 
-          // Build query string
-          final queryString = queryParams.entries
-              .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
-              .join('&');
+    // Build query parameters
+    final queryParams = <String, String>{
+      'name': otherUserName,
+      'profilePic': otherUserProfilePic ?? '',
+    };
 
-          context.push('/chat/$roomId?$queryString');
-        },
+    // Add adId parameter if available
+    if (adId != null) {
+      queryParams['adId'] = adId;
+    }
+
+    // Add adTitle parameter if available
+    if (adTitle != null) {
+      queryParams['adTitle'] = adTitle;
+    }
+
+    // Pass ad price through when the room payload includes it, so the chat
+    // page's pinned card can render it without a second network fetch.
+    final adPrice = room['adPrice'] as int?;
+    if (adPrice != null) {
+      queryParams['price'] = adPrice.toString();
+    }
+
+    // Add phone parameter if available
+    if (otherUserPhone != null && otherUserPhone.toString().trim().isNotEmpty) {
+      queryParams['phone'] = otherUserPhone.toString();
+    }
+
+    // Add fromPage parameter if available
+    if (widget.fromPage != null) {
+      queryParams['from'] = widget.fromPage!;
+    }
+
+    // Build query string
+    final queryString = queryParams.entries
+        .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+        .join('&');
+
+    try {
+      context.push('/chat/${Uri.encodeComponent(roomId)}?$queryString');
+    } catch (e) {
+      print('❌ Failed to open chat room $roomId: $e');
+      _showOpenError('Could not open this conversation. Please try again.');
+    }
+  }
+
+  void _showOpenError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.redColor,
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -575,6 +760,7 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
 
   @override
   void dispose() {
+    _searchController.dispose();
     // Don't dispose ChatBloc as it's global and shared across pages
     super.dispose();
   }

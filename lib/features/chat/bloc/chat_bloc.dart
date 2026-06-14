@@ -17,6 +17,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<LoadChatRooms>(_onLoadChatRooms);
     on<JoinChatRoom>(_onJoinChatRoom);
     on<LoadRoomMessages>(_onLoadRoomMessages);
+    on<MarkRoomRead>(_onMarkRoomRead);
     on<NewMessageReceived>(_onNewMessageReceived);
     on<SendMessage>(_onSendMessage);
     on<CreateChatRoom>(_onCreateChatRoom);
@@ -152,6 +153,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     } catch (e) {
       print('❌ Failed to load messages: $e');
       emit(ChatErrorState('Failed to load messages: $e'));
+    }
+  }
+
+  Future<void> _onMarkRoomRead(
+      MarkRoomRead event, Emitter<ChatState> emit) async {
+    try {
+      await _chatRepository.markRoomRead(event.roomId);
+    } catch (e) {
+      // Non-fatal: badge clearing is best-effort and shouldn't break the chat.
+      print('⚠️ Failed to mark room read: $e');
     }
   }
 

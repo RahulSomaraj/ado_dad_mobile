@@ -35,6 +35,7 @@ class AddCommercialVehicleForm extends StatefulWidget {
 
 class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
   final GlobalKey<FormState> _sellerFormKey = GlobalKey<FormState>();
+  int _step = 0; // 0 = Details, 1 = Photos, 2 = Review
   String? _title;
   int _price = 0;
   String _location = '';
@@ -200,7 +201,10 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
   int _seatingCapacity = 0;
 
   void _addAdvertisement() async {
-    if (!_sellerFormKey.currentState!.validate()) return;
+    if (!_sellerFormKey.currentState!.validate()) {
+      setState(() => _step = 0);
+      return;
+    }
     _sellerFormKey.currentState!.save();
 
     await _uploadImages(); // S3 Upload
@@ -345,6 +349,12 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
               key: _sellerFormKey,
               child: Column(
                 children: [
+                  _buildStepHeader(),
+                  Offstage(
+                    offstage: _step != 0,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                   Divider(thickness: 2),
                   _formHeader(),
                   Divider(),
@@ -955,6 +965,14 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                       ),
                     ),
                   ),
+                      ],
+                    ),
+                  ),
+                  Offstage(
+                    offstage: _step != 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                   Divider(),
                   Container(
                     width: double.infinity,
@@ -1138,6 +1156,30 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                       desktop: 60,
                     ),
                   ),
+                      ],
+                    ),
+                  ),
+                  Offstage(
+                    offstage: _step != 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'Review your details and post',
+                      style: AppTextstyle.sectionTitleTextStyle.copyWith(
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile:
+                              AppTextstyle.sectionTitleTextStyle.fontSize ?? 18,
+                          tablet: 24,
+                          largeTablet: 30,
+                          desktop: 36,
+                        ),
+                      ),
+                    ),
+                  ),
                   SafeArea(
                     top: false,
                     minimum: const EdgeInsets.only(bottom: 20),
@@ -1243,11 +1285,225 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                       ],
                     ),
                   )
+                      ],
+                    ),
+                  ),
+                  _buildStepNav(),
                 ],
               ),
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildStepHeader() {
+    const stepNames = ['Details', 'Photos', 'Review'];
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: GetResponsiveSize.getResponsivePadding(
+          context,
+          mobile: 16,
+          tablet: 24,
+          largeTablet: 32,
+          desktop: 40,
+        ),
+        vertical: GetResponsiveSize.getResponsiveSize(
+          context,
+          mobile: 12,
+          tablet: 16,
+          largeTablet: 20,
+          desktop: 24,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Step ${_step + 1} of 3',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primaryColor,
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(
+                    context,
+                    mobile: 14,
+                    tablet: 18,
+                    largeTablet: 22,
+                    desktop: 26,
+                  ),
+                ),
+              ),
+              Text(
+                stepNames[_step],
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(
+                    context,
+                    mobile: 14,
+                    tablet: 18,
+                    largeTablet: 22,
+                    desktop: 26,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 8,
+              tablet: 12,
+              largeTablet: 16,
+              desktop: 20,
+            ),
+          ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: Stack(
+              children: [
+                Container(
+                  height: 4,
+                  width: double.infinity,
+                  color: Colors.grey.shade300,
+                ),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Container(
+                      height: 4,
+                      width: constraints.maxWidth * ((_step + 1) / 3),
+                      color: AppColors.primaryColor,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepNav() {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: GetResponsiveSize.getResponsivePadding(
+          context,
+          mobile: 16,
+          tablet: 24,
+          largeTablet: 32,
+          desktop: 40,
+        ),
+        vertical: GetResponsiveSize.getResponsiveSize(
+          context,
+          mobile: 12,
+          tablet: 16,
+          largeTablet: 20,
+          desktop: 24,
+        ),
+      ),
+      child: Row(
+        children: [
+          if (_step > 0)
+            Expanded(
+              child: SizedBox(
+                height: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 50,
+                  tablet: 65,
+                  largeTablet: 75,
+                  desktop: 85,
+                ),
+                child: OutlinedButton(
+                  onPressed: () => setState(() => _step--),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primaryColor,
+                    side: BorderSide(color: AppColors.primaryColor),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        GetResponsiveSize.getResponsiveBorderRadius(
+                          context,
+                          mobile: 25,
+                          tablet: 30,
+                          largeTablet: 35,
+                          desktop: 40,
+                        ),
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    'Back',
+                    style: AppTextstyle.buttonText.copyWith(
+                      color: AppColors.primaryColor,
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: AppTextstyle.buttonText.fontSize ?? 16,
+                        tablet: 20,
+                        largeTablet: 24,
+                        desktop: 28,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          if (_step > 0 && _step < 2)
+            SizedBox(
+              width: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 12,
+                tablet: 16,
+                largeTablet: 20,
+                desktop: 24,
+              ),
+            ),
+          if (_step < 2)
+            Expanded(
+              child: SizedBox(
+                height: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 50,
+                  tablet: 65,
+                  largeTablet: 75,
+                  desktop: 85,
+                ),
+                child: ElevatedButton(
+                  onPressed: () => setState(() => _step++),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryColor,
+                    foregroundColor: AppColors.whiteColor,
+                    elevation: 5,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        GetResponsiveSize.getResponsiveBorderRadius(
+                          context,
+                          mobile: 25,
+                          tablet: 30,
+                          largeTablet: 35,
+                          desktop: 40,
+                        ),
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    'Next',
+                    style: AppTextstyle.buttonText.copyWith(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: AppTextstyle.buttonText.fontSize ?? 16,
+                        tablet: 20,
+                        largeTablet: 24,
+                        desktop: 28,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

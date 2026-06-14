@@ -16,6 +16,13 @@ class LoadRoomMessages extends ChatEvent {
   LoadRoomMessages(this.roomId);
 }
 
+/// Mark a room's messages as read (clears its unread badge).
+class MarkRoomRead extends ChatEvent {
+  final String roomId;
+
+  MarkRoomRead(this.roomId);
+}
+
 class ChatRoomsLoaded extends ChatEvent {
   final List<Map<String, dynamic>> rooms;
 

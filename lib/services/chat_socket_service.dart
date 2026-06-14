@@ -346,6 +346,17 @@ class ChatSocketService {
     _socket!.emit('getRoomMessages', {'roomId': roomId});
   }
 
+  /// Tell the server the current user has read everything in [roomId] so its
+  /// unread count is reset. No-op if the socket isn't connected.
+  Future<void> markRoomRead(String roomId) async {
+    if (!_isConnected || _socket == null) {
+      print('⚠️ markRoomRead skipped — socket not connected');
+      return;
+    }
+    print('👁️ Marking room as read: $roomId');
+    _socket!.emit('markChatRoomRead', {'roomId': roomId});
+  }
+
   /// Send a message to the current room with connection persistence.
   /// For image/audio, pass type and optional attachments.
   void sendMessage(String content,

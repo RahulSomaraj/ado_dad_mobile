@@ -69,52 +69,70 @@ class ThemeModeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: AnimatedBuilder(
-        animation: ThemeController.instance,
-        builder: (context, _) {
-          return Container(
-            decoration: BoxDecoration(
-              color: AppColors.whiteColor,
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: const [
-                BoxShadow(color: Colors.black12, blurRadius: 6, spreadRadius: 1),
-              ],
+    return AnimatedBuilder(
+      animation: ThemeController.instance,
+      builder: (context, _) {
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _openPicker(context),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: AppColors.isDark
+                              ? Colors.white10
+                              : const Color(0xFFF1F2F6),
+                        ),
+                        child: const Icon(Icons.brightness_6_outlined,
+                            size: 20, color: AppColors.primaryColor),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Appearance',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: AppColors.blackColor),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              ThemeController.instance.label(),
+                              style: TextStyle(
+                                  color: AppColors.greyColor, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.chevron_right,
+                          size: 22, color: AppColors.greyColor),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 9),
+                    child: Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: AppColors.dividerColor),
+                  ),
+                ],
+              ),
             ),
-            child: ListTile(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              leading: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: AppColors.isDark
-                      ? Colors.white10
-                      : Colors.grey[200],
-                ),
-                child: const Icon(Icons.brightness_6_outlined,
-                    color: AppColors.primaryColor),
-              ),
-              title: Text(
-                'Appearance',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: AppColors.blackColor),
-              ),
-              subtitle: Text(
-                ThemeController.instance.label(),
-                style: TextStyle(color: AppColors.greyColor, fontSize: 12),
-              ),
-              trailing: Icon(Icons.arrow_forward_ios,
-                  size: 18, color: AppColors.greyColor),
-              onTap: () => _openPicker(context),
-            ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

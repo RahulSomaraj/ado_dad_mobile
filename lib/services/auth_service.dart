@@ -277,8 +277,16 @@ class AuthService {
     }
   }
 
-  /// Manual logout (called by user action)
-  Future<void> logout() async {
+  /// Manual logout (called by user action).
+  ///
+  /// Clears the socket connection and all stored auth/user data, then
+  /// navigates to [redirectTo]. The data clear is fully awaited BEFORE
+  /// navigation so the destination route never sees a stale token.
+  ///
+  /// Defaults to '/login' (used by automatic token-expiry logout). The manual
+  /// logout button passes '/home' so the user lands on the home screen as a
+  /// guest (the app allows browsing without login).
+  Future<void> logout({String redirectTo = '/login'}) async {
     // Reset initial refresh flag
     resetInitialRefreshFlag();
 
@@ -288,14 +296,11 @@ class AuthService {
 
     await clearUserData();
 
-    final router = AppRoutes.router;
-    if (router.canPop()) {
-      while (router.canPop()) {
-        router.pop();
-      }
-    }
-
-    router.go('/login');
+    // go_router's `.go()` replaces the entire navigation stack with the target
+    // location's stack, so there's no need to pop pages first. The previous
+    // `while (canPop()) pop()` loop could pop the last remaining page and throw
+    // "You have popped the last page off of the stack".
+    AppRoutes.router.go(redirectTo);
   }
 
   /// Reset refresh state (useful for testing or manual refresh)

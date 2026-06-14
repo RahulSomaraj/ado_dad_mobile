@@ -123,6 +123,25 @@ class AddRepository {
     }
   }
 
+  /// Accurate per-user counts for the profile stats strip
+  /// (My ads / Wishlist / Chats). Backed by GET /v2/ads/me/stats.
+  Future<Map<String, int>> fetchProfileStats() async {
+    int asInt(dynamic v) => v is int
+        ? v
+        : (v is num ? v.toInt() : int.tryParse('${v ?? 0}') ?? 0);
+    try {
+      final response = await _dio.get('/v2/ads/me/stats');
+      final data = (response.data as Map?) ?? const {};
+      return {
+        'ads': asInt(data['ads']),
+        'wishlist': asInt(data['wishlist']),
+        'chats': asInt(data['chats']),
+      };
+    } catch (_) {
+      return {'ads': 0, 'wishlist': 0, 'chats': 0};
+    }
+  }
+
   /// Lightweight count for the filter screens' live "Show N results" CTA.
   /// Reuses the same /v2/ads/list endpoint (which already returns `total`)
   /// with limit:1 so we only transfer one row.

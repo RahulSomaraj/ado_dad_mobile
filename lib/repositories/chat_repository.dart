@@ -93,7 +93,9 @@ class ChatRepository {
       'timestamp': room['lastMessageAt'] != null
           ? DateTime.tryParse(room['lastMessageAt']) ?? DateTime.now()
           : DateTime.now(),
-      'unreadCount': 0, // API doesn't provide unread count
+      // Unread count from the backend when available. Accepts `unreadCount`
+      // or `unread`; falls back to 0 so the badge simply stays hidden.
+      'unreadCount': _asInt(room['unreadCount'] ?? room['unread']),
       'adId': room['adId'] ?? '',
       'status': room['status'] ?? 'active',
       'messageCount': room['messageCount'] ?? 0,
@@ -101,7 +103,38 @@ class ChatRepository {
       'adDetails': adDetails,
       'adTitle': adDetails?['title'] ??
           'Ad #${room['adId'] ?? 'Unknown'}', // Extract title from adDetails
+      // Ad price from the room payload (when backend includes adDetails.price),
+      // so the chat page can show it on the pinned card without a 2nd fetch.
+      'adPrice': _asInt(adDetails?['price'], orNull: true),
     };
+  }
+
+  /// Coerce a dynamic numeric/string value to an int.
+  /// Returns null (when [orNull]) for missing values, otherwise 0.
+  static int? _asInt(dynamic v, {bool orNull = false}) {
+    if (v == null) return orNull ? null : 0;
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    final parsed = int.tryParse(v.toString());
+    return parsed ?? (orNull ? null : 0);
+  }
+
+  /// Mark a room as read: optimistically zero its local unread count (so the
+  /// badge clears instantly) and tell the server. Safe to call repeatedly.
+  Future<void> markRoomRead(String roomId) async {
+    var changed = false;
+    for (final room in _rooms) {
+      if (room['id'] == roomId && ((room['unreadCount'] as int?) ?? 0) != 0) {
+        room['unreadCount'] = 0;
+        changed = true;
+      }
+    }
+    if (changed) _roomsController.add(List.from(_rooms));
+    try {
+      await _socketService.markRoomRead(roomId);
+    } catch (e) {
+      print('⚠️ markRoomRead failed: $e');
+    }
   }
 
   /// Connect to chat server

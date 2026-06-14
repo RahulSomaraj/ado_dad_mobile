@@ -73,34 +73,36 @@ class RichAdCard extends StatelessWidget {
     final dt = DateTime.tryParse(iso);
     if (dt == null) return '';
     final d = DateTime.now().difference(dt);
-    if (d.inDays >= 365) return '${(d.inDays / 365).floor()}y';
-    if (d.inDays >= 30) return '${(d.inDays / 30).floor()}mo';
-    if (d.inDays >= 7) return '${(d.inDays / 7).floor()}w';
-    if (d.inDays >= 1) return '${d.inDays}d';
-    if (d.inHours >= 1) return '${d.inHours}h';
-    if (d.inMinutes >= 1) return '${d.inMinutes}m';
-    return 'now';
+    if (d.inDays >= 365) return '${(d.inDays / 365).floor()}y ago';
+    if (d.inDays >= 30) return '${(d.inDays / 30).floor()}mo ago';
+    if (d.inDays >= 7) return '${(d.inDays / 7).floor()}w ago';
+    if (d.inDays >= 1) return '${d.inDays}d ago';
+    if (d.inHours >= 1) return '${d.inHours}h ago';
+    if (d.inMinutes >= 1) return '${d.inMinutes}m ago';
+    return 'just now';
   }
 
   Widget _chip(IconData icon, String label) {
-    final display = label.length > 14 ? '${label.substring(0, 14)}…' : label;
+    final display = label.length > 10 ? '${label.substring(0, 10)}…' : label;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
       decoration: BoxDecoration(
         color: AppColors.scaffoldBackground,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: AppColors.dividerColor),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.max,
         children: [
-          Icon(icon, size: 11, color: AppColors.greyColor),
-          const SizedBox(width: 3),
-          Text(
-            display,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 9.5, color: AppColors.blackColor1),
+          Icon(icon, size: 10, color: AppColors.greyColor),
+          const SizedBox(width: 2),
+          Flexible(
+            child: Text(
+              display,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 9, color: AppColors.blackColor1),
+            ),
           ),
         ],
       ),
@@ -140,16 +142,13 @@ class RichAdCard extends StatelessWidget {
     return SizedBox(
       height: 22,
       child: ClipRect(
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: Row(
-            children: [
-              for (var i = 0; i < chips.length && i < 2; i++) ...[
-                if (i > 0) const SizedBox(width: 5),
-                Flexible(child: chips[i]),
-              ],
+        child: Row(
+          children: [
+            for (var i = 0; i < chips.length && i < 2; i++) ...[
+              if (i > 0) const SizedBox(width: 4),
+              Expanded(child: chips[i]),
             ],
-          ),
+          ],
         ),
       ),
     );
@@ -309,7 +308,7 @@ class RichAdCard extends StatelessWidget {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(9, 7, 9, 8),
+                padding: const EdgeInsets.fromLTRB(9, 7, 9, 11),
                 child: ClipRect(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,12 +329,14 @@ class RichAdCard extends StatelessWidget {
                           ),
                           if (!property && ad.price > 0) ...[
                             const SizedBox(width: 4),
-                            Text(
-                              'EMI ${_emiText(ad.price)}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  fontSize: 9, color: AppColors.greyColor),
+                            Flexible(
+                              child: Text(
+                                'EMI ${_emiText(ad.price)}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                    fontSize: 9, color: AppColors.greyColor),
+                              ),
                             ),
                           ],
                         ],
@@ -362,6 +363,8 @@ class RichAdCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       _specChips(),
                       const Spacer(),
+                      // Footer line 1 — full place (ellipsis only if it
+                      // truly overflows the tile width).
                       Row(
                         children: [
                           Icon(Icons.location_on_outlined,
@@ -376,25 +379,34 @@ class RichAdCard extends StatelessWidget {
                                   fontSize: 10, color: AppColors.greyColor),
                             ),
                           ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      // Footer line 2 — distance + how long ago it was posted.
+                      Row(
+                        children: [
                           if (ad.distance != null) ...[
-                            const SizedBox(width: 4),
+                            Icon(Icons.navigation_outlined,
+                                size: 11, color: AppColors.primaryColor),
+                            const SizedBox(width: 2),
                             Text(
-                              '${ad.distance!.toStringAsFixed(1)} km',
+                              '${ad.distance!.toStringAsFixed(1)} km away',
+                              style: TextStyle(
+                                  fontSize: 9.5, color: AppColors.primaryColor),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Icon(Icons.schedule,
+                              size: 10, color: AppColors.greyColor),
+                          const SizedBox(width: 2),
+                          Expanded(
+                            child: Text(
+                              _relTime(ad.postedAt),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                   fontSize: 9.5, color: AppColors.greyColor),
                             ),
-                            Text(' · ',
-                                style: TextStyle(
-                                    fontSize: 9.5, color: AppColors.greyColor)),
-                          ],
-                          Text(
-                            _relTime(ad.postedAt),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontSize: 9.5, color: AppColors.greyColor),
                           ),
                         ],
                       ),
@@ -425,6 +437,7 @@ double richAdCardMainAxisExtent(
   final cardWidth = available / columns;
   final aspectRatio = GetResponsiveSize.isTablet(context) ? (16 / 9) : (16 / 10);
   final imageHeight = cardWidth / aspectRatio;
-  const textBlockHeight = 15 + 18 + 3 + 16 + 6 + 22 + 14 + 6 + 10;
+  // price + title + chips + footer (now two lines: place, then distance/time).
+  const textBlockHeight = 15 + 18 + 3 + 16 + 6 + 22 + 14 + 13 + 6 + 10;
   return imageHeight + textBlockHeight;
 }

@@ -4,6 +4,7 @@ import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/error_message_util.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
+import 'package:ado_dad_user/services/auth_service.dart';
 import 'package:ado_dad_user/features/login/bloc/login_bloc.dart' as login_bloc;
 import 'package:ado_dad_user/features/profile/bloc/profile_bloc.dart'
     as profile_bloc;
@@ -16,12 +17,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:ado_dad_user/features/profile/ui/widgets/profile_header.dart';
-import 'package:ado_dad_user/features/profile/ui/widgets/profile_card.dart';
-import 'package:ado_dad_user/features/profile/ui/widgets/profile_avatar.dart';
+import 'package:ado_dad_user/features/profile/ui/widgets/profile_label.dart';
+import 'package:ado_dad_user/features/profile/ui/widgets/profile_text_field.dart';
 import 'package:ado_dad_user/features/profile/ui/widgets/profile_menu_item.dart';
 import 'package:ado_dad_user/common/widgets/theme_mode_tile.dart';
 import 'package:ado_dad_user/features/profile/ui/widgets/change_password_dialog.dart';
@@ -349,7 +350,7 @@ class _ProfilePageState extends State<ProfilePage> {
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.grey[200],
+        backgroundColor: AppColors.whiteColor,
         body: Stack(
           children: [
             SingleChildScrollView(
@@ -566,84 +567,315 @@ class _ProfilePageState extends State<ProfilePage> {
                     //   _currentProfilePicUrl = state.profile.profilePic;
                     // }
 
-                    return Stack(
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height +
-                              GetResponsiveSize.getResponsiveSize(
-                                context,
-                                mobile: 500,
-                                tablet: 300,
-                                largeTablet: 500,
-                                desktop: 1000,
-                              ),
-                        ),
-                        Container(
-                          height: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 250, // keep phone unchanged
-                            tablet: 340,
-                            largeTablet: 400,
-                            desktop: 440,
+                        // Flat app bar — wireframe: "Profile" + settings gear
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            16,
+                            MediaQuery.of(context).padding.top + 8,
+                            8,
+                            8,
                           ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryColor,
-                            borderRadius: const BorderRadius.only(
-                              bottomLeft: Radius.circular(40),
-                              bottomRight: Radius.circular(40),
+                          child: Row(
+                            children: [
+                              Text(
+                                "Profile",
+                                style: TextStyle(
+                                  color: AppColors.blackColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                    context,
+                                    mobile: 20,
+                                    tablet: 26,
+                                    largeTablet: 30,
+                                    desktop: 32,
+                                  ),
+                                ),
+                              ),
+                              const Spacer(),
+                              InkWell(
+                                onTap: () =>
+                                    setState(() => isEditing = !isEditing),
+                                borderRadius: BorderRadius.circular(10),
+                                child: Container(
+                                  width: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 40,
+                                    tablet: 56,
+                                    largeTablet: 62,
+                                    desktop: 68,
+                                  ),
+                                  height: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 40,
+                                    tablet: 56,
+                                    largeTablet: 62,
+                                    desktop: 68,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: AppColors.isDark
+                                        ? Colors.white10
+                                        : const Color(0xFFF1F2F6),
+                                  ),
+                                  child: Icon(
+                                    Icons.settings_outlined,
+                                    color: AppColors.blackColor,
+                                    size: GetResponsiveSize.getResponsiveSize(
+                                      context,
+                                      mobile: 22,
+                                      tablet: 30,
+                                      largeTablet: 34,
+                                      desktop: 36,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: AppColors.dividerColor),
+
+                        // Compact hero — avatar + name/email + Edit (wireframe)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                          child: Row(
+                            children: [
+                              // Avatar
+                              GestureDetector(
+                                onTap: isEditing ? _pickImage : null,
+                                child: Stack(
+                                  children: [
+                                    CircleAvatar(
+                                      radius:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 32,
+                                        tablet: 44,
+                                        largeTablet: 52,
+                                        desktop: 58,
+                                      ),
+                                      backgroundColor: AppColors.greyColor,
+                                      backgroundImage: _pickedImageBytes != null
+                                          ? MemoryImage(_pickedImageBytes!)
+                                          : (_currentProfilePicUrl != null &&
+                                                  _currentProfilePicUrl!
+                                                      .isNotEmpty &&
+                                                  _currentProfilePicUrl !=
+                                                      'default-profile-pic-url' &&
+                                                  _currentProfilePicUrl!
+                                                      .startsWith('http'))
+                                              ? NetworkImage(
+                                                      _currentProfilePicUrl!)
+                                                  as ImageProvider
+                                              : null,
+                                      child: (_pickedImageBytes == null &&
+                                              (_currentProfilePicUrl == null ||
+                                                  _currentProfilePicUrl!
+                                                      .isEmpty ||
+                                                  _currentProfilePicUrl ==
+                                                      'default-profile-pic-url' ||
+                                                  !_currentProfilePicUrl!
+                                                      .startsWith('http')))
+                                          ? Icon(Icons.person,
+                                              size: GetResponsiveSize
+                                                  .getResponsiveSize(
+                                                context,
+                                                mobile: 34,
+                                                tablet: 46,
+                                                largeTablet: 54,
+                                                desktop: 60,
+                                              ),
+                                              color: Colors.white)
+                                          : null,
+                                    ),
+                                    if (isEditing)
+                                      Positioned(
+                                        right: 0,
+                                        bottom: 0,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: AppColors.primaryColor,
+                                            border: Border.all(
+                                                color: Colors.white,
+                                                width: 1.5),
+                                          ),
+                                          child: const Icon(Icons.edit,
+                                              size: 12, color: Colors.white),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              // Name + email
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            nameController.text.isEmpty
+                                                ? 'Your name'
+                                                : nameController.text,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.blackColor,
+                                              fontSize: GetResponsiveSize
+                                                  .getResponsiveFontSize(
+                                                context,
+                                                mobile: 16,
+                                                tablet: 20,
+                                                largeTablet: 24,
+                                                desktop: 26,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Icon(Icons.verified,
+                                            color: AppColors.primaryColor,
+                                            size: GetResponsiveSize
+                                                .getResponsiveSize(
+                                              context,
+                                              mobile: 16,
+                                              tablet: 20,
+                                              largeTablet: 24,
+                                              desktop: 26,
+                                            )),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      emailController.text,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: AppColors.greyColor,
+                                        fontSize: GetResponsiveSize
+                                            .getResponsiveFontSize(
+                                          context,
+                                          mobile: 12,
+                                          tablet: 15,
+                                          largeTablet: 17,
+                                          desktop: 19,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Edit / Save pill
+                              GestureDetector(
+                                onTap: isEditing
+                                    ? saveProfile
+                                    : () => setState(() => isEditing = true),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 7),
+                                  decoration: BoxDecoration(
+                                    color: isEditing
+                                        ? AppColors.primaryColor
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                        color: AppColors.primaryColor,
+                                        width: 1),
+                                  ),
+                                  child: Text(
+                                    isEditing ? 'Save' : 'Edit',
+                                    style: TextStyle(
+                                      color: isEditing
+                                          ? Colors.white
+                                          : AppColors.primaryColor,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: GetResponsiveSize
+                                          .getResponsiveFontSize(
+                                        context,
+                                        mobile: 13,
+                                        tablet: 16,
+                                        largeTablet: 18,
+                                        desktop: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Editable fields appear inline only while editing
+                        if (isEditing)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border:
+                                    Border.all(color: AppColors.dividerColor),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const ProfileLabel(text: "Full Name"),
+                                  ProfileTextField(
+                                    controller: nameController,
+                                    isEditable: isEditing,
+                                  ),
+                                  const ProfileLabel(text: "Email"),
+                                  ProfileTextField(
+                                    controller: emailController,
+                                    isEditable: isEditing,
+                                  ),
+                                  const ProfileLabel(text: "Phone Number"),
+                                  ProfileTextField(
+                                    controller: phoneController,
+                                    isEditable: isEditing,
+                                    isPhoneField: true,
+                                    countryCode: _countryCode,
+                                    onCountryCodeChanged: (code) {
+                                      setState(() {
+                                        _countryCode = code;
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
+
+                        // Stats (kpis) — My ads / Wishlist / Chats
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 6, 16, 14),
+                          child: const _ProfileStatsStrip(),
                         ),
-
-                        // Header
-                        const ProfileHeader(),
-
-                        // Profile card
-                        ProfileCard(
-                          nameController: nameController,
-                          emailController: emailController,
-                          phoneController: phoneController,
-                          countryCode: _countryCode,
-                          onCountryCodeChanged: (code) {
-                            setState(() {
-                              _countryCode = code;
-                            });
-                          },
-                          isEditing: isEditing,
-                          onEditTap: () => setState(() => isEditing = true),
-                          onSaveTap: saveProfile,
-                        ),
-
-                        // Avatar
-                        ProfileAvatar(
-                          pickedImageBytes: _pickedImageBytes,
-                          currentProfilePicUrl: _currentProfilePicUrl,
-                          isEditing: isEditing,
-                          onPickImage: _pickImage,
-                        ),
-
-                        // Menu list
-                        Positioned(
-                          top: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 430,
-                            tablet: 530,
-                            largeTablet: 550,
-                            desktop: 600,
-                          ),
-                          left: 20,
-                          right: 20,
-                          child: Column(
-                            children: [
-                              ProfileMenuItem(
-                                  image:
-                                      'assets/images/wishlist-profile-icon.png',
-                                  title: "Wishlist",
-                                  onTap: () => context.push('/wishlist')),
+                        Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: AppColors.dividerColor),
+                        // Menu list — flat full-width rows (all menus kept)
                               ProfileMenuItem(
                                   image: 'assets/images/add-profile-icon.png',
-                                  title: "My Ads",
-                                  onTap: () => context.push('/my-ads')),
+                                  title: "My Activities",
+                                  onTap: () => context.go('/my-activity')),
                               ProfileMenuItem(
                                   image: 'assets/images/help-profile-icon.png',
                                   title: "Help and Support",
@@ -737,7 +969,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   } else {
                                     confirm = await showDialog<bool>(
                                       context: context,
-                                      builder: (_) => AlertDialog(
+                                      builder: (dialogContext) => AlertDialog(
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
                                             GetResponsiveSize
@@ -940,7 +1172,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                                     ),
                                                     onPressed: () =>
                                                         Navigator.pop(
-                                                            context, false),
+                                                            dialogContext,
+                                                            false),
                                                     child: Text(
                                                       "Cancel",
                                                       style: TextStyle(
@@ -1013,7 +1246,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                     ),
                                                     onPressed: () =>
                                                         Navigator.pop(
-                                                            context, true),
+                                                            dialogContext, true),
                                                     child: Text(
                                                       "Logout",
                                                       style: TextStyle(
@@ -1039,9 +1272,19 @@ class _ProfilePageState extends State<ProfilePage> {
                                     );
                                   }
                                   if (confirm == true) {
+                                    // Reset the LoginBloc state, then perform a
+                                    // fully-awaited logout (disconnects socket,
+                                    // clears stored tokens/user data) BEFORE
+                                    // navigating. We route to '/home' so the
+                                    // user lands on the home screen as a guest
+                                    // (no token). Navigating before the data was
+                                    // cleared (or to the splash, which adds its
+                                    // own timer) was why logout appeared not to
+                                    // work.
                                     context.read<login_bloc.LoginBloc>().add(
                                         const login_bloc.LoginEvent.logout());
-                                    context.go('/');
+                                    await AuthService().logout(
+                                        redirectTo: '/home');
                                   }
                                 },
                               ),
@@ -1787,7 +2030,13 @@ class _ProfilePageState extends State<ProfilePage> {
                                           .deleteAccount();
                                       context.read<login_bloc.LoginBloc>().add(
                                           const login_bloc.LoginEvent.logout());
-                                      context.go('/');
+                                      // Fully-awaited logout clears tokens/user
+                                      // data, then routes to '/home' as a guest.
+                                      // Previously this navigated to the splash
+                                      // before the data was cleared, leaving the
+                                      // user appearing logged in.
+                                      await AuthService().logout(
+                                          redirectTo: '/home');
                                     } catch (e) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
@@ -1809,6 +2058,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 image: 'assets/images/close.png',
                                 title: "Delete My Data",
                                 isLogout: true,
+                                showDivider: false,
                                 onTap: () async {
                                   final TextEditingController _confirmCtl =
                                       TextEditingController();
@@ -2573,10 +2823,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                      ],
-                    );
+                          );
                   }
 
                   if (state is Error) {
@@ -2596,6 +2843,85 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
         ),
         // Bottom navigation is now provided by the persistent shell.
+      ),
+    );
+  }
+}
+
+/// Profile stats shortcuts: My ads · Wishlist · Chats, with live counts read
+/// from the global blocs (loads are kicked off on first build).
+class _ProfileStatsStrip extends StatefulWidget {
+  const _ProfileStatsStrip();
+
+  @override
+  State<_ProfileStatsStrip> createState() => _ProfileStatsStripState();
+}
+
+class _ProfileStatsStripState extends State<_ProfileStatsStrip> {
+  Map<String, int>? _stats;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final stats = await AddRepository().fetchProfileStats();
+    if (!mounted) return;
+    setState(() => _stats = stats);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _kpi(_stats?['ads'], 'My ads', () => context.push('/my-ads')),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _kpi(_stats?['wishlist'], 'Wishlist',
+              () => context.push('/wishlist')),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _kpi(
+              _stats?['chats'], 'Chats', () => context.go('/chat-rooms')),
+        ),
+      ],
+    );
+  }
+
+  Widget _kpi(int? count, String label, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: AppColors.whiteColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.dividerColor),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              count == null ? '—' : '$count',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primaryColor,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(fontSize: 11, color: AppColors.greyColor),
+            ),
+          ],
+        ),
       ),
     );
   }

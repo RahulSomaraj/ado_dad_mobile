@@ -1162,9 +1162,10 @@ class _HomePageState extends State<HomePage> {
         GetResponsiveSize.isTablet(context) ? (16 / 9) : (16 / 10);
     final imageHeight = cardWidth / aspectRatio;
 
-    // Matches _buildRichAdCard: padding + price + title + chips + footer,
-    // plus a small safety buffer so font-metric rounding can't overflow.
-    const textBlockHeight = 15 + 18 + 3 + 16 + 6 + 22 + 14 + 6 + 10;
+    // Matches RichAdCard: padding + price + title + chips + footer, where the
+    // footer is now two lines (place, then distance/time). Includes a small
+    // safety buffer so font-metric rounding can't overflow.
+    const textBlockHeight = 15 + 18 + 3 + 16 + 6 + 22 + 14 + 13 + 6 + 10;
 
     return imageHeight + textBlockHeight;
   }
@@ -1406,13 +1407,13 @@ class _HomePageState extends State<HomePage> {
     final dt = DateTime.tryParse(iso);
     if (dt == null) return '';
     final d = DateTime.now().difference(dt);
-    if (d.inDays >= 365) return '${(d.inDays / 365).floor()}y';
-    if (d.inDays >= 30) return '${(d.inDays / 30).floor()}mo';
-    if (d.inDays >= 7) return '${(d.inDays / 7).floor()}w';
-    if (d.inDays >= 1) return '${d.inDays}d';
-    if (d.inHours >= 1) return '${d.inHours}h';
-    if (d.inMinutes >= 1) return '${d.inMinutes}m';
-    return 'now';
+    if (d.inDays >= 365) return '${(d.inDays / 365).floor()}y ago';
+    if (d.inDays >= 30) return '${(d.inDays / 30).floor()}mo ago';
+    if (d.inDays >= 7) return '${(d.inDays / 7).floor()}w ago';
+    if (d.inDays >= 1) return '${d.inDays}d ago';
+    if (d.inHours >= 1) return '${d.inHours}h ago';
+    if (d.inMinutes >= 1) return '${d.inMinutes}m ago';
+    return 'just now';
   }
 
   Widget _chip(IconData icon, String label) {
@@ -1681,6 +1682,7 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 6),
                       _cardSpecChips(ad),
                       const Spacer(),
+                      // Footer line 1 — full place.
                       Row(
                         children: [
                           Icon(Icons.location_on_outlined,
@@ -1695,25 +1697,34 @@ class _HomePageState extends State<HomePage> {
                                   fontSize: 10, color: AppColors.greyColor),
                             ),
                           ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      // Footer line 2 — distance + how long ago it was posted.
+                      Row(
+                        children: [
                           if (ad.distance != null) ...[
-                            const SizedBox(width: 4),
+                            Icon(Icons.navigation_outlined,
+                                size: 11, color: AppColors.primaryColor),
+                            const SizedBox(width: 2),
                             Text(
-                              '${ad.distance!.toStringAsFixed(1)} km',
+                              '${ad.distance!.toStringAsFixed(1)} km away',
+                              style: TextStyle(
+                                  fontSize: 9.5, color: AppColors.primaryColor),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Icon(Icons.schedule,
+                              size: 10, color: AppColors.greyColor),
+                          const SizedBox(width: 2),
+                          Expanded(
+                            child: Text(
+                              _relTime(ad.postedAt),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                   fontSize: 9.5, color: AppColors.greyColor),
                             ),
-                            Text(' · ',
-                                style: TextStyle(
-                                    fontSize: 9.5, color: AppColors.greyColor)),
-                          ],
-                          Text(
-                            _relTime(ad.postedAt),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontSize: 9.5, color: AppColors.greyColor),
                           ),
                         ],
                       ),

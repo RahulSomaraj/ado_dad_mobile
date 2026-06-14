@@ -2228,8 +2228,11 @@ class _SimilarAdsSectionState extends State<_SimilarAdsSection> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: _items.length,
             separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (_, i) =>
-                SizedBox(width: 190, child: RichAdCard(ad: _items[i])),
+            itemBuilder: (_, i) => SizedBox(
+              width: 190,
+              height: 240,
+              child: RichAdCard(ad: _items[i]),
+            ),
           ),
         ),
       ],

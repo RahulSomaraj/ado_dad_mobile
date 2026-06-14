@@ -8,13 +8,21 @@ class AppConfig {
   // Base URL for API calls
   static String get baseUrl {
     var url = dotenv.env['BASE_URL'] ?? '';
-    // Android emulator: localhost is the emulator itself, not the dev machine.
-    if (!kIsWeb && Platform.isAndroid) {
+    if (!kIsWeb && Platform.isAndroid && _isLocalDevUrl(url)) {
+      // Physical device over Wi‑Fi: set DEV_HOST_IP to your PC's LAN IP (e.g. 192.168.1.42).
+      // Android emulator: leave DEV_HOST_IP empty — uses 10.0.2.2 (host loopback alias).
+      final host = dotenv.env['DEV_HOST_IP']?.trim();
+      final resolvedHost =
+          (host != null && host.isNotEmpty) ? host : '10.0.2.2';
       url = url
-          .replaceAll('localhost', '10.0.2.2')
-          .replaceAll('127.0.0.1', '10.0.2.2');
+          .replaceAll('localhost', resolvedHost)
+          .replaceAll('127.0.0.1', resolvedHost);
     }
     return url;
+  }
+
+  static bool _isLocalDevUrl(String url) {
+    return url.contains('localhost') || url.contains('127.0.0.1');
   }
 
   // Google Places API Key for map integration

@@ -46,6 +46,7 @@ import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:ado_dad_user/repositories/showroom_repo.dart';
 import 'package:ado_dad_user/common/auth_guard.dart';
 import 'package:flutter/material.dart';
+import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -63,6 +64,9 @@ class AppRoutes {
       final redirectPath = await AuthGuard.checkRouteAccess(location);
       return redirectPath;
     },
+    // Friendly fallback for unmatched routes or builder exceptions, instead of
+    // GoRouter's raw red error screen (e.g. an empty/invalid '/chat/' path).
+    errorBuilder: (context, state) => _RouteErrorScreen(error: state.error),
     routes: [
       GoRoute(path: '/', builder: (context, state) => Splash()),
       GoRoute(path: '/splash-1', builder: (context, state) => SplashScreen1()),
@@ -338,6 +342,8 @@ class AppRoutes {
             final fromPage = state.uri.queryParameters['from'];
             final adId = state.uri.queryParameters['adId'];
             final adTitle = state.uri.queryParameters['adTitle'];
+            final adPrice = int.tryParse(
+                state.uri.queryParameters['price'] ?? '');
             return ChatPage(
               roomId: roomId,
               otherUserName: otherUserName,
@@ -346,6 +352,7 @@ class AppRoutes {
               fromPage: fromPage,
               adId: adId,
               adTitle: adTitle,
+              adPrice: adPrice,
             );
           }),
       GoRoute(
@@ -367,4 +374,63 @@ class AppRoutes {
           }),
     ],
   );
+}
+
+/// Sensible fallback screen shown by [GoRouter.errorBuilder] when a route can't
+/// be matched or a page builder throws, replacing the default red error page.
+class _RouteErrorScreen extends StatelessWidget {
+  final Exception? error;
+  const _RouteErrorScreen({this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.scaffoldBackground,
+      appBar: AppBar(
+        backgroundColor: AppColors.primaryColor,
+        foregroundColor: Colors.white,
+        title: const Text('Something went wrong'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline,
+                  size: 64, color: AppColors.greyColor),
+              const SizedBox(height: 16),
+              Text(
+                'We couldn’t open that page',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.blackColor,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'The link may be broken or the content is no longer available.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13.5, color: AppColors.greyColor),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => context.go('/home'),
+                icon: const Icon(Icons.home_outlined),
+                label: const Text('Go to Home'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryColor,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

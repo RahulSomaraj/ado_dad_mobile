@@ -30,6 +30,7 @@ class ChatPage extends StatefulWidget {
   final String? fromPage; // Track where user came from
   final String? adId; // Ad ID for this chat
   final String? adTitle; // Ad title for this chat
+  final int? adPrice; // Ad price for this chat (from room payload, optional)
 
   const ChatPage({
     super.key,
@@ -40,6 +41,7 @@ class ChatPage extends StatefulWidget {
     this.fromPage,
     this.adId,
     this.adTitle,
+    this.adPrice,
   });
 
   @override
@@ -73,6 +75,9 @@ class _ChatPageState extends State<ChatPage> {
   /// Which chat audio message is currently playing (by url). Stops others when one starts.
   String? _playingAudioMessageUrl;
 
+  /// Price of the pinned ad, fetched lazily so the listing card can show title + price.
+  int? _adPrice;
+
   @override
   void initState() {
     super.initState();
@@ -85,9 +90,21 @@ class _ChatPageState extends State<ChatPage> {
     // Get current user ID
     _getCurrentUserId();
 
+    // Prefer the price passed from the room payload; only fetch as a fallback
+    // when it wasn't provided.
+    _adPrice = widget.adPrice;
+    if (_adPrice == null &&
+        widget.adId != null &&
+        widget.adId!.trim().isNotEmpty) {
+      _fetchAdPrice();
+    }
+
     // Join the room and load messages when page loads
     print('🚪 Dispatching JoinChatRoom event...');
     context.read<ChatBloc>().add(JoinChatRoom(widget.roomId));
+
+    // Opening the room means the user has seen it — clear its unread badge.
+    context.read<ChatBloc>().add(MarkRoomRead(widget.roomId));
 
     // Also directly load messages to ensure they refresh when room opens
     // This ensures messages are always loaded even if room was already joined
@@ -114,10 +131,37 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  /// Loads the pinned ad so the listing card can display its price.
+  Future<void> _fetchAdPrice() async {
+    try {
+      final ad = await AddRepository().fetchAdDetail(widget.adId!);
+      if (mounted) setState(() => _adPrice = ad.price);
+    } catch (e) {
+      // Non-fatal: the card simply falls back to showing the title only.
+      print('⚠️ Could not load ad price for pinned card: $e');
+    }
+  }
+
+  /// Indian-style number grouping (e.g. 540000 -> 5,40,000).
+  String _inr(num n) {
+    final s = n.round().toString();
+    if (s.length <= 3) return s;
+    final last3 = s.substring(s.length - 3);
+    var rest = s.substring(0, s.length - 3);
+    final buf = <String>[];
+    while (rest.length > 2) {
+      buf.insert(0, rest.substring(rest.length - 2));
+      rest = rest.substring(0, rest.length - 2);
+    }
+    if (rest.isNotEmpty) buf.insert(0, rest);
+    return '${buf.join(',')},$last3';
+  }
+
   @override
   Widget build(BuildContext context) {
     print('🏗️ Building chat page for room: ${widget.roomId}');
     return Scaffold(
+      backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
         title: Row(
           children: [
@@ -292,46 +336,16 @@ class _ChatPageState extends State<ChatPage> {
               );
             }
 
+            // Surface a clear, actionable error instead of a silent empty thread
+            // when messages fail to load (e.g. socket/connection failure).
+            if (state is ChatErrorState && _messages.isEmpty) {
+              return _buildThreadError(state.error);
+            }
+
             return Column(
               children: [
                 // Pinned listing context (tap to open the ad)
-                if (widget.adId != null)
-                  GestureDetector(
-                    onTap: _navigateToAdDetail,
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        border: Border(
-                          bottom: BorderSide(color: Colors.grey[300]!),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.sell_outlined,
-                              size: 18, color: AppColors.primaryColor),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              widget.adTitle ?? 'View listing',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontSize: 13, fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                          Text('View',
-                              style: TextStyle(
-                                  fontSize: 12.5,
-                                  color: AppColors.primaryColor)),
-                          Icon(Icons.chevron_right,
-                              size: 18, color: AppColors.primaryColor),
-                        ],
-                      ),
-                    ),
-                  ),
+                if (widget.adId != null) _buildPinnedListingCard(),
                 // Messages list
                 Expanded(
                   child: _messages.isEmpty
@@ -440,133 +454,95 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  Widget _buildMessageBubble(Map<String, dynamic> message, int index) {
-    final sender = message['sender'] as Map<String, dynamic>?;
-    final senderId = message['senderId'] ?? '';
-    final content = message['content'] ?? '';
-    final type = message['type'] ?? 'text';
-    final attachments = (message['attachments'] as List<dynamic>?) ?? [];
-    final timestamp = message['createdAt'] != null
-        ? DateTime.tryParse(message['createdAt'])
-        : DateTime.now();
-
-    // Determine if message is from current user
-    final isMe = _currentUserId != null && senderId == _currentUserId;
-
-    return Container(
-      margin: EdgeInsets.only(
-        bottom: GetResponsiveSize.getResponsiveSize(
-          context,
-          mobile: 8,
-          tablet: 12,
-          largeTablet: 16,
-          desktop: 20,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment:
-            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-        children: [
-          if (!isMe) ...[
-            CircleAvatar(
-              radius: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 16,
-                tablet: 20,
-                largeTablet: 24,
-                desktop: 28,
+  /// Clear, actionable error view shown when the conversation fails to load.
+  Widget _buildThreadError(String error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.wifi_off, size: 64, color: Colors.red[300]),
+            const SizedBox(height: 16),
+            Text(
+              'Couldn’t load this conversation',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppColors.blackColor,
               ),
-              backgroundColor: Colors.grey[300],
-              backgroundImage: sender?['profilePic'] != null &&
-                      sender!['profilePic'] != 'default-profile-pic-url'
-                  ? NetworkImage(sender['profilePic'])
-                  : null,
-              child: sender?['profilePic'] == null ||
-                      sender?['profilePic'] == 'default-profile-pic-url'
-                  ? Text(
-                      (sender?['name'] ?? 'U').substring(0, 1).toUpperCase(),
-                      style: TextStyle(
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: 12,
-                          tablet: 16,
-                          largeTablet: 18,
-                          desktop: 20,
-                        ),
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    )
-                  : null,
             ),
-            SizedBox(
-              width: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 8,
-                tablet: 12,
-                largeTablet: 16,
-                desktop: 20,
+            const SizedBox(height: 8),
+            Text(
+              error.isNotEmpty
+                  ? error
+                  : 'Please check your connection and try again.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13.5, color: AppColors.greyColor),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                // Re-join the room and reload its messages.
+                context.read<ChatBloc>().add(JoinChatRoom(widget.roomId));
+                context.read<ChatBloc>().add(LoadRoomMessages(widget.roomId));
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryColor,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
             ),
           ],
-          Flexible(
+        ),
+      ),
+    );
+  }
+
+  /// Pinned listing chip shown centered above the thread, matching the
+  /// wireframe ("📌 Maruti Swift VXI · ₹5,40,000"). Tap opens the ad.
+  Widget _buildPinnedListingCard() {
+    final title = widget.adTitle ?? 'View listing';
+    final label =
+        _adPrice != null ? '$title · ₹${_inr(_adPrice!)}' : title;
+    return Align(
+      alignment: Alignment.center,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 12, bottom: 2),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: _navigateToAdDetail,
             child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 16,
-                  tablet: 20,
-                  largeTablet: 24,
-                  desktop: 28,
-                ),
-                vertical: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 12,
-                  tablet: 16,
-                  largeTablet: 20,
-                  desktop: 24,
-                ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.82,
               ),
               decoration: BoxDecoration(
-                color: isMe ? AppColors.primaryColor : Colors.grey[200],
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(
-                    context,
-                    mobile: 20,
-                    tablet: 24,
-                    largeTablet: 28,
-                    desktop: 32,
-                  ),
-                ),
+                color: AppColors.cardColor,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.dividerColor, width: 0.5),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildMessageContent(
-                    type: type,
-                    content: content,
-                    attachments: attachments,
-                    isMe: isMe,
-                  ),
-                  SizedBox(
-                    height: GetResponsiveSize.getResponsiveSize(
-                      context,
-                      mobile: 4,
-                      tablet: 6,
-                      largeTablet: 8,
-                      desktop: 10,
-                    ),
-                  ),
-                  Text(
-                    _formatTime(timestamp),
-                    style: TextStyle(
-                      color: isMe ? Colors.white70 : Colors.grey[600],
-                      fontSize: GetResponsiveSize.getResponsiveFontSize(
-                        context,
-                        mobile: 12,
-                        tablet: 16,
-                        largeTablet: 18,
-                        desktop: 20,
+                  Icon(Icons.push_pin,
+                      size: 13, color: AppColors.primaryColor),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.blackColor,
                       ),
                     ),
                   ),
@@ -574,41 +550,183 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
           ),
-          if (isMe) ...[
-            SizedBox(
-              width: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 8,
-                tablet: 12,
-                largeTablet: 16,
-                desktop: 20,
-              ),
-            ),
-            CircleAvatar(
-              radius: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 16,
-                tablet: 20,
-                largeTablet: 24,
-                desktop: 28,
-              ),
-              backgroundColor: AppColors.primaryColor,
-              child: Icon(
-                Icons.person,
-                size: GetResponsiveSize.getResponsiveSize(
-                  context,
-                  mobile: 16,
-                  tablet: 20,
-                  largeTablet: 24,
-                  desktop: 28,
-                ),
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
     );
+  }
+
+  /// Parse a message timestamp, falling back to now if missing/invalid.
+  DateTime _messageTimestamp(Map<String, dynamic> message) {
+    final raw = message['createdAt'];
+    if (raw is String) {
+      return DateTime.tryParse(raw) ?? DateTime.now();
+    }
+    return DateTime.now();
+  }
+
+  bool _sameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  Widget _buildMessageBubble(Map<String, dynamic> message, int index) {
+    final senderId = message['senderId'] ?? '';
+    final content = message['content'] ?? '';
+    final type = message['type'] ?? 'text';
+    final attachments = (message['attachments'] as List<dynamic>?) ?? [];
+    final timestamp = _messageTimestamp(message);
+
+    // Determine if message is from current user
+    final isMe = _currentUserId != null && senderId == _currentUserId;
+
+    // Group consecutive messages from the same sender on the same day so the
+    // thread reads cleanly (no avatar/timestamp repetition) like the wireframe.
+    final prev = index > 0 ? _messages[index - 1] : null;
+    final next = index < _messages.length - 1 ? _messages[index + 1] : null;
+    final prevSameSender = prev != null &&
+        (prev['senderId'] ?? '') == senderId &&
+        _sameDay(_messageTimestamp(prev), timestamp);
+    final nextSameSender = next != null &&
+        (next['senderId'] ?? '') == senderId &&
+        _sameDay(_messageTimestamp(next), timestamp);
+
+    final showDateSeparator =
+        prev == null || !_sameDay(_messageTimestamp(prev), timestamp);
+    // Timestamp only at the end of a group keeps the thread uncluttered.
+    final showTime = !nextSameSender;
+
+    final isImage = type == 'image' && attachments.isNotEmpty;
+
+    final bubble = ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width * 0.76,
+      ),
+      child: Container(
+        padding: isImage
+            ? const EdgeInsets.all(4)
+            : const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: isMe ? AppColors.primaryColor : AppColors.cardColor,
+          borderRadius: _bubbleRadius(
+            isMe: isMe,
+            prevSameSender: prevSameSender,
+            nextSameSender: nextSameSender,
+          ),
+          border: isMe
+              ? null
+              : Border.all(color: AppColors.dividerColor, width: 0.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildMessageContent(
+              type: type,
+              content: content,
+              attachments: attachments,
+              isMe: isMe,
+            ),
+            if (showTime) ...[
+              const SizedBox(height: 3),
+              Padding(
+                padding: EdgeInsets.only(left: isImage ? 4 : 0),
+                child: Text(
+                  _formatBubbleTime(timestamp),
+                  style: TextStyle(
+                    color: isMe ? Colors.white70 : AppColors.greyColor,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (showDateSeparator) _buildDateSeparator(timestamp),
+        Container(
+          margin: EdgeInsets.only(bottom: nextSameSender ? 2 : 10),
+          child: Row(
+            mainAxisAlignment:
+                isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            children: [bubble],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Asymmetric corner radii: the "tail" (small corner) only appears on the
+  /// last bubble of a group; inner corners are tightened so a run of messages
+  /// from one sender reads as a connected cluster.
+  BorderRadius _bubbleRadius({
+    required bool isMe,
+    required bool prevSameSender,
+    required bool nextSameSender,
+  }) {
+    // Wireframe bubble radius is 14, with a 4px "tail" on the last of a group.
+    const big = Radius.circular(14);
+    const small = Radius.circular(6);
+    const tail = Radius.circular(4);
+    if (isMe) {
+      return BorderRadius.only(
+        topLeft: big,
+        topRight: prevSameSender ? small : big,
+        bottomLeft: big,
+        bottomRight: nextSameSender ? small : tail,
+      );
+    }
+    return BorderRadius.only(
+      topLeft: prevSameSender ? small : big,
+      topRight: big,
+      bottomLeft: nextSameSender ? small : tail,
+      bottomRight: big,
+    );
+  }
+
+  Widget _buildDateSeparator(DateTime timestamp) {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        decoration: BoxDecoration(
+          color: AppColors.cardColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.dividerColor, width: 0.5),
+        ),
+        child: Text(
+          _dateLabel(timestamp),
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w600,
+            color: AppColors.greyColor,
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _dateLabel(DateTime ts) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final that = DateTime(ts.year, ts.month, ts.day);
+    final diff = today.difference(that).inDays;
+    if (diff == 0) return 'Today';
+    if (diff == 1) return 'Yesterday';
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    final label = '${ts.day} ${months[ts.month - 1]}';
+    return ts.year == now.year ? label : '$label ${ts.year}';
+  }
+
+  String _formatBubbleTime(DateTime ts) {
+    final h = ts.hour.toString().padLeft(2, '0');
+    final m = ts.minute.toString().padLeft(2, '0');
+    return '$h:$m';
   }
 
   Widget _buildMessageContent({
@@ -662,7 +780,7 @@ class _ChatPageState extends State<ChatPage> {
     return Text(
       content.isNotEmpty ? content : '',
       style: TextStyle(
-        color: isMe ? Colors.white : Colors.black87,
+        color: isMe ? Colors.white : AppColors.blackColor,
         fontSize: GetResponsiveSize.getResponsiveFontSize(
           context,
           mobile: 16,
@@ -749,10 +867,10 @@ class _ChatPageState extends State<ChatPage> {
         ),
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardColor,
         border: Border(
           top: BorderSide(
-            color: Colors.grey[300]!,
+            color: AppColors.dividerColor,
             width: GetResponsiveSize.getResponsiveSize(
               context,
               mobile: 1,
@@ -883,6 +1001,7 @@ class _ChatPageState extends State<ChatPage> {
                   decoration: InputDecoration(
                     hintText: 'Type a message...',
                     hintStyle: TextStyle(
+                      color: AppColors.greyColor,
                       fontSize: GetResponsiveSize.getResponsiveFontSize(
                         context,
                         mobile: 16,
@@ -904,7 +1023,7 @@ class _ChatPageState extends State<ChatPage> {
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: Colors.grey[100],
+                    fillColor: AppColors.scaffoldBackground,
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: GetResponsiveSize.getResponsivePadding(
                         context,
@@ -923,6 +1042,7 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                   ),
                   style: TextStyle(
+                    color: AppColors.blackColor,
                     fontSize: GetResponsiveSize.getResponsiveFontSize(
                       context,
                       mobile: 16,
@@ -933,6 +1053,7 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                   maxLines: null,
                   textCapitalization: TextCapitalization.sentences,
+                  cursorColor: AppColors.primaryColor,
                 ),
               ),
               if (_stagedImagesBytes.isEmpty && _stagedVoicePath == null) ...[
@@ -1251,23 +1372,6 @@ class _ChatPageState extends State<ChatPage> {
     final m = seconds ~/ 60;
     final s = seconds % 60;
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-  }
-
-  String _formatTime(DateTime? timestamp) {
-    if (timestamp == null) return '';
-
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
-
-    if (difference.inDays > 0) {
-      return '${timestamp.day}/${timestamp.month} ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
-    } else if (difference.inHours > 0) {
-      return '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
-    } else {
-      return 'Just now';
-    }
   }
 
   void _handleBackNavigation() {
