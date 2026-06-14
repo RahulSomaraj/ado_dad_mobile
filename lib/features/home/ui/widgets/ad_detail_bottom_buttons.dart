@@ -139,4 +139,58 @@ class _MakeOfferButton extends StatelessWidget {
           child: Text(
             label,
             maxLines: 1,
- 
+            style: TextStyle(
+              color: AppColors.primaryColor,
+              fontWeight: FontWeight.w700,
+              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                  mobile: 16, tablet: 22, largeTablet: 26, desktop: 30),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChatButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _ChatButton({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: GetResponsiveSize.getResponsiveSize(context,
+          mobile: 48, tablet: 65, largeTablet: 75, desktop: 85),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primaryColor,
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.symmetric(
+            horizontal: GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+            vertical: GetResponsiveSize.getResponsivePadding(context,
+                mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              GetResponsiveSize.getResponsiveBorderRadius(context,
+                  mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
+            ),
+          ),
+        ),
+        onPressed: onTap,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                mobile: 16, tablet: 22, largeTablet: 26, desktop: 30),
+          ),
+        ),
+      ),
+    );
+  }
+}

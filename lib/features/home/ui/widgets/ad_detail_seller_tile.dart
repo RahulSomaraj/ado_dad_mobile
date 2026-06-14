@@ -124,4 +124,109 @@ class _AdDetailSellerTileState extends State<AdDetailSellerTile> {
         0,
       ),
       child: AdDetailCardShell(
-       
+        child: ListTile(
+          leading: Builder(
+            builder: (context) {
+              final pic = (ad.user?.profilePic ?? '').trim();
+              final hasPic = pic.startsWith('http');
+              final radius = GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 24, tablet: 32, largeTablet: 38, desktop: 44);
+              final initial = (ad.user?.name?.trim().isNotEmpty == true)
+                  ? ad.user!.name!.trim()[0].toUpperCase()
+                  : '?';
+              return CircleAvatar(
+                radius: radius,
+                backgroundColor: const Color(0xFFEDEBFF),
+                backgroundImage: hasPic ? NetworkImage(pic) : null,
+                child: hasPic
+                    ? null
+                    : Text(
+                        initial,
+                        style: TextStyle(
+                          color: const Color(0xFF4F48EC),
+                          fontWeight: FontWeight.w700,
+                          fontSize: radius * 0.8,
+                        ),
+                      ),
+              );
+            },
+          ),
+          title: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  ad.user?.name?.trim().isNotEmpty == true
+                      ? ad.user!.name!
+                      : 'Seller',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 16, tablet: 24, largeTablet: 28, desktop: 32),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (ad.user?.isVerified == true) ...[
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.verified,
+                  color: const Color(0xFF4F48EC),
+                  size: GetResponsiveSize.getResponsiveSize(context,
+                      mobile: 16, tablet: 22, largeTablet: 26, desktop: 30),
+                ),
+              ],
+            ],
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (ad.user?.email?.trim().isNotEmpty == true)
+                Text(
+                  ad.user!.email!,
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 14, tablet: 20, largeTablet: 24, desktop: 28),
+                  ),
+                ),
+              if (ad.user?.phone?.trim().isNotEmpty == true)
+                Text(
+                  _maskPhoneNumber(ad.user!.phone!),
+                  style: TextStyle(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 14, tablet: 20, largeTablet: 24, desktop: 28),
+                  ),
+                ),
+              Text(
+                ad.location,
+                style: TextStyle(
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                      mobile: 14, tablet: 20, largeTablet: 24, desktop: 28),
+                ),
+              ),
+              if (trust != null) trust,
+            ],
+          ),
+          trailing: Icon(
+            Icons.chevron_right,
+            size: GetResponsiveSize.getResponsiveSize(context,
+                mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
+          ),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+            vertical: GetResponsiveSize.getResponsivePadding(context,
+                mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
+          ),
+          onTap: () {
+            final sellerId = ad.user?.id;
+            if (sellerId != null && sellerId.isNotEmpty && ad.user != null) {
+              context.push('/seller-profile/$sellerId', extra: ad.user);
+            }
+          },
+        ),
+      ),
+    );
+  }
+}

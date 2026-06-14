@@ -3,13 +3,13 @@ import 'dart:typed_data';
 
 import 'package:ado_dad_user/common/api_service.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
-import 'package:ado_dad_user/models/seller_stats.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/commercial_vehicle_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_fuel_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_manufacturer_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_transmission_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_variant_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehilce_model.dart';
+import 'package:ado_dad_user/models/seller_stats.dart';
 import 'package:dio/dio.dart';
 import 'package:mime/mime.dart';
 
@@ -145,7 +145,7 @@ class AddRepository {
 
   /// Trust signals for a seller's ad-detail tile (ad count, member-since,
   /// reply time, verified). Backed by GET /v2/ads/sellers/:id/stats.
-  /// Returns null on failure so callers can fall back to ad-embedded data.
+  /// Returns null on failure so callers fall back to ad-embedded data.
   Future<SellerStats?> fetchSellerStats(String sellerId) async {
     if (sellerId.trim().isEmpty) return null;
     try {
@@ -729,4 +729,124 @@ class AddRepository {
       print('🔍 Marking ad as sold - Ad ID: $adId');
       print('🔍 Base URL: ${_dio.options.baseUrl}');
       print('🔍 Full URL will be: ${_dio.options.baseUrl}ads/$adId/sold');
-      print('🔍 Trying v2 endpoint: ${_dio.optio
+      print('🔍 Trying v2 endpoint: ${_dio.options.baseUrl}v2/ads/$adId/sold');
+      print('🔍 Request data: {"soldOut": true}');
+
+      final resp = await _dio.put(
+        '/ads/$adId/sold',
+        data: {
+          'soldOut': true,
+        },
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      print('✅ Mark as sold response: ${resp.statusCode} - ${resp.data}');
+
+      // Accept various success status codes (200, 201, 204, etc.)
+      if (resp.statusCode! < 200 || resp.statusCode! >= 300) {
+        throw Exception(
+            'Failed to mark ad as sold - Status: ${resp.statusCode}');
+      }
+
+      // Parse and return the updated ad data from the response
+      final raw = resp.data;
+      final obj =
+          (raw is Map<String, dynamic> && raw['data'] is Map<String, dynamic>)
+              ? raw['data'] as Map<String, dynamic>
+              : (raw as Map<String, dynamic>);
+
+      return AddModel.fromJson(obj);
+    } on DioException catch (e) {
+      print('❌ Dio error in markAdAsSold (v1): $e');
+      print('❌ Response data: ${e.response?.data}');
+      print('❌ Response status: ${e.response?.statusCode}');
+      print('❌ Request URL: ${e.requestOptions.uri}');
+
+      // If v1 fails with 404, try v2 endpoint
+      if (e.response?.statusCode == 404) {
+        print('🔄 Trying v2 endpoint...');
+        try {
+          final resp2 = await _dio.put(
+            '/v2/ads/$adId/sold',
+            data: {
+              'soldOut': true,
+            },
+            options: Options(
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            ),
+          );
+          print(
+              '✅ Mark as sold response (v2): ${resp2.statusCode} - ${resp2.data}');
+
+          if (resp2.statusCode! < 200 || resp2.statusCode! >= 300) {
+            throw Exception(
+                'Failed to mark ad as sold - Status: ${resp2.statusCode}');
+          }
+
+          // Parse and return the updated ad data from the v2 response
+          final raw2 = resp2.data;
+          final obj2 = (raw2 is Map<String, dynamic> &&
+                  raw2['data'] is Map<String, dynamic>)
+              ? raw2['data'] as Map<String, dynamic>
+              : (raw2 as Map<String, dynamic>);
+
+          return AddModel.fromJson(obj2);
+        } catch (e2) {
+          print('❌ Dio error in markAdAsSold (v2): $e2');
+          if (e2 is DioException) {
+            print('❌ Response data: ${e2.response?.data}');
+            print('❌ Response status: ${e2.response?.statusCode}');
+          }
+        }
+      }
+
+      throw Exception(DioErrorHandler.handleError(e));
+    }
+  }
+
+  Future<PaginatedAdsResponse> fetchAdsByUserId({
+    required String userId,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/ads',
+        queryParameters: {
+          'userId': userId,
+          'page': page,
+          'limit': limit,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final List<dynamic> adsData = data['data'] ?? [];
+        final bool hasNext = data['hasNext'] ?? false;
+
+        final List<AddModel> ads =
+            adsData.map((adJson) => AddModel.fromJson(adJson)).toList();
+
+        return PaginatedAdsResponse(data: ads, hasNext: hasNext);
+      } else {
+        throw Exception("Failed to fetch ads for user");
+      }
+    } catch (e) {
+      print('Error fetching ads by user ID: $e');
+      throw Exception("Error fetching ads by user ID: $e");
+    }
+  }
+}
+
+class PaginatedAdsResponse {
+  final List<AddModel> data;
+  final bool hasNext;
+
+  PaginatedAdsResponse({required this.data, required this.hasNext});
+}
