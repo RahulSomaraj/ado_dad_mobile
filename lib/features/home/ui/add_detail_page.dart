@@ -1203,7 +1203,7 @@ Download Adodad app to contact the seller and view more details!
           mainAxisSize: MainAxisSize.min,
           children: [
             if (visible.isNotEmpty) ...[
-              header('Specifications'),
+              header('Key specs'),
               SizedBox(height: gap),
               Wrap(
                 spacing: chipSpacing,
@@ -2233,23 +2233,15 @@ class _SimilarAdsSectionState extends State<_SimilarAdsSection> {
     }
   }
 
-  String _inr(num n) {
-    final s = n.round().toString();
-    if (s.length <= 3) return s;
-    final last3 = s.substring(s.length - 3);
-    var rest = s.substring(0, s.length - 3);
-    final buf = <String>[];
-    while (rest.length > 2) {
-      buf.insert(0, rest.substring(rest.length - 2));
-      rest = rest.substring(0, rest.length - 2);
-    }
-    if (rest.isNotEmpty) buf.insert(0, rest);
-    return '${buf.join(',')},$last3';
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_loading || _items.isEmpty) return const SizedBox.shrink();
+    final cardH = richAdCardMainAxisExtent(
+      context,
+      columns: 1,
+      horizontalPadding: (MediaQuery.of(context).size.width - 190) / 2,
+      spacing: 0,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2290,7 +2282,7 @@ class _SimilarAdsSectionState extends State<_SimilarAdsSection> {
           ),
         ),
         SizedBox(
-          height: 256,
+          height: cardH,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -2298,7 +2290,7 @@ class _SimilarAdsSectionState extends State<_SimilarAdsSection> {
             separatorBuilder: (_, __) => const SizedBox(width: 12),
             itemBuilder: (_, i) => SizedBox(
               width: 190,
-              height: 256,
+              height: cardH,
               child: RichAdCard(ad: _items[i]),
             ),
           ),
@@ -2307,91 +2299,6 @@ class _SimilarAdsSectionState extends State<_SimilarAdsSection> {
     );
   }
 
-  Widget _card(AddModel ad) {
-    final img = ad.images.isNotEmpty ? ad.images.first : null;
-    return GestureDetector(
-      onTap: () => context.push('/add-detail-page', extra: ad),
-      child: Container(
-        width: 160,
-        decoration: BoxDecoration(
-          color: AppColors.whiteColor,
-          border: Border.all(color: AppColors.dividerColor, width: 0.5),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 110,
-              width: double.infinity,
-              child: img != null
-                  ? AppNetworkImage(
-                      url: img,
-                      fit: BoxFit.cover,
-                      height: 110,
-                      width: double.infinity,
-                    )
-                  : Container(
-                      color: AppColors.scaffoldBackground,
-                      child: Icon(Icons.image_outlined,
-                          color: AppColors.greyColor),
-                    ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '₹ ${_inr(ad.price)}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.blackColor,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    (ad.title != null && ad.title!.trim().isNotEmpty)
-                        ? ad.title!
-                        : ad.category,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.blackColor1,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.location_on_outlined,
-                          size: 12, color: AppColors.greyColor),
-                      const SizedBox(width: 2),
-                      Expanded(
-                        child: Text(
-                          ad.location,
-                          style: TextStyle(
-                              fontSize: 10.5, color: AppColors.greyColor),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _Spec {

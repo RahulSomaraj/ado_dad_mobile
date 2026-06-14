@@ -179,10 +179,10 @@ class AdDetailTitlePrice extends StatelessWidget {
               ),
             ),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Flexible(
+              Expanded(
                 child: Text(
                   '₹ ${(ad.price)}',
                   style: TextStyle(

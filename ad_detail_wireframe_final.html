@@ -3,43 +3,45 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>ado-dad · Ad Detail — Final (as built)</title>
+<title>ado-dad · Ad Detail — Final (picture-perfect)</title>
 <style>
 :root{
-  /* real app palette */
-  --primary:#4F48EC;        /* AppColors.primaryColor (indigo) */
-  --primary-tint:#EDEBFF;   /* avatar / chip tint */
-  --green:#19A463;          /* verified badge + call button */
+  --primary:#4F48EC;          /* AppColors.primaryColor */
+  --primary-08:rgba(79,72,236,.08);
+  --primary-25:rgba(79,72,236,.25);
+  --primary-tint:#EDEBFF;
+  --green:#19A463;            /* verified badge + call button */
   --star:#F5A623;
-  --ink:#111317; --muted:#6B7280; --line:#E6E7EB; --card:#FFFFFF;
-  --bg:#0f1115; --panel:#F7F8FA; --skel:#EDEFF3;
-  --shadow:0 10px 34px rgba(0,0,0,.45);
+  --ink:#16181D; --muted:#6B7280; --soft:#9AA1AC; --line:#E7E8EC; --card:#FFFFFF;
+  --bg:#0d0f13; --panel:#F6F7F9; --skel:#E9ECF1;
+  --shadow:0 14px 40px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:#e8ebf0;
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;}
-.wrap{max-width:1120px;margin:0 auto;padding:24px 20px 70px;}
-.logo{font-weight:800;letter-spacing:.3px;font-size:21px}
-.logo b{color:#8a93ff}
-.tagline{color:#8b93a3;font-size:13px;margin:4px 0 2px}
+.wrap{max-width:1120px;margin:0 auto;padding:26px 20px 72px}
+.logo{font-weight:800;letter-spacing:.2px;font-size:21px}
+.logo b{color:#8e96ff}
+.logo .s{font-size:13px;color:#8b93a3;font-weight:500}
+.tagline{color:#8b93a3;font-size:13px;margin:5px 0 0}
 .legend{display:flex;gap:18px;flex-wrap:wrap;margin:14px 0 26px;font-size:12.5px;color:#8b93a3}
 .legend span{display:inline-flex;align-items:center;gap:7px}
 .dot{width:11px;height:11px;border-radius:50%;display:inline-block}
-.stage{display:flex;gap:48px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+.stage{display:flex;gap:50px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
 /* phone */
-.phone{width:344px;flex:0 0 344px;background:#000;border-radius:42px;padding:11px;box-shadow:var(--shadow);border:1px solid #232838}
-.screen{background:var(--panel);border-radius:31px;height:734px;overflow:hidden;position:relative;display:flex;flex-direction:column}
-.notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:118px;height:22px;background:#000;border-radius:0 0 14px 14px;z-index:40}
-.sbar{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:11px;color:#333;flex:0 0 auto;background:var(--card)}
+.phone{width:346px;flex:0 0 346px;background:#000;border-radius:44px;padding:11px;box-shadow:var(--shadow);border:1px solid #20242e}
+.screen{background:var(--panel);border-radius:33px;height:744px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:116px;height:22px;background:#000;border-radius:0 0 14px 14px;z-index:40}
+.sbar{height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 22px 0 22px;font-size:11px;color:#3a3f47;flex:0 0 auto;background:var(--card)}
 .view{flex:1 1 auto;overflow-y:auto;scrollbar-width:thin;color:var(--ink);background:var(--panel)}
-.view::-webkit-scrollbar{width:5px}.view::-webkit-scrollbar-thumb{background:#cfd4dc;border-radius:4px}
+.view::-webkit-scrollbar{width:5px}.view::-webkit-scrollbar-thumb{background:#cdd2db;border-radius:4px}
 .pad{padding:14px 16px}
 .row{display:flex;gap:10px}.row.wrap{flex-wrap:wrap}.between{justify-content:space-between;align-items:center}
-.muted{color:var(--muted)}
+.muted{color:var(--muted)}.soft{color:var(--soft)}
 .h{font-weight:700;font-size:14px;margin:2px 0}
 .sub{font-size:12px;color:var(--muted)}
 /* gallery */
-.hero{height:226px;background:linear-gradient(135deg,#c9cdd6,#aeb4c0);position:relative;display:flex;align-items:center;justify-content:center;color:#fff9;font-size:34px}
+.hero{height:228px;background:linear-gradient(135deg,#cfd3db,#b0b6c1);position:relative;display:flex;align-items:center;justify-content:center;color:#ffffffb0;font-size:34px}
 .cic{width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;flex:0 0 auto}
 .dots{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
 .dots i{width:6px;height:6px;border-radius:50%;background:#ffffff88}
@@ -47,64 +49,65 @@ html,body{margin:0;background:var(--bg);color:#e8ebf0;
 .badge{font-size:9px;font-weight:800;letter-spacing:.3px;padding:4px 8px;border-radius:5px;display:inline-flex;align-items:center;gap:4px;color:#fff}
 .badge.green{background:var(--green)}
 .badge.tag{background:rgba(0,0,0,.6)}
-.pill-count{position:absolute;right:12px;bottom:12px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:4px 8px;border-radius:5px;display:flex;align-items:center;gap:4px}
+.count{position:absolute;right:12px;bottom:12px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:4px 8px;border-radius:5px;display:flex;align-items:center;gap:4px}
 /* price + emi */
 .price{font-weight:800;font-size:22px;color:var(--ink)}
-.chip-emi{display:inline-flex;align-items:center;gap:4px;background:rgba(79,72,236,.08);border:1px solid rgba(79,72,236,.25);color:var(--primary);font-size:12px;font-weight:600;padding:5px 10px;border-radius:20px}
+.emi{display:inline-flex;align-items:center;gap:5px;background:var(--primary-08);border:1px solid var(--primary-25);color:var(--primary);font-size:12px;font-weight:600;padding:5px 11px;border-radius:20px}
 .spec{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);color:var(--ink);font-size:12px;padding:7px 11px;border-radius:20px;white-space:nowrap}
 .skel{background:var(--skel);border-radius:7px}
 /* seller card */
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;align-items:center;gap:12px}
+.scard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;display:flex;align-items:center;gap:13px}
 .av{width:46px;height:46px;border-radius:50%;background:var(--primary-tint);color:var(--primary);font-weight:800;display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
-.trust{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:#374151;margin-top:3px}
+.sname{display:flex;align-items:center;gap:5px;font-weight:700;font-size:14px;color:var(--ink)}
+.trust{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12.5px;color:#374151;margin-top:3px}
 .trust .star{color:var(--star)}
-.sep{color:#c4c8d0}
+.trust .sep{color:#c7cbd3}
 /* similar */
-.simcard{flex:0 0 150px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.simcard .ph{height:84px;background:#d7dbe2}
-.simcard .b{padding:8px}
 .scrollx{display:flex;gap:11px;overflow-x:auto;padding:2px 0 6px}
 .scrollx::-webkit-scrollbar{height:0}
-.seeall{display:inline-flex;align-items:center;gap:2px;color:var(--primary);font-size:13px;font-weight:600}
+.sim{flex:0 0 152px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.sim .ph{height:84px;background:#d9dde4}
+.sim .b{padding:8px 9px}
+.seeall{display:inline-flex;align-items:center;gap:1px;color:var(--primary);font-size:13px;font-weight:600}
 /* sticky bar */
 .cta{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:11px 13px;display:flex;gap:10px;align-items:center}
 .btn{height:46px;border-radius:13px;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:7px}
 .btn.fill{background:var(--primary);color:#fff;flex:2}
 .btn.outline{background:#fff;color:var(--primary);border:1.4px solid var(--primary);flex:3}
 .btn.call{background:var(--green);color:#fff;width:46px;flex:0 0 46px}
-/* marker */
+/* markers + notes */
 .mk{position:relative}
 .mk::after{content:attr(data-n);position:absolute;z-index:6;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:var(--primary);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--panel)}
-.glow{box-shadow:0 0 0 2px rgba(79,72,236,.5);border-radius:12px}
-/* notes */
+.glow{box-shadow:0 0 0 2px rgba(79,72,236,.5);border-radius:14px}
 .notes{max-width:430px;flex:1 1 360px}
-.notes h3{font-size:16px;color:#e8ebf0;margin:0 0 4px}
-.notes .s{color:#8b93a3;font-size:13px;margin-bottom:16px}
-.note{display:grid;grid-template-columns:24px 1fr;gap:12px;padding:13px 0;border-top:1px solid #242a35}
+.notes h3{font-size:16px;color:#e8ebf0;margin:2px 0 4px}
+.notes .s{color:#8b93a3;font-size:13px;margin-bottom:14px}
+.note{display:grid;grid-template-columns:24px 1fr;gap:12px;padding:13px 0;border-top:1px solid #232936}
 .note .n{width:21px;height:21px;border-radius:50%;background:var(--primary);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:2px}
-.note .t{font-size:13px;line-height:1.5;color:#cdd3de}
+.note .t{font-size:13px;line-height:1.5;color:#ccd2dd}
 .note .t b{color:#fff}
+.note .t code{color:#9aa2b5;font-size:11.5px}
 .foot{color:#8b93a3;font-size:12px;margin-top:24px;text-align:center;line-height:1.6}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="logo">ado<b>·</b>dad — Ad Detail <span style="font-size:13px;color:#8b93a3;font-weight:500">· final, as built</span></div>
-  <div class="tagline">Mockup reflects the implemented widgets &amp; real app colors (indigo #4F48EC, green #19A463)</div>
+  <div class="logo">ado<b>·</b>dad — Ad Detail <span class="s">· final, picture-perfect</span></div>
+  <div class="tagline">Mirrors the shipped widgets and the real palette — indigo #4F48EC, green #19A463.</div>
   <div class="legend">
-    <span><i class="dot" style="background:var(--primary)"></i> Numbered = change shipped in this redesign</span>
-    <span><i class="dot" style="background:var(--green)"></i> Trust / verified</span>
+    <span><i class="dot" style="background:var(--primary)"></i> Numbered = element shipped in this redesign</span>
+    <span><i class="dot" style="background:var(--green)"></i> Verified / trust</span>
   </div>
 
   <div class="stage">
     <!-- PHONE -->
     <div class="phone"><div class="screen"><div class="notch"></div>
-      <div class="sbar"><span>9:41</span><span>▦ ▼ ▮</span></div>
+      <div class="sbar"><span>9:41</span><span>5G ▮▮▮ 100%</span></div>
       <div class="view">
 
         <!-- 1 · gallery -->
-        <div class="hero mk" data-n="1">🖼
-          <div style="position:absolute;top:46px;left:12px;right:12px;display:flex;justify-content:space-between">
+        <div class="hero mk" data-n="1">🚗
+          <div style="position:absolute;top:14px;left:12px;right:12px;display:flex;justify-content:space-between">
             <div class="cic">‹</div>
             <div class="row"><div class="cic">⤴</div><div class="cic">♡</div></div>
           </div>
@@ -112,27 +115,25 @@ html,body{margin:0;background:var(--bg);color:#e8ebf0;
             <div class="badge green">✓ VERIFIED SELLER</div>
             <div class="badge tag">CAR</div>
           </div>
-          <div class="pill-count">▣ 1/4</div>
+          <div class="count">▣ 1/4</div>
           <div class="dots"><i class="on"></i><i></i><i></i><i></i></div>
         </div>
 
         <!-- title + price + emi -->
-        <div class="pad" style="padding-bottom:6px">
+        <div class="pad" style="padding-bottom:4px">
           <div class="h" style="font-size:16px">Maruti Swift VXI 2021</div>
-          <div class="sub" style="margin:3px 0 10px">Posted On 12 Jun 2026</div>
-          <div class="row between mk" data-n="2" style="align-items:center">
+          <div class="sub" style="margin:4px 0 12px">Posted On 12 Jun 2026</div>
+          <div class="row between mk" data-n="2">
             <div class="price">₹ 540000</div>
-            <div class="chip-emi">💳 EMI ₹9,720/mo</div>
+            <div class="emi">💳 EMI ₹9,720/mo</div>
           </div>
-          <div class="row" style="align-items:center;gap:4px;margin-top:8px">
-            <span class="muted" style="font-size:13px">📍 3.2 km away</span>
-          </div>
+          <div class="soft" style="font-size:13px;margin-top:9px">📍 3.2 km away</div>
         </div>
 
-        <!-- 3 · key specs as chips -->
-        <div class="pad mk" data-n="3" style="padding-top:8px;padding-bottom:6px">
-          <div class="h" style="margin-bottom:8px">Key specs</div>
-          <div class="row wrap glow" style="gap:8px;padding:8px">
+        <!-- 3 · key specs chips -->
+        <div class="pad mk" data-n="3" style="padding-top:10px;padding-bottom:6px">
+          <div class="h" style="margin-bottom:9px">Key specs</div>
+          <div class="row wrap glow" style="gap:8px;padding:9px">
             <span class="spec">🏭 Maruti Suzuki</span>
             <span class="spec">🚗 Swift VXI</span>
             <span class="spec">⚙️ Manual</span>
@@ -144,54 +145,51 @@ html,body{margin:0;background:var(--bg);color:#e8ebf0;
         </div>
 
         <!-- description -->
-        <div class="pad" style="padding-top:8px;padding-bottom:6px">
-          <div class="h" style="margin-bottom:8px">Description</div>
-          <div class="skel" style="height:9px;margin:6px 0"></div>
-          <div class="skel" style="height:9px;width:90%;margin:6px 0"></div>
-          <div class="skel" style="height:9px;width:74%"></div>
+        <div class="pad" style="padding-top:10px;padding-bottom:6px">
+          <div class="h" style="margin-bottom:9px">Description</div>
+          <div class="skel" style="height:9px;margin:7px 0"></div>
+          <div class="skel" style="height:9px;width:92%;margin:7px 0"></div>
+          <div class="skel" style="height:9px;width:70%"></div>
         </div>
 
-        <!-- 4 · seller tile -->
+        <!-- report -->
+        <div class="pad" style="text-align:center;padding:8px 16px 2px">
+          <span class="soft" style="font-size:12px">⚑ Report this ad</span>
+        </div>
+
+        <!-- 4 · seller card -->
         <div class="pad mk" data-n="4" style="padding-top:10px;padding-bottom:6px">
-          <div class="card glow">
+          <div class="scard glow">
             <div class="av">R</div>
             <div style="flex:1;min-width:0">
-              <div style="display:flex;align-items:center;gap:5px">
-                <span style="font-weight:700;font-size:14px">Rahul S.</span>
-                <span style="color:var(--primary)">✔</span>
-              </div>
+              <div class="sname">Rahul S. <span style="color:var(--primary)">✔</span></div>
               <div class="trust">
                 <span class="star">★</span><span>4.7</span>
                 <span class="sep">·</span><span>replies in ~5m</span>
                 <span class="sep">·</span><span>12 ads</span>
               </div>
-              <div class="sub" style="margin-top:3px">Member since 2023 · Bengaluru</div>
+              <div class="sub" style="margin-top:4px">Member since 2023 · Bengaluru</div>
             </div>
-            <span class="muted" style="font-size:20px">›</span>
+            <span class="soft" style="font-size:20px">›</span>
           </div>
         </div>
 
-        <!-- report -->
-        <div class="pad" style="text-align:center;padding:6px 16px">
-          <span class="sub">⚑ Report this ad</span>
-        </div>
-
         <!-- 5 · similar near you -->
-        <div class="pad mk" data-n="5" style="padding-bottom:10px">
+        <div class="pad mk" data-n="5" style="padding-bottom:12px">
           <div class="row between" style="margin-bottom:10px">
             <div class="h" style="margin:0">Similar near you</div>
             <span class="seeall">See all ›</span>
           </div>
           <div class="scrollx">
-            <div class="simcard"><div class="ph"></div><div class="b"><div style="font-weight:800;font-size:13px">₹ 4,90,000</div><div class="sub" style="margin:2px 0">Swift LXI 2020</div><div class="sub">📍 3.0 km away</div></div></div>
-            <div class="simcard"><div class="ph"></div><div class="b"><div style="font-weight:800;font-size:13px">₹ 6,10,000</div><div class="sub" style="margin:2px 0">Baleno Zeta</div><div class="sub">📍 5.4 km away</div></div></div>
-            <div class="simcard"><div class="ph"></div><div class="b"><div style="font-weight:800;font-size:13px">₹ 5,20,000</div><div class="sub" style="margin:2px 0">Hyundai i20</div><div class="sub">📍 6.1 km away</div></div></div>
+            <div class="sim"><div class="ph"></div><div class="b"><div style="font-weight:800;font-size:13px">₹ 4,90,000</div><div class="sub" style="margin:3px 0">Swift LXI 2020</div><div class="sub">📍 3.0 km away</div></div></div>
+            <div class="sim"><div class="ph"></div><div class="b"><div style="font-weight:800;font-size:13px">₹ 6,10,000</div><div class="sub" style="margin:3px 0">Baleno Zeta</div><div class="sub">📍 5.4 km away</div></div></div>
+            <div class="sim"><div class="ph"></div><div class="b"><div style="font-weight:800;font-size:13px">₹ 5,20,000</div><div class="sub" style="margin:3px 0">Hyundai i20</div><div class="sub">📍 6.1 km away</div></div></div>
           </div>
         </div>
 
       </div>
 
-      <!-- 6 · sticky CTA bar -->
+      <!-- 6 · sticky CTA -->
       <div class="cta mk" data-n="6">
         <div class="btn fill">💬 Chat</div>
         <div class="btn outline">Make an Offer</div>
@@ -201,26 +199,26 @@ html,body{margin:0;background:var(--bg);color:#e8ebf0;
 
     <!-- NOTES -->
     <div class="notes">
-      <h3>What's on screen — and where it lives in code</h3>
-      <div class="s">Every numbered element is implemented. Mockup mirrors the real widgets and colours.</div>
+      <h3>Every element, mapped to code</h3>
+      <div class="s">All six are implemented; the mockup matches the real widgets and colours.</div>
 
-      <div class="note"><div class="n">1</div><div class="t"><b>Verified-seller badge on the gallery.</b> Green <code>#19A463</code> pill with a check, floated bottom-left above the category/listing tag — shows only when <code>ad.user.isVerified</code>. <span class="muted">add_detail_page.dart · _detailVerifiedBadge()</span></div></div>
+      <div class="note"><div class="n">1</div><div class="t"><b>Verified-seller badge on the gallery.</b> Green <code>#19A463</code> pill + check, bottom-left above the listing tag; shows only when <code>ad.user.isVerified</code>. <code>add_detail_page.dart · _detailVerifiedBadge()</code></div></div>
 
-      <div class="note"><div class="n">2</div><div class="t"><b>EMI as a chip beside price.</b> Indigo-tinted pill with a card icon (<code>EMI ₹9,720/mo</code>), only for financeable vehicles. <span class="muted">ad_detail_title_price.dart</span></div></div>
+      <div class="note"><div class="n">2</div><div class="t"><b>EMI as a chip beside price.</b> Indigo-tinted pill with a card icon (<code>EMI ₹9,720/mo</code>), only for financeable vehicles. <code>ad_detail_title_price.dart</code></div></div>
 
-      <div class="note"><div class="n">3</div><div class="t"><b>Key specs as chips.</b> Year · fuel · transmission · km · owner read at a glance instead of a stacked key–value table. <span class="muted">add_detail_page.dart · _specChips()</span></div></div>
+      <div class="note"><div class="n">3</div><div class="t"><b>Key specs as chips.</b> Make · model · transmission · fuel · year · km · owner — scannable, not a stacked table. <code>add_detail_page.dart · _specChips()</code></div></div>
 
-      <div class="note"><div class="n">4</div><div class="t"><b>Seller tile with trust signals.</b> <span class="star" style="color:var(--star)">★</span> rating · replies-in · ad count · member-since, fetched from the new endpoint; whole tile taps through to the seller profile. Rating appears once seller-ratings exist; the rest is live now. <span class="muted">ad_detail_seller_tile.dart → GET /v2/ads/sellers/:id/stats</span></div></div>
+      <div class="note"><div class="n">4</div><div class="t"><b>Seller tile — trust first.</b> Name + verified check, then <span style="color:var(--star)">★</span> rating · replies-in · ad count <i>directly under the name</i>, then <b>Member since YYYY · city</b> on its own line. Email and masked phone removed. Whole tile taps to the seller profile. Rating shows once seller-ratings exist; reply-time, ad count, member-since are live now. <code>ad_detail_seller_tile.dart → GET /v2/ads/sellers/:id/stats</code></div></div>
 
-      <div class="note"><div class="n">5</div><div class="t"><b>"Similar near you" + See all.</b> Distance shown per card; See-all opens search. <span class="muted">add_detail_page.dart · _SimilarAdsSection</span></div></div>
+      <div class="note"><div class="n">5</div><div class="t"><b>"Similar near you" + See all.</b> Distance per card; See-all opens search. <code>add_detail_page.dart · _SimilarAdsSection</code></div></div>
 
-      <div class="note"><div class="n">6</div><div class="t"><b>Sticky action bar — fixed &amp; reordered.</b> <b>Chat · Make an Offer · Call</b>; the long "Make an Offer" label now scales to fit (FittedBox) so it no longer overflows. <span class="muted">ad_detail_bottom_buttons.dart</span></div></div>
+      <div class="note"><div class="n">6</div><div class="t"><b>Sticky bar — fixed &amp; reordered.</b> <b>Chat</b> (filled) · <b>Make an Offer</b> (outlined) · <b>Call</b> (green); the long label scales to fit (FittedBox) so it never overflows. <code>ad_detail_bottom_buttons.dart</code></div></div>
     </div>
   </div>
 
   <div class="foot">
-    Illustrative mockup — placeholder imagery and sample values; spacing/copy indicative.<br/>
-    Backend trust signals served by <code>SellerStatsUc</code> (ad count, member-since, reply time; rating reserved for a future seller-rating feature).
+    Illustrative — placeholder imagery and sample values; spacing/copy indicative.<br/>
+    Trust signals served by <code>SellerStatsUc</code> (ad count, member-since, reply time; rating reserved for a future seller-rating feature).
   </div>
 </div>
 </body>
