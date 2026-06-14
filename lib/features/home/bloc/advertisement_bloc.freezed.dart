@@ -24,6 +24,8 @@ mixin _$AdvertisementEvent {
     required TResult Function(String categoryId) fetchByCategory,
     required TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -58,6 +60,8 @@ mixin _$AdvertisementEvent {
     TResult? Function(String categoryId)? fetchByCategory,
     TResult? Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -91,6 +95,8 @@ mixin _$AdvertisementEvent {
     TResult Function(String categoryId)? fetchByCategory,
     TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -232,6 +238,8 @@ class _$StartedImpl implements Started {
     required TResult Function(String categoryId) fetchByCategory,
     required TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -269,6 +277,8 @@ class _$StartedImpl implements Started {
     TResult? Function(String categoryId)? fetchByCategory,
     TResult? Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -305,6 +315,8 @@ class _$StartedImpl implements Started {
     TResult Function(String categoryId)? fetchByCategory,
     TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -447,6 +459,8 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
     required TResult Function(String categoryId) fetchByCategory,
     required TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -484,6 +498,8 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
     TResult? Function(String categoryId)? fetchByCategory,
     TResult? Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -520,6 +536,8 @@ class _$FetchAllListingsEventImpl implements FetchAllListingsEvent {
     TResult Function(String categoryId)? fetchByCategory,
     TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -660,6 +678,8 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
     required TResult Function(String categoryId) fetchByCategory,
     required TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -697,6 +717,8 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
     TResult? Function(String categoryId)? fetchByCategory,
     TResult? Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -733,6 +755,8 @@ class _$FetchNextPageEventImpl implements FetchNextPageEvent {
     TResult Function(String categoryId)? fetchByCategory,
     TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -902,6 +926,8 @@ class _$FetchByCategoryImpl implements FetchByCategory {
     required TResult Function(String categoryId) fetchByCategory,
     required TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -939,6 +965,8 @@ class _$FetchByCategoryImpl implements FetchByCategory {
     TResult? Function(String categoryId)? fetchByCategory,
     TResult? Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -975,6 +1003,8 @@ class _$FetchByCategoryImpl implements FetchByCategory {
     TResult Function(String categoryId)? fetchByCategory,
     TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -1085,6 +1115,8 @@ abstract class _$$ApplyFiltersEventImplCopyWith<$Res> {
   @useResult
   $Res call(
       {String? categoryId,
+      double? latitude,
+      double? longitude,
       int? minYear,
       int? maxYear,
       List<String>? manufacturerIds,
@@ -1117,6 +1149,8 @@ class __$$ApplyFiltersEventImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? categoryId = freezed,
+    Object? latitude = freezed,
+    Object? longitude = freezed,
     Object? minYear = freezed,
     Object? maxYear = freezed,
     Object? manufacturerIds = freezed,
@@ -1139,6 +1173,14 @@ class __$$ApplyFiltersEventImplCopyWithImpl<$Res>
           ? _value.categoryId
           : categoryId // ignore: cast_nullable_to_non_nullable
               as String?,
+      latitude: freezed == latitude
+          ? _value.latitude
+          : latitude // ignore: cast_nullable_to_non_nullable
+              as double?,
+      longitude: freezed == longitude
+          ? _value.longitude
+          : longitude // ignore: cast_nullable_to_non_nullable
+              as double?,
       minYear: freezed == minYear
           ? _value.minYear
           : minYear // ignore: cast_nullable_to_non_nullable
@@ -1212,6 +1254,8 @@ class __$$ApplyFiltersEventImplCopyWithImpl<$Res>
 class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
   const _$ApplyFiltersEventImpl(
       {this.categoryId,
+      this.latitude,
+      this.longitude,
       this.minYear,
       this.maxYear,
       final List<String>? manufacturerIds,
@@ -1237,6 +1281,10 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
 
   @override
   final String? categoryId;
+  @override
+  final double? latitude;
+  @override
+  final double? longitude;
   @override
   final int? minYear;
   @override
@@ -1324,7 +1372,7 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
 
   @override
   String toString() {
-    return 'AdvertisementEvent.applyFilters(categoryId: $categoryId, minYear: $minYear, maxYear: $maxYear, manufacturerIds: $manufacturerIds, modelIds: $modelIds, fuelTypeIds: $fuelTypeIds, transmissionTypeIds: $transmissionTypeIds, minPrice: $minPrice, maxPrice: $maxPrice, commercialVehicleTypes: $commercialVehicleTypes, propertyTypes: $propertyTypes, minBedrooms: $minBedrooms, maxBedrooms: $maxBedrooms, minArea: $minArea, maxArea: $maxArea, isFurnished: $isFurnished, hasParking: $hasParking)';
+    return 'AdvertisementEvent.applyFilters(categoryId: $categoryId, latitude: $latitude, longitude: $longitude, minYear: $minYear, maxYear: $maxYear, manufacturerIds: $manufacturerIds, modelIds: $modelIds, fuelTypeIds: $fuelTypeIds, transmissionTypeIds: $transmissionTypeIds, minPrice: $minPrice, maxPrice: $maxPrice, commercialVehicleTypes: $commercialVehicleTypes, propertyTypes: $propertyTypes, minBedrooms: $minBedrooms, maxBedrooms: $maxBedrooms, minArea: $minArea, maxArea: $maxArea, isFurnished: $isFurnished, hasParking: $hasParking)';
   }
 
   @override
@@ -1334,6 +1382,10 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
             other is _$ApplyFiltersEventImpl &&
             (identical(other.categoryId, categoryId) ||
                 other.categoryId == categoryId) &&
+            (identical(other.latitude, latitude) ||
+                other.latitude == latitude) &&
+            (identical(other.longitude, longitude) ||
+                other.longitude == longitude) &&
             (identical(other.minYear, minYear) || other.minYear == minYear) &&
             (identical(other.maxYear, maxYear) || other.maxYear == maxYear) &&
             const DeepCollectionEquality()
@@ -1364,25 +1416,28 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      categoryId,
-      minYear,
-      maxYear,
-      const DeepCollectionEquality().hash(_manufacturerIds),
-      const DeepCollectionEquality().hash(_modelIds),
-      const DeepCollectionEquality().hash(_fuelTypeIds),
-      const DeepCollectionEquality().hash(_transmissionTypeIds),
-      minPrice,
-      maxPrice,
-      const DeepCollectionEquality().hash(_commercialVehicleTypes),
-      const DeepCollectionEquality().hash(_propertyTypes),
-      minBedrooms,
-      maxBedrooms,
-      minArea,
-      maxArea,
-      isFurnished,
-      hasParking);
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        categoryId,
+        latitude,
+        longitude,
+        minYear,
+        maxYear,
+        const DeepCollectionEquality().hash(_manufacturerIds),
+        const DeepCollectionEquality().hash(_modelIds),
+        const DeepCollectionEquality().hash(_fuelTypeIds),
+        const DeepCollectionEquality().hash(_transmissionTypeIds),
+        minPrice,
+        maxPrice,
+        const DeepCollectionEquality().hash(_commercialVehicleTypes),
+        const DeepCollectionEquality().hash(_propertyTypes),
+        minBedrooms,
+        maxBedrooms,
+        minArea,
+        maxArea,
+        isFurnished,
+        hasParking
+      ]);
 
   /// Create a copy of AdvertisementEvent
   /// with the given fields replaced by the non-null parameter values.
@@ -1402,6 +1457,8 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
     required TResult Function(String categoryId) fetchByCategory,
     required TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -1429,6 +1486,8 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
   }) {
     return applyFilters(
         categoryId,
+        latitude,
+        longitude,
         minYear,
         maxYear,
         manufacturerIds,
@@ -1456,6 +1515,8 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
     TResult? Function(String categoryId)? fetchByCategory,
     TResult? Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -1482,6 +1543,8 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
   }) {
     return applyFilters?.call(
         categoryId,
+        latitude,
+        longitude,
         minYear,
         maxYear,
         manufacturerIds,
@@ -1509,6 +1572,8 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
     TResult Function(String categoryId)? fetchByCategory,
     TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -1537,6 +1602,8 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
     if (applyFilters != null) {
       return applyFilters(
           categoryId,
+          latitude,
+          longitude,
           minYear,
           maxYear,
           manufacturerIds,
@@ -1618,6 +1685,8 @@ class _$ApplyFiltersEventImpl implements ApplyFiltersEvent {
 abstract class ApplyFiltersEvent implements AdvertisementEvent {
   const factory ApplyFiltersEvent(
       {final String? categoryId,
+      final double? latitude,
+      final double? longitude,
       final int? minYear,
       final int? maxYear,
       final List<String>? manufacturerIds,
@@ -1636,6 +1705,8 @@ abstract class ApplyFiltersEvent implements AdvertisementEvent {
       final bool? hasParking}) = _$ApplyFiltersEventImpl;
 
   String? get categoryId;
+  double? get latitude;
+  double? get longitude;
   int? get minYear;
   int? get maxYear;
   List<String>? get manufacturerIds;
@@ -1757,6 +1828,8 @@ class _$UpdateAdFavoriteStatusEventImpl implements UpdateAdFavoriteStatusEvent {
     required TResult Function(String categoryId) fetchByCategory,
     required TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -1794,6 +1867,8 @@ class _$UpdateAdFavoriteStatusEventImpl implements UpdateAdFavoriteStatusEvent {
     TResult? Function(String categoryId)? fetchByCategory,
     TResult? Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -1830,6 +1905,8 @@ class _$UpdateAdFavoriteStatusEventImpl implements UpdateAdFavoriteStatusEvent {
     TResult Function(String categoryId)? fetchByCategory,
     TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -2023,6 +2100,8 @@ class _$SearchByLocationEventImpl implements SearchByLocationEvent {
     required TResult Function(String categoryId) fetchByCategory,
     required TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -2060,6 +2139,8 @@ class _$SearchByLocationEventImpl implements SearchByLocationEvent {
     TResult? Function(String categoryId)? fetchByCategory,
     TResult? Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -2096,6 +2177,8 @@ class _$SearchByLocationEventImpl implements SearchByLocationEvent {
     TResult Function(String categoryId)? fetchByCategory,
     TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -2275,6 +2358,8 @@ class _$SearchAdsEventImpl implements SearchAdsEvent {
     required TResult Function(String categoryId) fetchByCategory,
     required TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -2312,6 +2397,8 @@ class _$SearchAdsEventImpl implements SearchAdsEvent {
     TResult? Function(String categoryId)? fetchByCategory,
     TResult? Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -2348,6 +2435,8 @@ class _$SearchAdsEventImpl implements SearchAdsEvent {
     TResult Function(String categoryId)? fetchByCategory,
     TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -2498,6 +2587,8 @@ class _$SearchNextPageEventImpl implements SearchNextPageEvent {
     required TResult Function(String categoryId) fetchByCategory,
     required TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -2535,6 +2626,8 @@ class _$SearchNextPageEventImpl implements SearchNextPageEvent {
     TResult? Function(String categoryId)? fetchByCategory,
     TResult? Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -2571,6 +2664,8 @@ class _$SearchNextPageEventImpl implements SearchNextPageEvent {
     TResult Function(String categoryId)? fetchByCategory,
     TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -2739,6 +2834,8 @@ class _$FetchByUserIdEventImpl implements FetchByUserIdEvent {
     required TResult Function(String categoryId) fetchByCategory,
     required TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -2776,6 +2873,8 @@ class _$FetchByUserIdEventImpl implements FetchByUserIdEvent {
     TResult? Function(String categoryId)? fetchByCategory,
     TResult? Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,
@@ -2812,6 +2911,8 @@ class _$FetchByUserIdEventImpl implements FetchByUserIdEvent {
     TResult Function(String categoryId)? fetchByCategory,
     TResult Function(
             String? categoryId,
+            double? latitude,
+            double? longitude,
             int? minYear,
             int? maxYear,
             List<String>? manufacturerIds,

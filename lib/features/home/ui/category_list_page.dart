@@ -11,6 +11,7 @@ import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/services/filter_state_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 
@@ -32,6 +33,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
   final Dio _dio = ApiService().dio;
   Map<String, bool?> _manufacturerPremiumCache =
       {}; // Cache manufacturer isPremium
+  double? _lat;
+  double? _lng;
 
   // Helper method to check if this is Premium Vehicles category
   bool get _isPremiumVehiclesCategory {
@@ -47,17 +50,6 @@ class _CategoryListPageState extends State<CategoryListPage> {
   void initState() {
     super.initState();
 
-    // initial load: category with no filters
-    // For Premium Vehicles, pass null to fetch all ads (will filter by isPremium client-side)
-    context.read<AdvertisementBloc>().add(
-          AdvertisementEvent.applyFilters(categoryId: _effectiveCategoryId),
-        );
-
-    // Pre-fetch manufacturer isPremium data for premium category
-    if (_isPremiumVehiclesCategory) {
-      _fetchManufacturerPremiumData();
-    }
-
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 300) {
@@ -66,6 +58,36 @@ class _CategoryListPageState extends State<CategoryListPage> {
             );
       }
     });
+
+    Future.microtask(() => _initLoad());
+  }
+
+  Future<void> _initLoad() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (permission != LocationPermission.denied &&
+          permission != LocationPermission.deniedForever) {
+        final pos = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.low);
+        _lat = pos.latitude;
+        _lng = pos.longitude;
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
+
+    // For Premium Vehicles, pass null to fetch all ads (will filter by isPremium client-side)
+    context.read<AdvertisementBloc>().add(
+          AdvertisementEvent.applyFilters(
+            categoryId: _effectiveCategoryId,
+            latitude: _lat,
+            longitude: _lng,
+          ),
+        );
+
+    if (_isPremiumVehiclesCategory) {
+      _fetchManufacturerPremiumData();
+    }
   }
 
   /// Fetch manufacturer isPremium data from API
@@ -210,6 +232,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
                       context.read<AdvertisementBloc>().add(
                             AdvertisementEvent.applyFilters(
                               categoryId: widget.categoryId,
+                              latitude: _lat,
+                              longitude: _lng,
                               propertyTypes: (result['propertyTypes'] as List?)
                                   ?.cast<String>(),
                               minBedrooms: result['minBedrooms'] as int?,
@@ -234,6 +258,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
                             AdvertisementEvent.applyFilters(
                               // For Premium Vehicles, pass null to fetch all categories
                               categoryId: _effectiveCategoryId,
+                              latitude: _lat,
+                              longitude: _lng,
                               commercialVehicleTypes:
                                   (result['commercialVehicleTypes'] as List?)
                                       ?.cast<String>(),
@@ -348,6 +374,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
                             context.read<AdvertisementBloc>().add(
                                   AdvertisementEvent.applyFilters(
                                     categoryId: widget.categoryId,
+                                    latitude: _lat,
+                                    longitude: _lng,
                                   ),
                                 );
                           },
@@ -561,6 +589,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
                       context.read<AdvertisementBloc>().add(
                             AdvertisementEvent.applyFilters(
                               categoryId: widget.categoryId,
+                              latitude: _lat,
+                              longitude: _lng,
                               propertyTypes:
                                   (_filters['propertyTypes'] as List?)
                                       ?.cast<String>(),
@@ -580,6 +610,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
                       context.read<AdvertisementBloc>().add(
                             AdvertisementEvent.applyFilters(
                               categoryId: _effectiveCategoryId,
+                              latitude: _lat,
+                              longitude: _lng,
                               commercialVehicleTypes:
                                   (_filters['commercialVehicleTypes'] as List?)
                                       ?.cast<String>(),

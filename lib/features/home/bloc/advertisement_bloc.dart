@@ -242,6 +242,8 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
 
     // set/replace filters (category can be re-applied from page)
     _categoryId = event.categoryId ?? _categoryId;
+    _locationLatitude = event.latitude;
+    _locationLongitude = event.longitude;
     _minYear = event.minYear;
     _maxYear = event.maxYear;
     _manufacturerIds = event.manufacturerIds;
@@ -259,13 +261,13 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _isFurnished = event.isFurnished;
     _hasParking = event.hasParking;
     _currentPage = 1;
-    _locationLatitude = null;
-    _locationLongitude = null;
 
     try {
       final result = await repository.fetchAllAds(
           page: _currentPage,
           category: _categoryId,
+          latitude: _locationLatitude,
+          longitude: _locationLongitude,
           commercialVehicleTypes: _commercialVehicleTypes,
           minYear: _minYear,
           maxYear: _maxYear,

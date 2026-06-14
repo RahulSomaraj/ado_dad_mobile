@@ -9,6 +9,8 @@ class AdvertisementEvent with _$AdvertisementEvent {
       {required String categoryId}) = FetchByCategory;
   const factory AdvertisementEvent.applyFilters({
     String? categoryId,
+    double? latitude,
+    double? longitude,
     int? minYear,
     int? maxYear,
     List<String>? manufacturerIds,
