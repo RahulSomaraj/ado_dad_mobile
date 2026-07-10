@@ -385,7 +385,7 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Edit Add Details',
+          'Edit ad',
           style: AppTextstyle.appbarText.copyWith(
             fontSize: GetResponsiveSize.getResponsiveFontSize(
               context,

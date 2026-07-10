@@ -1660,23 +1660,11 @@ Download Adodad app to contact the seller and view more details!
       return;
     }
 
-    if (!kIsWeb && Platform.isIOS) {
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => ReportAdDialog(
-          reportedUserId: reportedUserId,
-          adId: ad.id,
-        ),
-      );
-    } else {
-      showDialog(
-        context: context,
-        builder: (context) => ReportAdDialog(
-          reportedUserId: reportedUserId,
-          adId: ad.id,
-        ),
-      );
-    }
+    ReportAdDialog.show(
+      context,
+      reportedUserId: reportedUserId,
+      adId: ad.id,
+    );
   }
 
   // ======= Seller Tile =======
@@ -1983,6 +1971,7 @@ Download Adodad app to contact the seller and view more details!
           adTitle: ad.description.isNotEmpty ? ad.description : 'Untitled Ad',
           adPosterName: ad.user?.name ?? 'Unknown Seller',
           otherUserId: ad.user?.id ?? '',
+          adPrice: ad.price,
         );
       },
       markingAsSold: () {},
@@ -1993,6 +1982,7 @@ Download Adodad app to contact the seller and view more details!
           adTitle: ad.description.isNotEmpty ? ad.description : 'Untitled Ad',
           adPosterName: ad.user?.name ?? 'Unknown Seller',
           otherUserId: ad.user?.id ?? '',
+          adPrice: ad.price,
         );
       },
       deleting: () {},

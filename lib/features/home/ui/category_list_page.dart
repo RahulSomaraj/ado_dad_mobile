@@ -29,6 +29,9 @@ class _CategoryListPageState extends State<CategoryListPage> {
   late final List<AddModel> filteredAds;
   final ScrollController _scrollController = ScrollController();
   Map<String, dynamic> _filters = {};
+
+  /// Client-side sort of the loaded list (wireframe: "Category list" chips).
+  String _sort = 'newest'; // newest | price_desc | price_asc
   final FilterStateService _filterStateService = FilterStateService();
   final Dio _dio = ApiService().dio;
   Map<String, bool?> _manufacturerPremiumCache =
@@ -565,25 +568,169 @@ class _CategoryListPageState extends State<CategoryListPage> {
                   }
                 }
 
-                if (items.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'No ads found.',
-                      style: TextStyle(
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: 16.0, // Keep mobile unchanged
-                          tablet: 25.0,
-                          largeTablet: 30.0,
-                          desktop: 35.0,
-                        ),
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  );
+                // Client-side sorting (does not mutate bloc state)
+                if (_sort == 'price_desc') {
+                  items = List.of(items)
+                    ..sort((a, b) => b.price.compareTo(a.price));
+                } else if (_sort == 'price_asc') {
+                  items = List.of(items)
+                    ..sort((a, b) => a.price.compareTo(b.price));
                 }
 
-                return RefreshIndicator(
+                if (items.isEmpty) {
+                  return _buildEmptyState(context);
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSortChips(context),
+                    Expanded(
+                      child: _buildListingsGrid(context, state, items),
+                    ),
+                  ],
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Sort chip row (wireframe: docs/ado_dad_wireframes_missing_pages.html
+  /// → "Category list").
+  Widget _buildSortChips(BuildContext context) {
+    const options = [
+      ('newest', 'Newest'),
+      ('price_desc', 'Price ↓'),
+      ('price_asc', 'Price ↑'),
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: options.map((option) {
+            final selected = _sort == option.$1;
+            return Padding(
+              padding: const EdgeInsets.only(right: 7),
+              child: ChoiceChip(
+                label: Text(option.$2),
+                selected: selected,
+                onSelected: (_) => setState(() => _sort = option.$1),
+                selectedColor: AppColors.primaryColor,
+                labelStyle: TextStyle(
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                      mobile: 12, tablet: 15, largeTablet: 17, desktop: 19),
+                  color: selected ? Colors.white : AppColors.blackColor,
+                ),
+                backgroundColor: AppColors.whiteColor,
+                shape: StadiumBorder(
+                  side: BorderSide(
+                    color: selected
+                        ? AppColors.primaryColor
+                        : AppColors.greyColor.withOpacity(0.4),
+                  ),
+                ),
+                showCheckmark: false,
+                visualDensity: VisualDensity.compact,
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  /// Friendly empty state with a filter reset (wireframe: "Category list").
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.sentiment_dissatisfied_outlined,
+              size: GetResponsiveSize.getResponsiveSize(context,
+                  mobile: 40, tablet: 52, largeTablet: 64, desktop: 76),
+              color: AppColors.greyColor,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'No ads found',
+              style: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(
+                  context,
+                  mobile: 16.0, // Keep mobile unchanged
+                  tablet: 25.0,
+                  largeTablet: 30.0,
+                  desktop: 35.0,
+                ),
+                fontWeight: FontWeight.w600,
+                color: AppColors.blackColor,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Try clearing a filter or widening your price range.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                    mobile: 12.5, tablet: 16, largeTablet: 18, desktop: 20),
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 14),
+            OutlinedButton(
+              onPressed: _resetFilters,
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: AppColors.greyColor.withOpacity(0.6)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
+              ),
+              child: Text(
+                'Reset filters',
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.blackColor,
+                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                      mobile: 13, tablet: 16, largeTablet: 18, desktop: 20),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _resetFilters() {
+    setState(() {
+      _filters = {};
+      _sort = 'newest';
+    });
+    context.read<AdvertisementBloc>().add(
+          AdvertisementEvent.applyFilters(
+            categoryId: widget.categoryId == 'property'
+                ? widget.categoryId
+                : _effectiveCategoryId,
+            latitude: _lat,
+            longitude: _lng,
+          ),
+        );
+  }
+
+  Widget _buildListingsGrid(
+      BuildContext context, ListingsLoaded state, List<AddModel> items) {
+    final isPremiumCategory =
+        widget.categoryTitle.toLowerCase().contains('premium');
+    return RefreshIndicator(
                   onRefresh: () async {
                     if (widget.categoryId == 'property') {
                       // Property filters
@@ -658,13 +805,6 @@ class _CategoryListPageState extends State<CategoryListPage> {
                     },
                   ),
                 );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        ),
-      ),
-    );
   }
 
   String _getAdTitle(AddModel ad) {

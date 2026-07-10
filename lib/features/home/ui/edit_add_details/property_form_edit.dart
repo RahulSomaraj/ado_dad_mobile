@@ -321,7 +321,7 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Edit Property Details',
+          'Edit ad',
           style: AppTextstyle.appbarText.copyWith(
             fontSize: GetResponsiveSize.getResponsiveFontSize(
               context,

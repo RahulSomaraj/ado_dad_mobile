@@ -26,6 +26,14 @@ class ShowroomUserAdsPage extends StatefulWidget {
 }
 
 class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
+  String get _dealerInitials {
+    final n = widget.userName?.trim() ?? '';
+    if (n.isEmpty) return 'S';
+    final parts = n.split(RegExp(r'\s+'));
+    if (parts.length == 1) return parts.first[0].toUpperCase();
+    return (parts.first[0] + parts.last[0]).toUpperCase();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -113,7 +121,7 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'This showroom doesn\'t have any products listed yet.',
+                          'This showroom doesn\'t have active listings yet.',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: Colors.grey[500],
                           ),
@@ -128,22 +136,111 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Padding(
-                  //   padding:
-                  //       const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  //   child: Text(
-                  //     'Showroom Products (${ads.length})',
-                  //     style: theme.textTheme.titleMedium?.copyWith(
-                  //       fontWeight: FontWeight.w700,
-                  //     ),
-                  //   ),
-                  // ),
-                  SizedBox(
-                      height: GetResponsiveSize.getResponsiveSize(context,
-                          mobile: 20,
-                          tablet: 28,
-                          largeTablet: 36,
-                          desktop: 44)),
+                  // Dealer header (wireframe: "Showroom — dealer's ads")
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      GetResponsiveSize.getResponsivePadding(context,
+                          mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+                      GetResponsiveSize.getResponsivePadding(context,
+                          mobile: 10, tablet: 12, largeTablet: 14, desktop: 16),
+                      GetResponsiveSize.getResponsivePadding(context,
+                          mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+                      0,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: GetResponsiveSize.getResponsiveSize(context,
+                              mobile: 48,
+                              tablet: 58,
+                              largeTablet: 68,
+                              desktop: 78),
+                          height: GetResponsiveSize.getResponsiveSize(context,
+                              mobile: 48,
+                              tablet: 58,
+                              largeTablet: 68,
+                              desktop: 78),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            _dealerInitials,
+                            style: TextStyle(
+                              color: AppColors.primaryColor,
+                              fontWeight: FontWeight.w700,
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                  context,
+                                  mobile: 17,
+                                  tablet: 21,
+                                  largeTablet: 25,
+                                  desktop: 29),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.userName ?? 'Showroom',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                          context,
+                                          mobile: 15,
+                                          tablet: 19,
+                                          largeTablet: 23,
+                                          desktop: 27),
+                                ),
+                              ),
+                              Text(
+                                '${ads.length} listing${ads.length == 1 ? '' : 's'}${hasMore ? '+' : ''}',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: AppColors.greyColor,
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                          context,
+                                          mobile: 11.5,
+                                          tablet: 14,
+                                          largeTablet: 16,
+                                          desktop: 18),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      GetResponsiveSize.getResponsivePadding(context,
+                          mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+                      GetResponsiveSize.getResponsivePadding(context,
+                          mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
+                      GetResponsiveSize.getResponsivePadding(context,
+                          mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
+                      0,
+                    ),
+                    child: Text(
+                      'Showroom products (${ads.length})',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 15,
+                            tablet: 20,
+                            largeTablet: 24,
+                            desktop: 28),
+                      ),
+                    ),
+                  ),
                   // Product list
                   Expanded(
                     child: GridView.builder(
@@ -191,7 +288,7 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
                                 );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6366F1),
+                            backgroundColor: AppColors.primaryColor,
                             foregroundColor: Colors.white,
                             padding: EdgeInsets.symmetric(
                               vertical: GetResponsiveSize.getResponsivePadding(
@@ -213,7 +310,7 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
                             ),
                           ),
                           child: Text(
-                            'Load More Products',
+                            'Load more products',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: GetResponsiveSize.getResponsiveFontSize(

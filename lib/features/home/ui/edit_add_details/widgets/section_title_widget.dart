@@ -1,7 +1,9 @@
-import 'package:ado_dad_user/common/app_textstyle.dart';
+import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:flutter/material.dart';
 
+/// Uppercase section label (wireframe: docs/ado_dad_wireframes_missing_pages.html
+/// → "Edit ad" grouped sections).
 class SectionTitleWidget extends StatelessWidget {
   final String title;
 
@@ -13,15 +15,18 @@ class SectionTitleWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      title,
-      style: AppTextstyle.sectionTitleTextStyle.copyWith(
+      title.toUpperCase(),
+      style: TextStyle(
         fontSize: GetResponsiveSize.getResponsiveFontSize(
           context,
-          mobile: AppTextstyle.sectionTitleTextStyle.fontSize ?? 18,
-          tablet: 22,
-          largeTablet: 26,
-          desktop: 30,
+          mobile: 11.5,
+          tablet: 14,
+          largeTablet: 16,
+          desktop: 18,
         ),
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.6,
+        color: AppColors.greyColor,
       ),
     );
   }

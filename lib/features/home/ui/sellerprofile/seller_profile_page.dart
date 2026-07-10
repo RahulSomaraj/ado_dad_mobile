@@ -7,7 +7,9 @@ import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/common/widgets/rich_ad_card.dart';
 import 'package:ado_dad_user/common/widgets/skeleton.dart';
 import 'package:ado_dad_user/features/home/ui/sellerprofile/bloc/bloc/seller_profile_bloc.dart';
+import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SellerProfilePage extends StatefulWidget {
   final AdUser seller;
@@ -71,6 +73,18 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                             desktop: 34),
                       ),
                     ),
+                    Text(
+                      'Seller',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 16,
+                            tablet: 20,
+                            largeTablet: 24,
+                            desktop: 28),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -116,6 +130,39 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                     loaded: (ads, hasNext, page, isPaging) => Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Stats strip (client-side, from the loaded ads)
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: GetResponsiveSize.getResponsivePadding(
+                                context,
+                                mobile: 16,
+                                tablet: 20,
+                                largeTablet: 24,
+                                desktop: 28),
+                          ),
+                          child: Row(
+                            children: [
+                              _StatTile(label: 'Ads', value: ads.length),
+                              const SizedBox(width: 10),
+                              _StatTile(
+                                label: 'Active',
+                                value: ads.where((a) => a.isActive).length,
+                              ),
+                              const SizedBox(width: 10),
+                              _StatTile(
+                                label: 'Inactive',
+                                value: ads.where((a) => !a.isActive).length,
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 14,
+                                tablet: 18,
+                                largeTablet: 22,
+                                desktop: 26)),
                         Padding(
                           padding: EdgeInsets.symmetric(
                             horizontal: GetResponsiveSize.getResponsivePadding(
@@ -126,7 +173,7 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                                 desktop: 28),
                           ),
                           child: Text(
-                            'Seller Products (${ads.length})',
+                            'Seller products (${ads.length})',
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w700,
                               fontSize: GetResponsiveSize.getResponsiveFontSize(
@@ -200,7 +247,7 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                                             );
                                       },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF6366F1),
+                                  backgroundColor: AppColors.primaryColor,
                                   foregroundColor: Colors.white,
                                   padding: EdgeInsets.symmetric(
                                     horizontal:
@@ -253,7 +300,7 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                                         ),
                                       )
                                     : Text(
-                                        'Load More Products',
+                                        'Load more products',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w600,
                                           fontSize: GetResponsiveSize
@@ -360,9 +407,25 @@ class _SellerCard extends StatelessWidget {
           CircleAvatar(
             radius: GetResponsiveSize.getResponsiveSize(context,
                 mobile: 32, tablet: 42, largeTablet: 52, desktop: 62),
+            backgroundColor: AppColors.primaryColor.withOpacity(0.1),
             backgroundImage: seller.profilePic?.trim().isNotEmpty == true
                 ? NetworkImage(seller.profilePic!)
                 : null,
+            child: seller.profilePic?.trim().isNotEmpty == true
+                ? null
+                : Text(
+                    _initials(seller.name),
+                    style: TextStyle(
+                      color: AppColors.primaryColor,
+                      fontWeight: FontWeight.w700,
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 20,
+                          tablet: 26,
+                          largeTablet: 32,
+                          desktop: 38),
+                    ),
+                  ),
           ),
           SizedBox(
               width: GetResponsiveSize.getResponsiveSize(context,
@@ -427,10 +490,98 @@ class _SellerCard extends StatelessWidget {
                 SizedBox(
                     height: GetResponsiveSize.getResponsiveSize(context,
                         mobile: 12, tablet: 16, largeTablet: 20, desktop: 24)),
+                if (seller.phone?.trim().isNotEmpty == true)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _callSeller(seller.phone!),
+                      icon: const Icon(Icons.phone, size: 16),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryColor,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      label: Text(
+                        'Call',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 13,
+                              tablet: 16,
+                              largeTablet: 18,
+                              desktop: 20),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  String _initials(String? name) {
+    final n = name?.trim() ?? '';
+    if (n.isEmpty) return 'S';
+    final parts = n.split(RegExp(r'\s+'));
+    if (parts.length == 1) return parts.first[0].toUpperCase();
+    return (parts.first[0] + parts.last[0]).toUpperCase();
+  }
+
+  Future<void> _callSeller(String phone) async {
+    final rawPhone = phone.trim();
+    if (rawPhone.isEmpty) return;
+    final uri = Uri(scheme: 'tel', path: rawPhone);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+}
+
+/// Small stat tile for the seller header (wireframe: "Seller profile").
+class _StatTile extends StatelessWidget {
+  const _StatTile({required this.label, required this.value});
+  final String label;
+  final int value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFE6E8EE)),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          children: [
+            Text(
+              '$value',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                    mobile: 15, tablet: 18, largeTablet: 21, desktop: 24),
+                color: const Color(0xFF111827),
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                    mobile: 10.5, tablet: 12, largeTablet: 13, desktop: 14),
+                color: const Color(0xFF6B7280),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

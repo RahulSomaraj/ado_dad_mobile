@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ado·dad — Wireframe status tracker</title>
+<style>
+:root{
+  --brand:#4F48EC;
+  --bg:#e9eaee; --card:#ffffff; --bg2:#f3f4f7;
+  --tx:#1a1a1c; --tx2:#5f5e5a; --tx3:#8b8a86;
+  --bd:rgba(0,0,0,.12); --bd2:rgba(0,0,0,.24);
+  --ok-bg:#E4F5E9; --ok-tx:#1D6B36;
+  --re-bg:#E6F1FB; --re-tx:#0C447C;
+  --new-bg:#EEEDFD; --new-tx:#3A34B8;
+}
+body.dark{
+  --bg:#0f1115; --card:#1b1f27; --bg2:#232833;
+  --tx:#ECEEF3; --tx2:#9aa1af; --tx3:#6f7785;
+  --bd:rgba(255,255,255,.12); --bd2:rgba(255,255,255,.24);
+  --ok-bg:#16351f; --ok-tx:#7fd39a;
+  --re-bg:#14304a; --re-tx:#85B7EB;
+  --new-bg:#241f5e; --new-tx:#b0abf5;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:0.5px solid var(--bd2);display:flex;align-items:center;justify-content:space-between;padding:14px 20px;}
+h1{font-size:18px;font-weight:500;margin:0}
+h1 b{color:var(--brand)}
+.toggle{border:0.5px solid var(--bd2);background:transparent;color:var(--tx);border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;}
+.wrap{max-width:1060px;margin:0 auto;padding:18px 20px 60px;}
+.sub{color:var(--tx2);font-size:13px;line-height:1.55;margin-bottom:16px;}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px;}
+.tile{background:var(--card);border:0.5px solid var(--bd);border-radius:14px;padding:14px 16px;}
+.tile b{display:block;font-size:24px;font-weight:600;}
+.tile span{font-size:12px;color:var(--tx2);}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.fchip{font-size:12.5px;border:0.5px solid var(--bd);border-radius:18px;padding:6px 13px;cursor:pointer;background:var(--card);color:var(--tx);}
+.fchip.on{background:var(--brand);border-color:var(--brand);color:#fff;}
+table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border:0.5px solid var(--bd);border-radius:14px;overflow:hidden;font-size:12.5px;}
+th{text-align:left;font-weight:500;font-size:11px;letter-spacing:.4px;text-transform:uppercase;color:var(--tx3);padding:11px 13px;border-bottom:0.5px solid var(--bd);background:var(--bg2);}
+td{padding:10px 13px;border-bottom:0.5px solid var(--bd);vertical-align:top;}
+tr:last-child td{border-bottom:0;}
+td .f{font-size:10.5px;color:var(--tx3);font-family:ui-monospace,Menlo,Consolas,monospace;display:block;margin-top:2px;}
+.pill{display:inline-block;font-size:10.5px;font-weight:600;border-radius:12px;padding:3px 9px;white-space:nowrap;}
+.pill.ok{background:var(--ok-bg);color:var(--ok-tx);}
+.pill.re{background:var(--re-bg);color:var(--re-tx);}
+.pill.new{background:var(--new-bg);color:var(--new-tx);}
+.src{font-size:11px;color:var(--tx2);}
+.note{font-size:11.5px;color:var(--tx2);}
+footer{color:var(--tx3);font-size:11.5px;margin-top:14px;}
+</style>
+</head>
+<body>
+<header>
+  <h1><b>ado</b>·dad — wireframe status tracker</h1>
+  <button class="toggle" onclick="document.body.classList.toggle('dark')">Light / Dark</button>
+</header>
+<div class="wrap">
+  <div class="sub">
+    Every screen in the app vs its wireframe source. Updated <b>10 Jul 2026 — implementation pass complete</b>: all 9 newly wireframed screens are implemented; both redesigns verified against the app.
+    Sources: <b>MASTER</b> = docs/ado_dad_wireframes.html · <b>ADDENDUM</b> = docs/ado_dad_wireframes_missing_pages.html ·
+    plus the two standalone redesigns (ad_detail_wireframe_final.html, docs/notifications_redesign_wireframe.html).
+  </div>
+
+  <div class="tiles">
+    <div class="tile"><b>27</b><span>Screens tracked</span></div>
+    <div class="tile"><b style="color:var(--ok-tx)">16</b><span>OK — matches master wireframe</span></div>
+    <div class="tile"><b style="color:var(--re-tx)">2</b><span>Redesigns verified — app matches final wireframe</span></div>
+    <div class="tile"><b style="color:var(--new-tx)">9</b><span>Implemented — wireframed &amp; built 10 Jul</span></div>
+  </div>
+
+  <div class="filters">
+    <span class="fchip on" data-f="all">All</span>
+    <span class="fchip" data-f="ok">OK</span>
+    <span class="fchip" data-f="re">Verified redesigns</span>
+    <span class="fchip" data-f="new">Implemented</span>
+  </div>
+
+  <table id="tbl">
+    <thead><tr><th style="width:26%">Screen</th><th style="width:12%">Status</th><th style="width:26%">Wireframe source</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr data-s="ok"><td>Splash &amp; onboarding<span class="f">features/splash/splash_screen.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "Onboarding &amp; Auth"</td><td class="note">Splash carousel + browse-first entry.</td></tr>
+      <tr data-s="ok"><td>Login (password / OTP entry)<span class="f">features/login/ui/login_page.dart · otp_login_page.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "Onboarding &amp; Auth"</td><td class="note">Phone-first OTP login per master doc.</td></tr>
+      <tr data-s="new"><td>OTP verification<span class="f">features/login/ui/otp_verification_page.dart</span></td><td><span class="pill new">IMPLEMENTED</span></td><td class="src">ADDENDUM · "OTP verification"</td><td class="note">6-box auto-advance, masked number, 30s resend timer. Implemented.</td></tr>
+      <tr data-s="new"><td>Sign up<span class="f">features/signup/ui/signup_page.dart</span></td><td><span class="pill new">IMPLEMENTED</span></td><td class="src">ADDENDUM · "Sign up"</td><td class="note">Avatar upload, phone check, strength meter. Implemented (fields reordered).</td></tr>
+      <tr data-s="ok"><td>Bottom navbar<span class="f">common/widgets/scaffold_with_nav_bar.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "Bottom navbar"</td><td class="note">Home · Favorites · Sell FAB · Chat · Profile.</td></tr>
+      <tr data-s="ok"><td>Home<span class="f">features/home/ui/home_page.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "Home"</td><td class="note">Location header, category rail, promo carousel, 2-up grid.</td></tr>
+      <tr data-s="ok"><td>Ad card (rich)<span class="f">common/widgets/rich_ad_card.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "Ad card — detailed"</td><td class="note">Badges, EMI, spec chips, photo/video count.</td></tr>
+      <tr data-s="ok"><td>Search<span class="f">features/search/ui/search_page.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "Search &amp; Filters"</td><td class="note">Recent + trending chips, save-search alert.</td></tr>
+      <tr data-s="ok"><td>Search filter sheet<span class="f">features/search/ui/search_page.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "Search filter sheet"</td><td class="note">Quick sheet with live result count.</td></tr>
+      <tr data-s="ok"><td>Vehicle filter<span class="f">features/home/ui/car_filters_page.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "Vehicle filter"</td><td class="note">Brand/model search rows, sticky result count.</td></tr>
+      <tr data-s="ok"><td>Property filter<span class="f">features/home/ui/property_filter_page.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "Property filter"</td><td class="note">Buy/Rent toggle, bedrooms, area, furnishing.</td></tr>
+      <tr data-s="new"><td>Category list<span class="f">features/home/ui/category_list_page.dart</span></td><td><span class="pill new">IMPLEMENTED</span></td><td class="src">ADDENDUM · "Category list"</td><td class="note">Sort chips (client-side), friendly empty state with Reset filters. Implemented.</td></tr>
+      <tr data-s="re"><td>Ad detail<span class="f">features/home/ui/add_detail_page.dart</span></td><td><span class="pill re">VERIFIED</span></td><td class="src">ad_detail_wireframe_final.html</td><td class="note">App matches the final spec — all 6 elements verified in code (10 Jul).</td></tr>
+      <tr data-s="new"><td>Seller profile<span class="f">features/home/ui/sellerprofile/seller_profile_page.dart</span></td><td><span class="pill new">IMPLEMENTED</span></td><td class="src">ADDENDUM · "Seller profile"</td><td class="note">Header with initials avatar, Call button, Ads/Active/Inactive stats. Implemented.</td></tr>
+      <tr data-s="ok"><td>Sell — category picker<span class="f">features/sell/ui/item_category.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "Sell flow"</td><td class="note">Category cards with subtitles.</td></tr>
+      <tr data-s="ok"><td>Sell — post forms (car/bike/commercial/property)<span class="f">features/sell/ui/form/add_*_form.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "Sell flow"</td><td class="note">3-step stepper with progress.</td></tr>
+      <tr data-s="new"><td>Edit ad (4 forms)<span class="f">features/home/ui/edit_add_details/*_form_edit.dart</span></td><td><span class="pill new">IMPLEMENTED</span></td><td class="src">ADDENDUM · "Edit ad"</td><td class="note">Shared widgets restyled: section labels, switches, feature chips, COVER badge — all 4 forms. Implemented.</td></tr>
+      <tr data-s="re"><td>Notifications<span class="f">features/home/ui/notifications.dart</span></td><td><span class="pill re">VERIFIED</span></td><td class="src">docs/notifications_redesign_wireframe.html</td><td class="note">App matches redesign: grouping, mark-all-read, swipe dismiss verified (10 Jul).</td></tr>
+      <tr data-s="ok"><td>Profile<span class="f">features/profile/ui/profile_page.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "Profile"</td><td class="note">Stats strip, icon menu, Appearance, danger logout.</td></tr>
+      <tr data-s="ok"><td>My activity — My Ads / Wishlist / Drafts<span class="f">features/profile/ui/my_activity_page.dart · MyAds/ui/my_ads_page.dart · wishlist/wishlist_page.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "My Ads &amp; Wishlist"</td><td class="note">Tabs, status chips, per-ad stats + inline actions.</td></tr>
+      <tr data-s="ok"><td>Chat inbox<span class="f">features/chat/ui/chat_rooms_page.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "Chat"</td><td class="note">Unread badges + previews.</td></tr>
+      <tr data-s="ok"><td>Chat thread<span class="f">features/chat/ui/chat_page.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "Chat"</td><td class="note">Pinned listing card, quick replies, Call in header.</td></tr>
+      <tr data-s="ok"><td>Showroom directory<span class="f">features/showroom/ui/showroom_users_page.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "Showroom"</td><td class="note">Filter chips, trust signals, featured stock.</td></tr>
+      <tr data-s="new"><td>Showroom — dealer's ads<span class="f">features/showroom/ui/showroom_user_ads_page.dart</span></td><td><span class="pill new">IMPLEMENTED</span></td><td class="src">ADDENDUM · "Showroom — dealer's ads"</td><td class="note">Dealer header with listing count, branded load-more, empty state. Implemented.</td></tr>
+      <tr data-s="new"><td>Report ad dialog<span class="f">features/home/ui/report_ad_dialog.dart</span></td><td><span class="pill new">IMPLEMENTED</span></td><td class="src">ADDENDUM · "Report ad"</td><td class="note">Bottom sheet with radio reasons and destructive submit. Implemented.</td></tr>
+      <tr data-s="new"><td>Make offer popup<span class="f">features/home/ui/offer_popup.dart</span></td><td><span class="pill new">IMPLEMENTED</span></td><td class="src">ADDENDUM · "Make an offer"</td><td class="note">Bottom sheet with pinned listing, -5/-8/-10% chips, message preview. Implemented.</td></tr>
+      <tr data-s="new"><td>Help &amp; Support<span class="f">features/profile/help/help.dart</span></td><td><span class="pill new">IMPLEMENTED</span></td><td class="src">ADDENDUM · "Help &amp; Support"</td><td class="note">Searchable accordion topics + contact card. Implemented (support email TODO).</td></tr>
+      <tr data-s="ok"><td>Wishlist (favorites)<span class="f">features/profile/wishlist/wishlist_page.dart</span></td><td><span class="pill ok">OK</span></td><td class="src">MASTER · "My Ads &amp; Wishlist"</td><td class="note">Covered by the Wishlist tab spec.</td></tr>
+    </tbody>
+  </table>
+  <footer>Legend — OK: master wireframe covers it, no change needed · VERIFIED: final redesign wireframe confirmed to match the shipped code · IMPLEMENTED: wireframed in the addendum and built in Flutter on 10 Jul 2026. Run flutter analyze &amp; test on device before release.</footer>
+</div>
+<script>
+document.querySelectorAll('.fchip').forEach(c=>c.addEventListener('click',()=>{
+  document.querySelectorAll('.fchip').forEach(x=>x.classList.remove('on'));
+  c.classList.add('on');
+  const f=c.dataset.f;
+  document.querySelectorAll('#tbl tbody tr').forEach(r=>{r.style.display=(f==='all'||r.dataset.s===f)?'':'none';});
+}));
+</script>
+</body>
+</html>

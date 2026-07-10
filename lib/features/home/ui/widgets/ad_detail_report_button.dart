@@ -1,12 +1,9 @@
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/auth_guard.dart';
 import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/features/home/ui/report_ad_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 
 class AdDetailReportButton extends StatelessWidget {
   final AddModel ad;
@@ -33,23 +30,11 @@ class AdDetailReportButton extends StatelessWidget {
       return;
     }
 
-    if (!kIsWeb && Platform.isIOS) {
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => ReportAdDialog(
-          reportedUserId: reportedUserId,
-          adId: ad.id,
-        ),
-      );
-    } else {
-      showDialog(
-        context: context,
-        builder: (context) => ReportAdDialog(
-          reportedUserId: reportedUserId,
-          adId: ad.id,
-        ),
-      );
-    }
+    ReportAdDialog.show(
+      context,
+      reportedUserId: reportedUserId,
+      adId: ad.id,
+    );
   }
 
   @override

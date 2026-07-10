@@ -398,7 +398,7 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Edit Add Details',
+          'Edit ad',
           style: AppTextstyle.appbarText.copyWith(
             fontSize: GetResponsiveSize.getResponsiveFontSize(
               context,

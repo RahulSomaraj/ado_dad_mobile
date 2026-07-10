@@ -29,8 +29,40 @@ class _SignupPageState extends State<SignupPage> {
   String _countryCode = "+91";
   String _selectedFlag = "🇮🇳";
   String _password = '';
+  String _phoneInput = '';
+
+  final TextEditingController _passwordController = TextEditingController();
+  int _passwordStrength = 0; // 0..3
 
   Uint8List? _avatarBytes; // <-- NEW: local preview bytes
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(() {
+      final strength = _computePasswordStrength(_passwordController.text);
+      if (strength != _passwordStrength) {
+        setState(() => _passwordStrength = strength);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  /// Very light client-side strength heuristic (wireframe: 3-segment meter).
+  int _computePasswordStrength(String value) {
+    if (value.isEmpty) return 0;
+    var score = 0;
+    if (value.length >= 8) score++;
+    if (RegExp(r'[A-Z]').hasMatch(value) &&
+        RegExp(r'[0-9]').hasMatch(value)) score++;
+    if (RegExp(r'[!@#\$%^&*(),.?":{}|<>_\-]').hasMatch(value)) score++;
+    return score;
+  }
 
   Future<void> _pickAvatar() async {
     final result = await FilePicker.platform.pickFiles(
@@ -313,16 +345,6 @@ class _SignupPageState extends State<SignupPage> {
                                 desktop: 30,
                               ),
                             ),
-                            _buildEmailField(),
-                            SizedBox(
-                              height: GetResponsiveSize.getResponsiveSize(
-                                context,
-                                mobile: 10, // Keep mobile unchanged
-                                tablet: 20,
-                                largeTablet: 25,
-                                desktop: 30,
-                              ),
-                            ),
                             _buildPhoneField(),
                             SizedBox(
                               height: GetResponsiveSize.getResponsiveSize(
@@ -333,7 +355,18 @@ class _SignupPageState extends State<SignupPage> {
                                 desktop: 30,
                               ),
                             ),
+                            _buildEmailField(),
+                            SizedBox(
+                              height: GetResponsiveSize.getResponsiveSize(
+                                context,
+                                mobile: 10, // Keep mobile unchanged
+                                tablet: 20,
+                                largeTablet: 25,
+                                desktop: 30,
+                              ),
+                            ),
                             _buildPasswordField(),
+                            _buildPasswordStrengthMeter(),
                             const SizedBox(height: 10),
                             _buildButton(state)
                           ],
@@ -376,6 +409,7 @@ class _SignupPageState extends State<SignupPage> {
       initialValue: _phone,
       onSaved: (value) => _phone = value ?? "",
       keyboardType: TextInputType.phone,
+      onChanged: (value) => setState(() => _phoneInput = value),
       inputFormatters: [
         FilteringTextInputFormatter.digitsOnly,
       ],
@@ -441,6 +475,10 @@ class _SignupPageState extends State<SignupPage> {
             ),
           ),
         ),
+        suffixIcon: _phoneInput.length >= 10
+            ? const Icon(Icons.check_circle,
+                color: AppColors.primaryColor, size: 20)
+            : null,
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -472,10 +510,41 @@ class _SignupPageState extends State<SignupPage> {
   Widget _buildPasswordField() {
     return GetInput(
       label: "Password",
-      initialValue: '',
+      controller: _passwordController,
       onSaved: (value) => _password = value!,
       isPassword: true,
       isSignupPassword: true,
+    );
+  }
+
+  /// 3-segment strength meter (wireframe: docs/ado_dad_wireframes_missing_pages.html
+  /// → "Sign up").
+  Widget _buildPasswordStrengthMeter() {
+    if (_passwordController.text.isEmpty) return const SizedBox.shrink();
+    final activeColor = _passwordStrength <= 1
+        ? AppColors.redColor
+        : _passwordStrength == 2
+            ? const Color(0xFFE8A13B)
+            : AppColors.primaryColor;
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        children: List.generate(3, (i) {
+          final active = i < _passwordStrength;
+          return Expanded(
+            child: Container(
+              height: 3,
+              margin: EdgeInsets.only(right: i < 2 ? 4 : 0),
+              decoration: BoxDecoration(
+                color: active
+                    ? activeColor
+                    : AppColors.greyColor.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          );
+        }),
+      ),
     );
   }
 

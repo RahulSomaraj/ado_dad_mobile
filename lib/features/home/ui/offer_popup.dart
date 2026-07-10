@@ -1,76 +1,64 @@
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 
-/// Show the offer popup dialog
+/// Make-an-offer bottom sheet (wireframe: docs/ado_dad_wireframes_missing_pages.html
+/// → "Make an offer"). Pinned listing context, big amount input with
+/// quick-percent chips (computed client-side from the asking price), and a
+/// primary Send offer action.
 Future<void> showOfferPopup({
   required BuildContext context,
   required String adId,
   required String adTitle,
   required String adPosterName,
   required Function(double) onOfferSubmitted,
-}) async {
-  final isIOS = !kIsWeb && Platform.isIOS;
-
-  if (isIOS) {
-    return showCupertinoDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return _OfferPopupDialog(
-          adId: adId,
-          adTitle: adTitle,
-          adPosterName: adPosterName,
-          onOfferSubmitted: onOfferSubmitted,
-          isIOS: true,
-        );
-      },
-    );
-  } else {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return _OfferPopupDialog(
-          adId: adId,
-          adTitle: adTitle,
-          adPosterName: adPosterName,
-          onOfferSubmitted: onOfferSubmitted,
-          isIOS: false,
-        );
-      },
-    );
-  }
+  int? adPrice,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (BuildContext context) {
+      return _OfferSheet(
+        adId: adId,
+        adTitle: adTitle,
+        adPosterName: adPosterName,
+        adPrice: adPrice,
+        onOfferSubmitted: onOfferSubmitted,
+      );
+    },
+  );
 }
 
-class _OfferPopupDialog extends StatefulWidget {
+class _OfferSheet extends StatefulWidget {
   final String adId;
   final String adTitle;
   final String adPosterName;
+  final int? adPrice;
   final Function(double) onOfferSubmitted;
-  final bool isIOS;
 
-  const _OfferPopupDialog({
+  const _OfferSheet({
     required this.adId,
     required this.adTitle,
     required this.adPosterName,
+    required this.adPrice,
     required this.onOfferSubmitted,
-    required this.isIOS,
   });
 
   @override
-  State<_OfferPopupDialog> createState() => _OfferPopupDialogState();
+  State<_OfferSheet> createState() => _OfferSheetState();
 }
 
-class _OfferPopupDialogState extends State<_OfferPopupDialog> {
+class _OfferSheetState extends State<_OfferSheet> {
   final TextEditingController amountController = TextEditingController();
   final FocusNode amountFocusNode = FocusNode();
   double? amount;
   String? errorText;
+  int? _selectedPercent; // 5, 8, 10 or null (custom / none)
+
+  static const List<int> _percentOptions = [5, 8, 10];
 
   void _validateAmount(String value) {
     if (value.isEmpty) {
@@ -100,6 +88,33 @@ class _OfferPopupDialogState extends State<_OfferPopupDialog> {
     }
   }
 
+  void _applyPercent(int percent) {
+    final price = widget.adPrice;
+    if (price == null || price <= 0) return;
+    final discounted = (price * (100 - percent) / 100).roundToDouble();
+    setState(() {
+      _selectedPercent = percent;
+      amountController.text = discounted.toStringAsFixed(0);
+      amount = discounted;
+      errorText = null;
+    });
+  }
+
+  String _formatPrice(int price) {
+    final s = price.toString();
+    // Simple Indian-style grouping (e.g. 5,40,000).
+    if (s.length <= 3) return s;
+    final last3 = s.substring(s.length - 3);
+    var rest = s.substring(0, s.length - 3);
+    final parts = <String>[];
+    while (rest.length > 2) {
+      parts.insert(0, rest.substring(rest.length - 2));
+      rest = rest.substring(0, rest.length - 2);
+    }
+    if (rest.isNotEmpty) parts.insert(0, rest);
+    return '${parts.join(',')},$last3';
+  }
+
   @override
   void dispose() {
     amountController.dispose();
@@ -107,630 +122,377 @@ class _OfferPopupDialogState extends State<_OfferPopupDialog> {
     super.dispose();
   }
 
+  TextStyle _sectionLabelStyle(BuildContext context) => GoogleFonts.poppins(
+        fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+            mobile: 11, tablet: 13, largeTablet: 14, desktop: 15),
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.6,
+        color: AppColors.greyColor,
+      );
+
   @override
   Widget build(BuildContext context) {
-    if (widget.isIOS) {
-      // iOS-friendly Cupertino dialog - matching delete account popup design
-      return StatefulBuilder(
-        builder: (stateContext, setState) => CupertinoAlertDialog(
-          title: Text(
-            'Make an Offer',
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                  mobile: 18, tablet: 22, largeTablet: 26, desktop: 30),
-              fontWeight: FontWeight.w600,
-            ),
+    final canSend = amount != null && errorText == null;
+
+    return SafeArea(
+      child: Container(
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.whiteColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 24, largeTablet: 28, desktop: 32),
+            8,
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 24, largeTablet: 28, desktop: 32),
+            GetResponsiveSize.getResponsivePadding(context,
+                mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
           ),
-          content: Container(
-            padding: EdgeInsets.only(
-              top: GetResponsiveSize.getResponsivePadding(context,
-                  mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Ad info
-                Text(
-                  'Ad: ${widget.adTitle}',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                        mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.greyColor.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                SizedBox(
-                  height: GetResponsiveSize.getResponsiveSize(context,
-                      mobile: 4, tablet: 6, largeTablet: 8, desktop: 10),
-                ),
-                Text(
-                  'Seller: ${widget.adPosterName}',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                        mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
-                    color: CupertinoColors.secondaryLabel,
-                  ),
-                ),
-                SizedBox(
-                  height: GetResponsiveSize.getResponsiveSize(context,
-                      mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
-                ),
-                // Amount input label
-                Text(
-                  'Enter your offer amount:',
-                  textAlign: TextAlign.left,
-                  style: TextStyle(
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                        mobile: 13, tablet: 15, largeTablet: 17, desktop: 19),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(
-                  height: GetResponsiveSize.getResponsiveSize(context,
-                      mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
-                ),
-                // Amount input field
-                CupertinoTextField(
-                  controller: amountController,
-                  focusNode: amountFocusNode,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                        RegExp(r'^\d+\.?\d{0,2}')),
-                  ],
-                  placeholder: 'Enter amount (e.g., 15000)',
-                  padding: EdgeInsets.symmetric(
-                    horizontal: GetResponsiveSize.getResponsivePadding(context,
-                        mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
-                    vertical: GetResponsiveSize.getResponsivePadding(context,
-                        mobile: 10, tablet: 14, largeTablet: 18, desktop: 22),
-                  ),
-                  style: TextStyle(
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                        mobile: 16, tablet: 18, largeTablet: 20, desktop: 22),
-                  ),
-                  prefix: Padding(
-                    padding: EdgeInsets.only(
-                      left: GetResponsiveSize.getResponsivePadding(context,
-                          mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
-                    ),
+              ),
+              // Header
+              Row(
+                children: [
+                  Expanded(
                     child: Text(
-                      '₹ ',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
+                      'Make an offer',
+                      style: GoogleFonts.poppins(
                         fontSize: GetResponsiveSize.getResponsiveFontSize(
                             context,
                             mobile: 16,
-                            tablet: 18,
-                            largeTablet: 20,
-                            desktop: 22),
+                            tablet: 20,
+                            largeTablet: 22,
+                            desktop: 24),
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.blackColor,
                       ),
                     ),
                   ),
-                  decoration: BoxDecoration(
-                    color: CupertinoColors.systemGrey6,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  onChanged: (value) {
-                    _validateAmount(value);
-                    setState(() {}); // Update the dialog state
-                  },
-                ),
-                // Error text
-                if (errorText != null)
-                  Padding(
-                    padding: EdgeInsets.only(
-                      top: GetResponsiveSize.getResponsiveSize(context,
-                          mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
-                    ),
-                    child: Text(
-                      errorText!,
-                      style: TextStyle(
-                        color: CupertinoColors.systemRed,
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile: 12,
-                            tablet: 14,
-                            largeTablet: 16,
-                            desktop: 18),
-                      ),
-                    ),
-                  ),
-                // Message preview
-                if (amount != null && errorText == null) ...[
-                  SizedBox(
-                    height: GetResponsiveSize.getResponsiveSize(context,
-                        mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
-                  ),
-                  Text(
-                    'I will make an offer for an amount ₹${amount!.toStringAsFixed(0)}',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                          mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
-                      color: CupertinoColors.label,
-                    ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: Icon(Icons.close, color: AppColors.greyColor),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
                 ],
-              ],
-            ),
-          ),
-          actions: [
-            CupertinoDialogAction(
-              isDefaultAction: false,
-              onPressed: () => Navigator.pop(stateContext),
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  color: CupertinoColors.systemBlue,
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                      mobile: 16, tablet: 18, largeTablet: 20, desktop: 22),
+              ),
+              const SizedBox(height: 12),
+
+              // Pinned listing context
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                      color: AppColors.greyColor.withOpacity(0.35)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryColor.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.sell_outlined,
+                        color: AppColors.primaryColor,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (widget.adPrice != null)
+                            Text.rich(
+                              TextSpan(
+                                text: '₹ ${_formatPrice(widget.adPrice!)} ',
+                                style: GoogleFonts.poppins(
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                          context,
+                                          mobile: 13.5,
+                                          tablet: 16,
+                                          largeTablet: 18,
+                                          desktop: 20),
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.blackColor,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: 'asking',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w400,
+                                      color: AppColors.greyColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          Text(
+                            widget.adTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                              fontSize:
+                                  GetResponsiveSize.getResponsiveFontSize(
+                                      context,
+                                      mobile: 12.5,
+                                      tablet: 15,
+                                      largeTablet: 17,
+                                      desktop: 19),
+                              color: AppColors.blackColor,
+                            ),
+                          ),
+                          Text(
+                            'Seller: ${widget.adPosterName}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 10.5,
+                              color: AppColors.greyColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            CupertinoDialogAction(
-              isDefaultAction: false,
-              onPressed: amount != null && errorText == null
-                  ? () {
-                      widget.onOfferSubmitted(amount!);
-                      Navigator.pop(stateContext);
-                    }
-                  : null,
-              child: Text(
-                'Send Offer',
-                style: TextStyle(
-                  color: amount != null && errorText == null
-                      ? AppColors.primaryColor
-                      : CupertinoColors.placeholderText,
+              const SizedBox(height: 14),
+
+              Text('YOUR OFFER', style: _sectionLabelStyle(context)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: amountController,
+                focusNode: amountFocusNode,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                ],
+                style: GoogleFonts.poppins(
                   fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                      mobile: 16, tablet: 18, largeTablet: 20, desktop: 22),
+                      mobile: 18, tablet: 22, largeTablet: 24, desktop: 26),
                   fontWeight: FontWeight.w600,
+                  color: AppColors.blackColor,
                 ),
-              ),
-            ),
-          ],
-        ),
-      );
-    } else {
-      // Material Design dialog for Android/Web
-      return AlertDialog(
-        titlePadding: EdgeInsets.fromLTRB(
-          GetResponsiveSize.getResponsivePadding(context,
-              mobile: 24, tablet: 32, largeTablet: 40, desktop: 48),
-          GetResponsiveSize.getResponsivePadding(context,
-              mobile: 24, tablet: 32, largeTablet: 40, desktop: 48),
-          GetResponsiveSize.getResponsivePadding(context,
-              mobile: 0, tablet: 6, largeTablet: 12, desktop: 18),
-          GetResponsiveSize.getResponsivePadding(context,
-              mobile: 16, tablet: 24, largeTablet: 32, desktop: 40),
-        ),
-        contentPadding: EdgeInsets.fromLTRB(
-          GetResponsiveSize.getResponsivePadding(context,
-              mobile: 24, tablet: 32, largeTablet: 40, desktop: 48),
-          0,
-          GetResponsiveSize.getResponsivePadding(context,
-              mobile: 24, tablet: 32, largeTablet: 40, desktop: 48),
-          GetResponsiveSize.getResponsivePadding(context,
-              mobile: 16, tablet: 24, largeTablet: 32, desktop: 40),
-        ),
-        actionsPadding: EdgeInsets.fromLTRB(
-          GetResponsiveSize.getResponsivePadding(context,
-              mobile: 8, tablet: 16, largeTablet: 24, desktop: 32),
-          0,
-          GetResponsiveSize.getResponsivePadding(context,
-              mobile: 8, tablet: 16, largeTablet: 24, desktop: 32),
-          GetResponsiveSize.getResponsivePadding(context,
-              mobile: 8, tablet: 16, largeTablet: 24, desktop: 32),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(
-            GetResponsiveSize.getResponsiveBorderRadius(context,
-                mobile: 16, tablet: 18, largeTablet: 20, desktop: 22),
-          ),
-        ),
-        title: Row(
-          children: [
-            Icon(
-              Icons.monetization_on,
-              color: Colors.blue.shade600,
-              size: GetResponsiveSize.getResponsiveSize(context,
-                  mobile: 28, tablet: 42, largeTablet: 52, desktop: 62),
-            ),
-            SizedBox(
-                width: GetResponsiveSize.getResponsiveSize(context,
-                    mobile: 12, tablet: 14, largeTablet: 16, desktop: 18)),
-            Expanded(
-              child: Text(
-                'Make an Offer',
-                style: TextStyle(
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                      mobile: 20, tablet: 30, largeTablet: 36, desktop: 42),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: _buildContent(context),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.symmetric(
-                horizontal: GetResponsiveSize.getResponsivePadding(context,
-                    mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
-                vertical: GetResponsiveSize.getResponsivePadding(context,
-                    mobile: 8, tablet: 12, largeTablet: 16, desktop: 20),
-              ),
-            ),
-            child: Text(
-              'Cancel',
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                    mobile: 14, tablet: 22, largeTablet: 28, desktop: 34),
-              ),
-            ),
-          ),
-          SizedBox(
-            height: GetResponsiveSize.getResponsiveSize(context,
-                mobile: 48, tablet: 65, largeTablet: 75, desktop: 85),
-            child: ElevatedButton(
-              onPressed: amount != null && errorText == null
-                  ? () {
-                      widget.onOfferSubmitted(amount!);
-                      Navigator.of(context).pop();
-                    }
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: amount != null && errorText == null
-                    ? AppColors.primaryColor
-                    : Colors.grey.shade400,
-                foregroundColor: AppColors.whiteColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    GetResponsiveSize.getResponsiveBorderRadius(context,
-                        mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
+                decoration: InputDecoration(
+                  hintText: 'Enter amount (e.g., 15000)',
+                  hintStyle: GoogleFonts.poppins(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 14, tablet: 17, largeTablet: 19, desktop: 21),
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.greyColor,
                   ),
-                ),
-                elevation: 0,
-                padding: EdgeInsets.symmetric(
-                  horizontal: GetResponsiveSize.getResponsivePadding(context,
-                      mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
-                  vertical: GetResponsiveSize.getResponsivePadding(context,
-                      mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
-                ),
-              ),
-              child: Text(
-                'Send Offer',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.whiteColor,
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                      mobile: 14, tablet: 22, largeTablet: 28, desktop: 34),
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-  }
-
-  Widget _buildContent(BuildContext context) {
-    if (widget.isIOS) {
-      // Simplified iOS content - cleaner, matching CupertinoAlertDialog style
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Ad info (simplified for iOS)
-          Text(
-            'Ad: ${widget.adTitle}',
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                  mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
-            ),
-          ),
-          SizedBox(
-              height: GetResponsiveSize.getResponsiveSize(context,
-                  mobile: 4, tablet: 6, largeTablet: 8, desktop: 10)),
-          Text(
-            'Seller: ${widget.adPosterName}',
-            style: TextStyle(
-              color: CupertinoColors.secondaryLabel,
-              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                  mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
-            ),
-          ),
-          SizedBox(
-              height: GetResponsiveSize.getResponsiveSize(context,
-                  mobile: 16, tablet: 20, largeTablet: 24, desktop: 28)),
-
-          // Amount input label
-          Text(
-            'Enter your offer amount:',
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                  mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
-            ),
-          ),
-          SizedBox(
-              height: GetResponsiveSize.getResponsiveSize(context,
-                  mobile: 8, tablet: 10, largeTablet: 12, desktop: 14)),
-          CupertinoTextField(
-            controller: amountController,
-            focusNode: amountFocusNode,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-            ],
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                  mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
-            ),
-            placeholder: 'Enter amount (e.g., 15000)',
-            placeholderStyle: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                  mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
-              color: CupertinoColors.placeholderText,
-            ),
-            prefix: Padding(
-              padding: EdgeInsets.only(
-                left: GetResponsiveSize.getResponsivePadding(context,
-                    mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
-              ),
-              child: Text(
-                '₹ ',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                      mobile: 16, tablet: 20, largeTablet: 24, desktop: 28),
-                ),
-              ),
-            ),
-            padding: EdgeInsets.symmetric(
-              horizontal: GetResponsiveSize.getResponsivePadding(context,
-                  mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
-              vertical: GetResponsiveSize.getResponsivePadding(context,
-                  mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
-            ),
-            decoration: BoxDecoration(
-              color: CupertinoColors.systemGrey6,
-              borderRadius: BorderRadius.circular(
-                GetResponsiveSize.getResponsiveBorderRadius(context,
-                    mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
-              ),
-            ),
-            onChanged: _validateAmount,
-          ),
-          if (errorText != null) ...[
-            SizedBox(
-                height: GetResponsiveSize.getResponsiveSize(context,
-                    mobile: 8, tablet: 10, largeTablet: 12, desktop: 14)),
-            Text(
-              errorText!,
-              style: TextStyle(
-                color: CupertinoColors.destructiveRed,
-                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                    mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
-              ),
-            ),
-          ],
-
-          if (amount != null) ...[
-            SizedBox(
-                height: GetResponsiveSize.getResponsiveSize(context,
-                    mobile: 16, tablet: 20, largeTablet: 24, desktop: 28)),
-            Text(
-              'I will make an offer for an amount ₹${amount!.toStringAsFixed(0)}',
-              style: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                    mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
-                color: CupertinoColors.label,
-              ),
-            ),
-          ],
-        ],
-      );
-    } else {
-      // Material Design content for Android/Web
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Ad info
-          Container(
-            padding: EdgeInsets.all(
-              GetResponsiveSize.getResponsivePadding(context,
-                  mobile: 12, tablet: 20, largeTablet: 28, desktop: 36),
-            ),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(
-                GetResponsiveSize.getResponsiveBorderRadius(context,
-                    mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Ad: ${widget.adTitle}',
-                  style: TextStyle(
+                  prefixText: '₹ ',
+                  prefixStyle: GoogleFonts.poppins(
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                        mobile: 18, tablet: 22, largeTablet: 24, desktop: 26),
                     fontWeight: FontWeight.w600,
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                        mobile: 14, tablet: 22, largeTablet: 28, desktop: 34),
+                    color: AppColors.blackColor,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 13),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(11),
+                    borderSide: BorderSide(
+                        color: AppColors.greyColor.withOpacity(0.4)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(11),
+                    borderSide: const BorderSide(
+                        color: AppColors.primaryColor, width: 1.5),
                   ),
                 ),
-                SizedBox(
-                    height: GetResponsiveSize.getResponsiveSize(context,
-                        mobile: 4, tablet: 8, largeTablet: 12, desktop: 16)),
-                Text(
-                  'Seller: ${widget.adPosterName}',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                        mobile: 12, tablet: 20, largeTablet: 26, desktop: 32),
+                onChanged: (value) {
+                  _selectedPercent = null;
+                  _validateAmount(value);
+                },
+              ),
+              if (errorText != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    errorText!,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: AppColors.redColor,
+                    ),
+                  ),
+                ),
+
+              // Quick percent chips (only when the asking price is known)
+              if (widget.adPrice != null && widget.adPrice! > 0) ...[
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 7,
+                  children: [
+                    ..._percentOptions.map((p) {
+                      final selected = _selectedPercent == p;
+                      return ChoiceChip(
+                        label: Text('-$p%'),
+                        selected: selected,
+                        onSelected: (_) => _applyPercent(p),
+                        selectedColor: AppColors.primaryColor,
+                        labelStyle: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: selected
+                              ? Colors.white
+                              : AppColors.blackColor,
+                        ),
+                        shape: StadiumBorder(
+                          side: BorderSide(
+                            color: selected
+                                ? AppColors.primaryColor
+                                : AppColors.greyColor.withOpacity(0.4),
+                          ),
+                        ),
+                        backgroundColor: AppColors.whiteColor,
+                        showCheckmark: false,
+                        visualDensity: VisualDensity.compact,
+                      );
+                    }),
+                    ChoiceChip(
+                      label: const Text('Custom'),
+                      selected: _selectedPercent == null &&
+                          amountController.text.isNotEmpty,
+                      onSelected: (_) {
+                        setState(() => _selectedPercent = null);
+                        amountFocusNode.requestFocus();
+                      },
+                      selectedColor: AppColors.primaryColor,
+                      labelStyle: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: _selectedPercent == null &&
+                                amountController.text.isNotEmpty
+                            ? Colors.white
+                            : AppColors.blackColor,
+                      ),
+                      shape: StadiumBorder(
+                        side: BorderSide(
+                          color: AppColors.greyColor.withOpacity(0.4),
+                        ),
+                      ),
+                      backgroundColor: AppColors.whiteColor,
+                      showCheckmark: false,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
+                ),
+              ],
+
+              // Offer message preview (sent into the chat thread)
+              if (amount != null && errorText == null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryColor.withOpacity(0.06),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    'I will make an offer for an amount ₹${amount!.toStringAsFixed(0)}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: AppColors.blackColor1,
+                    ),
                   ),
                 ),
               ],
-            ),
-          ),
-          SizedBox(
-              height: GetResponsiveSize.getResponsiveSize(context,
-                  mobile: 20, tablet: 28, largeTablet: 36, desktop: 44)),
+              const SizedBox(height: 16),
 
-          // Amount input
-          Text(
-            'Enter your offer amount:',
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                  mobile: 16, tablet: 24, largeTablet: 30, desktop: 36),
-            ),
-          ),
-          SizedBox(
-              height: GetResponsiveSize.getResponsiveSize(context,
-                  mobile: 8, tablet: 10, largeTablet: 12, desktop: 14)),
-          TextField(
-            controller: amountController,
-            focusNode: amountFocusNode,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-            ],
-            style: TextStyle(
-              fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                  mobile: 16, tablet: 24, largeTablet: 28, desktop: 32),
-            ),
-            decoration: InputDecoration(
-              hintText: 'Enter amount (e.g., 15000)',
-              hintStyle: TextStyle(
-                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                    mobile: 16, tablet: 24, largeTablet: 28, desktop: 32),
-              ),
-              prefixText: '₹ ',
-              prefixStyle: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                    mobile: 16, tablet: 24, largeTablet: 28, desktop: 32),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: GetResponsiveSize.getResponsivePadding(context,
-                    mobile: 12, tablet: 16, largeTablet: 20, desktop: 24),
-                vertical: GetResponsiveSize.getResponsivePadding(context,
-                    mobile: 14, tablet: 18, largeTablet: 22, desktop: 26),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(context,
-                      mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
-                ),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(context,
-                      mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
-                ),
-                borderSide: BorderSide(
-                  color: Colors.blue.shade600,
-                  width: GetResponsiveSize.getResponsiveSize(context,
-                      mobile: 2, tablet: 2.5, largeTablet: 3, desktop: 3.5),
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(context,
-                      mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
-                ),
-                borderSide: const BorderSide(color: Colors.red),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(context,
-                      mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
-                ),
-                borderSide: BorderSide(
-                  color: Colors.red,
-                  width: GetResponsiveSize.getResponsiveSize(context,
-                      mobile: 2, tablet: 2.5, largeTablet: 3, desktop: 3.5),
-                ),
-              ),
-            ),
-            onChanged: _validateAmount,
-          ),
-          if (errorText != null) ...[
-            SizedBox(
-                height: GetResponsiveSize.getResponsiveSize(context,
-                    mobile: 8, tablet: 10, largeTablet: 12, desktop: 14)),
-            Text(
-              errorText!,
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                    mobile: 12, tablet: 20, largeTablet: 26, desktop: 32),
-              ),
-            ),
-          ],
-
-          SizedBox(
-              height: GetResponsiveSize.getResponsiveSize(context,
-                  mobile: 16, tablet: 20, largeTablet: 24, desktop: 28)),
-
-          // Message preview
-          if (amount != null) ...[
-            Container(
-              padding: EdgeInsets.all(
-                GetResponsiveSize.getResponsivePadding(context,
-                    mobile: 12, tablet: 20, largeTablet: 28, desktop: 36),
-              ),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(context,
-                      mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
-                ),
-                border: Border.all(color: Colors.blue.shade200),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Actions
+              Row(
                 children: [
-                  Text(
-                    'Your offer message:',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                          mobile: 12, tablet: 20, largeTablet: 26, desktop: 32),
-                      color: Colors.blue,
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                            color: AppColors.greyColor.withOpacity(0.6)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: GoogleFonts.poppins(
+                          color: AppColors.blackColor,
+                          fontWeight: FontWeight.w500,
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 13.5,
+                              tablet: 16,
+                              largeTablet: 18,
+                              desktop: 20),
+                        ),
+                      ),
                     ),
                   ),
-                  SizedBox(
-                      height: GetResponsiveSize.getResponsiveSize(context,
-                          mobile: 4, tablet: 8, largeTablet: 12, desktop: 16)),
-                  Text(
-                    'I will make an offer for an amount ₹${amount!.toStringAsFixed(0)}',
-                    style: TextStyle(
-                      fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                          mobile: 14, tablet: 22, largeTablet: 28, desktop: 34),
-                      color: Colors.black87,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: canSend
+                          ? () {
+                              widget.onOfferSubmitted(amount!);
+                              Navigator.of(context).pop();
+                            }
+                          : null,
+                      icon: const Icon(Icons.send, size: 16),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryColor,
+                        disabledBackgroundColor:
+                            AppColors.greyColor.withOpacity(0.4),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                      ),
+                      label: Text(
+                        'Send offer',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 13.5,
+                              tablet: 16,
+                              largeTablet: 18,
+                              desktop: 20),
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-            SizedBox(
-                height: GetResponsiveSize.getResponsiveSize(context,
-                    mobile: 16, tablet: 20, largeTablet: 24, desktop: 28)),
-          ],
-        ],
-      );
-    }
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

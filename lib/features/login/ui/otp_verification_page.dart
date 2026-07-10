@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
@@ -29,8 +30,54 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
+  static const int _resendCooldownSeconds = 30;
+  Timer? _resendTimer;
+  int _resendSecondsLeft = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _startResendCooldown();
+  }
+
+  void _startResendCooldown() {
+    _resendTimer?.cancel();
+    setState(() => _resendSecondsLeft = _resendCooldownSeconds);
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        if (_resendSecondsLeft > 0) {
+          _resendSecondsLeft--;
+        }
+        if (_resendSecondsLeft == 0) {
+          timer.cancel();
+        }
+      });
+    });
+  }
+
+  /// Masks the destination the OTP was sent to, e.g. "+91 98•••• ••21"
+  /// or "ra•••••@newshop.in".
+  String get _maskedIdentifier {
+    final id = widget.identifier.trim();
+    if (widget.isEmail) {
+      final at = id.indexOf('@');
+      if (at <= 2) return id;
+      return '${id.substring(0, 2)}${'•' * (at - 2)}${id.substring(at)}';
+    }
+    final digits = id.replaceAll(RegExp(r'\D'), '');
+    if (digits.length < 4) return id;
+    final first = digits.substring(0, 2);
+    final last = digits.substring(digits.length - 2);
+    return '+91 $first•••• ••$last';
+  }
+
   @override
   void dispose() {
+    _resendTimer?.cancel();
     for (var controller in _otpControllers) {
       controller.dispose();
     }
@@ -80,6 +127,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     context.read<OtpBloc>().add(
           OtpEvent.sendOtp(identifier: widget.identifier),
         );
+    _startResendCooldown();
   }
 
   @override
@@ -175,32 +223,94 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                         ),
                 ),
                 const SizedBox(height: 30),
-                Text(
-                  'OTP Verification',
-                  style: AppTextstyle.title1.copyWith(
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(
+                Center(
+                  child: Icon(
+                    Icons.shield_outlined,
+                    size: GetResponsiveSize.getResponsiveSize(
                       context,
-                      mobile: 20.0, // Keep mobile unchanged
-                      tablet: 30.0,
-                      largeTablet: 40.0,
-                      desktop: 50.0,
+                      mobile: 36.0,
+                      tablet: 44.0,
+                      largeTablet: 52.0,
+                      desktop: 60.0,
+                    ),
+                    color: AppColors.primaryColor,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Center(
+                  child: Text(
+                    'OTP Verification',
+                    style: AppTextstyle.title1.copyWith(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 20.0, // Keep mobile unchanged
+                        tablet: 30.0,
+                        largeTablet: 40.0,
+                        desktop: 50.0,
+                      ),
                     ),
                   ),
                 ),
-                Text(
-                  'Enter the OTP you received',
-                  style: TextStyle(
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(
-                      context,
-                      mobile: 14.0, // Keep mobile unchanged
-                      tablet: 20.0,
-                      largeTablet: 26.0,
-                      desktop: 32.0,
+                const SizedBox(height: 4),
+                Center(
+                  child: Text(
+                    'Enter the OTP you received',
+                    style: TextStyle(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 14.0, // Keep mobile unchanged
+                        tablet: 20.0,
+                        largeTablet: 26.0,
+                        desktop: 32.0,
+                      ),
+                      color: AppColors.blackColor,
                     ),
-                    color: AppColors.blackColor,
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 4),
+                Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Sent to $_maskedIdentifier',
+                        style: TextStyle(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 12.0,
+                            tablet: 16.0,
+                            largeTablet: 20.0,
+                            desktop: 24.0,
+                          ),
+                          color: AppColors.greyColor,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => context.pop(),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'Change',
+                          style: TextStyle(
+                            fontSize: GetResponsiveSize.getResponsiveFontSize(
+                              context,
+                              mobile: 12.0,
+                              tablet: 16.0,
+                              largeTablet: 20.0,
+                              desktop: 24.0,
+                            ),
+                            color: AppColors.primaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
                 _buildOtpInputFields(),
                 const SizedBox(height: 30),
                 _buildConfirmOtpButton(),
@@ -271,7 +381,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
-                  color: AppColors.greyColor,
+                  color: AppColors.primaryColor,
                   width: focusedBorderWidth,
                 ),
               ),
@@ -393,7 +503,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                 ),
               ),
               TextButton(
-                onPressed: isResending ? null : _handleResendOtp,
+                onPressed: (isResending || _resendSecondsLeft > 0)
+                    ? null
+                    : _handleResendOtp,
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.symmetric(
                     horizontal: GetResponsiveSize.getResponsivePadding(
@@ -407,7 +519,22 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: isResending
+                child: _resendSecondsLeft > 0
+                    ? Text(
+                        'Resend in 0:${_resendSecondsLeft.toString().padLeft(2, '0')}',
+                        style: TextStyle(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 14.0,
+                            tablet: 20.0,
+                            largeTablet: 25.0,
+                            desktop: 30.0,
+                          ),
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.greyColor,
+                        ),
+                      )
+                    : isResending
                     ? SizedBox(
                         width: GetResponsiveSize.getResponsiveSize(
                           context,

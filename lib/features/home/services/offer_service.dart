@@ -13,6 +13,7 @@ class OfferService {
     required String adTitle,
     required String adPosterName,
     required String otherUserId,
+    int? adPrice,
   }) async {
     print('💰 Starting offer flow...');
     print('📋 Offer details:');
@@ -36,6 +37,7 @@ class OfferService {
       adId: adId,
       adTitle: adTitle,
       adPosterName: adPosterName,
+      adPrice: adPrice,
       onOfferSubmitted: (amount) async {
         print('💵 Offer submitted with amount: ₹${amount.toStringAsFixed(0)}');
         print('🔄 Starting room check and creation flow...');
