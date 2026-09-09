@@ -457,8 +457,10 @@ class _OfferSheetState extends State<_OfferSheet> {
                     child: ElevatedButton.icon(
                       onPressed: canSend
                           ? () {
+                              // offer_service closes this sheet itself;
+                              // popping here too would dismiss the loading
+                              // dialog it shows next (QA audit 2026-07-10).
                               widget.onOfferSubmitted(amount!);
-                              Navigator.of(context).pop();
                             }
                           : null,
                       icon: const Icon(Icons.send, size: 16),

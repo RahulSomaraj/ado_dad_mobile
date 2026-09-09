@@ -181,8 +181,9 @@ class _ChatPageState extends State<ChatPage> {
               child: widget.otherUserProfilePic == null ||
                       widget.otherUserProfilePic == 'default-profile-pic-url'
                   ? Text(
-                      (widget.otherUserName ?? 'U')
-                          .substring(0, 1)
+                      ((widget.otherUserName ?? '').trim().isEmpty
+                              ? 'U'
+                              : widget.otherUserName!.trim()[0])
                           .toUpperCase(),
                       style: TextStyle(
                         fontSize: GetResponsiveSize.getResponsiveFontSize(

@@ -35,8 +35,8 @@ class ChatService {
       );
     } catch (e) {
       print('💥 Error in chat flow: $e');
-      // Close loading dialog
-      Navigator.of(context).pop();
+      // Close loading dialog (guarded)
+      _closeLoadingDialog(context);
 
       // Show error
       _showErrorDialog(context, 'Failed to check chat room: $e');
@@ -63,8 +63,8 @@ class ChatService {
       print('   Success: ${result['success']}');
       print('   Data: ${result['data']}');
 
-      // Close loading dialog
-      Navigator.of(context).pop();
+      // Close loading dialog (guarded)
+      _closeLoadingDialog(context);
 
       if (result['success'] == true && result['data']?['exists'] == true) {
         final roomId = result['data']?['roomId'];
@@ -164,8 +164,9 @@ class ChatService {
         _showErrorDialog(context, 'Failed to create chat room');
       }
     } catch (e) {
-      // Close loading dialog
-      Navigator.of(context).pop();
+      // Close loading dialog if still visible (guarded — normally already
+      // closed after the room check; an unguarded pop removed the page)
+      _closeLoadingDialog(context);
       print('💥 Error creating room: $e');
       print('📋 Error details:');
       print('   Error type: ${e.runtimeType}');
@@ -244,8 +245,20 @@ class ChatService {
     }
   }
 
+  // Guards the loading dialog so a stray pop can never remove a page route
+  // (QA audit 2026-07-10).
+  static bool _loadingDialogShown = false;
+
+  static void _closeLoadingDialog(BuildContext context) {
+    if (_loadingDialogShown && context.mounted) {
+      Navigator.of(context).pop();
+    }
+    _loadingDialogShown = false;
+  }
+
   /// Show loading dialog
   static void _showLoadingDialog(BuildContext context, String message) {
+    _loadingDialogShown = true;
     showDialog(
       context: context,
       barrierDismissible: false,

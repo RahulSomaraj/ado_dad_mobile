@@ -40,6 +40,21 @@ class ChatSocketService {
   /// Initialize and connect to WebSocket server
   Future<bool> connect() async {
     try {
+      // Already connected — reuse the live socket instead of stacking a new
+      // forceNew connection whose duplicate listeners double-deliver messages
+      // (QA audit 2026-07-10).
+      if (_isConnected && _socket?.connected == true) {
+        print('✅ Socket already connected — reusing existing connection');
+        return true;
+      }
+      // Tear down any stale socket before creating a fresh one.
+      if (_socket != null) {
+        try {
+          _socket!.dispose();
+        } catch (_) {}
+        _socket = null;
+      }
+
       // Get stored token
       final token = await getToken();
       print('🔑 Retrieved token: ${token != null ? 'Present' : 'Missing'}');
@@ -428,7 +443,16 @@ class ChatSocketService {
   Future<void> _ensureConnection() async {
     if (!_isConnected || _socket == null) {
       print('🔄 Connection lost, attempting to reconnect...');
-      await connect();
+      final roomToRejoin = _currentRoomId;
+      final reconnected = await connect();
+      // Server-side room membership dies with the old socket — rejoin the
+      // active room or subsequent sendMessage calls are silently dropped
+      // (QA audit 2026-07-10).
+      if (reconnected && roomToRejoin != null && _socket != null) {
+        print('🔁 Rejoining room after reconnect: $roomToRejoin');
+        _socket!.emit('joinChatRoom', {'roomId': roomToRejoin});
+        _currentRoomId = roomToRejoin;
+      }
     } else {
       print('✅ Connection is stable');
     }
@@ -445,9 +469,14 @@ class ChatSocketService {
   }
 
   /// Monitor connection health
+  Timer? _monitoringTimer;
+
   void _startConnectionMonitoring() {
-    // Monitor connection every 30 seconds
-    Timer.periodic(const Duration(seconds: 30), (timer) {
+    // A single periodic timer — previously one was spawned per onConnect and
+    // never cancelled, so stale timers piled up and each triggered its own
+    // reconnect storm (QA audit 2026-07-10).
+    _monitoringTimer?.cancel();
+    _monitoringTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       if (_isConnected && _socket != null) {
         _socket!
             .emit('ping', {'timestamp': DateTime.now().millisecondsSinceEpoch});
@@ -461,6 +490,8 @@ class ChatSocketService {
 
   /// Disconnect from server
   Future<void> disconnect() async {
+    _monitoringTimer?.cancel();
+    _monitoringTimer = null;
     if (_socket != null) {
       _socket!.disconnect();
       _socket = null;
@@ -468,16 +499,19 @@ class ChatSocketService {
 
     _isConnected = false;
     _currentRoomId = null;
-    _connectionController.add(false);
+    if (!_connectionController.isClosed) {
+      _connectionController.add(false);
+    }
     print('🔌 Disconnected from WebSocket');
   }
 
   /// Clean up resources
   void dispose() {
     disconnect();
-    _connectionController.close();
-    _messageController.close();
-    _roomController.close();
-    _errorController.close();
+    if (!_connectionController.isClosed) _connectionController.close();
+    if (!_messageController.isClosed) _messageController.close();
+    if (!_messagesController.isClosed) _messagesController.close();
+    if (!_roomController.isClosed) _roomController.close();
+    if (!_errorController.isClosed) _errorController.close();
   }
 }

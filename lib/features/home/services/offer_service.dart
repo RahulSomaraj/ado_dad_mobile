@@ -55,8 +55,8 @@ class OfferService {
               context, adId, otherUserId, amount, pageScaffoldMessenger);
         } catch (e) {
           print('💥 Error in offer flow: $e');
-          // Close loading dialog
-          Navigator.of(context).pop();
+          // Close loading dialog (guarded — never pops a page route)
+          _closeLoadingDialog(context);
 
           // Show error
           _showErrorDialog(context, 'Failed to check room: $e');
@@ -88,8 +88,8 @@ class OfferService {
       print('   Success: ${result['success']}');
       print('   Data: ${result['data']}');
 
-      // Close loading dialog
-      Navigator.of(context).pop();
+      // Close loading dialog (guarded)
+      _closeLoadingDialog(context);
 
       if (result['success'] == true && result['data']?['exists'] == true) {
         final roomId = result['data']?['roomId'];
@@ -170,8 +170,10 @@ class OfferService {
         _showErrorDialog(context, 'Failed to create chat room');
       }
     } catch (e) {
-      // Close loading dialog
-      Navigator.of(context).pop();
+      // Close loading dialog if still visible (guarded — it was normally
+      // closed already after the room check, so an unguarded pop here used
+      // to remove the underlying page)
+      _closeLoadingDialog(context);
       print('💥 Error creating room: $e');
       print('📋 Error details:');
       print('   Error type: ${e.runtimeType}');
@@ -691,8 +693,20 @@ class OfferService {
     );
   }
 
+  // Tracks whether the offer-flow loading dialog is on screen, so a stray
+  // "close loading" pop can never remove a page route (QA audit 2026-07-10).
+  static bool _loadingDialogShown = false;
+
+  static void _closeLoadingDialog(BuildContext context) {
+    if (_loadingDialogShown && context.mounted) {
+      Navigator.of(context).pop();
+    }
+    _loadingDialogShown = false;
+  }
+
   /// Show loading dialog
   static void _showLoadingDialog(BuildContext context, String message) {
+    _loadingDialogShown = true;
     showDialog(
       context: context,
       barrierDismissible: false,

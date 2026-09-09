@@ -10,6 +10,8 @@ import 'package:ado_dad_user/common/widgets/location_picker_widget.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/features/sell/bloc/bloc/add_post_bloc.dart';
+import 'package:ado_dad_user/features/sell/bloc/media_upload/media_upload_bloc.dart';
+import 'package:ado_dad_user/features/sell/ui/form/widgets/photo_step_widget.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/commercial_vehicle_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_fuel_type_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_manufacturer_model.dart';
@@ -20,7 +22,6 @@ import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 
 class AddCommercialVehicleForm extends StatefulWidget {
   final String categoryTitle;
@@ -42,62 +43,9 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
   double? _latitude;
   double? _longitude;
   String _description = '';
-  final ImagePicker _picker = ImagePicker();
-  final List<Uint8List> _imageFiles = [];
-  final List<String> _uploadedUrls = [];
-
-  // Video upload variables
-  Uint8List? _videoFile;
-  String? _uploadedVideoUrl;
-  String? _videoFileName;
-  Future<void> _pickImages() async {
-    final picked = await _picker.pickMultiImage(imageQuality: 70);
-    if (picked.isNotEmpty) {
-      for (final img in picked) {
-        final bytes = await img.readAsBytes();
-        _imageFiles.add(bytes);
-      }
-      setState(() {});
-    }
-  }
-
-  Future<void> _uploadImages() async {
-    _uploadedUrls.clear();
-    for (final file in _imageFiles) {
-      final url = await AddRepository().uploadImageToS3(file);
-      if (url != null) _uploadedUrls.add(url);
-    }
-  }
-
-  Future<void> _pickVideo() async {
-    final picked = await _picker.pickVideo(source: ImageSource.gallery);
-    if (picked != null) {
-      final bytes = await picked.readAsBytes();
-      setState(() {
-        _videoFile = bytes;
-        _videoFileName = picked.name;
-      });
-    }
-  }
-
-  Future<void> _uploadVideo() async {
-    if (_videoFile != null) {
-      final url = await AddRepository().uploadVideoToS3(_videoFile!);
-      if (url != null) {
-        setState(() {
-          _uploadedVideoUrl = url;
-        });
-      }
-    }
-  }
-
-  void _removeVideo() {
-    setState(() {
-      _videoFile = null;
-      _videoFileName = null;
-      _uploadedVideoUrl = null;
-    });
-  }
+  /// Photos/video live here and upload to S3 as soon as they are picked.
+  late final MediaUploadBloc _mediaBloc =
+      MediaUploadBloc(repository: AddRepository());
 
   CommercialVehicleType? _selectedVehicleType;
   final Map<String, String> _bodyTypeMap = {
@@ -127,6 +75,12 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
   VehicleModel? _selectedModel;
   List<VehicleVariant> _variants = [];
   VehicleVariant? _selectedVariant;
+
+  @override
+  void dispose() {
+    _mediaBloc.close();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -200,15 +154,33 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
   bool _hasPermit = false;
   int _seatingCapacity = 0;
 
+  void _showMediaMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   void _addAdvertisement() async {
     if (!_sellerFormKey.currentState!.validate()) {
-      setState(() => _step = 0);
+      setState(() => _step = 1); // Details step
       return;
     }
     _sellerFormKey.currentState!.save();
 
-    await _uploadImages(); // S3 Upload
-    await _uploadVideo(); // S3 Video Upload
+    // Photos were uploaded in the background while the form was filled.
+    final media = _mediaBloc.state;
+    if (!media.hasImages) {
+      setState(() => _step = 0);
+      _showMediaMessage('Add at least one photo to post your ad.');
+      return;
+    }
+    if (!media.allDone) {
+      setState(() => _step = 0);
+      _showMediaMessage(media.hasFailed
+          ? 'Some photos failed to upload. Tap them to retry or remove.'
+          : 'Still uploading ${media.pendingCount} file(s), please wait a moment.');
+      return;
+    }
 
     final ad = {
       "commercialVehicleType": _selectedVehicleType?.name,
@@ -230,8 +202,8 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
       "hasFitness": _hasIFitness,
       "hasPermit": _hasPermit,
       "description": _description,
-      "images": _uploadedUrls,
-      "link": _uploadedVideoUrl, // Video URL
+      "images": media.imageUrls,
+      "link": media.videoUrl,
       "fuelTypeId": _selectedfuelType!.id,
       "transmissionTypeId": _selectedtransmissionType!.id,
       "additionalFeatures": _selectedFeatures,
@@ -301,7 +273,12 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
           ),
         ),
       ),
-      body: BlocConsumer<AddPostBloc, AddPostState>(
+      body: BlocProvider<MediaUploadBloc>.value(
+        value: _mediaBloc,
+        child: BlocListener<MediaUploadBloc, MediaUploadState>(
+          // Step nav (Next enabled/disabled) depends on media state.
+          listener: (_, __) => setState(() {}),
+          child: BlocConsumer<AddPostBloc, AddPostState>(
         listener: (context, state) async {
           state.whenOrNull(
             success: () async {
@@ -352,6 +329,10 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                   _buildStepHeader(),
                   Offstage(
                     offstage: _step != 0,
+                    child: PhotoStepWidget(categoryId: widget.categoryId),
+                  ),
+                  Offstage(
+                    offstage: _step != 1,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -969,197 +950,6 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                     ),
                   ),
                   Offstage(
-                    offstage: _step != 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                  Divider(),
-                  Container(
-                    width: double.infinity,
-                    color: AppColors.whiteColor,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: GetResponsiveSize.getResponsivePadding(
-                          context,
-                          mobile: 16,
-                          tablet: 24,
-                          largeTablet: 32,
-                          desktop: 40,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          Text(
-                            'Upload Images',
-                            style: AppTextstyle.sectionTitleTextStyle.copyWith(
-                              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                                context,
-                                mobile: AppTextstyle
-                                        .sectionTitleTextStyle.fontSize ??
-                                    18,
-                                tablet: 24,
-                                largeTablet: 30,
-                                desktop: 36,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 20,
-                              tablet: 28,
-                              largeTablet: 36,
-                              desktop: 44,
-                            ),
-                          ),
-                          _buildImagePicker(),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 20,
-                              tablet: 28,
-                              largeTablet: 36,
-                              desktop: 44,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: GetResponsiveSize.getResponsiveSize(
-                      context,
-                      mobile: 20,
-                      tablet: 28,
-                      largeTablet: 36,
-                      desktop: 44,
-                    ),
-                  ),
-                  // Video Upload Section
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.whiteColor,
-                      borderRadius: BorderRadius.circular(
-                        GetResponsiveSize.getResponsiveBorderRadius(
-                          context,
-                          mobile: 12,
-                          tablet: 16,
-                          largeTablet: 20,
-                          desktop: 24,
-                        ),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 1,
-                            tablet: 1.5,
-                            largeTablet: 2,
-                            desktop: 2.5,
-                          ),
-                          blurRadius: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 5,
-                            tablet: 7,
-                            largeTablet: 9,
-                            desktop: 11,
-                          ),
-                          offset: Offset(
-                            0,
-                            GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 2,
-                              tablet: 3,
-                              largeTablet: 4,
-                              desktop: 5,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: GetResponsiveSize.getResponsivePadding(
-                          context,
-                          mobile: 16,
-                          tablet: 24,
-                          largeTablet: 32,
-                          desktop: 40,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          Text(
-                            'Upload Video',
-                            style: AppTextstyle.sectionTitleTextStyle.copyWith(
-                              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                                context,
-                                mobile: AppTextstyle
-                                        .sectionTitleTextStyle.fontSize ??
-                                    18,
-                                tablet: 24,
-                                largeTablet: 30,
-                                desktop: 36,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 20,
-                              tablet: 28,
-                              largeTablet: 36,
-                              desktop: 44,
-                            ),
-                          ),
-                          _buildVideoPicker(),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 20,
-                              tablet: 28,
-                              largeTablet: 36,
-                              desktop: 44,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: GetResponsiveSize.getResponsiveSize(
-                      context,
-                      mobile: 30,
-                      tablet: 40,
-                      largeTablet: 50,
-                      desktop: 60,
-                    ),
-                  ),
-                      ],
-                    ),
-                  ),
-                  Offstage(
                     offstage: _step != 2,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1294,12 +1084,14 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
             ),
           );
         },
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildStepHeader() {
-    const stepNames = ['Details', 'Photos', 'Review'];
+    const stepNames = ['Photos', 'Details', 'Review'];
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: GetResponsiveSize.getResponsivePadding(
@@ -1471,7 +1263,9 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                   desktop: 85,
                 ),
                 child: ElevatedButton(
-                  onPressed: () => setState(() => _step++),
+                  onPressed: (_step == 0 && !_mediaBloc.state.hasImages)
+                      ? null
+                      : () => setState(() => _step++),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryColor,
                     foregroundColor: AppColors.whiteColor,
@@ -1615,266 +1409,6 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
             )
           ],
         ),
-      ),
-    );
-  }
-
-  void _removeImage(int index) {
-    setState(() {
-      _imageFiles.removeAt(index);
-    });
-  }
-
-  Widget _buildImagePicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            ..._imageFiles.asMap().entries.map((entry) {
-              final index = entry.key;
-              final bytes = entry.value;
-              return Stack(
-                children: [
-                  Image.memory(
-                    bytes,
-                    width: 100,
-                    height: 100,
-                    fit: BoxFit.cover,
-                  ),
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: () => _removeImage(index),
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.grey,
-                          shape: BoxShape.circle,
-                        ),
-                        padding: const EdgeInsets.all(4),
-                        child: const Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }),
-            GestureDetector(
-              onTap: _pickImages,
-              child: Container(
-                width: 100,
-                height: 100,
-                color: Colors.grey.shade300,
-                child: const Icon(Icons.add),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildVideoPicker() {
-    return Container(
-      height: GetResponsiveSize.getResponsiveSize(
-        context,
-        mobile: 56,
-        tablet: 75,
-        largeTablet: 90,
-        desktop: 105,
-      ),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Colors.grey.shade300,
-          width: GetResponsiveSize.getResponsiveSize(
-            context,
-            mobile: 1,
-            tablet: 1.5,
-            largeTablet: 2,
-            desktop: 2.5,
-          ),
-        ),
-        borderRadius: BorderRadius.circular(
-          GetResponsiveSize.getResponsiveBorderRadius(
-            context,
-            mobile: 8,
-            tablet: 12,
-            largeTablet: 16,
-            desktop: 20,
-          ),
-        ),
-        color: Colors.white,
-      ),
-      child: Row(
-        children: [
-          // Text field showing filename
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: GetResponsiveSize.getResponsivePadding(
-                  context,
-                  mobile: 16,
-                  tablet: 24,
-                  largeTablet: 32,
-                  desktop: 40,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _videoFileName ?? 'No video selected',
-                      style: TextStyle(
-                        color: _videoFileName != null
-                            ? Colors.black87
-                            : Colors.grey.shade500,
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: 16,
-                          tablet: 20,
-                          largeTablet: 24,
-                          desktop: 28,
-                        ),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (_videoFileName != null)
-                    GestureDetector(
-                      onTap: _removeVideo,
-                      child: Container(
-                        margin: const EdgeInsets.only(left: 8),
-                        decoration: const BoxDecoration(
-                          color: Colors.grey,
-                          shape: BoxShape.circle,
-                        ),
-                        padding: const EdgeInsets.all(4),
-                        child: const Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          // Choose File button
-          Container(
-            height: GetResponsiveSize.getResponsiveSize(
-              context,
-              mobile: 56,
-              tablet: 75,
-              largeTablet: 90,
-              desktop: 105,
-            ),
-            width: GetResponsiveSize.getResponsiveSize(
-              context,
-              mobile: 120,
-              tablet: 160,
-              largeTablet: 200,
-              desktop: 240,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(
-                    context,
-                    mobile: 8,
-                    tablet: 12,
-                    largeTablet: 16,
-                    desktop: 20,
-                  ),
-                ),
-                bottomRight: Radius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(
-                    context,
-                    mobile: 8,
-                    tablet: 12,
-                    largeTablet: 16,
-                    desktop: 20,
-                  ),
-                ),
-              ),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: _pickVideo,
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(
-                    GetResponsiveSize.getResponsiveBorderRadius(
-                      context,
-                      mobile: 8,
-                      tablet: 12,
-                      largeTablet: 16,
-                      desktop: 20,
-                    ),
-                  ),
-                  bottomRight: Radius.circular(
-                    GetResponsiveSize.getResponsiveBorderRadius(
-                      context,
-                      mobile: 8,
-                      tablet: 12,
-                      largeTablet: 16,
-                      desktop: 20,
-                    ),
-                  ),
-                ),
-                child: Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        _videoFileName != null ? Icons.edit : Icons.upload_file,
-                        color: Colors.black,
-                        size: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 18,
-                          tablet: 24,
-                          largeTablet: 28,
-                          desktop: 32,
-                        ),
-                      ),
-                      SizedBox(
-                        width: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 4,
-                          tablet: 8,
-                          largeTablet: 12,
-                          desktop: 16,
-                        ),
-                      ),
-                      Text(
-                        _videoFileName != null ? 'Change' : 'Choose File',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile: 14,
-                            tablet: 18,
-                            largeTablet: 22,
-                            desktop: 26,
-                          ),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

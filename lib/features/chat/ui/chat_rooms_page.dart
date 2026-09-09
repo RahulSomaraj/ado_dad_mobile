@@ -408,10 +408,17 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
     );
   }
 
+  String _avatarInitial(String? name) {
+    final n = name?.trim() ?? '';
+    return n.isEmpty ? 'U' : n[0].toUpperCase();
+  }
+
   Widget _buildRoomCard(Map<String, dynamic> room) {
-    final timestamp = room['timestamp'] as DateTime;
+    // Rooms created via the offer flow can have no last message yet —
+    // hard casts here used to crash the whole rooms list (QA audit).
+    final timestamp = room['timestamp'] as DateTime? ?? DateTime.now();
     final otherUser = room['otherUser'] as Map<String, dynamic>?;
-    final lastMessage = room['lastMessage'] as String;
+    final lastMessage = room['lastMessage'] as String? ?? '';
     final lastMessageType = room['lastMessageType'] as String? ?? 'text';
     final unreadCount = (room['unreadCount'] as int?) ?? 0;
     final hasUnread = unreadCount > 0;
@@ -457,7 +464,7 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
               child: otherUser?['profilePic'] == null ||
                       otherUser!['profilePic'] == 'default-profile-pic-url'
                   ? Text(
-                      (otherUser?['name'] ?? 'U').substring(0, 1).toUpperCase(),
+                      _avatarInitial(otherUser?['name'] as String?),
                       style: TextStyle(
                         fontSize: GetResponsiveSize.getResponsiveFontSize(
                           context,

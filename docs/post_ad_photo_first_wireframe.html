@@ -1,0 +1,470 @@
+<!doctype html><html><head><meta charset="utf-8">
+<title>Ado-Dad Photo-First Post Flow</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F4F5F9; --surface:#FFFFFF; --surface2:#EEF0F6; --ink:#15161D; --ink2:#464B5A; --muted:#7A8091;
+  --line:#DDE0EA; --line2:#C7CBD8; --accent:#4F48EC; --accent-soft:#ECEBFD; --accent-ink:#3B35C4;
+  --ok:#1F9D6A; --ok-soft:#E3F5EC; --warn:#D98E0B; --warn-soft:#FFF4DE; --bad:#F05555;
+  --phone:#0F1115; --shadow:0 18px 50px rgba(21,22,29,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F1115; --surface:#1B1F27; --surface2:#232833; --ink:#ECEEF3; --ink2:#C4C8D4; --muted:#8B93A3;
+    --line:#2A2F3A; --line2:#3A4050; --accent:#7A74FF; --accent-soft:#26265A; --accent-ink:#B2AEFF;
+    --ok:#3BC48A; --ok-soft:#153A2A; --warn:#F0B03A; --warn-soft:#3A2E12; --bad:#F26B6B;
+    --phone:#05060A; --shadow:0 18px 50px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F1115; --surface:#1B1F27; --surface2:#232833; --ink:#ECEEF3; --ink2:#C4C8D4; --muted:#8B93A3;
+  --line:#2A2F3A; --line2:#3A4050; --accent:#7A74FF; --accent-soft:#26265A; --accent-ink:#B2AEFF;
+  --ok:#3BC48A; --ok-soft:#153A2A; --warn:#F0B03A; --warn-soft:#3A2E12; --bad:#F26B6B;
+  --phone:#05060A; --shadow:0 18px 50px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:Manrope,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5}
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+a{color:var(--accent-ink)}
+.wrap{max-width:1340px;margin:0 auto;padding:28px 24px 80px}
+
+/* header */
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.top h1{font-size:26px;font-weight:800;margin:0;letter-spacing:-.02em;text-wrap:balance}
+.top p{margin:6px 0 0;color:var(--muted);max-width:62ch}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:6px}
+.meta{display:flex;gap:8px;flex-wrap:wrap}
+.tag{font-family:"JetBrains Mono",monospace;font-size:11px;padding:4px 9px;border:1px solid var(--line2);border-radius:999px;color:var(--ink2);background:var(--surface)}
+
+/* before/after strip */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0 8px}
+.rail{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.rail h3{margin:0 0 10px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.rail h3 b{color:var(--ink);font-weight:800}
+.steps{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.step{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:9px;border:1px solid var(--line2);font-weight:600;font-size:13px;background:var(--surface)}
+.step i{font-style:normal;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted)}
+.step.hot{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+.step.hot i{color:var(--accent-ink)}
+.step.dim{opacity:.55}
+.arrow{color:var(--muted);font-size:12px}
+.rail p{margin:10px 0 0;color:var(--ink2);font-size:13px}
+.rail p b{color:var(--bad);font-weight:700}
+.rail.after p b{color:var(--ok)}
+
+/* section */
+section{margin-top:40px}
+section>h2{font-size:18px;font-weight:800;margin:0 0 4px;letter-spacing:-.01em}
+section>.sub{color:var(--muted);margin:0 0 18px;max-width:70ch}
+
+/* screens */
+.flow{display:flex;gap:26px;overflow-x:auto;padding:6px 4px 22px;scroll-snap-type:x proximity}
+.shot{flex:0 0 auto;width:292px;scroll-snap-align:start}
+.shot .lbl{display:flex;align-items:baseline;gap:8px;margin:0 0 10px 2px}
+.shot .lbl .n{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--accent-ink);background:var(--accent-soft);padding:2px 7px;border-radius:6px}
+.shot .lbl h4{margin:0;font-size:14px;font-weight:700}
+.notes{margin:12px 2px 0;padding:0;list-style:none;display:grid;gap:6px}
+.notes li{font-size:12.5px;color:var(--ink2);padding-left:18px;position:relative;line-height:1.45}
+.notes li::before{content:"";position:absolute;left:4px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.notes li.dev::before{background:var(--warn)}
+.notes li .k{font-family:"JetBrains Mono",monospace;font-size:11px;background:var(--surface2);padding:1px 5px;border-radius:4px;color:var(--ink)}
+
+.phone{width:292px;height:620px;border-radius:34px;background:var(--phone);padding:10px;box-shadow:var(--shadow);position:relative}
+.screen{background:var(--surface);border-radius:26px;height:100%;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.status{height:26px;display:flex;justify-content:space-between;align-items:center;padding:0 18px;font-size:10px;font-weight:700;color:var(--ink2)}
+.status .notch{position:absolute;left:50%;top:6px;transform:translateX(-50%);width:76px;height:16px;border-radius:999px;background:var(--phone)}
+.bar{display:flex;align-items:center;gap:10px;padding:6px 14px 8px}
+.bar .back{width:24px;height:24px;border-radius:7px;border:1.5px solid var(--line2);display:grid;place-items:center;font-size:12px;color:var(--ink2)}
+.bar .t{font-weight:800;font-size:14px;flex:1}
+.bar .x{font-size:11px;color:var(--muted);font-weight:600}
+.prog{padding:0 14px 8px}
+.prog .row{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);font-weight:600;margin-bottom:5px}
+.prog .row b{color:var(--ink);font-weight:800}
+.segs{display:flex;gap:4px}
+.segs span{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.segs span.on{background:var(--accent)}
+.body{flex:1;padding:6px 14px 10px;overflow:hidden;display:flex;flex-direction:column;gap:10px}
+.h{font-weight:800;font-size:16px;letter-spacing:-.01em;line-height:1.2}
+.p{font-size:11.5px;color:var(--muted);line-height:1.4}
+.cta{margin-top:auto;padding:10px 14px 14px;border-top:1px solid var(--line);display:flex;gap:8px}
+.btn{flex:1;height:42px;border-radius:11px;display:grid;place-items:center;font-weight:800;font-size:13px;border:1.5px solid var(--line2);color:var(--ink2)}
+.btn.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.ghost{flex:0 0 42px}
+.btn.off{opacity:.45}
+
+/* wire primitives */
+.wtxt{height:8px;border-radius:4px;background:var(--line)}
+.field{border:1.5px solid var(--line2);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:3px;background:var(--surface)}
+.field .fl{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.field .fv{font-size:12.5px;font-weight:600;color:var(--ink)}
+.field .fv.ph{color:var(--muted);font-weight:500}
+.field.sel .fv::after{content:"⌄";float:right;color:var(--muted)}
+.field.err{border-color:var(--bad)}
+.ferr{font-size:10.5px;color:var(--bad);font-weight:600;margin-top:-6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:11px;font-weight:700;padding:6px 10px;border-radius:999px;border:1.5px solid var(--line2);color:var(--ink2)}
+.chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+.tog{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;padding:8px 0;border-bottom:1px dashed var(--line)}
+.sw{width:30px;height:18px;border-radius:999px;background:var(--line2);position:relative}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff}
+.sw.on{background:var(--accent)}.sw.on::after{left:14px}
+
+/* photos */
+.drop{border:2px dashed var(--accent);background:var(--accent-soft);border-radius:14px;padding:22px 14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+.drop .ic{width:44px;height:44px;border-radius:12px;background:var(--accent);display:grid;place-items:center;color:#fff;font-size:20px}
+.drop .b{font-weight:800;font-size:13px;color:var(--accent-ink)}
+.drop .s{font-size:11px;color:var(--muted)}
+.tips{background:var(--surface2);border-radius:12px;padding:10px 12px;display:grid;gap:6px}
+.tips .tt{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.tips .ti{font-size:11.5px;color:var(--ink2);display:flex;gap:7px;align-items:center}
+.tips .ti::before{content:"✓";color:var(--ok);font-weight:800;font-size:11px}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.ph{aspect-ratio:1;border-radius:10px;background:linear-gradient(135deg,var(--line) 0%,var(--surface2) 100%);position:relative;overflow:hidden;border:1.5px solid var(--line)}
+.ph.cover{grid-column:span 2;grid-row:span 2}
+.ph .cv{position:absolute;left:6px;top:6px;font-size:9px;font-weight:800;letter-spacing:.06em;background:var(--ink);color:var(--surface);padding:2px 6px;border-radius:5px}
+.ph .rm{position:absolute;right:5px;top:5px;width:16px;height:16px;border-radius:50%;background:var(--ink);color:var(--surface);font-size:10px;display:grid;place-items:center;font-weight:800}
+.ph .up{position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--line2)}
+.ph .up i{display:block;height:100%;background:var(--ok)}
+.ph .ok{position:absolute;right:5px;bottom:5px;width:14px;height:14px;border-radius:50%;background:var(--ok);color:#fff;font-size:9px;display:grid;place-items:center;font-weight:800}
+.ph .spin{position:absolute;inset:0;display:grid;place-items:center;font-size:10px;font-weight:800;color:var(--ink2);background:rgba(255,255,255,.35)}
+.ph.add{border:1.5px dashed var(--accent);background:var(--accent-soft);display:grid;place-items:center;color:var(--accent-ink);font-weight:800;font-size:22px}
+.ph .num{position:absolute;left:5px;bottom:5px;font-family:"JetBrains Mono",monospace;font-size:9px;background:var(--surface);color:var(--ink);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+.count{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);font-weight:600}
+.count b{color:var(--ink)}
+.vid{border:1.5px solid var(--line2);border-radius:12px;padding:9px 11px;display:flex;align-items:center;gap:10px}
+.vid .vi{width:34px;height:34px;border-radius:9px;background:var(--surface2);display:grid;place-items:center;font-size:14px}
+.vid .vt{font-size:12px;font-weight:700}
+.vid .vs{font-size:10.5px;color:var(--muted)}
+.vid .va{margin-left:auto;font-size:11px;font-weight:800;color:var(--accent-ink)}
+
+/* category sheet */
+.dimmed{position:absolute;inset:0;background:rgba(15,17,21,.55)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:22px 22px 0 0;padding:10px 14px 16px;display:flex;flex-direction:column;gap:10px}
+.sheet .grab{width:38px;height:4px;border-radius:2px;background:var(--line2);margin:0 auto 4px}
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cat{border:1.5px solid var(--line2);border-radius:12px;padding:12px 10px;display:flex;flex-direction:column;gap:6px}
+.cat .ci{width:30px;height:30px;border-radius:9px;background:var(--accent-soft);display:grid;place-items:center;font-size:15px}
+.cat .cn{font-weight:800;font-size:12.5px}
+.cat .cs{font-size:10.5px;color:var(--muted)}
+.home{display:grid;gap:8px;padding:0 14px}
+.card{height:88px;border-radius:12px;background:var(--surface2)}
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:56px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-around;background:var(--surface);font-size:9px;font-weight:700;color:var(--muted)}
+.tabbar .sell{width:46px;height:46px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:20px;margin-top:-26px;box-shadow:0 8px 20px rgba(79,72,236,.35)}
+
+/* review */
+.rv{border:1.5px solid var(--line);border-radius:12px;overflow:hidden}
+.rv .rh{display:flex;justify-content:space-between;align-items:center;padding:8px 11px;background:var(--surface2);font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rv .rh a{font-size:10.5px;text-transform:none;letter-spacing:0;font-weight:800}
+.kv{display:grid;grid-template-columns:1fr auto;padding:6px 11px;font-size:11.5px;border-top:1px dashed var(--line)}
+.kv span{color:var(--muted)}.kv b{font-weight:700}
+.strip{display:flex;gap:5px;padding:9px 11px}
+.strip i{width:40px;height:40px;border-radius:7px;background:var(--line);display:block}
+.strip i:first-child{outline:2px solid var(--accent);outline-offset:1px}
+.price{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.success{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:30px 20px;flex:1}
+.success .ok{width:64px;height:64px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;font-size:28px;font-weight:800}
+.preview{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:8px;display:flex;gap:9px;align-items:center;text-align:left}
+.preview i{width:52px;height:52px;border-radius:8px;background:var(--line);display:block;flex:0 0 auto}
+.preview .pt{font-size:12px;font-weight:700}.preview .pp{font-size:11px;color:var(--muted)}
+.pill{font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)}
+
+/* dev plan */
+.plan{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.pc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.pc h4{margin:0 0 8px;font-size:13.5px;font-weight:800}
+.pc p,.pc li{font-size:12.5px;color:var(--ink2);margin:0}
+.pc ul{margin:0;padding-left:16px;display:grid;gap:5px}
+.pc code{font-family:"JetBrains Mono",monospace;font-size:11px;background:var(--surface2);padding:1px 5px;border-radius:4px;color:var(--ink)}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin:0 0 14px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--accent)}
+.legend i.w{background:var(--warn)}
+@media (max-width:760px){.compare{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">ado-dad mobile · sell flow · v2 proposal</div>
+      <h1>Post an ad, photo-first</h1>
+      <p>Redesign of the four <span class="mono">add_*_form.dart</span> screens. Photos move to step 1 and upload in the background while the seller fills in details, so "Post" is instant instead of waiting on S3.</p>
+    </div>
+    <div class="meta">
+      <span class="tag">Flutter · go_router · bloc</span>
+      <span class="tag">4 categories, 1 shell</span>
+      <span class="tag">wireframe · not final visual</span>
+    </div>
+  </header>
+
+  <div class="compare">
+    <div class="rail">
+      <h3>Today <b>· 3 steps, upload on submit</b></h3>
+      <div class="steps">
+        <span class="step"><i>0</i>Category list</span><span class="arrow">→</span>
+        <span class="step"><i>1</i>Details (18+ fields)</span><span class="arrow">→</span>
+        <span class="step hot"><i>2</i>Photos + Video</span><span class="arrow">→</span>
+        <span class="step"><i>3</i>Review</span><span class="arrow">→</span>
+        <span class="step dim"><i>⏳</i>S3 upload × N, then POST</span>
+      </div>
+      <p><b>Problems:</b> seller types everything before seeing whether photos work; all images upload serially on "Post" (long spinner, silent failure if one URL is null); a validation error on submit jumps back to step 0; the 3-step shell is duplicated in 4 files (~7k lines).</p>
+    </div>
+    <div class="rail after">
+      <h3>Proposed <b>· photos first, upload as you go</b></h3>
+      <div class="steps">
+        <span class="step"><i>0</i>Category sheet</span><span class="arrow">→</span>
+        <span class="step hot"><i>1</i>Photos</span><span class="arrow">→</span>
+        <span class="step"><i>2</i>Details</span><span class="arrow">→</span>
+        <span class="step"><i>3</i>Price &amp; location</span><span class="arrow">→</span>
+        <span class="step"><i>4</i>Review → POST</span>
+      </div>
+      <p><b>Wins:</b> photos (the highest-effort, highest-value input) are captured while motivation is highest; uploads finish during steps 2–4 so Post is one API call; per-step validation; one shared <span class="mono">PostAdShell</span> with category-specific field sections plugged in.</p>
+    </div>
+  </div>
+
+  <section>
+    <h2>Screen flow</h2>
+    <p class="sub">Scroll sideways. Blue dots are UX notes, amber dots are implementation notes for the Flutter side.</p>
+    <div class="legend"><span><i></i>UX</span><span><i class="w"></i>Dev</span></div>
+    <div class="flow">
+
+      <!-- 0 category -->
+      <div class="shot">
+        <div class="lbl"><span class="n">00</span><h4>Category sheet</h4></div>
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="notch"></span><span>▮▮▮</span></div>
+          <div class="bar"><div class="t">Home</div></div>
+          <div class="home"><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div></div>
+          <div class="tabbar"><span>Home</span><span>Search</span><span class="sell">+</span><span>Chats</span><span>Profile</span></div>
+          <div class="dimmed"></div>
+          <div class="sheet">
+            <div class="grab"></div>
+            <div class="h">What are you selling?</div>
+            <div class="cats">
+              <div class="cat"><div class="ci">🛵</div><div class="cn">Two wheeler</div><div class="cs">Bikes &amp; scooters</div></div>
+              <div class="cat"><div class="ci">🚗</div><div class="cn">Car</div><div class="cs">Cars &amp; premium vehicles</div></div>
+              <div class="cat"><div class="ci">🚚</div><div class="cn">Commercial</div><div class="cs">Trucks, autos &amp; buses</div></div>
+              <div class="cat"><div class="ci">🏠</div><div class="cn">Property</div><div class="cs">Sell or rent</div></div>
+            </div>
+            <div class="p">Draft from yesterday · <b style="color:var(--accent-ink)">Resume Honda Activa</b></div>
+          </div>
+        </div></div>
+        <ul class="notes">
+          <li>Bottom sheet over Home instead of a full page (<span class="k">item_category.dart</span>) — one less push, 2×2 grid replaces the tall list.</li>
+          <li>Draft resume row appears only when a saved draft exists.</li>
+          <li class="dev">Route stays <span class="k">/add-&lt;cat&gt;-form</span>; sheet is a <span class="k">showModalBottomSheet</span> from the Sell tab.</li>
+        </ul>
+      </div>
+
+      <!-- 1 photos empty -->
+      <div class="shot">
+        <div class="lbl"><span class="n">01</span><h4>Photos — empty</h4></div>
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="notch"></span><span>▮▮▮</span></div>
+          <div class="bar"><div class="back">‹</div><div class="t">Sell a car</div><div class="x">Save draft</div></div>
+          <div class="prog"><div class="row"><span><b>Step 1</b> of 4</span><span>Photos</span></div><div class="segs"><span class="on"></span><span></span><span></span><span></span></div></div>
+          <div class="body">
+            <div class="h">Add photos of your car</div>
+            <div class="p">Ads with 5+ photos get about 3× more enquiries. First photo becomes the cover.</div>
+            <div class="drop">
+              <div class="ic">📷</div>
+              <div class="b">Take photo</div>
+              <div class="s">or choose from gallery · up to 10</div>
+            </div>
+            <div class="tips">
+              <div class="tt">Good shots to include</div>
+              <div class="ti">Front three-quarter, in daylight</div>
+              <div class="ti">Odometer &amp; dashboard</div>
+              <div class="ti">Interior, tyres, any damage</div>
+            </div>
+          </div>
+          <div class="cta"><div class="btn pri off">Continue</div></div>
+        </div></div>
+        <ul class="notes">
+          <li>Copy is category-aware ("your car" / "your bike" / "the property"); tips list changes per category.</li>
+          <li>Camera is the primary action; gallery secondary. Continue disabled until ≥1 photo.</li>
+          <li class="dev">Single <span class="k">PhotoStep</span> widget reused by all 4 create forms and the 4 edit forms — replaces <span class="k">_buildImagePicker</span> ×8.</li>
+        </ul>
+      </div>
+
+      <!-- 2 photos filled -->
+      <div class="shot">
+        <div class="lbl"><span class="n">02</span><h4>Photos — uploading</h4></div>
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="notch"></span><span>▮▮▮</span></div>
+          <div class="bar"><div class="back">‹</div><div class="t">Sell a car</div><div class="x">Save draft</div></div>
+          <div class="prog"><div class="row"><span><b>Step 1</b> of 4</span><span>Photos</span></div><div class="segs"><span class="on"></span><span></span><span></span><span></span></div></div>
+          <div class="body">
+            <div class="count"><span><b>6</b> of 10 photos</span><span>Hold &amp; drag to reorder</span></div>
+            <div class="pgrid">
+              <div class="ph cover"><span class="cv">COVER</span><span class="rm">×</span><span class="ok">✓</span></div>
+              <div class="ph"><span class="rm">×</span><span class="ok">✓</span><span class="num">2</span></div>
+              <div class="ph"><span class="rm">×</span><span class="ok">✓</span><span class="num">3</span></div>
+              <div class="ph"><span class="rm">×</span><span class="num">4</span><span class="up"><i style="width:70%"></i></span></div>
+              <div class="ph"><span class="rm">×</span><span class="num">5</span><span class="up"><i style="width:35%"></i></span></div>
+              <div class="ph"><span class="spin">Retry ↻</span><span class="num">6</span></div>
+              <div class="ph add">+</div>
+            </div>
+            <div class="vid"><div class="vi">🎬</div><div><div class="vt">Add a video</div><div class="vs">Optional · walk-around, max 60s</div></div><div class="va">Add</div></div>
+          </div>
+          <div class="cta"><div class="btn pri">Continue</div></div>
+        </div></div>
+        <ul class="notes">
+          <li>Each tile shows its own state: done ✓, progress bar, or Retry. Cover is 2×2 and reorderable — tap any tile → "Make cover".</li>
+          <li>Continue is allowed while uploads are still running; they keep going through steps 2–4.</li>
+          <li class="dev">New <span class="k">MediaUploadCubit</span>: <span class="k">List&lt;MediaItem&gt;</span> with <span class="k">{bytes, localId, status, progress, url}</span>; parallel uploads (max 3) via <span class="k">AddRepository.uploadImageToS3</span>. Compress to ~1600px / q70 before upload.</li>
+        </ul>
+      </div>
+
+      <!-- 3 details -->
+      <div class="shot">
+        <div class="lbl"><span class="n">03</span><h4>Details</h4></div>
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="notch"></span><span>▮▮▮</span></div>
+          <div class="bar"><div class="back">‹</div><div class="t">Sell a car</div><div class="x">Save draft</div></div>
+          <div class="prog"><div class="row"><span><b>Step 2</b> of 4</span><span>Details · <span style="color:var(--ok)">5/6 photos up</span></span></div><div class="segs"><span class="on"></span><span class="on"></span><span></span><span></span></div></div>
+          <div class="body">
+            <div class="h">Tell us about the car</div>
+            <div class="field sel"><div class="fl">Manufacturer</div><div class="fv">Maruti Suzuki</div></div>
+            <div class="grid2">
+              <div class="field sel"><div class="fl">Model</div><div class="fv">Swift</div></div>
+              <div class="field sel"><div class="fl">Variant</div><div class="fv ph">Select</div></div>
+            </div>
+            <div class="grid2">
+              <div class="field"><div class="fl">Year</div><div class="fv">2019</div></div>
+              <div class="field"><div class="fl">KM driven</div><div class="fv">42,300</div></div>
+            </div>
+            <div class="fl" style="font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700">Fuel</div>
+            <div class="chips"><span class="chip on">Petrol</span><span class="chip">Diesel</span><span class="chip">CNG</span><span class="chip">EV</span></div>
+            <div class="chips"><span class="chip on">Manual</span><span class="chip">Automatic</span></div>
+            <div class="tog"><span>First owner</span><span class="sw on"></span></div>
+            <div class="tog"><span>Insurance valid</span><span class="sw"></span></div>
+          </div>
+          <div class="cta"><div class="btn ghost">‹</div><div class="btn pri">Continue</div></div>
+        </div></div>
+        <ul class="notes">
+          <li>Only category facts here; price, location, description move to step 3. Short single-choice lists (fuel, transmission, ownership) become chips/toggles instead of dropdowns.</li>
+          <li>Progress row keeps showing upload state so the seller never wonders what happened to the photos.</li>
+          <li class="dev">This is the only per-category widget: <span class="k">CarDetailsSection</span>, <span class="k">TwoWheelerDetailsSection</span>, <span class="k">CommercialDetailsSection</span>, <span class="k">PropertyDetailsSection</span>. Each exposes <span class="k">validate()</span> and <span class="k">toJson()</span>.</li>
+        </ul>
+      </div>
+
+      <!-- 4 price/location -->
+      <div class="shot">
+        <div class="lbl"><span class="n">04</span><h4>Price &amp; location</h4></div>
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="notch"></span><span>▮▮▮</span></div>
+          <div class="bar"><div class="back">‹</div><div class="t">Sell a car</div><div class="x">Save draft</div></div>
+          <div class="prog"><div class="row"><span><b>Step 3</b> of 4</span><span>Price &amp; location · <span style="color:var(--ok)">all photos up</span></span></div><div class="segs"><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div></div>
+          <div class="body">
+            <div class="h">Set your price</div>
+            <div class="field"><div class="fl">Asking price</div><div class="fv price">₹ 4,85,000</div></div>
+            <div class="p">Similar 2019 Swifts near you listed at ₹4.2L – ₹5.1L</div>
+            <div class="field err"><div class="fl">Location</div><div class="fv ph">Search area or use GPS 📍</div></div>
+            <div class="ferr">Add a location so buyers nearby can find this ad</div>
+            <div class="field"><div class="fl">Title <span style="text-transform:none;letter-spacing:0">(optional)</span></div><div class="fv ph">Auto: "2019 Maruti Swift VXi"</div></div>
+            <div class="field" style="min-height:74px"><div class="fl">Description</div><div class="fv ph">Single owner, all services at ASC…</div></div>
+          </div>
+          <div class="cta"><div class="btn ghost">‹</div><div class="btn pri">Review</div></div>
+        </div></div>
+        <ul class="notes">
+          <li>Inline validation on Continue for this step only — never bounces the user to step 1.</li>
+          <li>Title auto-generates from details; description gets a category-specific placeholder.</li>
+          <li class="dev">Price-range hint is optional (needs a <span class="k">GET /ads/price-hint</span>); ship without it first. <span class="k">LocationPickerWidget</span> reused as-is.</li>
+        </ul>
+      </div>
+
+      <!-- 5 review -->
+      <div class="shot">
+        <div class="lbl"><span class="n">05</span><h4>Review &amp; post</h4></div>
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="notch"></span><span>▮▮▮</span></div>
+          <div class="bar"><div class="back">‹</div><div class="t">Sell a car</div><div class="x">Save draft</div></div>
+          <div class="prog"><div class="row"><span><b>Step 4</b> of 4</span><span>Review</span></div><div class="segs"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div></div>
+          <div class="body">
+            <div class="rv"><div class="rh"><span>Photos · 6</span><a>Edit</a></div><div class="strip"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+            <div class="rv"><div class="rh"><span>Details</span><a>Edit</a></div>
+              <div class="kv"><span>Vehicle</span><b>2019 Maruti Swift VXi</b></div>
+              <div class="kv"><span>KM · Fuel</span><b>42,300 · Petrol · Manual</b></div>
+              <div class="kv"><span>Owner</span><b>First owner</b></div>
+            </div>
+            <div class="rv"><div class="rh"><span>Price &amp; location</span><a>Edit</a></div>
+              <div class="kv"><span>Price</span><b>₹ 4,85,000</b></div>
+              <div class="kv"><span>Location</span><b>Kakkanad, Kochi</b></div>
+            </div>
+            <div class="p">By posting you agree to the listing rules.</div>
+          </div>
+          <div class="cta"><div class="btn ghost">‹</div><div class="btn pri">Post ad</div></div>
+        </div></div>
+        <ul class="notes">
+          <li>Grouped by step with an Edit link that jumps to that step and returns here — the current review is a flat read-only dump.</li>
+          <li class="dev">"Post ad" only sends the JSON: <span class="k">images</span> = urls from the cubit in display order, <span class="k">link</span> = video url. If any upload is still pending/failed, button reads "Waiting for 1 photo…" with a Retry/Remove sheet — no silent drop of null URLs.</li>
+        </ul>
+      </div>
+
+      <!-- 6 success -->
+      <div class="shot">
+        <div class="lbl"><span class="n">06</span><h4>Posted</h4></div>
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="notch"></span><span>▮▮▮</span></div>
+          <div class="success">
+            <div class="ok">✓</div>
+            <div class="h">Your ad is live</div>
+            <div class="p">Buyers in Kochi can see it now. We'll notify you when someone chats.</div>
+            <div class="preview"><i></i><div><div class="pt">2019 Maruti Swift VXi</div><div class="pp">₹ 4,85,000 · Kakkanad</div><span class="pill">Under review</span></div></div>
+          </div>
+          <div class="cta" style="flex-direction:column"><div class="btn pri">View my ad</div><div class="btn">Post another</div></div>
+        </div></div>
+        <ul class="notes">
+          <li>Replaces the "Success / Ad posted successfully" AlertDialog with a real end screen and a next action.</li>
+          <li class="dev">Show "Under review" pill only if the backend actually moderates; otherwise drop it.</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>Implementation plan</h2>
+    <p class="sub">Ordered so each step ships on its own without breaking the current forms.</p>
+    <div class="plan">
+      <div class="pc"><h4>1 · Extract the shell</h4>
+        <ul>
+          <li>New <code>lib/features/sell/ui/post_ad_shell.dart</code>: app bar, step header/progress, step nav, draft save. Owns <code>_step</code>.</li>
+          <li>Steps as a <code>List&lt;PostAdStep&gt;</code> = <code>[PhotoStep, detailsSection, PriceLocationStep, ReviewStep]</code>.</li>
+          <li>Each step implements <code>bool validate()</code> so "Continue" validates only that step.</li>
+        </ul></div>
+      <div class="pc"><h4>2 · Media upload cubit</h4>
+        <ul>
+          <li><code>MediaUploadCubit</code> in <code>features/sell/bloc/media_upload/</code>; state = list of <code>MediaItem(localId, bytes, status: queued|uploading|done|failed, progress, url)</code> + optional video item.</li>
+          <li>Starts upload on add; concurrency 3; retry per item; reorder/remove/setCover events.</li>
+          <li>Provided at the shell level so it survives step changes. <code>AddPostBloc</code> stays as-is; <code>postAd</code> just reads urls from the cubit.</li>
+        </ul></div>
+      <div class="pc"><h4>3 · Per-category detail sections</h4>
+        <ul>
+          <li>Move the field code out of each <code>add_*_form.dart</code> (lines ~322–757 in private vehicle) into <code>*_details_section.dart</code>.</li>
+          <li>Keep the existing manufacturer/model/variant/fuel/transmission blocs untouched.</li>
+          <li>Section returns <code>Map&lt;String,dynamic&gt;</code> merged with price/location/media into the same payload the API expects today — no backend change.</li>
+        </ul></div>
+      <div class="pc"><h4>4 · Category sheet + drafts</h4>
+        <ul>
+          <li><code>item_category.dart</code> → bottom sheet on Sell tab; tablet keeps a page.</li>
+          <li>Draft = serialised form map + local media paths in <code>SharedPreferences</code>/Hive keyed by category; "Save draft" and auto-save on back.</li>
+        </ul></div>
+      <div class="pc"><h4>5 · Reuse for edit</h4>
+        <ul>
+          <li><code>edit_add_details/*_form_edit.dart</code> use the same shell with <code>initialData</code>; existing image urls seed the cubit as <code>done</code> items.</li>
+          <li>Deletes <code>image_picker_widget.dart</code> / <code>video_picker_widget.dart</code> duplicates.</li>
+        </ul></div>
+      <div class="pc"><h4>Open questions</h4>
+        <ul>
+          <li>Max photos: 10? Current code has no cap.</li>
+          <li>Does the backend moderate before publish (affects screen 06)?</li>
+          <li>Price hint endpoint — worth doing now or later?</li>
+          <li>Keep video on step 1 (as drawn) or make it a separate optional step?</li>
+        </ul></div>
+    </div>
+  </section>
+</div>
+</html>

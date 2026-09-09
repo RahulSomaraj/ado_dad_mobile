@@ -10,6 +10,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatRepository _chatRepository = ChatRepository();
   StreamSubscription? _roomsSubscription;
   StreamSubscription? _errorSubscription;
+  StreamSubscription? _messagesSubscription;
 
   ChatBloc() : super(ChatInitial()) {
     print('🔧 ChatBloc constructor called - registering event handlers');
@@ -51,18 +52,25 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         print('✅ WebSocket connected successfully');
       }
 
+      // Cancel any previous subscriptions first — re-initializing used to
+      // stack duplicate listeners and double-handle every event (QA audit).
+      await _roomsSubscription?.cancel();
+      await _errorSubscription?.cancel();
+      await _messagesSubscription?.cancel();
+
       // Listen to rooms stream
       _roomsSubscription = _chatRepository.roomsStream.listen((rooms) {
-        add(ChatRoomsLoaded(rooms));
+        if (!isClosed) add(ChatRoomsLoaded(rooms));
       });
 
       // Listen to error stream
       _errorSubscription = _chatRepository.errorStream.listen((error) {
-        add(ChatError(error));
+        if (!isClosed) add(ChatError(error));
       });
 
       // Listen to messages stream for real-time messages
-      _chatRepository.messagesStream.listen((messageList) {
+      _messagesSubscription =
+          _chatRepository.messagesStream.listen((messageList) {
         print('🔍 ChatBloc received message list: ${messageList.length} items');
         print('📦 Message list data: $messageList');
 
@@ -70,7 +78,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         for (final message in messageList) {
           print('🔍 Processing individual message: $message');
           print('✅ Dispatching NewMessageReceived event');
-          add(NewMessageReceived(message));
+          if (!isClosed) add(NewMessageReceived(message));
         }
       });
 
@@ -191,7 +199,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           await _chatRepository.sendAudioMessage(
               event.roomId!, bytes, event.mimeType!);
         }
-        add(LoadRoomMessages(event.roomId!));
+        if (!isClosed) add(LoadRoomMessages(event.roomId!));
       } else {
         print('📤 Sending text message through Bloc: ${event.content}');
         _chatRepository.sendMessage(event.content, type: event.type);
@@ -280,14 +288,19 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       DisposeChat event, Emitter<ChatState> emit) async {
     await _roomsSubscription?.cancel();
     await _errorSubscription?.cancel();
-    _chatRepository.dispose();
+    await _messagesSubscription?.cancel();
+    // Disconnect only: ChatRepository/ChatSocketService are singletons, so
+    // dispose() here would close their broadcast controllers for good and
+    // break chat until app restart (QA audit 2026-07-10).
+    await _chatRepository.disconnect();
   }
 
   @override
   Future<void> close() {
     _roomsSubscription?.cancel();
     _errorSubscription?.cancel();
-    _chatRepository.dispose();
+    _messagesSubscription?.cancel();
+    _chatRepository.disconnect();
     return super.close();
   }
 }
