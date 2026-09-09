@@ -4,6 +4,7 @@ import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/widgets/ado_dad_logo.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/common/phone_number_util.dart';
 import 'package:ado_dad_user/common/widgets/common_decoration.dart';
 import 'package:ado_dad_user/features/login/bloc/otp_bloc.dart';
 import 'package:country_picker/country_picker.dart';
@@ -56,8 +57,10 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
         return "Enter a valid email address";
       }
     } else {
-      if (!_isPhone(trimmedValue)) {
-        return "Enter a valid phone number";
+      final phone =
+          PhoneNumberUtil.normalise(trimmedValue, _selectedCountryCode);
+      if (!phone.isValid) {
+        return phone.validationMessage;
       }
     }
     return null;
@@ -72,7 +75,34 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
       return trimmedValue;
     }
     if (trimmedValue.isEmpty) return '';
-    return '$_selectedCountryCode$trimmedValue';
+    // Strips a pasted/autofilled "+91", "0091" or trunk "0" so the country
+    // code is never doubled (the "+91919474…" bug).
+    return PhoneNumberUtil.normalise(trimmedValue, _selectedCountryCode).e164;
+  }
+
+  /// Live "Will send to +91 94744 14563" hint under the phone field.
+  String? get _sendToHint {
+    if (_emailMode) return null;
+    final raw = _otpInputController.text.trim();
+    if (raw.isEmpty) return null;
+    final phone = PhoneNumberUtil.normalise(raw, _selectedCountryCode);
+    if (!phone.isValid) return null;
+    return 'Will send to ${PhoneNumberUtil.format(phone.national, phone.dialCode)}';
+  }
+
+  /// Rewrites the field to the cleaned national number after a paste/autofill
+  /// (e.g. "+91 94744 14563" → "9474414563") so the user sees what is sent.
+  void _onPhoneChanged(String value) {
+    if (!_emailMode) {
+      final phone = PhoneNumberUtil.normalise(value, _selectedCountryCode);
+      if (phone.national != value && phone.isValid) {
+        _otpInputController.value = TextEditingValue(
+          text: phone.national,
+          selection: TextSelection.collapsed(offset: phone.national.length),
+        );
+      }
+    }
+    setState(() {});
   }
 
   void _showCountryPicker() {
@@ -144,23 +174,26 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          leading: IconButton(
-            icon: Icon(
-              (!kIsWeb && Platform.isIOS)
-                  ? Icons.arrow_back_ios
-                  : Icons.arrow_back,
-              size: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 24.0, // Keep mobile unchanged
-                tablet: 30.0,
-                largeTablet: 35.0,
-                desktop: 40.0,
-              ),
-            ),
-            onPressed: () {
-              context.pop();
-            },
-          ),
+          // '/login' is a root route after logout / splash — only show a
+          // back arrow when there is actually something to pop.
+          automaticallyImplyLeading: false,
+          leading: context.canPop()
+              ? IconButton(
+                  icon: Icon(
+                    (!kIsWeb && Platform.isIOS)
+                        ? Icons.arrow_back_ios
+                        : Icons.arrow_back,
+                    size: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 24.0, // Keep mobile unchanged
+                      tablet: 30.0,
+                      largeTablet: 35.0,
+                      desktop: 40.0,
+                    ),
+                  ),
+                  onPressed: () => context.pop(),
+                )
+              : null,
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
@@ -186,9 +219,7 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
                 ),
                 const SizedBox(height: 30),
                 Text(
-                  _emailMode
-                      ? 'Login with your Email'
-                      : 'Login with your Phone Number',
+                  'Welcome back',
                   style: AppTextstyle.title1.copyWith(
                     fontSize: GetResponsiveSize.getResponsiveFontSize(
                       context,
@@ -200,7 +231,9 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
                   ),
                 ),
                 Text(
-                  'Securely enter your account for a seamless\nexperience.',
+                  _emailMode
+                      ? 'Enter your email and we\'ll send you a one-time code.'
+                      : 'Enter your mobile number and we\'ll text you a one-time code.',
                   style: TextStyle(
                     fontSize: GetResponsiveSize.getResponsiveFontSize(
                       context,
@@ -218,31 +251,32 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
                   child: Column(
                     children: [
                       _buildOtpInputField(),
+                      if (_sendToHint != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6, left: 4),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              _sendToHint!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.green.shade700,
+                              ),
+                            ),
+                          ),
+                        ),
                       const SizedBox(height: 20),
                       _buildGetOtpButton(),
                     ],
                   ),
                 ),
-                const SizedBox(height: 30),
-                Center(
-                    child: Text(
-                  'Or',
-                  style: TextStyle(
-                      fontSize: GetResponsiveSize.getResponsiveFontSize(
-                        context,
-                        mobile: 14.0, // Keep mobile unchanged
-                        tablet: 20.0,
-                        largeTablet: 25.0,
-                        desktop: 30.0,
-                      ),
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.blackColor1),
-                )),
+                const SizedBox(height: 8),
                 Center(
                   child: TextButton(
                     onPressed: _toggleMode,
                     child: Text(
-                      _emailMode ? 'Login with Phone' : 'Login with Email',
+                      _emailMode ? 'Use phone number instead' : 'Use email instead',
                       style: TextStyle(
                           decoration: TextDecoration.underline,
                           fontSize: GetResponsiveSize.getResponsiveFontSize(
@@ -257,6 +291,10 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 20),
+                _buildOrDivider(),
+                const SizedBox(height: 16),
+                _buildPasswordLoginButton(),
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -298,9 +336,78 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
     );
   }
 
+  Widget _buildOrDivider() {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: AppColors.greyColor.withValues(alpha: 0.5))),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            'OR',
+            style: TextStyle(
+              fontSize: 12,
+              letterSpacing: 1,
+              fontWeight: FontWeight.w700,
+              color: AppColors.greyColor,
+            ),
+          ),
+        ),
+        Expanded(child: Divider(color: AppColors.greyColor.withValues(alpha: 0.5))),
+      ],
+    );
+  }
+
+  /// Secondary action: password login lives one tap away, below the fold line.
+  Widget _buildPasswordLoginButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: GetResponsiveSize.getResponsiveSize(
+        context,
+        mobile: 50,
+        tablet: 65,
+        largeTablet: 75,
+        desktop: 85,
+      ),
+      child: OutlinedButton(
+        onPressed: () => context.push('/login-password'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.blackColor,
+          side: BorderSide(color: AppColors.greyColor),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              GetResponsiveSize.getResponsiveBorderRadius(
+                context,
+                mobile: 25,
+                tablet: 30,
+                largeTablet: 35,
+                desktop: 40,
+              ),
+            ),
+          ),
+        ),
+        child: Text(
+          'Login with password',
+          style: AppTextstyle.buttonText.copyWith(
+            color: AppColors.blackColor,
+            fontSize: GetResponsiveSize.getResponsiveFontSize(
+              context,
+              mobile: AppTextstyle.buttonText.fontSize ?? 16,
+              tablet: 20,
+              largeTablet: 24,
+              desktop: 28,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildOtpInputField() {
     final textField = TextFormField(
       controller: _otpInputController,
+      onChanged: _onPhoneChanged,
+      autofillHints:
+          _emailMode ? const [AutofillHints.email] : const [AutofillHints.telephoneNumberNational],
       keyboardType:
           _emailMode ? TextInputType.emailAddress : TextInputType.phone,
       inputFormatters: _emailMode

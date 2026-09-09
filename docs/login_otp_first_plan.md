@@ -29,3 +29,22 @@ Fix: `lib/common/phone_number_util.dart` — `normalise(raw, dialCode)`: strip n
 - SMS auto-read (`sms_autofill`) now or later?
 
 Wireframe artifact: "Ado-Dad OTP-First Login". Repo copy: `docs/login_otp_first_wireframe.html`.
+
+## Implemented (2026-09-09) — steps 1, 2, 4 + SMS auto-read
+New files:
+- `lib/common/phone_number_util.dart` — `PhoneNumberUtil.normalise(raw, dialCode)` → `{national, e164, isValid, validationMessage}`, `format()`, `mask()`. Tests in `test/common/phone_number_util_test.dart` (note: `test/` is git-ignored in this repo).
+- `lib/services/otp_autofill_service.dart` — Android SMS **User Consent** API via `smart_auth` (added to pubspec). Parses the 6 digits after "otp"/"code" from:
+  `Dear User, Your Login otp is 833448. Do not share with any one. Team Adodad`.
+  No SMS permission needed; Android shows a one-tap "allow reading this message" sheet. Tests in `test/services/otp_autofill_service_test.dart`.
+  Silent (no prompt) reading needs the SMS Retriever format — backend must send `<#> Your Login otp is 833448 … <11-char app hash>`; get the hash with `SmartAuth.instance.getAppSignature()`. Then switch `listen()` to `getSmsWithRetrieverApi()`.
+
+Changed:
+- `app_routes.dart`: `/login` → `OtpLoginPage`, `/login-password` → password `Login()`, `/login-otp` redirects to `/login`. `auth_guard.dart` public list updated.
+- `otp_login_page.dart`: validation + identifier go through `PhoneNumberUtil` (fixes `+9191…`); pasted/autofilled numbers are rewritten to the clean 10 digits; live "Will send to +91 94744 14563" hint; copy "Welcome back"; "Use email instead" link; OR divider + outlined **Login with password** button; back arrow only when `context.canPop()`.
+- `otp_verification_page.dart`: starts SMS listener on open and after Resend; fills boxes + auto-verifies; auto-submits when the 6th digit is typed; first box has `AutofillHints.oneTimeCode` (iOS) and accepts a 6-char paste; mask uses the real dial code; "Reading SMS automatically…" indicator; "Login with password instead" link at bottom.
+- `login_page.dart`: `_getFormattedUsername()` uses the same util; "Login with OTP instead" now `go('/login')`.
+
+Run: `flutter pub get` · `flutter test test/common test/services` · `flutter analyze`.
+If `smart_auth` 3.x API names differ from what the analyzer expects, the only file to touch is `otp_autofill_service.dart` (`getSmsWithUserConsentApi`, `removeUserConsentApiListener`, `SmartAuth.instance`).
+
+Still pending (step 3): shared `phone_or_email_field.dart` widget to replace the duplicated country-picker code in OTP / password / signup pages.

@@ -73,10 +73,14 @@ class AppRoutes {
       GoRoute(path: '/splash-2', builder: (context, state) => SplashScreen2()),
       GoRoute(path: '/splash-3', builder: (context, state) => SplashScreen3()),
       GoRoute(path: '/splash-4', builder: (context, state) => SplashScreen4()),
-      GoRoute(path: '/login', builder: (context, state) => const Login()),
+      // OTP is the default way in; password login is the secondary route.
       GoRoute(
-          path: '/login-otp',
-          builder: (context, state) => const OtpLoginPage()),
+          path: '/login', builder: (context, state) => const OtpLoginPage()),
+      GoRoute(
+          path: '/login-password',
+          builder: (context, state) => const Login()),
+      // Old deep links / stale references.
+      GoRoute(path: '/login-otp', redirect: (context, state) => '/login'),
       GoRoute(
         path: '/otp-verification',
         builder: (context, state) {

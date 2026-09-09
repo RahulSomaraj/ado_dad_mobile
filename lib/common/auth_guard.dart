@@ -33,6 +33,7 @@ class AuthGuard {
   static const List<String> publicRoutes = [
     '/',
     '/login',
+    '/login-password',
     '/login-otp',
     '/otp-verification',
     '/signup',

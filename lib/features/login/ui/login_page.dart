@@ -2,6 +2,7 @@ import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/widgets/ado_dad_logo.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/common/phone_number_util.dart';
 import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/common/widgets/common_decoration.dart';
@@ -108,14 +109,10 @@ class _LoginPageState extends State<LoginPage> {
       return username;
     }
 
-    // If it's a phone number
+    // If it's a phone number — same normalisation as the OTP page, so a
+    // pasted "+91 …" never becomes "+91+91…" / "+9191…".
     if (_isPhone(username)) {
-      // If it already starts with +, return as is
-      if (username.startsWith('+')) {
-        return username;
-      }
-      // Otherwise, prepend the selected country code
-      return '$_selectedCountryCode$username';
+      return PhoneNumberUtil.normalise(username, _selectedCountryCode).e164;
     }
 
     return username;
@@ -354,10 +351,11 @@ class _LoginPageState extends State<LoginPage> {
                 Center(
                   child: TextButton(
                     onPressed: () {
-                      context.push('/login-otp');
+                      // OTP is the default login; go back to it.
+                      context.go('/login');
                     },
                     child: Text(
-                      'Login with OTP',
+                      'Login with OTP instead',
                       style: TextStyle(
                           decoration: TextDecoration.underline,
                           fontSize: GetResponsiveSize.getResponsiveFontSize(

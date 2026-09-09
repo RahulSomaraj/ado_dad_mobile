@@ -5,6 +5,8 @@ import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/widgets/ado_dad_logo.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/common/phone_number_util.dart';
+import 'package:ado_dad_user/services/otp_autofill_service.dart';
 import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:ado_dad_user/features/login/bloc/otp_bloc.dart';
 import 'package:flutter/material.dart';
@@ -35,11 +37,37 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
   Timer? _resendTimer;
   int _resendSecondsLeft = 0;
 
+  bool _autoReadActive = false;
+
   @override
   void initState() {
     super.initState();
     _startResendCooldown();
+    _listenForSms();
   }
+
+  /// Android: wait for the OTP SMS via the SMS User Consent API and fill the
+  /// boxes. Re-armed on every resend. iOS uses keyboard oneTimeCode autofill.
+  Future<void> _listenForSms() async {
+    if (widget.isEmail || !OtpAutofillService.instance.isSupported) return;
+    setState(() => _autoReadActive = true);
+    final code = await OtpAutofillService.instance.listen();
+    if (!mounted) return;
+    setState(() => _autoReadActive = false);
+    if (code == null || code.length != 6) return;
+    _fillOtp(code);
+    _handleConfirmOtp();
+  }
+
+  void _fillOtp(String code) {
+    for (var i = 0; i < 6; i++) {
+      _otpControllers[i].text = i < code.length ? code[i] : '';
+    }
+    _focusNodes[5].unfocus();
+  }
+
+  String get _enteredOtp =>
+      _otpControllers.map((controller) => controller.text).join();
 
   void _startResendCooldown() {
     _resendTimer?.cancel();
@@ -69,11 +97,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       if (at <= 2) return id;
       return '${id.substring(0, 2)}${'•' * (at - 2)}${id.substring(at)}';
     }
-    final digits = id.replaceAll(RegExp(r'\D'), '');
-    if (digits.length < 4) return id;
-    final first = digits.substring(0, 2);
-    final last = digits.substring(digits.length - 2);
-    return '+91 $first•••• ••$last';
+    return PhoneNumberUtil.mask(id);
   }
 
   @override
@@ -85,16 +109,24 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     for (var focusNode in _focusNodes) {
       focusNode.dispose();
     }
+    OtpAutofillService.instance.stop();
     super.dispose();
   }
 
   void _onOtpChanged(int index, String value) {
+    // A full code pasted / autofilled into one box (iOS oneTimeCode).
+    if (value.length >= 6) {
+      _fillOtp(value.substring(0, 6));
+      _handleConfirmOtp();
+      return;
+    }
     if (value.length == 1) {
       // Move to next field
       if (index < 5) {
         _focusNodes[index + 1].requestFocus();
       } else {
         _focusNodes[index].unfocus();
+        if (_enteredOtp.length == 6) _handleConfirmOtp();
       }
     } else if (value.isEmpty && index > 0) {
       // Move to previous field on backspace
@@ -103,7 +135,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
   }
 
   void _handleConfirmOtp() {
-    final otp = _otpControllers.map((controller) => controller.text).join();
+    final otp = _enteredOtp;
     if (otp.length == 6) {
       context.read<OtpBloc>().add(
             OtpEvent.verifyOtp(
@@ -129,6 +161,10 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
           OtpEvent.sendOtp(identifier: widget.identifier),
         );
     _startResendCooldown();
+    for (final c in _otpControllers) {
+      c.clear();
+    }
+    _listenForSms();
   }
 
   @override
@@ -298,10 +334,54 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                 ),
                 const SizedBox(height: 24),
                 _buildOtpInputFields(),
+                if (_autoReadActive) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.greyColor,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Reading SMS automatically…',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.greyColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 30),
                 _buildConfirmOtpButton(),
                 const SizedBox(height: 20),
                 _buildResendCodeSection(),
+                const SizedBox(height: 28),
+                Center(
+                  child: TextButton(
+                    onPressed: () => context.push('/login-password'),
+                    child: Text(
+                      'Login with password instead',
+                      style: TextStyle(
+                        fontSize: GetResponsiveSize.getResponsiveFontSize(
+                          context,
+                          mobile: 14.0,
+                          tablet: 20.0,
+                          largeTablet: 25.0,
+                          desktop: 30.0,
+                        ),
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.blackColor1,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -348,7 +428,12 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
             focusNode: _focusNodes[index],
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
-            maxLength: 1,
+            // First box carries the autofill hint so iOS / Android keyboards
+            // offer the code from the SMS; a 6-char paste is split by
+            // _onOtpChanged.
+            autofillHints:
+                index == 0 ? const [AutofillHints.oneTimeCode] : null,
+            maxLength: index == 0 ? 6 : 1,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
             ],
