@@ -24,6 +24,11 @@ class ChatSocketService {
       StreamController<Map<String, dynamic>>.broadcast();
   final StreamController<String> _errorController =
       StreamController<String>.broadcast();
+  // Transport-level status (connect / disconnect / connect_error). Kept apart
+  // from _errorController so socket.io's own auto-reconnect doesn't surface
+  // every blip as a chat error in the UI.
+  final StreamController<bool> _connectionStatusController =
+      StreamController<bool>.broadcast();
 
   // Getters
   bool get isConnected => _isConnected;
@@ -31,6 +36,7 @@ class ChatSocketService {
 
   // Streams
   Stream<bool> get connectionStream => _connectionController.stream;
+  Stream<bool> get connectionStatusStream => _connectionStatusController.stream;
   Stream<Map<String, dynamic>> get messageStream => _messageController.stream;
   Stream<List<Map<String, dynamic>>> get messagesStream =>
       _messagesController.stream;
@@ -142,6 +148,15 @@ class ChatSocketService {
       print('🔗 Socket ID: ${_socket!.id}');
       _isConnected = true;
       _connectionController.add(true);
+      _addConnectionStatus(true);
+
+      // Server-side room membership dies with the old socket. After a
+      // (re)connect, re-join the active room so live messages resume.
+      final roomToRejoin = _currentRoomId;
+      if (roomToRejoin != null) {
+        print('🔁 Re-joining room after (re)connect: $roomToRejoin');
+        _socket!.emit('joinChatRoom', {'roomId': roomToRejoin});
+      }
 
       // Start connection monitoring to keep it alive
       _startConnectionMonitoring();
@@ -153,14 +168,22 @@ class ChatSocketService {
       print('🔍 Disconnect timestamp: ${DateTime.now().toIso8601String()}');
       _isConnected = false;
       _connectionController.add(false);
+      _addConnectionStatus(false);
     });
 
     _socket!.onConnectError((error) {
       print('❌ WebSocket connection error!');
       print('💥 Error details: $error');
-      _errorController.add('Connection error: $error');
       _isConnected = false;
       _connectionController.add(false);
+      _addConnectionStatus(false);
+    });
+
+    _socket!.on('connect_timeout', (data) {
+      print('⏰ WebSocket connect timeout: $data');
+      _isConnected = false;
+      _connectionController.add(false);
+      _addConnectionStatus(false);
     });
 
     // Chat room events
@@ -482,10 +505,18 @@ class ChatSocketService {
             .emit('ping', {'timestamp': DateTime.now().millisecondsSinceEpoch});
         print('🏓 Periodic ping sent to maintain connection');
       } else {
-        print('⚠️ Connection lost during monitoring, attempting reconnect...');
-        connect();
+        // Do NOT call connect() here: it disposes the socket that socket.io
+        // is already trying to reconnect and raises a spurious
+        // "Connection timeout" error. Let the built-in reconnection work.
+        print('⚠️ Socket disconnected — waiting for socket.io auto-reconnect');
       }
     });
+  }
+
+  void _addConnectionStatus(bool connected) {
+    if (!_connectionStatusController.isClosed) {
+      _connectionStatusController.add(connected);
+    }
   }
 
   /// Disconnect from server
@@ -502,6 +533,7 @@ class ChatSocketService {
     if (!_connectionController.isClosed) {
       _connectionController.add(false);
     }
+    _addConnectionStatus(false);
     print('🔌 Disconnected from WebSocket');
   }
 
@@ -509,6 +541,9 @@ class ChatSocketService {
   void dispose() {
     disconnect();
     if (!_connectionController.isClosed) _connectionController.close();
+    if (!_connectionStatusController.isClosed) {
+      _connectionStatusController.close();
+    }
     if (!_messageController.isClosed) _messageController.close();
     if (!_messagesController.isClosed) _messagesController.close();
     if (!_roomController.isClosed) _roomController.close();

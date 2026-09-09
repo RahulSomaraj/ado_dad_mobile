@@ -18,10 +18,14 @@ class OtpVerificationPage extends StatefulWidget {
   final String identifier;
   final bool isEmail;
 
+  /// Route to land on after a successful login; defaults to '/home'.
+  final String? redirect;
+
   const OtpVerificationPage({
     super.key,
     required this.identifier,
     required this.isEmail,
+    this.redirect,
   });
 
   @override
@@ -120,6 +124,22 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       _handleConfirmOtp();
       return;
     }
+    if (value.length > 1) {
+      // Box 0 has maxLength 6 (for autofill); when the user re-types into it
+      // keep only the last character and move on to the next box.
+      final last = value.substring(value.length - 1);
+      _otpControllers[index].value = TextEditingValue(
+        text: last,
+        selection: const TextSelection.collapsed(offset: 1),
+      );
+      if (index < 5) {
+        _focusNodes[index + 1].requestFocus();
+      } else {
+        _focusNodes[index].unfocus();
+        if (_enteredOtp.length == 6) _handleConfirmOtp();
+      }
+      return;
+    }
     if (value.length == 1) {
       // Move to next field
       if (index < 5) {
@@ -164,7 +184,11 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     for (final c in _otpControllers) {
       c.clear();
     }
-    _listenForSms();
+    // The previous consent listener is still armed (~5 min); re-arming would
+    // be a no-op in the service and flip the spinner off.
+    if (!_autoReadActive) {
+      _listenForSms();
+    }
   }
 
   @override
@@ -173,7 +197,8 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       listener: (context, state) {
         state.whenOrNull(
           verifyOtpSuccess: (username) {
-            context.go('/home');
+            final target = widget.redirect;
+            context.go((target != null && target.isNotEmpty) ? target : '/home');
           },
           verifyOtpFailure: (message) {
             DialogUtil.showLoginErrorDialog(context, message);

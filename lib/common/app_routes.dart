@@ -50,6 +50,10 @@ import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Treats an empty query/extra string as absent.
+String? _nonEmpty(String? value) =>
+    (value == null || value.isEmpty) ? null : value;
+
 class AppRoutes {
   /// Use this context to show dialogs from app-level widgets (e.g. version check)
   /// that live above the Navigator in the tree.
@@ -75,19 +79,32 @@ class AppRoutes {
       GoRoute(path: '/splash-4', builder: (context, state) => SplashScreen4()),
       // OTP is the default way in; password login is the secondary route.
       GoRoute(
-          path: '/login', builder: (context, state) => const OtpLoginPage()),
+        path: '/login',
+        builder: (context, state) => OtpLoginPage(
+          redirect: _nonEmpty(state.uri.queryParameters['redirect']),
+        ),
+      ),
       GoRoute(
           path: '/login-password',
           builder: (context, state) => const Login()),
-      // Old deep links / stale references.
-      GoRoute(path: '/login-otp', redirect: (context, state) => '/login'),
+      // Old deep links / stale references (keep ?redirect=… etc.).
+      GoRoute(
+        path: '/login-otp',
+        redirect: (context, state) =>
+            '/login${state.uri.hasQuery ? '?${state.uri.query}' : ''}',
+      ),
       GoRoute(
         path: '/otp-verification',
         builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>;
+          final extra = state.extra as Map<String, dynamic>?;
+          final identifier = extra?['identifier'] as String?;
+          if (extra == null || identifier == null || identifier.isEmpty) {
+            return const _RouteErrorScreen.unavailable();
+          }
           return OtpVerificationPage(
-            identifier: extra['identifier'] as String,
-            isEmail: extra['isEmail'] as bool,
+            identifier: identifier,
+            isEmail: extra['isEmail'] as bool? ?? false,
+            redirect: _nonEmpty(extra['redirect'] as String?),
           );
         },
       ),
@@ -140,7 +157,9 @@ class AppRoutes {
         path: '/notifications',
         builder: (context, state) => const Notifications(),
       ),
-      GoRoute(path: '/logout', builder: (context, state) => const Login()),
+      // Logout lands on the default (OTP) login, same as '/login'.
+      GoRoute(
+          path: '/logout', builder: (context, state) => const OtpLoginPage()),
       GoRoute(path: '/signup', builder: (context, state) => const Signup()),
       GoRoute(
           path: '/wishlist', builder: (context, state) => const WishlistPage()),
@@ -159,8 +178,11 @@ class AppRoutes {
       GoRoute(
         path: '/category-list-page',
         builder: (context, state) {
-          final categoryId = state.uri.queryParameters['categoryId']!;
-          final title = state.uri.queryParameters['title']!;
+          final categoryId = state.uri.queryParameters['categoryId'] ?? '';
+          final title = state.uri.queryParameters['title'] ?? '';
+          if (categoryId.isEmpty) {
+            return const _RouteErrorScreen.unavailable();
+          }
           return CategoryListPage(
             categoryId: categoryId,
             categoryTitle: title,
@@ -170,8 +192,8 @@ class AppRoutes {
       GoRoute(
         path: '/add-detail-page',
         builder: (context, state) {
-          final ad = state.extra as AddModel;
-          // final adId = state.extra as String;
+          final ad = state.extra as AddModel?;
+          if (ad == null) return const _RouteErrorScreen.unavailable();
           return BlocProvider(
             create: (_) => AdDetailBloc(
               repository: AddRepository(),
@@ -183,7 +205,8 @@ class AppRoutes {
       GoRoute(
         path: '/seller-profile/:id',
         builder: (context, state) {
-          final sellerId = state.pathParameters['id']!;
+          final sellerId = state.pathParameters['id'] ?? '';
+          if (sellerId.isEmpty) return const _RouteErrorScreen.unavailable();
 
           // Get user data passed from the seller tile navigation
           final userData = state.extra as AdUser?;
@@ -205,68 +228,88 @@ class AppRoutes {
       GoRoute(
         path: '/add-two-wheeler-form',
         builder: (context, state) {
-          final extra = state.extra as Map<String, String>;
+          final extra = state.extra as Map<String, String>?;
+          final categoryId = extra?['categoryId'] ?? '';
+          if (categoryId.isEmpty) {
+            return const _RouteErrorScreen.unavailable();
+          }
           return AddTwoWheelerForm(
-            categoryTitle: extra['categoryTitle']!,
-            categoryId: extra['categoryId']!,
+            categoryTitle: extra?['categoryTitle'] ?? '',
+            categoryId: categoryId,
           );
         },
       ),
       GoRoute(
         path: '/add-commercial-vehicle-form',
         builder: (context, state) {
-          final extra = state.extra as Map<String, String>;
+          final extra = state.extra as Map<String, String>?;
+          final categoryId = extra?['categoryId'] ?? '';
+          if (categoryId.isEmpty) {
+            return const _RouteErrorScreen.unavailable();
+          }
           return AddCommercialVehicleForm(
-            categoryTitle: extra['categoryTitle']!,
-            categoryId: extra['categoryId']!,
+            categoryTitle: extra?['categoryTitle'] ?? '',
+            categoryId: categoryId,
           );
         },
       ),
       GoRoute(
         path: '/add-private-vehicle-form',
         builder: (context, state) {
-          final extra = state.extra as Map<String, String>;
+          final extra = state.extra as Map<String, String>?;
+          final categoryId = extra?['categoryId'] ?? '';
+          if (categoryId.isEmpty) {
+            return const _RouteErrorScreen.unavailable();
+          }
           return AddPrivateVehicleForm(
-            categoryTitle: extra['categoryTitle']!,
-            categoryId: extra['categoryId']!,
+            categoryTitle: extra?['categoryTitle'] ?? '',
+            categoryId: categoryId,
           );
         },
       ),
       GoRoute(
         path: '/add-property-form',
         builder: (context, state) {
-          final extra = state.extra as Map<String, String>;
+          final extra = state.extra as Map<String, String>?;
+          final categoryId = extra?['categoryId'] ?? '';
+          if (categoryId.isEmpty) {
+            return const _RouteErrorScreen.unavailable();
+          }
           return AddPropertyForm(
-            categoryTitle: extra['categoryTitle']!,
-            categoryId: extra['categoryId']!,
+            categoryTitle: extra?['categoryTitle'] ?? '',
+            categoryId: categoryId,
           );
         },
       ),
       GoRoute(
         path: '/edit-two-wheeler',
         builder: (context, state) {
-          final ad = state.extra as AddModel;
+          final ad = state.extra as AddModel?;
+          if (ad == null) return const _RouteErrorScreen.unavailable();
           return TwoWheelerFormEdit(ad: ad);
         },
       ),
       GoRoute(
         path: '/edit-private-vehicle',
         builder: (context, state) {
-          final ad = state.extra as AddModel;
+          final ad = state.extra as AddModel?;
+          if (ad == null) return const _RouteErrorScreen.unavailable();
           return PrivateVehicleFormEdit(ad: ad);
         },
       ),
       GoRoute(
         path: '/edit-commercial-vehicle',
         builder: (context, state) {
-          final ad = state.extra as AddModel;
+          final ad = state.extra as AddModel?;
+          if (ad == null) return const _RouteErrorScreen.unavailable();
           return CommercialVehicleFormEdit(ad: ad);
         },
       ),
       GoRoute(
         path: '/edit-property',
         builder: (context, state) {
-          final ad = state.extra as AddModel;
+          final ad = state.extra as AddModel?;
+          if (ad == null) return const _RouteErrorScreen.unavailable();
           return PropertyFormEdit(ad: ad);
         },
       ),
@@ -339,7 +382,8 @@ class AppRoutes {
       GoRoute(
           path: '/chat/:roomId',
           builder: (context, state) {
-            final roomId = state.pathParameters['roomId']!;
+            final roomId = state.pathParameters['roomId'] ?? '';
+            if (roomId.isEmpty) return const _RouteErrorScreen.unavailable();
             final otherUserName = state.uri.queryParameters['name'];
             final otherUserProfilePic = state.uri.queryParameters['profilePic'];
             final otherUserPhone = state.uri.queryParameters['phone'];
@@ -370,7 +414,8 @@ class AppRoutes {
       GoRoute(
           path: '/showroom-user-ads',
           builder: (context, state) {
-            final userId = state.extra as String;
+            final userId = state.extra as String? ?? '';
+            if (userId.isEmpty) return const _RouteErrorScreen.unavailable();
             return BlocProvider(
               create: (_) => ShowroomBloc(repository: ShowroomRepo()),
               child: ShowroomUserAdsPage(userId: userId),
@@ -384,7 +429,17 @@ class AppRoutes {
 /// be matched or a page builder throws, replacing the default red error page.
 class _RouteErrorScreen extends StatelessWidget {
   final Exception? error;
-  const _RouteErrorScreen({this.error});
+
+  /// Body text; null shows the generic broken-link copy.
+  final String? message;
+
+  const _RouteErrorScreen({this.error, this.message});
+
+  /// Shown when a route is opened without the `extra` / query data it needs
+  /// (e.g. restored from a deep link or after a process restart).
+  const _RouteErrorScreen.unavailable()
+      : error = null,
+        message = 'This page is no longer available';
 
   @override
   Widget build(BuildContext context) {
@@ -415,7 +470,8 @@ class _RouteErrorScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'The link may be broken or the content is no longer available.',
+                message ??
+                    'The link may be broken or the content is no longer available.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 13.5, color: AppColors.greyColor),
               ),
@@ -423,7 +479,7 @@ class _RouteErrorScreen extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: () => context.go('/home'),
                 icon: const Icon(Icons.home_outlined),
-                label: const Text('Go to Home'),
+                label: const Text('Go home'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryColor,
                   foregroundColor: Colors.white,

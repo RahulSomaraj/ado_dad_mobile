@@ -109,6 +109,30 @@ class ApiService {
               return handler.reject(e);
             }
 
+            // If the token in storage already differs from the one this
+            // request was sent with, another request has refreshed it in the
+            // meantime — just retry with the stored token, don't refresh again.
+            final sentAuthHeader =
+                e.requestOptions.headers['Authorization']?.toString();
+            final storedAuthHeader = _prepareAuthHeader(currentToken);
+            if (sentAuthHeader != null && sentAuthHeader != storedAuthHeader) {
+              print(
+                  '🔁 Token already refreshed by another request — retrying with stored token');
+              e.requestOptions.headers['Authorization'] = storedAuthHeader;
+              try {
+                final retryResponse = await _dio.fetch(e.requestOptions);
+                return handler.resolve(retryResponse);
+              } catch (retryError) {
+                return handler.reject(retryError is DioException
+                    ? retryError
+                    : DioException(
+                        requestOptions: e.requestOptions,
+                        type: DioExceptionType.unknown,
+                        error: retryError,
+                      ));
+              }
+            }
+
             print('🔄 Token exists, attempting to refresh...');
 
             // Try to refresh the token

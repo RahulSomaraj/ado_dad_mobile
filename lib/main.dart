@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ado_dad_user/common/app_routes.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_theme.dart';
@@ -60,58 +62,67 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 /// Initialize Firebase Cloud Messaging: request permission and get FCM token.
-/// Call after Firebase.initializeApp().
+/// Call after Firebase.initializeApp(). Never throws and is not awaited by
+/// main(), so a slow permission prompt or a Firebase error can't block or
+/// crash app startup.
 Future<void> _initFcm() async {
-  final messaging = FirebaseMessaging.instance;
+  try {
+    final messaging = FirebaseMessaging.instance;
 
-  // Request notification permission (iOS / Android 13+)
-  final settings = await messaging.requestPermission(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
-  if (settings.authorizationStatus == AuthorizationStatus.authorized ||
-      settings.authorizationStatus == AuthorizationStatus.provisional) {
-    // Show notifications in foreground on iOS
-    await messaging.setForegroundNotificationPresentationOptions(
+    // Request notification permission (iOS / Android 13+)
+    final settings = await messaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
     );
-    // Subscribe to broadcast topic for ALL notifications
-    await messaging.subscribeToTopic('all_users');
+    if (settings.authorizationStatus == AuthorizationStatus.authorized ||
+        settings.authorizationStatus == AuthorizationStatus.provisional) {
+      // Show notifications in foreground on iOS
+      await messaging.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      // Subscribe to broadcast topic for ALL notifications
+      await messaging.subscribeToTopic('all_users');
+    }
+
+    // Get FCM token (null if permission denied)
+    final token = await messaging.getToken();
+    if (token != null) {
+      debugPrint('FCM token: $token');
+      // TODO: send token to your backend (e.g. PATCH /profile with fcmToken)
+    }
+
+    // Listen for token refresh
+    messaging.onTokenRefresh.listen((newToken) {
+      debugPrint('FCM token refreshed: $newToken');
+      // TODO: send newToken to your backend
+    });
+
+    // Foreground: app is open when notification arrives — show in system shade (like Swiggy)
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      debugPrint('FCM foreground: ${message.notification?.title}');
+      final title = message.notification?.title ??
+          message.data['title'] ??
+          'Notification';
+      final body = message.notification?.body ?? message.data['body'] ?? '';
+      NotificationBadgeService.addNotification(title: title, body: body);
+      LocalNotificationService.showFromFcmMessage(message);
+    });
+
+    // Background tap: user tapped notification while app was in background
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      final title = message.notification?.title ?? 'Notification';
+      final body = message.notification?.body ?? '';
+      NotificationBadgeService.addNotification(title: title, body: body);
+      // Do not clear badge here – clear only when user opens the notifications page
+      _handleNotificationTap(
+          message); // async: opens notifications or home with login popup
+    });
+  } catch (e, st) {
+    debugPrint('FCM init failed (non-fatal): $e\n$st');
   }
-
-  // Get FCM token (null if permission denied)
-  final token = await messaging.getToken();
-  if (token != null) {
-    debugPrint('FCM token: $token');
-    // TODO: send token to your backend (e.g. PATCH /profile with fcmToken)
-  }
-
-  // Listen for token refresh
-  messaging.onTokenRefresh.listen((newToken) {
-    debugPrint('FCM token refreshed: $newToken');
-    // TODO: send newToken to your backend
-  });
-
-  // Foreground: app is open when notification arrives — show in system shade (like Swiggy)
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    debugPrint('FCM foreground: ${message.notification?.title}');
-    final title = message.notification?.title ?? message.data['title'] ?? 'Notification';
-    final body = message.notification?.body ?? message.data['body'] ?? '';
-    NotificationBadgeService.addNotification(title: title, body: body);
-    LocalNotificationService.showFromFcmMessage(message);
-  });
-
-  // Background tap: user tapped notification while app was in background
-  FirebaseMessaging.onMessageOpenedApp.listen((message) {
-    final title = message.notification?.title ?? 'Notification';
-    final body = message.notification?.body ?? '';
-    NotificationBadgeService.addNotification(title: title, body: body);
-    // Do not clear badge here – clear only when user opens the notifications page
-    _handleNotificationTap(message); // async: opens notifications or home with login popup
-  });
 }
 
 void main() async {
@@ -145,8 +156,9 @@ void main() async {
   // Register background handler before other FCM code
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // Initialize FCM: request permission, topic, and message handlers
-  await _initFcm();
+  // Initialize FCM: request permission, topic, and message handlers.
+  // Fire-and-forget so the permission prompt / network can't delay runApp.
+  unawaited(_initFcm());
 
   // Tap from scroll shade: go to notifications page only if logged in; else open home and show login popup
   await LocalNotificationService.init(

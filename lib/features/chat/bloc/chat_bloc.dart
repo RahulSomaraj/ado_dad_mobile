@@ -52,41 +52,70 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         print('✅ WebSocket connected successfully');
       }
 
-      // Cancel any previous subscriptions first — re-initializing used to
-      // stack duplicate listeners and double-handle every event (QA audit).
-      await _roomsSubscription?.cancel();
-      await _errorSubscription?.cancel();
-      await _messagesSubscription?.cancel();
-
-      // Listen to rooms stream
-      _roomsSubscription = _chatRepository.roomsStream.listen((rooms) {
-        if (!isClosed) add(ChatRoomsLoaded(rooms));
-      });
-
-      // Listen to error stream
-      _errorSubscription = _chatRepository.errorStream.listen((error) {
-        if (!isClosed) add(ChatError(error));
-      });
-
-      // Listen to messages stream for real-time messages
-      _messagesSubscription =
-          _chatRepository.messagesStream.listen((messageList) {
-        print('🔍 ChatBloc received message list: ${messageList.length} items');
-        print('📦 Message list data: $messageList');
-
-        // Process each message in the list (each item is a single message object)
-        for (final message in messageList) {
-          print('🔍 Processing individual message: $message');
-          print('✅ Dispatching NewMessageReceived event');
-          if (!isClosed) add(NewMessageReceived(message));
-        }
-      });
+      _ensureSubscriptions();
 
       // Load rooms
       await _chatRepository.getUserChatRooms();
     } catch (e) {
       emit(ChatErrorState('Initialization failed: $e'));
     }
+  }
+
+  /// Subscribe to the repository streams exactly once. Idempotent: a field
+  /// that is already non-null is left alone, so calling this from several
+  /// handlers never stacks duplicate listeners. Previously only
+  /// InitializeChat subscribed, so a page that dispatched LoadChatRooms
+  /// without ever running InitializeChat never received ChatRoomsSuccess.
+  void _ensureSubscriptions() {
+    // Listen to rooms stream
+    _roomsSubscription ??= _chatRepository.roomsStream.listen((rooms) {
+      if (!isClosed) add(ChatRoomsLoaded(rooms));
+    });
+
+    // Listen to error stream
+    _errorSubscription ??= _chatRepository.errorStream.listen((error) {
+      if (!isClosed) add(ChatError(error));
+    });
+
+    // Listen to messages stream for real-time messages
+    _messagesSubscription ??=
+        _chatRepository.messagesStream.listen((messageList) {
+      print('🔍 ChatBloc received message list: ${messageList.length} items');
+      print('📦 Message list data: $messageList');
+
+      // Process each message in the list (each item is a single message object)
+      for (final message in messageList) {
+        print('🔍 Processing individual message: $message');
+        print('✅ Dispatching NewMessageReceived event');
+        if (!isClosed) add(NewMessageReceived(message));
+      }
+    });
+  }
+
+  Future<void> _cancelSubscriptions() async {
+    await _roomsSubscription?.cancel();
+    await _errorSubscription?.cancel();
+    await _messagesSubscription?.cancel();
+    _roomsSubscription = null;
+    _errorSubscription = null;
+    _messagesSubscription = null;
+  }
+
+  /// Extract the room id from a raw socket message map. Different payloads
+  /// key it differently ('roomId', 'chatRoomId', or a nested 'room' object).
+  static String? _roomIdFromMessage(Map<String, dynamic> message) {
+    final direct = message['roomId'] ?? message['chatRoomId'];
+    if (direct != null && direct.toString().isNotEmpty) {
+      return direct.toString();
+    }
+    final room = message['room'];
+    if (room is Map) {
+      final id = room['id'] ?? room['_id'] ?? room['roomId'];
+      if (id != null && id.toString().isNotEmpty) return id.toString();
+    } else if (room != null && room.toString().isNotEmpty) {
+      return room.toString();
+    }
+    return null;
   }
 
   Future<void> _onLoadChatRooms(
@@ -100,6 +129,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     try {
       emit(ChatLoading());
+      _ensureSubscriptions();
       await _chatRepository.getUserChatRooms();
     } catch (e) {
       emit(ChatErrorState('Failed to load chat rooms: $e'));
@@ -125,6 +155,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       print('👤 Current user ID: $currentUserId');
 
       emit(ChatLoading());
+      _ensureSubscriptions();
 
       // Use WebSocket to join the room
       await _chatRepository.joinChatRoom(event.roomId);
@@ -281,14 +312,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   void _onNewMessageReceived(
       NewMessageReceived event, Emitter<ChatState> emit) {
     print('💬 New message received: ${event.message['content']}');
-    emit(NewMessageReceivedState(event.message));
+    emit(NewMessageReceivedState(event.message,
+        roomId: _roomIdFromMessage(event.message)));
   }
 
   Future<void> _onDisposeChat(
       DisposeChat event, Emitter<ChatState> emit) async {
-    await _roomsSubscription?.cancel();
-    await _errorSubscription?.cancel();
-    await _messagesSubscription?.cancel();
+    await _cancelSubscriptions();
     // Disconnect only: ChatRepository/ChatSocketService are singletons, so
     // dispose() here would close their broadcast controllers for good and
     // break chat until app restart (QA audit 2026-07-10).
@@ -296,11 +326,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   @override
-  Future<void> close() {
-    _roomsSubscription?.cancel();
-    _errorSubscription?.cancel();
-    _messagesSubscription?.cancel();
-    _chatRepository.disconnect();
+  Future<void> close() async {
+    await _cancelSubscriptions();
+    await _chatRepository.disconnect();
     return super.close();
   }
 }

@@ -63,20 +63,63 @@ class _AdDetailPageState extends State<AdDetailPage> {
   String? _cachedUserId;
   bool _userIdLoaded = false;
 
+  // The owner check is handed to many FutureBuilders; returning the same
+  // Future instance (per seller id) stops them flashing back to "no data"
+  // on every rebuild.
+  Future<bool>? _ownerFuture;
+  String? _ownerFutureSellerId;
+
   @override
   void initState() {
     super.initState();
   }
 
   // Check if current user is the owner of the ad
-  Future<bool> _isCurrentUserOwner(AddModel ad) async {
+  Future<bool> _isCurrentUserOwner(AddModel ad) {
+    final sellerId = ad.user?.id;
+    if (_ownerFuture == null || _ownerFutureSellerId != sellerId) {
+      _ownerFutureSellerId = sellerId;
+      _ownerFuture = _resolveIsOwner(sellerId);
+    }
+    return _ownerFuture!;
+  }
+
+  Future<bool> _resolveIsOwner(String? sellerId) async {
     if (!_userIdLoaded) {
       _cachedUserId = await SharedPrefs().getUserId();
       _userIdLoaded = true;
     }
     return _cachedUserId != null &&
-        ad.user?.id != null &&
-        _cachedUserId == ad.user!.id;
+        sellerId != null &&
+        _cachedUserId == sellerId;
+  }
+
+  /// Chat / offer need the seller's id; some legacy ads come without a user.
+  bool _ensureSeller(BuildContext context, AddModel ad) {
+    final sellerId = ad.user?.id;
+    if (sellerId == null || sellerId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Seller information unavailable',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red.shade300.withOpacity(0.9),
+        ),
+      );
+      return false;
+    }
+    return true;
+  }
+
+  /// After sold / delete: hand `true` back to the caller (My Ads, Home) so it
+  /// refreshes; fall back to home when there is nothing to pop.
+  void _leaveAfterChange(BuildContext context) {
+    if (context.canPop()) {
+      context.pop(true);
+    } else {
+      context.go('/home');
+    }
   }
 
   // Share ad functionality
@@ -201,7 +244,7 @@ Download Adodad app to contact the seller and view more details!
                     backgroundColor: AppColors.primaryColor,
                   ),
                 );
-                context.go('/home');
+                _leaveAfterChange(context);
               },
               deleting: () {},
               deleted: () {
@@ -214,7 +257,7 @@ Download Adodad app to contact the seller and view more details!
                     backgroundColor: AppColors.primaryColor,
                   ),
                 );
-                context.go('/home');
+                _leaveAfterChange(context);
               },
             );
           },
@@ -1436,7 +1479,9 @@ Download Adodad app to contact the seller and view more details!
             SizedBox(
                 height: GetResponsiveSize.getResponsiveSize(context,
                     mobile: 8, tablet: 10, largeTablet: 12, desktop: 14)),
-            _KeyValRow(label: 'Posted On', value: _niceDate(ad.postedAt!)),
+            _KeyValRow(
+                label: 'Posted On',
+                value: ad.postedAt.isNotEmpty ? _niceDate(ad.postedAt) : '-'),
             SizedBox(
                 height: GetResponsiveSize.getResponsiveSize(context,
                     mobile: 8, tablet: 24, largeTablet: 32, desktop: 40)),
@@ -1964,6 +2009,7 @@ Download Adodad app to contact the seller and view more details!
       loading: () {},
       error: (message) {},
       loaded: (ad) {
+        if (!_ensureSeller(context, ad)) return;
         // Show the offer popup
         OfferService.showOfferPopup(
           context: context,
@@ -1976,6 +2022,7 @@ Download Adodad app to contact the seller and view more details!
       },
       markingAsSold: () {},
       markedAsSold: (ad) {
+        if (!_ensureSeller(context, ad)) return;
         OfferService.showOfferPopup(
           context: context,
           adId: ad.id,
@@ -2023,6 +2070,7 @@ Download Adodad app to contact the seller and view more details!
       loading: () {},
       error: (message) {},
       loaded: (ad) {
+        if (!_ensureSeller(context, ad)) return;
         // Start direct chat
         ChatService.startDirectChat(
           context: context,
@@ -2034,6 +2082,7 @@ Download Adodad app to contact the seller and view more details!
       },
       markingAsSold: () {},
       markedAsSold: (ad) {
+        if (!_ensureSeller(context, ad)) return;
         ChatService.startDirectChat(
           context: context,
           adId: ad.id,
@@ -3081,4 +3130,4 @@ class _VideoFullScreenViewerState extends State<_VideoFullScreenViewer> {
               : Center(child: Chewie(controller: _chewieController!)),
     );
   }
-}
+}

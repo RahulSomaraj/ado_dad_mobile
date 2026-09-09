@@ -156,6 +156,22 @@ class _MyAdsPageState extends State<MyAdsPage> {
     }
   }
 
+  void _reload(BuildContext context) {
+    context
+        .read<MyAdsBloc>()
+        .add(const MyAdsEvent.load(page: 1, limit: 20));
+  }
+
+  /// Opens ad detail; it pops `true` after mark-as-sold / delete (and after
+  /// an edit made from inside it), so refresh the list on that result.
+  Future<void> _openDetail(BuildContext context, MyAd ad) async {
+    final changed =
+        await context.push<bool>('/add-detail-page', extra: _toAddModel(ad));
+    if (changed == true && context.mounted) {
+      _reload(context);
+    }
+  }
+
   Future<void> _handleEdit(BuildContext context, MyAd ad) async {
     final route = _editRouteFor(ad.category);
     if (route == null) {
@@ -168,9 +184,7 @@ class _MyAdsPageState extends State<MyAdsPage> {
     final changed =
         await context.push<bool>(route, extra: _toAddModel(ad));
     if (changed == true && context.mounted) {
-      context
-          .read<MyAdsBloc>()
-          .add(const MyAdsEvent.load(page: 1, limit: 20));
+      _reload(context);
     }
   }
 
@@ -385,7 +399,15 @@ class _MyAdsPageState extends State<MyAdsPage> {
                                 final ad = ads[i];
                                 return Stack(
                                   children: [
-                                    RichAdCard(ad: _toAddModel(ad)),
+                                    // RichAdCard pushes ad detail itself but
+                                    // ignores the result; take over the tap so
+                                    // sold/delete (pop(true)) refreshes here.
+                                    GestureDetector(
+                                      onTap: () => _openDetail(context, ad),
+                                      child: AbsorbPointer(
+                                        child: RichAdCard(ad: _toAddModel(ad)),
+                                      ),
+                                    ),
                                     Positioned(
                                       top: 5,
                                       right: 5,

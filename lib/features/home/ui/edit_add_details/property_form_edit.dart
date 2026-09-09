@@ -153,6 +153,7 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
         final bytes = await img.readAsBytes();
         _newImageFiles.add(bytes);
       }
+      if (!mounted) return;
       setState(() {});
     }
   }
@@ -167,6 +168,7 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
     final picked = await _picker.pickVideo(source: ImageSource.gallery);
     if (picked != null) {
       final bytes = await picked.readAsBytes();
+      if (!mounted) return;
       setState(() {
         _newVideoFile = bytes;
         _videoFileName = picked.name;
@@ -354,7 +356,13 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
                 context
                     .read<AdvertisementBloc>()
                     .add(const AdvertisementEvent.fetchAllListings());
-                context.go('/home');
+                // Pop back with a result so the caller (ad detail / My Ads)
+                // can refresh; fall back to home when there is nothing to pop.
+                if (context.canPop()) {
+                  context.pop(true);
+                } else {
+                  context.go('/home');
+                }
               },
               failure: (msg) {
                 ScaffoldMessenger.of(context).showSnackBar(

@@ -331,9 +331,19 @@ class AddRepository {
     return data.map((e) => VehicleVariant.fromJson(e)).toList();
   }
 
-  Future<List<VehicleTransmissionType>> fetchVehicleTransmissionTypes() async {
+  Future<List<VehicleTransmissionType>> fetchVehicleTransmissionTypes({
+    String? vehicleCategory,
+  }) async {
+    final queryParameters = <String, dynamic>{};
+    // Add category parameter if provided (mirrors fetchManufacturers)
+    if (vehicleCategory != null && vehicleCategory.isNotEmpty) {
+      queryParameters['vehicleCategory'] = vehicleCategory;
+      queryParameters['category'] = vehicleCategory; // same key fetchManufacturers uses
+    }
+
     final resp = await _dio.get(
       '/vehicle-inventory/transmission-types',
+      queryParameters: queryParameters.isEmpty ? null : queryParameters,
       options: Options(responseType: ResponseType.json),
     );
 
@@ -361,9 +371,19 @@ class AddRepository {
         .toList();
   }
 
-  Future<List<VehicleFuelType>> fetchVehicleFuelTypes() async {
+  Future<List<VehicleFuelType>> fetchVehicleFuelTypes({
+    String? vehicleCategory,
+  }) async {
+    final queryParameters = <String, dynamic>{};
+    // Add category parameter if provided (mirrors fetchManufacturers)
+    if (vehicleCategory != null && vehicleCategory.isNotEmpty) {
+      queryParameters['vehicleCategory'] = vehicleCategory;
+      queryParameters['category'] = vehicleCategory; // same key fetchManufacturers uses
+    }
+
     final resp = await _dio.get(
       '/vehicle-inventory/fuel-types',
+      queryParameters: queryParameters.isEmpty ? null : queryParameters,
       options: Options(responseType: ResponseType.json),
     );
 

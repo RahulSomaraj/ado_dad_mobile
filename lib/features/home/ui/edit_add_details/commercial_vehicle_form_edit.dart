@@ -29,6 +29,18 @@ import 'package:go_router/go_router.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
+
+/// Returns the first element matching [test], or null when there is none.
+T? _firstWhereOrNull<T>(Iterable<T> items, bool Function(T) test) {
+  for (final item in items) {
+    if (test(item)) return item;
+  }
+  return null;
+}
+
+/// Returns the first element, or null for an empty list.
+T? _firstOrNull<T>(List<T> items) => items.isEmpty ? null : items.first;
+
 class CommercialVehicleFormEdit extends StatefulWidget {
   final AddModel ad;
   const CommercialVehicleFormEdit({super.key, required this.ad});
@@ -40,6 +52,9 @@ class CommercialVehicleFormEdit extends StatefulWidget {
 
 class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
   final _formKey = GlobalKey<FormState>();
+
+  /// Category used to scope transmission / fuel lookups.
+  static const String _vehicleCategory = 'commercial_vehicle';
 
   // text controllers
   late final TextEditingController _titleCtrl;
@@ -167,90 +182,101 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
     final repo = AddRepository();
 
     // manufacturers with vehicleCategory 'passenger_car'
-    _manufacturers = await repo.fetchManufacturers(
-      vehicleCategory: 'passenger_car',
-    );
+    // TODO(backend): commercial manufacturer category
+    try {
+      _manufacturers =
+          await repo.fetchManufacturers(vehicleCategory: 'passenger_car');
+    } catch (e) {
+      debugPrint('Failed to load manufacturers: $e');
+    }
+    if (!mounted) return;
     setState(() {});
 
-    // preselect manufacturer by id
+    // preselect manufacturer by id (fallback: first, if any)
     final manufacturerId = widget.ad.manufacturer?.id;
     if (manufacturerId != null) {
-      final m = _manufacturers.where((x) => x.id == manufacturerId);
-      if (m.isNotEmpty) _selectedManufacturer = m.first;
-    } else if (_manufacturers.isNotEmpty) {
-      _selectedManufacturer = _manufacturers.first;
+      _selectedManufacturer =
+          _firstWhereOrNull(_manufacturers, (x) => x.id == manufacturerId);
+    } else {
+      _selectedManufacturer = _firstOrNull(_manufacturers);
     }
 
     // models for selected manufacturer
-    if (_selectedManufacturer != null) {
-      _models = await repo.fetchModelsByManufacturer(_selectedManufacturer!.id);
+    final manufacturer = _selectedManufacturer;
+    if (manufacturer != null) {
+      try {
+        _models = await repo.fetchModelsByManufacturer(manufacturer.id);
+      } catch (e) {
+        debugPrint('Failed to load models: $e');
+      }
+      if (!mounted) return;
       setState(() {});
       final modelId = widget.ad.model?.id;
       if (modelId != null) {
-        final mm = _models.where((x) => x.id == modelId);
-        if (mm.isNotEmpty) _selectedModel = mm.first;
+        _selectedModel = _firstWhereOrNull(_models, (x) => x.id == modelId);
       }
     }
 
     // variants for selected model
-    if (_selectedModel != null) {
-      _variants = await repo.fetchVariantsByModel(_selectedModel!.id);
+    final model = _selectedModel;
+    if (model != null) {
+      try {
+        _variants = await repo.fetchVariantsByModel(model.id);
+      } catch (e) {
+        debugPrint('Failed to load variants: $e');
+      }
+      if (!mounted) return;
       setState(() {});
 
       final variantIdOrName = widget.ad.variant;
-      if (_variants.isNotEmpty &&
-          variantIdOrName != null &&
-          variantIdOrName.isNotEmpty) {
+      if (variantIdOrName != null && variantIdOrName.trim().isNotEmpty) {
         final trimmedVariant = variantIdOrName.trim();
-        try {
-          _selectedVariant = _variants.firstWhere(
-            (v) =>
-                v.id.trim() == trimmedVariant ||
-                v.name.trim().toLowerCase() == trimmedVariant.toLowerCase(),
-          );
-        } catch (_) {
-          // Variant not found, leave it null instead of defaulting to first
-          _selectedVariant = null;
-        }
+        // Variant not found => leave null instead of defaulting to first.
+        _selectedVariant = _firstWhereOrNull(
+          _variants,
+          (v) =>
+              v.id.trim() == trimmedVariant ||
+              v.name.trim().toLowerCase() == trimmedVariant.toLowerCase(),
+        );
       } else {
         // No variant stored, leave it null
         _selectedVariant = null;
       }
     }
 
-    // transmission
+    // transmission (scoped to this category)
     try {
-      _transmissionTypes = await repo.fetchVehicleTransmissionTypes();
-      _selectedTransmissionType = _transmissionTypes.firstWhere(
-        (t) => t.id == widget.ad.transmissionId,
-        orElse: () {
-          final name = (widget.ad.transmission ?? '').toLowerCase();
-          return _transmissionTypes.firstWhere(
-            (t) => t.displayName.toLowerCase() == name,
-            orElse: () => _transmissionTypes.isNotEmpty
-                ? _transmissionTypes.first
-                : throw Exception('No transmission types'),
-          );
-        },
-      );
-    } catch (_) {}
+      final types = await repo.fetchVehicleTransmissionTypes(
+          vehicleCategory: _vehicleCategory);
+      if (!mounted) return;
+      _transmissionTypes =
+          types.where((t) => t.appliesTo(_vehicleCategory)).toList();
+      final name = (widget.ad.transmission ?? '').toLowerCase();
+      _selectedTransmissionType = _firstWhereOrNull(
+              _transmissionTypes, (t) => t.id == widget.ad.transmissionId) ??
+          _firstWhereOrNull(_transmissionTypes,
+              (t) => t.displayName.toLowerCase() == name) ??
+          _firstOrNull(_transmissionTypes);
+    } catch (e) {
+      debugPrint('Failed to load transmission types: $e');
+    }
+    if (!mounted) return;
 
-    // fuel
+    // fuel (scoped to this category)
     try {
-      _fuelTypes = await repo.fetchVehicleFuelTypes();
-      _selectedFuelType = _fuelTypes.firstWhere(
-        (f) => f.id == widget.ad.fuelTypeId,
-        orElse: () {
-          final name = (widget.ad.fuelType ?? '').toLowerCase();
-          return _fuelTypes.firstWhere(
-            (f) => f.displayName.toLowerCase() == name,
-            orElse: () => _fuelTypes.isNotEmpty
-                ? _fuelTypes.first
-                : throw Exception('No fuel types'),
-          );
-        },
-      );
-    } catch (_) {}
+      final fuels =
+          await repo.fetchVehicleFuelTypes(vehicleCategory: _vehicleCategory);
+      if (!mounted) return;
+      _fuelTypes = fuels.where((f) => f.appliesTo(_vehicleCategory)).toList();
+      final name = (widget.ad.fuelType ?? '').toLowerCase();
+      _selectedFuelType =
+          _firstWhereOrNull(_fuelTypes, (f) => f.id == widget.ad.fuelTypeId) ??
+              _firstWhereOrNull(
+                  _fuelTypes, (f) => f.displayName.toLowerCase() == name) ??
+              _firstOrNull(_fuelTypes);
+    } catch (e) {
+      debugPrint('Failed to load fuel types: $e');
+    }
 
     if (mounted) setState(() {});
   }
@@ -277,6 +303,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
         final bytes = await img.readAsBytes();
         _newImageFiles.add(bytes);
       }
+      if (!mounted) return;
       setState(() {});
     }
   }
@@ -291,6 +318,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
     final picked = await _picker.pickVideo(source: ImageSource.gallery);
     if (picked != null) {
       final bytes = await picked.readAsBytes();
+      if (!mounted) return;
       setState(() {
         _newVideoFile = bytes;
         _videoFileName = picked.name;
@@ -468,7 +496,13 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
                 context
                     .read<AdvertisementBloc>()
                     .add(const AdvertisementEvent.fetchAllListings());
-                context.go('/home');
+                // Pop back with a result so the caller (ad detail / My Ads)
+                // can refresh; fall back to home when there is nothing to pop.
+                if (context.canPop()) {
+                  context.pop(true);
+                } else {
+                  context.go('/home');
+                }
               },
               failure: (msg) {
                 ScaffoldMessenger.of(context).showSnackBar(

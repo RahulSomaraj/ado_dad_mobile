@@ -4,6 +4,7 @@ import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/widgets/ado_dad_logo.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
+import 'package:ado_dad_user/common/phone_number_util.dart';
 import 'package:ado_dad_user/common/widgets/get_input.dart';
 import 'package:ado_dad_user/features/signup/bloc/signup_bloc.dart';
 import 'package:ado_dad_user/models/signup_model.dart';
@@ -391,7 +392,10 @@ class _SignupPageState extends State<SignupPage> {
   Widget _buildPhoneNumberField() {
     final textField = TextFormField(
       initialValue: _phone,
-      onSaved: (value) => _phone = value ?? "",
+      // Strip a pasted/autofilled "+91 …" / "0091…" / trunk "0" so
+      // phoneNumber is the bare national number; countryCode is sent apart.
+      onSaved: (value) =>
+          _phone = PhoneNumberUtil.normalise(value ?? "", _countryCode).national,
       keyboardType: TextInputType.phone,
       onChanged: (value) => setState(() => _phoneInput = value),
       inputFormatters: [
@@ -470,6 +474,10 @@ class _SignupPageState extends State<SignupPage> {
         }
         if (!RegExp(r"^[0-9]+$").hasMatch(value)) {
           return "Enter a valid phone number";
+        }
+        final phone = PhoneNumberUtil.normalise(value, _countryCode);
+        if (!phone.isValid) {
+          return phone.validationMessage;
         }
         return null;
       },

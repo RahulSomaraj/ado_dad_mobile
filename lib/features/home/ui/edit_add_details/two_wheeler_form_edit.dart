@@ -24,6 +24,18 @@ import 'package:go_router/go_router.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
+
+/// Returns the first element matching [test], or null when there is none.
+T? _firstWhereOrNull<T>(Iterable<T> items, bool Function(T) test) {
+  for (final item in items) {
+    if (test(item)) return item;
+  }
+  return null;
+}
+
+/// Returns the first element, or null for an empty list.
+T? _firstOrNull<T>(List<T> items) => items.isEmpty ? null : items.first;
+
 class TwoWheelerFormEdit extends StatefulWidget {
   final AddModel ad;
   const TwoWheelerFormEdit({super.key, required this.ad});
@@ -34,6 +46,9 @@ class TwoWheelerFormEdit extends StatefulWidget {
 
 class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
   final _formKey = GlobalKey<FormState>();
+
+  /// Category used to scope manufacturer / transmission / fuel lookups.
+  static const String _vehicleCategory = 'two_wheeler';
 
   late final TextEditingController _titleCtrl;
   late final TextEditingController _priceCtrl;
@@ -117,68 +132,73 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
   }
 
   Future<void> _bootstrap() async {
-    // 1) load manufacturers with vehicleCategory 'two_wheeler'
     final repo = AddRepository();
-    final manufacturers = await repo.fetchManufacturers(
-      vehicleCategory: 'two_wheeler',
-    );
-    setState(() => _manufacturers = manufacturers);
 
-    // preselect manufacturer by id
+    // 1) load manufacturers with vehicleCategory 'two_wheeler'
+    try {
+      _manufacturers =
+          await repo.fetchManufacturers(vehicleCategory: _vehicleCategory);
+    } catch (e) {
+      debugPrint('Failed to load manufacturers: $e');
+    }
+    if (!mounted) return;
+    setState(() {});
+
+    // preselect manufacturer by id (fallback: first, if any)
     final manufacturerId = widget.ad.manufacturer?.id;
-    _selectedManufacturer = _manufacturers.firstWhere(
-      (m) => m.id == manufacturerId,
-      orElse: () => _manufacturers.first,
-    );
+    _selectedManufacturer =
+        _firstWhereOrNull(_manufacturers, (m) => m.id == manufacturerId) ??
+            _firstOrNull(_manufacturers);
 
     // 2) load models for selected manufacturer, then select by id
-    if (_selectedManufacturer != null) {
-      _models = await repo.fetchModelsByManufacturer(_selectedManufacturer!.id);
+    final manufacturer = _selectedManufacturer;
+    if (manufacturer != null) {
+      try {
+        _models = await repo.fetchModelsByManufacturer(manufacturer.id);
+      } catch (e) {
+        debugPrint('Failed to load models: $e');
+      }
+      if (!mounted) return;
       setState(() {});
 
       final modelId = widget.ad.model?.id;
-      _selectedModel = _models.isNotEmpty
-          ? _models.firstWhere(
-              (m) => m.id == modelId,
-              orElse: () => _models.first,
-            )
-          : null;
+      _selectedModel = _firstWhereOrNull(_models, (m) => m.id == modelId) ??
+          _firstOrNull(_models);
     }
 
-    // 3) load transmission types and fuel types; preselect by IDs
+    // 3) transmission types (optional for two-wheelers): preselect by id,
+    //    then by name; leave unset when nothing matches.
     try {
-      _transmissionTypes = await repo.fetchVehicleTransmissionTypes();
-      _selectedTransmissionType = _transmissionTypes.firstWhere(
-        (t) => t.id == widget.ad.transmissionId,
-        orElse: () {
-          // try best-effort match by name if ID missing
-          final name = (widget.ad.transmission ?? '').toLowerCase();
-          return _transmissionTypes.firstWhere(
-            (t) => t.displayName.toLowerCase() == name,
-            orElse: () => _transmissionTypes.first,
-          );
-        },
-      );
-    } catch (_) {}
+      final types = await repo.fetchVehicleTransmissionTypes(
+          vehicleCategory: _vehicleCategory);
+      if (!mounted) return;
+      _transmissionTypes =
+          types.where((t) => t.appliesTo(_vehicleCategory)).toList();
+      final name = (widget.ad.transmission ?? '').toLowerCase();
+      _selectedTransmissionType = _firstWhereOrNull(
+              _transmissionTypes, (t) => t.id == widget.ad.transmissionId) ??
+          _firstWhereOrNull(_transmissionTypes,
+              (t) => t.displayName.toLowerCase() == name);
+    } catch (e) {
+      debugPrint('Failed to load transmission types: $e');
+    }
+    if (!mounted) return;
 
+    // 4) fuel types: preselect by id, then by name, then first.
     try {
-      _fuelTypes = await repo.fetchVehicleFuelTypes();
-      _selectedFuelType = _fuelTypes.firstWhere(
-        (f) => f.id == widget.ad.fuelTypeId,
-        orElse: () {
-          final name = (widget.ad.fuelType ?? '').toLowerCase();
-          return _fuelTypes.firstWhere(
-            (f) => f.displayName.toLowerCase() == name,
-            orElse: () {
-              if (_fuelTypes.isNotEmpty) {
-                return _fuelTypes.first;
-              }
-              throw Exception('No fuel types available');
-            },
-          );
-        },
-      );
-    } catch (_) {}
+      final fuels =
+          await repo.fetchVehicleFuelTypes(vehicleCategory: _vehicleCategory);
+      if (!mounted) return;
+      _fuelTypes = fuels.where((f) => f.appliesTo(_vehicleCategory)).toList();
+      final name = (widget.ad.fuelType ?? '').toLowerCase();
+      _selectedFuelType =
+          _firstWhereOrNull(_fuelTypes, (f) => f.id == widget.ad.fuelTypeId) ??
+              _firstWhereOrNull(
+                  _fuelTypes, (f) => f.displayName.toLowerCase() == name) ??
+              _firstOrNull(_fuelTypes);
+    } catch (e) {
+      debugPrint('Failed to load fuel types: $e');
+    }
 
     if (mounted) setState(() {});
   }
@@ -202,6 +222,7 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
         final bytes = await img.readAsBytes();
         _newImageFiles.add(bytes);
       }
+      if (!mounted) return;
       setState(() {});
     }
   }
@@ -216,6 +237,7 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
     final picked = await _picker.pickVideo(source: ImageSource.gallery);
     if (picked != null) {
       final bytes = await picked.readAsBytes();
+      if (!mounted) return;
       setState(() {
         _newVideoFile = bytes;
         _videoFileName = picked.name;
@@ -330,14 +352,14 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
     final payload = {
       "vehicleType": "two_wheeler", // keep only if backend wants it in data
       "title": _titleCtrl.text.trim(), // Include title like other fields
-      "price": int.parse(_priceCtrl.text.trim()),
+      "price": int.tryParse(_priceCtrl.text.trim()) ?? 0,
       "location": _location,
       if (_latitude != null) "latitude": _latitude,
       if (_longitude != null) "longitude": _longitude,
       "manufacturerId": _selectedManufacturer?.id,
       "modelId": _selectedModel?.id,
-      "year": int.parse(_yearCtrl.text.trim()),
-      "mileage": int.parse(_mileageCtrl.text.trim()),
+      "year": int.tryParse(_yearCtrl.text.trim()) ?? 0,
+      "mileage": int.tryParse(_mileageCtrl.text.trim()) ?? 0,
       "color": _colorCtrl.text.trim(),
       "isFirstOwner": _isFirstOwner,
       "hasInsurance": _hasInsurance,
@@ -421,7 +443,13 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
                 context
                     .read<AdvertisementBloc>()
                     .add(const AdvertisementEvent.fetchAllListings());
-                context.go('/home');
+                // Pop back with a result so the caller (ad detail / My Ads)
+                // can refresh; fall back to home when there is nothing to pop.
+                if (context.canPop()) {
+                  context.pop(true);
+                } else {
+                  context.go('/home');
+                }
               },
               failure: (msg) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -504,7 +532,7 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
                     onSearch: (query) async {
                       return await AddRepository().fetchManufacturers(
                         search: query,
-                        vehicleCategory: 'two_wheeler',
+                        vehicleCategory: _vehicleCategory,
                       );
                     },
                     onChanged: (m) async {
@@ -547,14 +575,20 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
                   const SizedBox(height: 10),
 
                   // Transmission / Fuel
-                  buildSearchableDropdown<VehicleTransmissionType>(
-                    labelText: 'Transmission Type',
-                    items: _transmissionTypes,
-                    selectedValue: _selectedTransmissionType,
-                    getDisplayText: (item) => item.displayName,
-                    errorMsg: 'Please select a transmission type',
-                    onChanged: (t) =>
-                        setState(() => _selectedTransmissionType = t),
+                  // Transmission is optional for two-wheelers. The dropdown's
+                  // validator always requires a value, so it is isolated in
+                  // its own Form and therefore not part of _formKey's
+                  // validation.
+                  Form(
+                    child: buildSearchableDropdown<VehicleTransmissionType>(
+                      labelText: 'Transmission Type (optional)',
+                      items: _transmissionTypes,
+                      selectedValue: _selectedTransmissionType,
+                      getDisplayText: (item) => item.displayName,
+                      errorMsg: 'Please select a transmission type',
+                      onChanged: (t) =>
+                          setState(() => _selectedTransmissionType = t),
+                    ),
                   ),
                   const SizedBox(height: 10),
                   buildSearchableDropdown<VehicleFuelType>(
@@ -588,6 +622,7 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
                   const SizedBox(height: 10),
                   GetInput(
                     label: 'Color',
+                    required: false,
                     // initialValue: _color,
                     controller: _colorCtrl,
                     // onSaved: (v) => _color = v ?? '',

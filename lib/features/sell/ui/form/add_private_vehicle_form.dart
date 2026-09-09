@@ -32,7 +32,10 @@ class AddPrivateVehicleForm extends StatefulWidget {
 
 class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
   final GlobalKey<FormState> _sellerFormKey = GlobalKey<FormState>();
-  int _step = 0; // 0 = Details, 1 = Photos, 2 = Review
+
+  /// Category used to scope transmission / fuel type lookups.
+  static const String _vehicleCategory = 'passenger_car';
+  int _step = 0; // 0 = Photos, 1 = Details, 2 = Review
   String? _title;
   int _price = 0;
   String _location = '';
@@ -77,21 +80,33 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
   Future<void> _loadManufacturers() async {
     // For private_vehicle category (Car & Premium Vehicles),
     // fetch manufacturers with vehicleCategory 'passenger_car'
-    final manufacturers = await AddRepository().fetchManufacturers(
-      vehicleCategory: 'passenger_car',
-    );
-    setState(() {
-      _manufacturers = manufacturers;
-    });
+    try {
+      final manufacturers = await AddRepository().fetchManufacturers(
+        vehicleCategory: 'passenger_car',
+      );
+      if (!mounted) return;
+      setState(() {
+        _manufacturers = manufacturers;
+      });
+    } catch (e) {
+      debugPrint('Failed to load manufacturers: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to load manufacturers')),
+      );
+    }
   }
 
   Future<void> _loadTransmissionTypes() async {
     try {
-      final transmissionTypes =
-          await AddRepository().fetchVehicleTransmissionTypes();
+      final transmissionTypes = await AddRepository()
+          .fetchVehicleTransmissionTypes(vehicleCategory: _vehicleCategory);
       if (!mounted) return;
       setState(() {
-        _transmissionTypes = transmissionTypes;
+        // Keep only types that apply to this category (or to all).
+        _transmissionTypes = transmissionTypes
+            .where((t) => t.appliesTo(_vehicleCategory))
+            .toList();
       });
     } catch (e) {
       // Optional: surface the error
@@ -105,10 +120,13 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
 
   Future<void> _loadFuelTypes() async {
     try {
-      final fuelTypes = await AddRepository().fetchVehicleFuelTypes();
+      final fuelTypes = await AddRepository()
+          .fetchVehicleFuelTypes(vehicleCategory: _vehicleCategory);
       if (!mounted) return;
       setState(() {
-        _fuelTypes = fuelTypes;
+        // Keep only types that apply to this category (or to all).
+        _fuelTypes =
+            fuelTypes.where((f) => f.appliesTo(_vehicleCategory)).toList();
       });
     } catch (e) {
       // Optional: surface the error
@@ -196,8 +214,6 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
 
   @override
   Widget build(BuildContext context) {
-    print('Category Title: ${widget.categoryTitle}');
-    print('Category Title: ${widget.categoryId}');
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       appBar: PreferredSize(
@@ -303,7 +319,6 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                  Divider(thickness: 2),
                   _formHeader(),
                   Divider(),
                   Container(
@@ -426,9 +441,20 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
                               });
 
                               if (manufacturer != null) {
-                                final models = await AddRepository()
-                                    .fetchModelsByManufacturer(manufacturer.id);
-                                setState(() => _models = models);
+                                try {
+                                  final models = await AddRepository()
+                                      .fetchModelsByManufacturer(
+                                          manufacturer.id);
+                                  if (!mounted) return;
+                                  setState(() => _models = models);
+                                } catch (e) {
+                                  debugPrint('Failed to load models: $e');
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text('Failed to load models')),
+                                  );
+                                }
                               }
                             },
                           ),
@@ -466,9 +492,20 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
                               });
 
                               if (model != null) {
-                                final variants = await AddRepository()
-                                    .fetchVariantsByModel(model.id);
-                                setState(() => _variants = variants);
+                                try {
+                                  final variants = await AddRepository()
+                                      .fetchVariantsByModel(model.id);
+                                  if (!mounted) return;
+                                  setState(() => _variants = variants);
+                                } catch (e) {
+                                  debugPrint('Failed to load variants: $e');
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content:
+                                            Text('Failed to load variants')),
+                                  );
+                                }
                               }
                             },
                             errorMsg: 'Please select a model',
@@ -754,6 +791,7 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
                       ),
                     ),
                   ),
+                  _buildReviewSummary(),
                   SafeArea(
                     top: false,
                     minimum: const EdgeInsets.only(bottom: 20),
@@ -955,6 +993,19 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
     );
   }
 
+  /// Advances the step. Leaving Details (step 1) requires a valid form so
+  /// the seller cannot reach Review with invalid data; saving here also
+  /// populates the values shown in the Review summary.
+  void _onNextPressed() {
+    if (_step == 1) {
+      final form = _sellerFormKey.currentState;
+      if (form == null || !form.validate()) return;
+      form.save();
+    }
+    if (_step >= 2) return;
+    setState(() => _step++);
+  }
+
   Widget _buildStepNav() {
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -1041,7 +1092,7 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
                 child: ElevatedButton(
                   onPressed: (_step == 0 && !_mediaBloc.state.hasImages)
                       ? null
-                      : () => setState(() => _step++),
+                      : _onNextPressed,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryColor,
                     foregroundColor: AppColors.whiteColor,
@@ -1073,6 +1124,84 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------- review
+
+  String _photoSummary() {
+    final media = _mediaBloc.state;
+    final count = media.images.length;
+    if (count == 0) return 'No photos';
+    final label = count == 1 ? '1 photo' : '$count photos';
+    if (media.hasFailed) return '$label · some failed';
+    if (media.isUploading) return '$label · ${media.pendingCount} uploading…';
+    return '$label · all uploaded';
+  }
+
+  Widget _reviewRow(String label, String? value) {
+    final text = (value == null || value.trim().isEmpty) ? '—' : value;
+    final fontSize = GetResponsiveSize.getResponsiveFontSize(
+      context,
+      mobile: 14,
+      tablet: 18,
+      largeTablet: 22,
+      desktop: 26,
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: TextStyle(color: AppColors.greyColor, fontSize: fontSize),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: AppColors.blackColor,
+                fontWeight: FontWeight.w600,
+                fontSize: fontSize,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Compact read-only summary shown on the Review step.
+  Widget _buildReviewSummary() {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: GetResponsiveSize.getResponsivePadding(
+          context,
+          mobile: 16,
+          tablet: 24,
+          largeTablet: 32,
+          desktop: 40,
+        ),
+        vertical: 12,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _reviewRow('Photos', _photoSummary()),
+          _reviewRow('Price', _price > 0 ? '₹ $_price' : null),
+          _reviewRow('Location', _location),
+          _reviewRow('Manufacturer', _selectedManufacturer?.displayName),
+          _reviewRow('Model', _selectedModel?.displayName),
+          _reviewRow('Variant', _selectedVariant?.name),
+          _reviewRow('Year', '$_year'),
+          _reviewRow('Fuel type', _selectedfuelType?.displayName),
+          _reviewRow('Transmission', _selectedtransmissionType?.displayName),
         ],
       ),
     );

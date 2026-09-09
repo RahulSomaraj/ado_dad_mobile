@@ -1,0 +1,225 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Ado-Dad Fix Checklist</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>:root{
+  --ground:#F4F5F9; --surface:#FFFFFF; --surface2:#EEF0F6; --ink:#15161D; --ink2:#464B5A; --muted:#7A8091;
+  --line:#DDE0EA; --line2:#C7CBD8; --accent:#4F48EC; --accent-soft:#ECEBFD; --accent-ink:#3B35C4;
+  --ok:#1F9D6A; --ok-soft:#E3F5EC; --warn:#D98E0B; --warn-soft:#FFF4DE; --bad:#F05555;
+  --phone:#0F1115; --shadow:0 18px 50px rgba(21,22,29,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F1115; --surface:#1B1F27; --surface2:#232833; --ink:#ECEEF3; --ink2:#C4C8D4; --muted:#8B93A3;
+    --line:#2A2F3A; --line2:#3A4050; --accent:#7A74FF; --accent-soft:#26265A; --accent-ink:#B2AEFF;
+    --ok:#3BC48A; --ok-soft:#153A2A; --warn:#F0B03A; --warn-soft:#3A2E12; --bad:#F26B6B;
+    --phone:#05060A; --shadow:0 18px 50px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F1115; --surface:#1B1F27; --surface2:#232833; --ink:#ECEEF3; --ink2:#C4C8D4; --muted:#8B93A3;
+  --line:#2A2F3A; --line2:#3A4050; --accent:#7A74FF; --accent-soft:#26265A; --accent-ink:#B2AEFF;
+  --ok:#3BC48A; --ok-soft:#153A2A; --warn:#F0B03A; --warn-soft:#3A2E12; --bad:#F26B6B;
+  --phone:#05060A; --shadow:0 18px 50px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:Manrope,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5}
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+a{color:var(--accent-ink)}
+.wrap{max-width:1340px;margin:0 auto;padding:28px 24px 80px}
+
+/* header */
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.top h1{font-size:26px;font-weight:800;margin:0;letter-spacing:-.02em;text-wrap:balance}
+.top p{margin:6px 0 0;color:var(--muted);max-width:62ch}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:6px}
+.meta{display:flex;gap:8px;flex-wrap:wrap}
+.tag{font-family:"JetBrains Mono",monospace;font-size:11px;padding:4px 9px;border:1px solid var(--line2);border-radius:999px;color:var(--ink2);background:var(--surface)}
+
+/* before/after strip */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0 8px}
+.rail{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.rail h3{margin:0 0 10px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.rail h3 b{color:var(--ink);font-weight:800}
+.steps{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.step{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:9px;border:1px solid var(--line2);font-weight:600;font-size:13px;background:var(--surface)}
+.step i{font-style:normal;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted)}
+.step.hot{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+.step.hot i{color:var(--accent-ink)}
+.step.dim{opacity:.55}
+.arrow{color:var(--muted);font-size:12px}
+.rail p{margin:10px 0 0;color:var(--ink2);font-size:13px}
+.rail p b{color:var(--bad);font-weight:700}
+.rail.after p b{color:var(--ok)}
+
+/* section */
+section{margin-top:40px}
+section>h2{font-size:18px;font-weight:800;margin:0 0 4px;letter-spacing:-.01em}
+section>.sub{color:var(--muted);margin:0 0 18px;max-width:70ch}
+
+/* screens */
+.flow{display:flex;gap:26px;overflow-x:auto;padding:6px 4px 22px;scroll-snap-type:x proximity}
+.shot{flex:0 0 auto;width:292px;scroll-snap-align:start}
+.shot .lbl{display:flex;align-items:baseline;gap:8px;margin:0 0 10px 2px}
+.shot .lbl .n{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--accent-ink);background:var(--accent-soft);padding:2px 7px;border-radius:6px}
+.shot .lbl h4{margin:0;font-size:14px;font-weight:700}
+.notes{margin:12px 2px 0;padding:0;list-style:none;display:grid;gap:6px}
+.notes li{font-size:12.5px;color:var(--ink2);padding-left:18px;position:relative;line-height:1.45}
+.notes li::before{content:"";position:absolute;left:4px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.notes li.dev::before{background:var(--warn)}
+.notes li .k{font-family:"JetBrains Mono",monospace;font-size:11px;background:var(--surface2);padding:1px 5px;border-radius:4px;color:var(--ink)}
+
+.phone{width:292px;height:620px;border-radius:34px;background:var(--phone);padding:10px;box-shadow:var(--shadow);position:relative}
+.screen{background:var(--surface);border-radius:26px;height:100%;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.status{height:26px;display:flex;justify-content:space-between;align-items:center;padding:0 18px;font-size:10px;font-weight:700;color:var(--ink2)}
+.status .notch{position:absolute;left:50%;top:6px;transform:translateX(-50%);width:76px;height:16px;border-radius:999px;background:var(--phone)}
+.bar{display:flex;align-items:center;gap:10px;padding:6px 14px 8px}
+.bar .back{width:24px;height:24px;border-radius:7px;border:1.5px solid var(--line2);display:grid;place-items:center;font-size:12px;color:var(--ink2)}
+.bar .t{font-weight:800;font-size:14px;flex:1}
+.bar .x{font-size:11px;color:var(--muted);font-weight:600}
+.prog{padding:0 14px 8px}
+.prog .row{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);font-weight:600;margin-bottom:5px}
+.prog .row b{color:var(--ink);font-weight:800}
+.segs{display:flex;gap:4px}
+.segs span{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.segs span.on{background:var(--accent)}
+.body{flex:1;padding:6px 14px 10px;overflow:hidden;display:flex;flex-direction:column;gap:10px}
+.h{font-weight:800;font-size:16px;letter-spacing:-.01em;line-height:1.2}
+.p{font-size:11.5px;color:var(--muted);line-height:1.4}
+.cta{margin-top:auto;padding:10px 14px 14px;border-top:1px solid var(--line);display:flex;gap:8px}
+.btn{flex:1;height:42px;border-radius:11px;display:grid;place-items:center;font-weight:800;font-size:13px;border:1.5px solid var(--line2);color:var(--ink2)}
+.btn.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.ghost{flex:0 0 42px}
+.btn.off{opacity:.45}
+
+/* wire primitives */
+.wtxt{height:8px;border-radius:4px;background:var(--line)}
+.field{border:1.5px solid var(--line2);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:3px;background:var(--surface)}
+.field .fl{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.field .fv{font-size:12.5px;font-weight:600;color:var(--ink)}
+.field .fv.plh{color:var(--muted);font-weight:500}
+.field.sel .fv::after{content:"⌄";float:right;color:var(--muted)}
+.field.err{border-color:var(--bad)}
+.ferr{font-size:10.5px;color:var(--bad);font-weight:600;margin-top:-6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:11px;font-weight:700;padding:6px 10px;border-radius:999px;border:1.5px solid var(--line2);color:var(--ink2)}
+.chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+.tog{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;padding:8px 0;border-bottom:1px dashed var(--line)}
+.sw{width:30px;height:18px;border-radius:999px;background:var(--line2);position:relative}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff}
+.sw.on{background:var(--accent)}.sw.on::after{left:14px}
+
+/* photos */
+.drop{border:2px dashed var(--accent);background:var(--accent-soft);border-radius:14px;padding:22px 14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+.drop .ic{width:44px;height:44px;border-radius:12px;background:var(--accent);display:grid;place-items:center;color:#fff;font-size:20px}
+.drop .b{font-weight:800;font-size:13px;color:var(--accent-ink)}
+.drop .s{font-size:11px;color:var(--muted)}
+.tips{background:var(--surface2);border-radius:12px;padding:10px 12px;display:grid;gap:6px}
+.tips .tt{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.tips .ti{font-size:11.5px;color:var(--ink2);display:flex;gap:7px;align-items:center}
+.tips .ti::before{content:"✓";color:var(--ok);font-weight:800;font-size:11px}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.ph{aspect-ratio:1;border-radius:10px;background:linear-gradient(135deg,var(--line) 0%,var(--surface2) 100%);position:relative;overflow:hidden;border:1.5px solid var(--line)}
+.ph.cover{grid-column:span 2;grid-row:span 2}
+.ph .cv{position:absolute;left:6px;top:6px;font-size:9px;font-weight:800;letter-spacing:.06em;background:var(--ink);color:var(--surface);padding:2px 6px;border-radius:5px}
+.ph .rm{position:absolute;right:5px;top:5px;width:16px;height:16px;border-radius:50%;background:var(--ink);color:var(--surface);font-size:10px;display:grid;place-items:center;font-weight:800}
+.ph .up{position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--line2)}
+.ph .up i{display:block;height:100%;background:var(--ok)}
+.ph .ok{position:absolute;right:5px;bottom:5px;width:14px;height:14px;border-radius:50%;background:var(--ok);color:#fff;font-size:9px;display:grid;place-items:center;font-weight:800}
+.ph .spin{position:absolute;inset:0;display:grid;place-items:center;font-size:10px;font-weight:800;color:var(--ink2);background:rgba(255,255,255,.35)}
+.ph.add{border:1.5px dashed var(--accent);background:var(--accent-soft);display:grid;place-items:center;color:var(--accent-ink);font-weight:800;font-size:22px}
+.ph .num{position:absolute;left:5px;bottom:5px;font-family:"JetBrains Mono",monospace;font-size:9px;background:var(--surface);color:var(--ink);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+.count{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);font-weight:600}
+.count b{color:var(--ink)}
+.vid{border:1.5px solid var(--line2);border-radius:12px;padding:9px 11px;display:flex;align-items:center;gap:10px}
+.vid .vi{width:34px;height:34px;border-radius:9px;background:var(--surface2);display:grid;place-items:center;font-size:14px}
+.vid .vt{font-size:12px;font-weight:700}
+.vid .vs{font-size:10.5px;color:var(--muted)}
+.vid .va{margin-left:auto;font-size:11px;font-weight:800;color:var(--accent-ink)}
+
+/* category sheet */
+.dimmed{position:absolute;inset:0;background:rgba(15,17,21,.55)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:22px 22px 0 0;padding:10px 14px 16px;display:flex;flex-direction:column;gap:10px}
+.sheet .grab{width:38px;height:4px;border-radius:2px;background:var(--line2);margin:0 auto 4px}
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cat{border:1.5px solid var(--line2);border-radius:12px;padding:12px 10px;display:flex;flex-direction:column;gap:6px}
+.cat .ci{width:30px;height:30px;border-radius:9px;background:var(--accent-soft);display:grid;place-items:center;font-size:15px}
+.cat .cn{font-weight:800;font-size:12.5px}
+.cat .cs{font-size:10.5px;color:var(--muted)}
+.home{display:grid;gap:8px;padding:0 14px}
+.card{height:88px;border-radius:12px;background:var(--surface2)}
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:56px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-around;background:var(--surface);font-size:9px;font-weight:700;color:var(--muted)}
+.tabbar .sell{width:46px;height:46px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:20px;margin-top:-26px;box-shadow:0 8px 20px rgba(79,72,236,.35)}
+
+/* review */
+.rv{border:1.5px solid var(--line);border-radius:12px;overflow:hidden}
+.rv .rh{display:flex;justify-content:space-between;align-items:center;padding:8px 11px;background:var(--surface2);font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rv .rh a{font-size:10.5px;text-transform:none;letter-spacing:0;font-weight:800}
+.kv{display:grid;grid-template-columns:1fr auto;padding:6px 11px;font-size:11.5px;border-top:1px dashed var(--line)}
+.kv span{color:var(--muted)}.kv b{font-weight:700}
+.strip{display:flex;gap:5px;padding:9px 11px}
+.strip i{width:40px;height:40px;border-radius:7px;background:var(--line);display:block}
+.strip i:first-child{outline:2px solid var(--accent);outline-offset:1px}
+.price{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.success{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:30px 20px;flex:1}
+.success .ok{width:64px;height:64px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;font-size:28px;font-weight:800}
+.preview{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:8px;display:flex;gap:9px;align-items:center;text-align:left}
+.preview i{width:52px;height:52px;border-radius:8px;background:var(--line);display:block;flex:0 0 auto}
+.preview .pt{font-size:12px;font-weight:700}.preview .pp{font-size:11px;color:var(--muted)}
+.pill{font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)}
+
+/* dev plan */
+.plan{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.pc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.pc h4{margin:0 0 8px;font-size:13.5px;font-weight:800}
+.pc p,.pc li{font-size:12.5px;color:var(--ink2);margin:0}
+.pc ul{margin:0;padding-left:16px;display:grid;gap:5px}
+.pc code{font-family:"JetBrains Mono",monospace;font-size:11px;background:var(--surface2);padding:1px 5px;border-radius:4px;color:var(--ink)}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin:0 0 14px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--accent)}
+.legend i.w{background:var(--warn)}
+@media (max-width:760px){.compare{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+
+.sum{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0 6px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.tile b{display:block;font-size:26px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.tile span{font-size:11.5px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.tile.f b{color:var(--ok)}.tile.p b{color:var(--warn)}.tile.b b{color:var(--accent-ink)}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:12.5px}
+th{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;background:var(--surface2);font-weight:800}
+td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:top;color:var(--ink2)}
+td.w{color:var(--ink);font-weight:600;width:44%}
+td code,td .k{font-family:"JetBrains Mono",monospace;font-size:11px;background:var(--surface2);padding:1px 5px;border-radius:4px;color:var(--ink);white-space:nowrap}
+.st{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.st.f{background:var(--ok-soft);color:var(--ok)}.st.p{background:var(--warn-soft);color:var(--warn)}.st.b{background:var(--accent-soft);color:var(--accent-ink)}.st.v{background:var(--surface2);color:var(--ink2)}
+.sev{font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700}
+.sev.h{color:var(--bad)}.sev.m{color:var(--warn)}.sev.l{color:var(--muted)}
+.tw{overflow-x:auto}
+h2 .cnt{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--muted);font-weight:500;margin-left:8px}
+.legend .st{margin-right:4px}
+</style>
+<div class="wrap">
+<header class="top"><div>
+<div class="eyebrow">ado-dad mobile · full code scan · 9 sep 2026 · branch dev_redesign</div>
+<h1>Fix checklist</h1>
+<p>Every page audited (256 dart files). Items marked FIXED are already in your working copy (34 files, uncommitted). Run the build commands at the bottom, then work through PENDING in order.</p></div>
+<div class="meta"><span class="tag">3 reported symptoms → root causes found</span><span class="tag">bloc + freezed kept</span></div></header>
+<div class="sum"><div class="tile f"><b>35</b><span>fixed in repo</span></div><div class="tile p"><b>14</b><span>pending</span></div><div class="tile b"><b>1</b><span>needs backend</span></div><div class="tile"><b>2</b><span>verify on device</span></div></div>
+<div class="legend"><span class="st f">FIXED</span><span class="st p">PENDING</span><span class="st b">NEEDS BACKEND</span><span class="st v">VERIFY ON DEVICE</span></div>
+<section><h2>1 · App broken after returning from background<span class="cnt">9/11 fixed</span></h2><div class="tw"><table><tr><th style="width:70px">Status</th><th style="width:50px">Sev</th><th>Issue</th><th>Where</th><th>Fix / next step</th></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev h">HIGH</span></td><td class="w">Socket disconnect/reconnect on resume was broadcast as a chat error → chat screens flip to "Couldn't load"</td><td><code>chat_socket_service.dart</code>, <code>chat_bloc.dart</code></td><td>Transport events go to a new <code>connectionStatusStream</code>; only real server errors reach <code>ChatErrorState</code></td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev h">HIGH</span></td><td class="w">After reconnect the room was never re-joined → messages silently stop</td><td><code>chat_socket_service.dart</code> onConnect</td><td>Re-emits <code>joinChatRoom</code> for <code>_currentRoomId</code></td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev h">HIGH</span></td><td class="w">Monitoring timer force-recreated the socket every 5s → "Connection timeout" spam</td><td><code>chat_socket_service.dart</code> timer</td><td>Timer no longer calls <code>connect()</code>; socket.io reconnection owns it</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev h">HIGH</span></td><td class="w">Rooms page re-dispatched <code>LoadChatRooms</code> inside <code>build()</code> on every error → infinite request loop when offline</td><td><code>chat_rooms_page.dart:97-109</code></td><td>Removed; retry only via button / pull-to-refresh</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w">Parallel 401s after resume triggered a second refresh with a consumed refresh token → forced logout</td><td><code>api_service.dart:88-115</code></td><td>Compares failing request's token with stored token; retries instead of re-refreshing</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w"><code>handleTokenExpiration</code> popped the shell until it threw</td><td><code>auth_service.dart:258</code></td><td>Just <code>go('/login')</code></td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w"><code>_initFcm()</code> awaited before <code>runApp</code> with no try/catch → blank screen on cold relaunch after background kill (iOS APNS token, offline)</td><td><code>main.dart:149</code></td><td>Wrapped in try/catch, <code>unawaited</code></td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w"><code>ChatRepository.initialize()</code> stacked stream listeners on every call</td><td><code>chat_repository.dart:48</code></td><td><code>_initialized</code> guard + cancel</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev l">LOW</span></td><td class="w">AuthGuard treated every path as public (<code>'/'</code> with <code>startsWith</code>)</td><td><code>auth_guard.dart:107</code></td><td>Exact match for <code>'/'</code></td></tr><tr><td><span class="st v">VERIFY ON DEVICE</span></td><td><span class="sev m">MED</span></td><td class="w">Long background → token expired → now lands on OTP login (expected). Confirm no loop between splash and /login</td><td><code>splash_screen1.dart</code>, <code>auth_service.dart</code></td><td>Test: background 30+ min, resume</td></tr><tr><td><span class="st p">PENDING</span></td><td><span class="sev l">LOW</span></td><td class="w">Splash <code>LoginBloc.stream.listen</code> never cancelled; connectivity check compares list to enum</td><td><code>splash_screen.dart:61</code>, <code>connectivity_checker.dart:41</code></td><td>Store + cancel subscription; use <code>contains</code></td></tr></table></div></section>
+<section><h2>2 · Back button after the messaging page<span class="cnt">5/6 fixed</span></h2><div class="tw"><table><tr><th style="width:70px">Status</th><th style="width:50px">Sev</th><th>Issue</th><th>Where</th><th>Fix / next step</th></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev h">HIGH</span></td><td class="w">Rooms page stuck on skeleton after back from a chat opened from an ad (bloc had no stream subscriptions unless Chat tab was opened first)</td><td><code>chat_bloc.dart:62-107</code></td><td><code>_ensureSubscriptions()</code> on Initialize/LoadChatRooms/JoinChatRoom</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev h">HIGH</span></td><td class="w">Back from chat did <code>go('/chat-rooms?from=…')</code> → ad page destroyed, tab jumps, next back goes Home; Android back behaved differently</td><td><code>chat_page.dart:1378</code>, <code>chat_rooms_page.dart:114</code></td><td><code>canPop ? pop : go</code> + <code>PopScope</code> for system back; <code>from=</code> logic removed</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w">Every incoming socket message reloaded the rooms list with a spinner (flicker)</td><td><code>chat_rooms_page.dart:159</code></td><td>Cached <code>_lastRooms</code> + 2s-throttled silent reload</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w">Chat thread appended messages from other rooms</td><td><code>chat_page.dart:298</code>, <code>chat_bloc.dart:281</code></td><td><code>NewMessageReceivedState.roomId</code> filter</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev l">LOW</span></td><td class="w">Double <code>LoadRoomMessages</code> on open; voice-player subscription leak</td><td><code>chat_page.dart:111,273,117</code></td><td>Single dispatch; subscription stored + cancelled</td></tr><tr><td><span class="st p">PENDING</span></td><td><span class="sev m">MED</span></td><td class="w">One-shot chat states (Loading/Success/Error) instead of a state with <code>rooms</code>+<code>messages</code>+<code>status</code> — root of most flicker</td><td><code>chat_state.dart</code></td><td>Refactor to a single data state (bigger change, do after this round is verified)</td></tr></table></div></section>
+<section><h2>3 · Create ad — bikes show wrong fields + post-ad refactor<span class="cnt">9/13 fixed</span></h2><div class="tw"><table><tr><th style="width:70px">Status</th><th style="width:50px">Sev</th><th>Issue</th><th>Where</th><th>Fix / next step</th></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev h">HIGH</span></td><td class="w">Bike form showed car fuel/transmission options (Diesel/CNG, CVT/AMT) — endpoints were not category-filtered</td><td><code>add_repo.dart:334,364</code>, all vehicle forms</td><td>Sends <code>vehicleCategory</code>/<code>category</code> query param + client-side <code>appliesTo()</code> filter when backend returns a category</td></tr><tr><td><span class="st b">NEEDS BACKEND</span></td><td><span class="sev h">HIGH</span></td><td class="w">Backend must honour <code>category</code> on <code>/transmission-types</code> and <code>/fuel-types</code> (or return a category field per item) for the filter to bite</td><td>NestJS vehicle-inventory</td><td>Add query filter or <code>vehicleCategory</code> field in response</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w">Color required and Transmission required for two-wheelers</td><td><code>add_two_wheeler_form.dart</code>, <code>two_wheeler_form_edit.dart</code></td><td>Both optional; <code>transmissionTypeId</code> sent only when chosen</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w">Next from Details → Review did not validate; user bounced back on Post</td><td>all 4 <code>add_*_form.dart</code></td><td><code>_onNextPressed()</code> validates + saves on step 1</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w">Review step was only a heading + button</td><td>all 4 forms</td><td>Read-only summary: photos status, price, location, key fields</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w"><code>setState</code> after await without <code>mounted</code> in manufacturer/model loaders; <code>print()</code> in build; leftover Divider; stale step comment</td><td>all 4 forms</td><td>Fixed</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w">Retry on a photo with no bytes stayed "queued" forever → Post blocked</td><td><code>media_upload_bloc.dart</code></td><td>Ignored / marked failed</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w">Photo picker used <code>context</code> after await; dead image URL rendered red error box</td><td><code>photo_step_widget.dart</code></td><td><code>mounted</code> checks; <code>errorBuilder</code></td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev h">HIGH</span></td><td class="w">Edit forms did <code>go('/home')</code> on save → ad detail / My Ads never refreshed</td><td>4 × <code>*_form_edit.dart</code></td><td><code>pop(true)</code>; callers reload</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w">Edit forms: <code>.first</code> on empty lists, <code>int.parse</code> on text, setState after await</td><td>4 × <code>*_form_edit.dart</code></td><td>Safe lookups, <code>tryParse</code>, mounted</td></tr><tr><td><span class="st p">PENDING</span></td><td><span class="sev l">LOW</span></td><td class="w">Commercial vehicles fetch manufacturers with <code>passenger_car</code> (4 call sites)</td><td><code>add_commercial_vehicle_form.dart:100</code> etc.</td><td>Confirm whether backend has a commercial category; marked with TODO</td></tr><tr><td><span class="st p">PENDING</span></td><td><span class="sev l">LOW</span></td><td class="w"><code>TwoWheelerAdModel.variantId</code> required but never sent</td><td><code>two_wheeler_ad_model.dart</code></td><td>Make nullable / remove</td></tr><tr><td><span class="st p">PENDING</span></td><td><span class="sev m">MED</span></td><td class="w">Phase-2 of post-ad wireframe: category bottom sheet, Price &amp; location step, Posted screen, drafts, edit forms on shared PhotoStep</td><td>sell feature</td><td>Next round</td></tr></table></div></section>
+<section><h2>4 · Login / OTP / signup<span class="cnt">7/9 fixed</span></h2><div class="tw"><table><tr><th style="width:70px">Status</th><th style="width:50px">Sev</th><th>Issue</th><th>Where</th><th>Fix / next step</th></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev h">HIGH</span></td><td class="w">Resend on verify page pushed a <em>second</em> verify page (global OtpBloc listener on the login page fired too)</td><td><code>otp_login_page.dart:141</code></td><td>Listener ignores events unless route <code>isCurrent</code></td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w">Re-typing into OTP box 0 (maxLength 6) produced 7-char codes</td><td><code>otp_verification_page.dart</code></td><td>Keeps last char, advances focus</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w">Password page normalised a typed <code>+1…</code> number with the +91 picker</td><td><code>login_page.dart</code></td><td>Input starting with <code>+</code> kept as-is; validator checks length</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w"><code>?redirect=</code> was built by dialogs/guard but never honoured</td><td><code>app_routes.dart</code>, OTP pages</td><td>Passed through to <code>go(redirect ?? '/home')</code></td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w">Signup phone field had the same paste/autofill <code>91…</code> issue</td><td><code>signup_page.dart</code></td><td><code>PhoneNumberUtil.normalise</code></td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev l">LOW</span></td><td class="w">SMS parser fallback could auto-submit any 6-digit number from another SMS</td><td><code>otp_autofill_service.dart</code></td><td>Only digits after "otp"/"code"</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev l">LOW</span></td><td class="w"><code>/logout</code> built the password page; unused <code>_isPhone</code>; "Login with OTP instead" reset the stack</td><td><code>app_routes.dart</code>, login pages</td><td>Fixed</td></tr><tr><td><span class="st v">VERIFY ON DEVICE</span></td><td><span class="sev m">MED</span></td><td class="w"><code>smart_auth</code> 3.x method names (<code>getSmsWithUserConsentApi</code>, <code>removeUserConsentApiListener</code>) — not compilable here</td><td><code>otp_autofill_service.dart</code></td><td><code>flutter analyze</code>; one file to adjust if names differ</td></tr><tr><td><span class="st p">PENDING</span></td><td><span class="sev m">MED</span></td><td class="w">Shared phone-or-email field widget (dedupe OTP / password / signup)</td><td><code>lib/common/widgets/</code></td><td>Step 3 of login plan</td></tr></table></div></section>
+<section><h2>5 · Home · ad detail · My Ads · search · profile<span class="cnt">5/13 fixed</span></h2><div class="tw"><table><tr><th style="width:70px">Status</th><th style="width:50px">Sev</th><th>Issue</th><th>Where</th><th>Fix / next step</th></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev h">HIGH</span></td><td class="w">Ad detail: mark-sold/delete did <code>go('/home')</code>; failure replaced the page with an error screen</td><td><code>add_detail_page.dart:204-227</code>, <code>ad_detail_bloc.dart</code></td><td><code>pop(true)</code>; bloc re-emits <code>loaded</code> after <code>error</code></td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w">My Ads did not refresh after sold/delete/edit</td><td><code>my_ads_page.dart</code></td><td>Awaits <code>push&lt;bool&gt;</code>, reloads on <code>true</code> (card favourite button disabled on own ads)</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w">Route <code>extra as Map</code> casts crash on null (restore / deep link)</td><td><code>app_routes.dart</code> (7 routes)</td><td>Nullable casts → <code>_RouteErrorScreen</code></td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev m">MED</span></td><td class="w"><code>placemarks[0]</code> RangeError; setState after await in location code</td><td><code>home_page.dart:201,485,188-231</code></td><td>Guarded</td></tr><tr><td><span class="st f">FIXED</span></td><td><span class="sev l">LOW</span></td><td class="w">Chat/offer started with empty seller id; owner check re-created Future every build (flicker); notifications back went Home</td><td><code>add_detail_page.dart</code>, <code>notifications.dart</code></td><td>Guarded + cached + <code>maybePop</code></td></tr><tr><td><span class="st p">PENDING</span></td><td><span class="sev h">HIGH</span></td><td class="w">Category list pagination: after <code>applyFilters(lat/lng)</code>, page 2+ ignores category &amp; filters (location branch wins)</td><td><code>advertisement_bloc.dart:117-145</code></td><td>Track an explicit <code>_mode</code>; reset location flags on category/filter/search</td></tr><tr><td><span class="st p">PENDING</span></td><td><span class="sev h">HIGH</span></td><td class="w">Property filters lose <code>isFurnished</code>/<code>hasParking</code> on page 2</td><td><code>advertisement_bloc.dart:159-177</code></td><td>Pass both params in branch (e)</td></tr><tr><td><span class="st p">PENDING</span></td><td><span class="sev h">HIGH</span></td><td class="w">Load-more failure wipes the loaded list and leaves page counter incremented</td><td><code>advertisement_bloc.dart:185</code>, <code>showroom_bloc.dart:64</code>, <code>seller_profile_bloc.dart:60</code></td><td>Keep list, add <code>pageError</code>, decrement page</td></tr><tr><td><span class="st p">PENDING</span></td><td><span class="sev h">HIGH</span></td><td class="w">Search dispatches per keystroke with concurrent handlers → stale results overwrite new</td><td><code>advertisement_bloc.dart</code>, <code>search_page.dart:544</code></td><td><code>bloc_concurrency</code> restartable + 300ms debounce</td></tr><tr><td><span class="st p">PENDING</span></td><td><span class="sev h">HIGH</span></td><td class="w">Favourite toggle: dead <code>FavoriteLoaded</code> branch, wishlist double-skeleton, heart reverts on other emissions, double-tap sends two toggles</td><td><code>favorite_bloc.dart</code>, <code>wishlist_page.dart</code>, <code>ad_detail_action_buttons.dart</code></td><td>Local optimistic state + <code>droppable</code></td></tr><tr><td><span class="st p">PENDING</span></td><td><span class="sev h">HIGH</span></td><td class="w">Category list: hard-coded debug ad id, 15 prints, <code>fetchNextPage</code> in build for Premium</td><td><code>category_list_page.dart:418-490</code></td><td>Remove; move auto-page to listener</td></tr><tr><td><span class="st p">PENDING</span></td><td><span class="sev m">MED</span></td><td class="w">Search clear restores stale snapshot; wishlist never loads page 2; My Ads chips filter loaded pages only; seller/showroom pages refetch on every MediaQuery change</td><td><code>search_page.dart:523</code>, <code>wishlist_page.dart</code>, <code>my_ads_page.dart:344</code>, <code>seller_profile_page.dart:36</code>, <code>showroom_user_ads_page.dart:48</code></td><td>See audit notes</td></tr><tr><td><span class="st p">PENDING</span></td><td><span class="sev l">LOW</span></td><td class="w">~100 <code>print()</code> calls in hot paths; hard-coded <code>Colors.white/black</code> backgrounds break dark mode in ~12 files; unused <code>BottomNavBar</code></td><td>home / profile / search / showroom</td><td><code>debugPrint</code> behind <code>kDebugMode</code>; <code>AppColors.*</code></td></tr></table></div></section>
+<section><h2>Build &amp; verify</h2>
+<div class="tw"><table><tr><th>Step</th><th>Command / action</th></tr>
+<tr><td class="w">1. Generate + analyse</td><td><code>dart run build_runner build --delete-conflicting-outputs</code> · <code>flutter analyze</code> — paste any errors back; nothing here was compiled (no SDK in the sandbox)</td></tr>
+<tr><td class="w">2. Unit tests</td><td><code>flutter test test/common test/services</code> (phone normaliser, SMS parser)</td></tr>
+<tr><td class="w">3. Resume test</td><td>Open a chat → background 1 min → resume: messages keep arriving, no "Couldn't load". Background 30+ min → resume: either still logged in or cleanly on the OTP page, no loop.</td></tr>
+<tr><td class="w">4. Back-nav test</td><td>Ad detail → Chat with seller → back → must land on the same ad. Chat tab → room → back → rooms list (no skeleton). Android system back = same.</td></tr>
+<tr><td class="w">5. Bike ad</td><td>Sell → Two wheeler: photos first, fuel/transmission lists only bike values (needs backend filter), colour + transmission optional, Review shows summary, Post works with uploads finished.</td></tr>
+<tr><td class="w">6. Login</td><td>Paste "+91 94744 14563" → field shows 9474414563 + "Will send to…". SMS arrives → consent sheet → auto-verified. Resend does not open a second page.</td></tr>
+</table></div></section>
+</div></html>

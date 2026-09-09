@@ -253,18 +253,10 @@ class AuthService {
       // Clear all user data
       await clearUserData();
 
-      // Navigate to login page using GoRouter
-      // We need to use the router instance
-      final router = AppRoutes.router;
-      if (router.canPop()) {
-        // If we can pop, pop until we reach the root
-        while (router.canPop()) {
-          router.pop();
-        }
-      }
-
-      // Navigate to login page
-      router.go('/login');
+      // Navigate to login page using GoRouter. `.go()` replaces the whole
+      // navigation stack, so no need to pop pages first (the old
+      // `while (canPop()) pop()` loop could pop the last page and throw).
+      AppRoutes.router.go('/login');
 
       print('✅ User automatically logged out and redirected to login');
     } catch (e) {

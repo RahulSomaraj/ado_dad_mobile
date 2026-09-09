@@ -98,6 +98,15 @@ class _LoginPageState extends State<LoginPage> {
     if (!_isEmail(trimmedValue) && !_isPhone(trimmedValue)) {
       return "Enter a valid email or phone number";
     }
+    // Phone without its own country code: check length against the
+    // selected country so "+91" + a 6-digit number is rejected up front.
+    if (!_isEmail(trimmedValue) && !trimmedValue.startsWith('+')) {
+      final phone =
+          PhoneNumberUtil.normalise(trimmedValue, _selectedCountryCode);
+      if (!phone.isValid) {
+        return phone.validationMessage;
+      }
+    }
     return null;
   }
 
@@ -112,6 +121,10 @@ class _LoginPageState extends State<LoginPage> {
     // If it's a phone number — same normalisation as the OTP page, so a
     // pasted "+91 …" never becomes "+91+91…" / "+9191…".
     if (_isPhone(username)) {
+      if (username.startsWith('+')) {
+        // User typed their own country code — keep it as-is (digits only).
+        return '+${username.replaceAll(RegExp(r'\D'), '')}';
+      }
       return PhoneNumberUtil.normalise(username, _selectedCountryCode).e164;
     }
 
@@ -263,9 +276,22 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Pushed from the OTP page ('/login-password'): give the user a way
+      // back. '/logout' style root entries have nothing to pop, so no bar.
+      appBar: context.canPop()
+          ? AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.pop(),
+              ),
+            )
+          : null,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
+          padding: EdgeInsets.symmetric(
+              horizontal: 20, vertical: context.canPop() ? 10 : 50),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,8 +377,13 @@ class _LoginPageState extends State<LoginPage> {
                 Center(
                   child: TextButton(
                     onPressed: () {
-                      // OTP is the default login; go back to it.
-                      context.go('/login');
+                      // OTP is the default login; usually we were pushed on
+                      // top of it, so pop back rather than rebuilding it.
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go('/login');
+                      }
                     },
                     child: Text(
                       'Login with OTP instead',

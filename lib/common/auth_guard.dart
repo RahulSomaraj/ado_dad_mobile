@@ -104,8 +104,11 @@ class AuthGuard {
       return true;
     }
 
-    // Check if route starts with any public route pattern
+    // Check if route starts with any public route pattern.
+    // '/' is exact-match only (handled above): every path starts with '/',
+    // so including it here made every route — protected ones too — public.
     for (final publicRoute in publicRoutes) {
+      if (publicRoute == '/') continue;
       if (path.startsWith(publicRoute)) {
         return true;
       }

@@ -28,7 +28,7 @@ class AddPropertyForm extends StatefulWidget {
 
 class _AddPropertyFormState extends State<AddPropertyForm> {
   final GlobalKey<FormState> _sellerFormKey = GlobalKey<FormState>();
-  int _step = 0; // 0 = Details, 1 = Photos, 2 = Review
+  int _step = 0; // 0 = Photos, 1 = Details, 2 = Review
   String? _title;
   String _description = '';
   int _price = 0;
@@ -172,8 +172,6 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
 
   @override
   Widget build(BuildContext context) {
-    print('Category Title: ${widget.categoryTitle}');
-    print('Category Title: ${widget.categoryId}');
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       appBar: PreferredSize(
@@ -279,7 +277,6 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                  Divider(thickness: 2),
                   _formHeader(),
                   Divider(),
                   Container(
@@ -715,6 +712,7 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
                       ),
                     ),
                   ),
+                  _buildReviewSummary(),
                   SafeArea(
                     top: false,
                     minimum: const EdgeInsets.only(bottom: 20),
@@ -924,6 +922,19 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
     );
   }
 
+  /// Advances the step. Leaving Details (step 1) requires a valid form so
+  /// the seller cannot reach Review with invalid data; saving here also
+  /// populates the values shown in the Review summary.
+  void _onNextPressed() {
+    if (_step == 1) {
+      final form = _sellerFormKey.currentState;
+      if (form == null || !form.validate()) return;
+      form.save();
+    }
+    if (_step >= 2) return;
+    setState(() => _step++);
+  }
+
   Widget _buildStepNav() {
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -1010,7 +1021,7 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
                 child: ElevatedButton(
                   onPressed: (_step == 0 && !_mediaBloc.state.hasImages)
                       ? null
-                      : () => setState(() => _step++),
+                      : _onNextPressed,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryColor,
                     foregroundColor: AppColors.whiteColor,
@@ -1042,6 +1053,84 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------- review
+
+  String _photoSummary() {
+    final media = _mediaBloc.state;
+    final count = media.images.length;
+    if (count == 0) return 'No photos';
+    final label = count == 1 ? '1 photo' : '$count photos';
+    if (media.hasFailed) return '$label · some failed';
+    if (media.isUploading) return '$label · ${media.pendingCount} uploading…';
+    return '$label · all uploaded';
+  }
+
+  Widget _reviewRow(String label, String? value) {
+    final text = (value == null || value.trim().isEmpty) ? '—' : value;
+    final fontSize = GetResponsiveSize.getResponsiveFontSize(
+      context,
+      mobile: 14,
+      tablet: 18,
+      largeTablet: 22,
+      desktop: 26,
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: TextStyle(color: AppColors.greyColor, fontSize: fontSize),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: AppColors.blackColor,
+                fontWeight: FontWeight.w600,
+                fontSize: fontSize,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Compact read-only summary shown on the Review step.
+  Widget _buildReviewSummary() {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: GetResponsiveSize.getResponsivePadding(
+          context,
+          mobile: 16,
+          tablet: 24,
+          largeTablet: 32,
+          desktop: 40,
+        ),
+        vertical: 12,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _reviewRow('Photos', _photoSummary()),
+          _reviewRow('Price', _price > 0 ? '₹ $_price' : null),
+          _reviewRow('Location', _location),
+          _reviewRow('Property type', _selectedPropertyType),
+          _reviewRow(
+            'Listing type',
+            _selectedPropertyType == 'plot' ? 'Sell' : _listingType,
+          ),
+          _reviewRow('Area (sqft)', _areasqft > 0 ? '$_areasqft' : null),
         ],
       ),
     );

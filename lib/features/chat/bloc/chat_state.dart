@@ -33,7 +33,11 @@ class MessagesLoaded extends ChatState {
 class NewMessageReceivedState extends ChatState {
   final Map<String, dynamic> message;
 
-  NewMessageReceivedState(this.message);
+  /// Room the message belongs to (when the payload carries one), so pages can
+  /// ignore messages meant for other rooms.
+  final String? roomId;
+
+  NewMessageReceivedState(this.message, {this.roomId});
 }
 
 class ChatErrorState extends ChatState {

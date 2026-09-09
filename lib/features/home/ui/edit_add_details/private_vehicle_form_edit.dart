@@ -28,6 +28,18 @@ import 'package:go_router/go_router.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
+
+/// Returns the first element matching [test], or null when there is none.
+T? _firstWhereOrNull<T>(Iterable<T> items, bool Function(T) test) {
+  for (final item in items) {
+    if (test(item)) return item;
+  }
+  return null;
+}
+
+/// Returns the first element, or null for an empty list.
+T? _firstOrNull<T>(List<T> items) => items.isEmpty ? null : items.first;
+
 class PrivateVehicleFormEdit extends StatefulWidget {
   final AddModel ad;
   const PrivateVehicleFormEdit({super.key, required this.ad});
@@ -38,6 +50,9 @@ class PrivateVehicleFormEdit extends StatefulWidget {
 
 class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
   final _formKey = GlobalKey<FormState>();
+
+  /// Category used to scope transmission / fuel lookups.
+  static const String _vehicleCategory = 'passenger_car';
 
   // ---- Controllers (like in TwoWheelerFormEdit)
   late final TextEditingController _titleCtrl;
@@ -157,87 +172,93 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
     final repo = AddRepository();
 
     // 1) Manufacturers with vehicleCategory 'passenger_car'
-    _manufacturers = await repo.fetchManufacturers(
-      vehicleCategory: 'passenger_car',
-    );
+    try {
+      _manufacturers =
+          await repo.fetchManufacturers(vehicleCategory: 'passenger_car');
+    } catch (e) {
+      debugPrint('Failed to load manufacturers: $e');
+    }
     if (!mounted) return;
 
     final manufacturerId = widget.ad.manufacturer?.id;
-    if (_manufacturers.isNotEmpty) {
-      _selectedManufacturer = _manufacturers.firstWhere(
-        (m) => m.id == manufacturerId,
-        orElse: () => _manufacturers.first,
-      );
-    }
+    _selectedManufacturer =
+        _firstWhereOrNull(_manufacturers, (m) => m.id == manufacturerId) ??
+            _firstOrNull(_manufacturers);
 
     // 2) Models for selected manufacturer
-    if (_selectedManufacturer != null) {
-      _models = await repo.fetchModelsByManufacturer(_selectedManufacturer!.id);
+    final manufacturer = _selectedManufacturer;
+    if (manufacturer != null) {
+      try {
+        _models = await repo.fetchModelsByManufacturer(manufacturer.id);
+      } catch (e) {
+        debugPrint('Failed to load models: $e');
+      }
+      if (!mounted) return;
     }
 
     final modelId = widget.ad.model?.id;
-    if (_models.isNotEmpty) {
-      _selectedModel = _models.firstWhere(
-        (m) => m.id == modelId,
-        orElse: () => _models.first,
-      );
-    }
+    _selectedModel = _firstWhereOrNull(_models, (m) => m.id == modelId) ??
+        _firstOrNull(_models);
 
     // 3) Variants for selected model
-    if (_selectedModel != null) {
-      _variants = await repo.fetchVariantsByModel(_selectedModel!.id);
+    final model = _selectedModel;
+    if (model != null) {
+      try {
+        _variants = await repo.fetchVariantsByModel(model.id);
+      } catch (e) {
+        debugPrint('Failed to load variants: $e');
+      }
+      if (!mounted) return;
     }
 
     final variantIdOrName = widget.ad.variant;
-    if (_variants.isNotEmpty &&
-        variantIdOrName != null &&
-        variantIdOrName.isNotEmpty) {
+    if (variantIdOrName != null && variantIdOrName.trim().isNotEmpty) {
       final trimmedVariant = variantIdOrName.trim();
-      try {
-        _selectedVariant = _variants.firstWhere(
-          (v) =>
-              v.id.trim() == trimmedVariant ||
-              v.name.trim().toLowerCase() == trimmedVariant.toLowerCase(),
-        );
-      } catch (_) {
-        // Variant not found, leave it null instead of defaulting to first
-        _selectedVariant = null;
-      }
+      // Variant not found => leave null instead of defaulting to first.
+      _selectedVariant = _firstWhereOrNull(
+        _variants,
+        (v) =>
+            v.id.trim() == trimmedVariant ||
+            v.name.trim().toLowerCase() == trimmedVariant.toLowerCase(),
+      );
     } else {
       // No variant stored, leave it null
       _selectedVariant = null;
     }
 
-    // 4) Transmission / Fuel
+    // 4) Transmission / Fuel (scoped to this category)
     try {
-      _transmissionTypes = await repo.fetchVehicleTransmissionTypes();
+      final types = await repo.fetchVehicleTransmissionTypes(
+          vehicleCategory: _vehicleCategory);
+      if (!mounted) return;
+      _transmissionTypes =
+          types.where((t) => t.appliesTo(_vehicleCategory)).toList();
       final txId = widget.ad.transmissionId;
-      _selectedTransmissionType = _transmissionTypes.firstWhere(
-        (t) => t.id == txId,
-        orElse: () {
-          final name = (widget.ad.transmission ?? '').toLowerCase();
-          return _transmissionTypes.firstWhere(
-            (t) => _transLabel(t).toLowerCase() == name,
-            orElse: () => _transmissionTypes.first,
-          );
-        },
-      );
-    } catch (_) {}
+      final name = (widget.ad.transmission ?? '').toLowerCase();
+      _selectedTransmissionType =
+          _firstWhereOrNull(_transmissionTypes, (t) => t.id == txId) ??
+              _firstWhereOrNull(_transmissionTypes,
+                  (t) => _transLabel(t).toLowerCase() == name) ??
+              _firstOrNull(_transmissionTypes);
+    } catch (e) {
+      debugPrint('Failed to load transmission types: $e');
+    }
+    if (!mounted) return;
 
     try {
-      _fuelTypes = await repo.fetchVehicleFuelTypes();
+      final fuels =
+          await repo.fetchVehicleFuelTypes(vehicleCategory: _vehicleCategory);
+      if (!mounted) return;
+      _fuelTypes = fuels.where((f) => f.appliesTo(_vehicleCategory)).toList();
       final fuelId = widget.ad.fuelTypeId;
-      _selectedFuelType = _fuelTypes.firstWhere(
-        (f) => f.id == fuelId,
-        orElse: () {
-          final name = (widget.ad.fuelType ?? '').toLowerCase();
-          return _fuelTypes.firstWhere(
-            (f) => _fuelLabel(f).toLowerCase() == name,
-            orElse: () => _fuelTypes.first,
-          );
-        },
-      );
-    } catch (_) {}
+      final name = (widget.ad.fuelType ?? '').toLowerCase();
+      _selectedFuelType = _firstWhereOrNull(_fuelTypes, (f) => f.id == fuelId) ??
+          _firstWhereOrNull(
+              _fuelTypes, (f) => _fuelLabel(f).toLowerCase() == name) ??
+          _firstOrNull(_fuelTypes);
+    } catch (e) {
+      debugPrint('Failed to load fuel types: $e');
+    }
 
     if (mounted) setState(() {});
   }
@@ -249,7 +270,8 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
         final bytes = await img.readAsBytes();
         _newImageFiles.add(bytes);
       }
-      if (mounted) setState(() {});
+      if (!mounted) return;
+      setState(() {});
     }
   }
 
@@ -263,6 +285,7 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
     final picked = await _picker.pickVideo(source: ImageSource.gallery);
     if (picked != null) {
       final bytes = await picked.readAsBytes();
+      if (!mounted) return;
       setState(() {
         _newVideoFile = bytes;
         _videoFileName = picked.name;
@@ -430,7 +453,13 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
                 context
                     .read<AdvertisementBloc>()
                     .add(const AdvertisementEvent.fetchAllListings());
-                context.go('/home');
+                // Pop back with a result so the caller (ad detail / My Ads)
+                // can refresh; fall back to home when there is nothing to pop.
+                if (context.canPop()) {
+                  context.pop(true);
+                } else {
+                  context.go('/home');
+                }
               },
               failure: (msg) =>
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(

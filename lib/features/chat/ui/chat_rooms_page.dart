@@ -23,6 +23,13 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
 
   bool _hasInitialized = false;
 
+  /// Last successfully loaded rooms list. Rendered for any non-rooms state
+  /// (e.g. NewMessageReceivedState) so the list never flashes to a spinner.
+  List<Map<String, dynamic>>? _lastRooms;
+
+  /// Throttle for silent background reloads triggered by incoming messages.
+  DateTime? _lastSilentReload;
+
   // ---- Search ----
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
@@ -95,31 +102,35 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
     });
   }
 
+  /// Silently refresh the rooms list (no spinner — the cached list stays on
+  /// screen) at most once every 2 seconds.
+  void _silentReloadThrottled() {
+    final now = DateTime.now();
+    final last = _lastSilentReload;
+    if (last != null && now.difference(last) < const Duration(seconds: 2)) {
+      return;
+    }
+    _lastSilentReload = now;
+    print('🔄 Silent chat rooms reload');
+    _chatBloc.add(LoadChatRooms());
+  }
+
   @override
   Widget build(BuildContext context) {
-    // This callback runs every time build is called, so we need to be careful
-    // We only want to reload if we're in a bad state and not already loading
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && _hasInitialized) {
-        final currentState = _chatBloc.state;
-        // Only trigger reload if in error state (to allow retry)
-        // Don't reload if already loading or if we have success
-        if (currentState is ChatErrorState) {
-          print('🔄 Detected error state, attempting to reload');
-          _chatBloc.add(LoadChatRooms());
-        }
-      }
-    });
-
+    // NOTE: no post-frame reload here. Re-dispatching LoadChatRooms on every
+    // build while in ChatErrorState looped forever when offline; retry now
+    // happens only via the Retry button, pull-to-refresh, or
+    // didChangeDependencies.
     return PopScope(
-      canPop: false, // Prevent default back behavior
+      // Custom handling: close search first, then pop if possible, else /home.
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return; // System already handled the pop
         if (_isSearching) {
           _stopSearch();
           return;
         }
-        _handleBackNavigation(); // Use our custom navigation
+        _handleBackNavigation();
       },
       child: Scaffold(
         backgroundColor: AppColors.scaffoldBackground,
@@ -129,7 +140,13 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
           minimum: const EdgeInsets.only(bottom: 30),
           child: BlocListener<ChatBloc, ChatState>(
             listener: (context, state) {
-              if (state is ChatRoomJoined) {
+              if (state is ChatRoomsSuccess) {
+                _lastRooms = state.rooms;
+              } else if (state is NewMessageReceivedState) {
+                // Keep showing the cached list; refresh quietly in the
+                // background so the preview/unread badge catches up.
+                _silentReloadThrottled();
+              } else if (state is ChatRoomJoined) {
                 print('✅ Room joined successfully: ${state.roomId}');
 
                 // Load messages for the joined room
@@ -143,6 +160,18 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
             },
             child: BlocBuilder<ChatBloc, ChatState>(
               builder: (context, state) {
+                if (state is ChatRoomsSuccess) {
+                  return _buildRoomsList(state.rooms);
+                }
+
+                // Any other state: keep the last known list on screen if we
+                // have one, so background refreshes / new messages / errors
+                // never flash a spinner over an already-loaded list.
+                final cached = _lastRooms;
+                if (cached != null) {
+                  return _buildRoomsList(cached);
+                }
+
                 if (state is ChatLoading) {
                   return const SkeletonList();
                 }
@@ -151,40 +180,8 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
                   return _buildErrorState(state.error);
                 }
 
-                if (state is ChatRoomsSuccess) {
-                  return _buildRoomsList(state.rooms);
-                }
-
-                // Handle states from chat page - trigger reload and show loading
-                if (state is MessagesLoaded ||
-                    state is ChatRoomJoined ||
-                    state is ChatRoomCreated ||
-                    state is NewMessageReceivedState) {
-                  // Trigger reload if we're in a chat-related state
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      print(
-                          '🔄 Triggering chat rooms reload from ${state.runtimeType} state');
-                      context.read<ChatBloc>().add(LoadChatRooms());
-                    }
-                  });
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-
-                // For any other state (including ChatInitial), show loading
-                // and trigger load if not already loading
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted && state is! ChatLoading) {
-                    print('🔄 Triggering initial chat rooms load');
-                    context.read<ChatBloc>().add(LoadChatRooms());
-                  }
-                });
-
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
+                // Initial / transitional state with nothing cached yet.
+                return const SkeletonList();
               },
             ),
           ),
@@ -669,7 +666,6 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
     print('👤 Other user: $otherUserName');
     print('🏷️ Ad ID: $adId');
     print('📝 Ad Title: $adTitle');
-    print('📍 From page: ${widget.fromPage}');
 
     // Build query parameters
     final queryParams = <String, String>{
@@ -697,11 +693,6 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
     // Add phone parameter if available
     if (otherUserPhone != null && otherUserPhone.toString().trim().isNotEmpty) {
       queryParams['phone'] = otherUserPhone.toString();
-    }
-
-    // Add fromPage parameter if available
-    if (widget.fromPage != null) {
-      queryParams['from'] = widget.fromPage!;
     }
 
     // Build query string
@@ -744,24 +735,13 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
   }
 
   void _handleBackNavigation() {
-    // Use the fromPage parameter to determine where to go back
-    print('🔙 Navigating back from: ${widget.fromPage}');
-
-    // Navigate back to the appropriate page based on fromPage
-    if (widget.fromPage == 'profile') {
-      context.go('/profile');
-    } else if (widget.fromPage == 'home') {
-      context.go('/home');
-    } else if (widget.fromPage == 'ad-detail') {
-      // If came from ad detail page (via chat page), go to home
-      context.go('/home');
+    print('🔙 Navigating back from chat rooms');
+    // Pop to wherever we came from; fall back to home when this page is the
+    // root of the stack (e.g. opened via context.go or a deep link).
+    if (context.canPop()) {
+      context.pop();
     } else {
-      // Default fallback - check if we can pop, otherwise go to home
-      if (context.canPop()) {
-        context.pop();
-      } else {
-        context.go('/home');
-      }
+      context.go('/home');
     }
   }
 

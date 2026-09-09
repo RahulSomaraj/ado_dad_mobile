@@ -70,6 +70,7 @@ class _ChatPageState extends State<ChatPage> {
   String? _stagedVoicePath;
   int _stagedVoiceDurationSeconds = 0;
   final just_audio.AudioPlayer _stagedVoicePlayer = just_audio.AudioPlayer();
+  StreamSubscription<just_audio.PlayerState>? _stagedVoiceStateSub;
   bool _stagedVoicePlaying = false;
 
   /// Which chat audio message is currently playing (by url). Stops others when one starts.
@@ -99,22 +100,19 @@ class _ChatPageState extends State<ChatPage> {
       _fetchAdPrice();
     }
 
-    // Join the room and load messages when page loads
+    // Join the room (socket) and load messages (HTTP) when page loads.
+    // Messages are loaded exactly once here; the ChatRoomJoined listener no
+    // longer dispatches a second LoadRoomMessages (it double-fetched).
     print('🚪 Dispatching JoinChatRoom event...');
     context.read<ChatBloc>().add(JoinChatRoom(widget.roomId));
 
     // Opening the room means the user has seen it — clear its unread badge.
     context.read<ChatBloc>().add(MarkRoomRead(widget.roomId));
 
-    // Also directly load messages to ensure they refresh when room opens
-    // This ensures messages are always loaded even if room was already joined
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        print('🔄 Silently refreshing messages for room: ${widget.roomId}');
-        context.read<ChatBloc>().add(LoadRoomMessages(widget.roomId));
-      }
-    });
-    _stagedVoicePlayer.playerStateStream.listen((state) {
+    print('📨 Dispatching LoadRoomMessages event...');
+    context.read<ChatBloc>().add(LoadRoomMessages(widget.roomId));
+
+    _stagedVoiceStateSub = _stagedVoicePlayer.playerStateStream.listen((state) {
       if (state.processingState == just_audio.ProcessingState.completed) {
         if (mounted) setState(() => _stagedVoicePlaying = false);
       }
@@ -160,7 +158,13 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     print('🏗️ Building chat page for room: ${widget.roomId}');
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _handleBackNavigation();
+      },
+      child: Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
         title: Row(
@@ -272,8 +276,6 @@ class _ChatPageState extends State<ChatPage> {
 
           if (state is ChatRoomJoined) {
             print('✅ Room joined successfully: ${state.roomId}');
-            print('📨 Dispatching LoadRoomMessages event...');
-            context.read<ChatBloc>().add(LoadRoomMessages(widget.roomId));
           } else if (state is MessagesLoaded) {
             if (mounted) {
               setState(() {
@@ -296,6 +298,12 @@ class _ChatPageState extends State<ChatPage> {
               });
             }
           } else if (state is NewMessageReceivedState) {
+            // Ignore messages that belong to a different room.
+            if (state.roomId != null && state.roomId != widget.roomId) {
+              print(
+                  '↩️ Ignoring message for room ${state.roomId} (viewing ${widget.roomId})');
+              return;
+            }
             print('💬 New message received: ${state.message['content']}');
             // Check if message already exists to prevent duplicates
             final messageId = state.message['id'] ?? state.message['_id'];
@@ -451,6 +459,7 @@ class _ChatPageState extends State<ChatPage> {
             );
           },
         ),
+      ),
       ),
     );
   }
@@ -1377,13 +1386,13 @@ class _ChatPageState extends State<ChatPage> {
 
   void _handleBackNavigation() {
     print('🔙 Navigating back from chat page');
-    print('📍 From page: ${widget.fromPage}');
-
-    // Always navigate back to chat rooms page
-    // Pass the fromPage parameter so chat rooms knows where to go back
-    print('💬 Navigating to chat rooms page');
-    final fromPage = widget.fromPage ?? 'home';
-    context.go('/chat-rooms?from=$fromPage');
+    // Pop to wherever we came from (rooms list, ad detail, ...); fall back
+    // to the rooms list when this page is the root (deep link / context.go).
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/chat-rooms');
+    }
   }
 
   Future<void> _callUser() async {
@@ -1456,6 +1465,7 @@ class _ChatPageState extends State<ChatPage> {
     print('🧹 Disposing chat page for room: ${widget.roomId}');
     _voiceRecordTimer?.cancel();
     _voiceRecorder.dispose();
+    _stagedVoiceStateSub?.cancel();
     _stagedVoicePlayer.dispose();
     _messageController.dispose();
     _scrollController.dispose();

@@ -44,19 +44,26 @@ class ChatRepository {
   final StreamController<List<Map<String, dynamic>>> _roomsController =
       StreamController<List<Map<String, dynamic>>>.broadcast();
 
-  /// Initialize chat repository
-  Future<void> initialize() async {
-    // Setup socket event listeners
-    _socketService.connectionStream.listen((connected) {
-      // Connection status is handled by the socket service
-    });
+  StreamSubscription<String>? _socketErrorSubscription;
+  StreamSubscription<Map<String, dynamic>>? _socketRoomSubscription;
+  bool _initialized = false;
 
-    _socketService.errorStream.listen((error) {
-      _errorController.add(error);
+  /// Initialize chat repository. Idempotent: this is a singleton and every
+  /// InitializeChat used to stack another set of listeners, so each socket
+  /// event was forwarded N times.
+  Future<void> initialize() async {
+    if (_initialized) return;
+    _initialized = true;
+
+    await _socketErrorSubscription?.cancel();
+    await _socketRoomSubscription?.cancel();
+
+    _socketErrorSubscription = _socketService.errorStream.listen((error) {
+      if (!_errorController.isClosed) _errorController.add(error);
     });
 
     // Listen to room events
-    _socketService.roomStream.listen((event) {
+    _socketRoomSubscription = _socketService.roomStream.listen((event) {
       _handleRoomEvent(event);
     });
   }
@@ -686,6 +693,11 @@ class ChatRepository {
 
   /// Clean up resources
   void dispose() {
+    _socketErrorSubscription?.cancel();
+    _socketRoomSubscription?.cancel();
+    _socketErrorSubscription = null;
+    _socketRoomSubscription = null;
+    _initialized = false;
     if (!_errorController.isClosed) {
       _errorController.close();
     }

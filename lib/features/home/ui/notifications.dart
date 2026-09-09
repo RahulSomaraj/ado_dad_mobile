@@ -66,7 +66,13 @@ class _NotificationsState extends State<Notifications> {
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          onPressed: () => context.go('/home'),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          },
           icon: Icon(
             (!kIsWeb && Platform.isIOS)
                 ? Icons.arrow_back_ios

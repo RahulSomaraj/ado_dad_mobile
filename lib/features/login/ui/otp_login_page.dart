@@ -14,7 +14,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class OtpLoginPage extends StatefulWidget {
-  const OtpLoginPage({super.key});
+  /// Where to send the user after a successful login (from `?redirect=`).
+  final String? redirect;
+
+  const OtpLoginPage({super.key, this.redirect});
 
   @override
   State<OtpLoginPage> createState() => _OtpLoginPageState();
@@ -41,10 +44,6 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
   bool _isEmail(String value) {
     return RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
         .hasMatch(value);
-  }
-
-  bool _isPhone(String value) {
-    return RegExp(r"^[0-9]+$").hasMatch(value);
   }
 
   String? _validateInput(String? value) {
@@ -140,6 +139,10 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
   Widget build(BuildContext context) {
     return BlocListener<OtpBloc, OtpState>(
       listener: (context, state) {
+        // OtpBloc is app-global: when the verification page (pushed on top)
+        // resends, this listener fires too. Only react while this page is
+        // the visible route, otherwise a duplicate verification page is pushed.
+        if (ModalRoute.of(context)?.isCurrent != true) return;
         state.whenOrNull(
           sendOtpSuccess: () {
             final identifier = _lastIdentifier ?? _buildIdentifier();
@@ -157,6 +160,7 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
             context.push('/otp-verification', extra: {
               'identifier': identifier,
               'isEmail': _emailMode,
+              'redirect': widget.redirect,
             });
           },
           sendOtpFailure: (message) {

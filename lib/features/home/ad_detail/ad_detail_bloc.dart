@@ -10,6 +10,10 @@ part 'ad_detail_bloc.freezed.dart';
 class AdDetailBloc extends Bloc<AdDetailEvent, AdDetailState> {
   final AddRepository repository;
 
+  /// Last successfully loaded ad, so a failed sold/delete action can put the
+  /// page back on the detail view instead of leaving it on the error screen.
+  AddModel? _lastLoaded;
+
   AdDetailBloc({
     required this.repository,
   }) : super(const AdDetailState.initial()) {
@@ -20,6 +24,7 @@ class AdDetailBloc extends Bloc<AdDetailEvent, AdDetailState> {
           try {
             final detail = await repository.fetchAdDetail(adId);
             // Names are now parsed directly from nested objects in the model
+            _lastLoaded = detail;
             emit(AdDetailState.loaded(detail));
           } catch (e) {
             emit(AdDetailState.error(e.toString()));
@@ -29,9 +34,10 @@ class AdDetailBloc extends Bloc<AdDetailEvent, AdDetailState> {
           emit(const AdDetailState.markingAsSold());
           try {
             final updatedAd = await repository.markAdAsSold(adId);
+            _lastLoaded = updatedAd;
             emit(AdDetailState.markedAsSold(updatedAd));
           } catch (e) {
-            emit(AdDetailState.error(e.toString()));
+            _emitActionError(emit, e);
           }
         },
         deleteAd: (adId) async {
@@ -40,11 +46,21 @@ class AdDetailBloc extends Bloc<AdDetailEvent, AdDetailState> {
             await repository.deleteAd(adId);
             emit(const AdDetailState.deleted());
           } catch (e) {
-            emit(AdDetailState.error(e.toString()));
+            _emitActionError(emit, e);
           }
         },
         started: () {},
       );
     });
+  }
+
+  /// Surfaces the error (listeners show a SnackBar) and then restores the
+  /// previously loaded ad so the builder keeps showing the detail page.
+  void _emitActionError(Emitter<AdDetailState> emit, Object e) {
+    emit(AdDetailState.error(e.toString()));
+    final ad = _lastLoaded;
+    if (ad != null) {
+      emit(AdDetailState.loaded(ad));
+    }
   }
 }

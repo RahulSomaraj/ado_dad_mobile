@@ -92,6 +92,10 @@ class MediaUploadBloc extends Bloc<MediaUploadEvent, MediaUploadState> {
 
   Future<void> _onRetryRequested(
       _RetryRequested e, Emitter<MediaUploadState> emit) async {
+    // An item without bytes (e.g. seeded from an existing URL) can never be
+    // re-uploaded, so a retry is a no-op.
+    final target = _find(e.localId);
+    if (target == null || target.bytes == null) return;
     if (state.video?.localId == e.localId) {
       emit(state.copyWith(
           video: state.video!.copyWith(status: MediaUploadStatus.queued)));
@@ -164,7 +168,12 @@ class MediaUploadBloc extends Bloc<MediaUploadEvent, MediaUploadState> {
     while (_active < _maxConcurrent && _queue.isNotEmpty) {
       final id = _queue.removeAt(0);
       final item = _find(id);
-      if (item == null || item.bytes == null) continue;
+      if (item == null) continue;
+      if (item.bytes == null) {
+        // Nothing to upload: mark it failed instead of leaving it queued.
+        add(MediaUploadEvent.uploadResultReceived(localId: id, url: null));
+        continue;
+      }
       _active++;
       add(MediaUploadEvent.uploadResultReceived(
           localId: id, url: null, started: true));

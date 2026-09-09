@@ -32,7 +32,6 @@ class OtpAutofillService {
 
   static final RegExp _codePattern =
       RegExp(r'(?:otp|code)\D{0,20}?(\d{6})', caseSensitive: false);
-  static final RegExp _anySixDigits = RegExp(r'\b(\d{6})\b');
 
   bool get isSupported => !kIsWeb && Platform.isAndroid;
 
@@ -61,11 +60,11 @@ class OtpAutofillService {
     _listening = false;
   }
 
-  /// Prefers the number right after "otp"/"code"; falls back to any 6 digits.
+  /// Only the number right after "otp"/"code". No bare 6-digit fallback so an
+  /// unrelated SMS (e.g. a bank OTP) is never auto-submitted as ours.
   @visibleForTesting
   static String? extractCode(String sms) {
     if (sms.isEmpty) return null;
-    return _codePattern.firstMatch(sms)?.group(1) ??
-        _anySixDigits.firstMatch(sms)?.group(1);
+    return _codePattern.firstMatch(sms)?.group(1);
   }
 }

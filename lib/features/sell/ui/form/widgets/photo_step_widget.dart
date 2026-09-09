@@ -73,25 +73,28 @@ class _PhotoStepWidgetState extends State<PhotoStepWidget> {
   Future<void> _pickFromCamera() async {
     final picked =
         await _picker.pickImage(source: ImageSource.camera, imageQuality: 70);
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
     final bytes = await picked.readAsBytes();
+    if (!mounted) return;
     _bloc.add(MediaUploadEvent.imagesAdded([bytes]));
   }
 
   Future<void> _pickFromGallery() async {
     final picked = await _picker.pickMultiImage(imageQuality: 70);
-    if (picked.isEmpty) return;
+    if (picked.isEmpty || !mounted) return;
     final List<Uint8List> files = [];
     for (final p in picked) {
       files.add(await p.readAsBytes());
     }
+    if (!mounted) return;
     _bloc.add(MediaUploadEvent.imagesAdded(files));
   }
 
   Future<void> _pickVideo() async {
     final picked = await _picker.pickVideo(source: ImageSource.gallery);
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
     final bytes = await picked.readAsBytes();
+    if (!mounted) return;
     _bloc.add(MediaUploadEvent.videoAdded(file: bytes, fileName: picked.name));
   }
 
@@ -498,7 +501,15 @@ class _PhotoTile extends StatelessWidget {
     final Widget image = item.bytes != null
         ? Image.memory(item.bytes!, fit: BoxFit.cover)
         : (item.url != null
-            ? Image.network(item.url!, fit: BoxFit.cover)
+            ? Image.network(
+                item.url!,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: Colors.grey.shade300,
+                  child: Icon(Icons.broken_image_outlined,
+                      color: Colors.grey.shade600, size: 28),
+                ),
+              )
             : const SizedBox.shrink());
 
     return InkWell(

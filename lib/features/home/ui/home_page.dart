@@ -185,6 +185,7 @@ class _HomePageState extends State<HomePage> {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('user_location', placeDetails);
 
+          if (!mounted) return;
           setState(() {
             _userLocation = placeDetails;
           });
@@ -198,7 +199,10 @@ class _HomePageState extends State<HomePage> {
       // Fallback to standard geocoding
       final placemarks =
           await placemarkFromCoordinates(position.latitude, position.longitude);
-      final place = placemarks[0];
+      final place = placemarks.isNotEmpty ? placemarks.first : null;
+      if (place == null) {
+        throw Exception('No placemark found for the current position');
+      }
 
       // Create a more detailed address format
       final addressComponents = <String>[];
@@ -219,12 +223,14 @@ class _HomePageState extends State<HomePage> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_location', newAddress);
 
+      if (!mounted) return;
       setState(() {
         _userLocation = newAddress;
       });
       await _applyLocationBasedRecommendations(newAddress);
     } catch (e) {
       print("Location error: $e");
+      if (!mounted) return;
       setState(() {
         _userLocation = "Location not available";
         _isLocationRecommendationsMode = false;
@@ -250,11 +256,10 @@ class _HomePageState extends State<HomePage> {
   Future<void> _applyLocationBasedRecommendations(String location) async {
     final query = location.trim();
     if (query.isEmpty || query == "Location not available") {
-      if (mounted) {
-        setState(() {
-          _isLocationRecommendationsMode = false;
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _isLocationRecommendationsMode = false;
+      });
       context
           .read<AdvertisementBloc>()
           .add(const AdvertisementEvent.fetchAllListings());
@@ -267,6 +272,7 @@ class _HomePageState extends State<HomePage> {
         region: 'in',
         language: 'en',
       );
+      if (!mounted) return;
 
       if (predictions.isNotEmpty) {
         final selectedPrediction = predictions.firstWhere(
@@ -278,13 +284,12 @@ class _HomePageState extends State<HomePage> {
         final placeDetails = await _placesService.getPlaceDetails(
           selectedPrediction.placeId,
         );
+        if (!mounted) return;
         final point = placeDetails?.geometry?.location;
         if (point != null) {
-          if (mounted) {
-            setState(() {
-              _isLocationRecommendationsMode = true;
-            });
-          }
+          setState(() {
+            _isLocationRecommendationsMode = true;
+          });
           print("🔍 Searching by location: ${point.lat}, ${point.lng}");
           context.read<AdvertisementBloc>().add(
                 AdvertisementEvent.searchByLocation(
@@ -299,11 +304,10 @@ class _HomePageState extends State<HomePage> {
       print('Error applying location recommendations: $e');
     }
 
-    if (mounted) {
-      setState(() {
-        _isLocationRecommendationsMode = false;
-      });
-    }
+    if (!mounted) return;
+    setState(() {
+      _isLocationRecommendationsMode = false;
+    });
     context
         .read<AdvertisementBloc>()
         .add(const AdvertisementEvent.fetchAllListings());
@@ -482,7 +486,10 @@ class _HomePageState extends State<HomePage> {
                             // Fallback to standard geocoding
                             final placemarks = await placemarkFromCoordinates(
                                 position.latitude, position.longitude);
-                            final place = placemarks[0];
+                            if (placemarks.isEmpty) {
+                              throw Exception('No address found');
+                            }
+                            final place = placemarks.first;
 
                             final addressComponents = <String>[];
                             if (place.locality?.isNotEmpty == true) {
@@ -847,6 +854,7 @@ class _HomePageState extends State<HomePage> {
                               // Do not clear badge here – clear only when user opens the notifications page
                               final isAuthenticated =
                                   await AuthGuard.isAuthenticated();
+                              if (!context.mounted) return;
                               if (isAuthenticated) {
                                 context.push('/notifications');
                               } else {
