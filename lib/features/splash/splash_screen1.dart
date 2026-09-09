@@ -1,6 +1,20 @@
+import 'package:ado_dad_user/common/widgets/ado_dad_logo.dart';
 import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
+
+const Color _kBrandPurple = Color(0xFF4F46E5);
+
+/// Brand lockup scaled to fill [width], tinted with [color].
+Widget _brandLogo({required double width, required Color color}) {
+  return SizedBox(
+    width: width,
+    child: FittedBox(
+      fit: BoxFit.contain,
+      child: AdoDadLogo(height: 100, color: color),
+    ),
+  );
+}
 
 class SplashScreen1 extends StatefulWidget {
   const SplashScreen1({super.key});
@@ -27,12 +41,7 @@ class _SplashScreen1State extends State<SplashScreen1> {
       //   child: Image(image: AssetImage('assets/images/Ado-dad1.png')),
       // ),
       body: Center(
-        child: Image.asset(
-          'assets/images/Ado-dad1.png',
-          width: imageSize,
-          height: imageSize,
-          fit: BoxFit.contain,
-        ),
+        child: _brandLogo(width: imageSize, color: _kBrandPurple),
       ),
     );
   }
@@ -134,23 +143,17 @@ class _SplashScreen2State extends State<SplashScreen2>
                       // Blue logo underneath
                       Opacity(
                         opacity: value,
-                        child: Image.asset(
-                          'assets/images/Ado-dad1.png',
-                          // width: 200,
-                          // height: 200,
+                        child: _brandLogo(
                           width: logoSize,
-                          height: logoSize,
+                          color: _kBrandPurple,
                         ),
                       ),
                       // White logo fading out
                       Opacity(
                         opacity: 1,
-                        child: Image.asset(
-                          'assets/images/Ado-dad-white.png',
-                          // width: 200,
-                          // height: 200,
+                        child: _brandLogo(
                           width: logoSize,
-                          height: logoSize,
+                          color: Colors.white,
                         ),
                       ),
                     ],
@@ -278,12 +281,9 @@ class _SplashScreen3State extends State<SplashScreen3>
                       opacity: animation,
                       child: ScaleTransition(scale: animation, child: child),
                     ),
-                    child: Image.asset(
-                      'assets/images/Ado-dad1.png',
-                      // width: 250,
-                      // height: 250,
+                    child: _brandLogo(
                       width: logoSize,
-                      height: logoSize,
+                      color: _kBrandPurple,
                     ),
                   ),
                 ),
@@ -317,15 +317,9 @@ class _SplashScreen4State extends State<SplashScreen4> {
     final screenWidth = MediaQuery.of(context).size.width;
     final logoSize = screenWidth * 0.4;
     return Scaffold(
-      backgroundColor: const Color(0xFF4F46E5),
+      backgroundColor: _kBrandPurple,
       body: Center(
-        child: Image.asset(
-          'assets/images/Ado-dad-white.png',
-          // width: 250,
-          // height: 250,
-          width: logoSize,
-          height: logoSize,
-        ),
+        child: _brandLogo(width: logoSize, color: Colors.white),
       ),
     );
   }

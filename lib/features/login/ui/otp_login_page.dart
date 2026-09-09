@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/widgets/ado_dad_logo.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/widgets/common_decoration.dart';
@@ -172,31 +173,16 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
                 // Adodad logo with responsive sizing
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: GetResponsiveSize.isTablet(context)
-                      ? SizedBox(
-                          height: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 0, // Not used since we check isTablet first
-                            tablet: 40,
-                            largeTablet: 80,
-                            desktop: 100,
-                          ),
-                          width: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 0, // Not used since we check isTablet first
-                            tablet: 200,
-                            largeTablet: 250,
-                            desktop: 300,
-                          ),
-                          child: Image.asset(
-                            'assets/images/Ado-dad.png',
-                            fit: BoxFit.contain,
-                          ),
-                        )
-                      : Image.asset(
-                          'assets/images/Ado-dad.png',
-                          fit: BoxFit.contain,
-                        ),
+                  child: AdoDadLogo(
+                    height: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 36,
+                      tablet: 48,
+                      largeTablet: 60,
+                      desktop: 72,
+                    ),
+                    color: AppColors.primaryColor,
+                  ),
                 ),
                 const SizedBox(height: 30),
                 Text(

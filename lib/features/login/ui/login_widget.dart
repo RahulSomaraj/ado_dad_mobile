@@ -1,4 +1,5 @@
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/widgets/ado_dad_logo.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
@@ -55,7 +56,7 @@ class _LoginWidgetState extends State<LoginWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.asset('assets/images/Ado-dad.png'),
+              const AdoDadLogo(height: 36, color: AppColors.primaryColor),
               const SizedBox(height: 30),
               Text(
                 'Login to your Account',

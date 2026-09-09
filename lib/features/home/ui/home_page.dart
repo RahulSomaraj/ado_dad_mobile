@@ -1,4 +1,5 @@
 import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/widgets/ado_dad_logo.dart';
 import 'package:ado_dad_user/common/widgets/app_network_image.dart';
 import 'package:ado_dad_user/common/widgets/rich_ad_card.dart';
 import 'package:ado_dad_user/common/widgets/skeleton.dart';
@@ -804,22 +805,16 @@ class _HomePageState extends State<HomePage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Builder(
-            builder: (context) {
-              // White wordmark sized by height so it is clearly visible on the
-              // purple header (the old asset was only 108x16 and rendered tiny).
-              return Image.asset(
-                'assets/images/Ado-dad-white.png',
-                height: GetResponsiveSize.getResponsiveSize(
-                  context,
-                  mobile: 28,
-                  tablet: 44,
-                  largeTablet: 52,
-                  desktop: 56,
-                ),
-                fit: BoxFit.contain,
-              );
-            },
+          // White mark + wordmark sized by height so it is clearly visible on
+          // the purple header.
+          AdoDadLogo(
+            height: GetResponsiveSize.getResponsiveSize(
+              context,
+              mobile: 28,
+              tablet: 44,
+              largeTablet: 52,
+              desktop: 56,
+            ),
           ),
           Expanded(
             child: FittedBox(

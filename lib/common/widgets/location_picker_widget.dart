@@ -530,6 +530,11 @@ class _LocationPickerDialogState extends State<_LocationPickerDialog> {
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton(
+                          // The app theme gives buttons an infinite minimum
+                          // width, which is invalid inside a Row. Override it.
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(0, 50),
+                          ),
                           onPressed: _selectedAddress != null
                               ? () {
                                   Navigator.of(context).pop({
