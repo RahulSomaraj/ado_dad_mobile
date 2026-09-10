@@ -25,6 +25,24 @@ class _MyAdsPageState extends State<MyAdsPage> {
   final ScrollController _scrollController = ScrollController();
   String _statusFilter = 'all';
 
+  /// Page already requested by the "filtered view is empty" auto-pager.
+  /// Guards it against requesting the same page over and over.
+  int? _autoPagingPage;
+
+  /// A status filter can hide every ad on the pages loaded so far, leaving no
+  /// scrollable content and therefore no way to reach the next page. Keep
+  /// pulling pages until something matches or the list is exhausted.
+  void _scheduleAutoLoadMore(int nextPage) {
+    if (_autoPagingPage == nextPage) return;
+    _autoPagingPage = nextPage;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<MyAdsBloc>().add(
+            MyAdsEvent.loadMore(nextPage: nextPage, limit: 20),
+          );
+    });
+  }
+
   List<MyAd> _filterByStatus(List<MyAd> ads) {
     switch (_statusFilter) {
       case 'active':
@@ -298,12 +316,12 @@ class _MyAdsPageState extends State<MyAdsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F4FC),
+      backgroundColor: AppColors.whiteColor,
       appBar: widget.embedded
           ? null
           : AppBar(
               elevation: 0,
-              backgroundColor: const Color(0xFFF6F4FC),
+              backgroundColor: AppColors.whiteColor,
               leading: IconButton(
                 icon: Icon(
                   (!kIsWeb && Platform.isIOS)
@@ -316,10 +334,15 @@ class _MyAdsPageState extends State<MyAdsPage> {
               ),
               title: BlocBuilder<MyAdsBloc, MyAdsState>(
                 builder: (context, state) {
-                  final count = state.maybeMap(
-                      loaded: (s) => s.ads.length, orElse: () => 0);
+                  // Only the pages loaded so far are counted, so mark the
+                  // total as partial while more pages remain.
+                  final label = state.maybeMap(
+                    loaded: (s) =>
+                        'My Ads (${s.ads.length}${s.hasNext ? '+' : ''})',
+                    orElse: () => 'My Ads',
+                  );
                   return Text(
-                    'My Ads ($count)',
+                    label,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: GetResponsiveSize.getResponsiveFontSize(context,
@@ -327,7 +350,7 @@ class _MyAdsPageState extends State<MyAdsPage> {
                           tablet: 24,
                           largeTablet: 28,
                           desktop: 32),
-                      color: const Color(0xFF16181B),
+                      color: AppColors.blackColor,
                     ),
                   );
                 },
@@ -365,17 +388,22 @@ class _MyAdsPageState extends State<MyAdsPage> {
                   );
                 }
                 final ads = _filterByStatus(loaded.ads);
+                if (ads.isEmpty && loaded.hasNext && !loaded.isPaging) {
+                  _scheduleAutoLoadMore(loaded.page + 1);
+                }
                 return Column(
                   children: [
                     _buildStatusChips(),
                     Expanded(
                       child: ads.isEmpty
                           ? Center(
-                              child: Text(
-                                'No ads in this filter',
-                                style:
-                                    TextStyle(color: Colors.grey.shade600),
-                              ),
+                              child: (loaded.hasNext || loaded.isPaging)
+                                  ? const CircularProgressIndicator()
+                                  : Text(
+                                      'No ads in this filter',
+                                      style: TextStyle(
+                                          color: Colors.grey.shade600),
+                                    ),
                             )
                           : GridView.builder(
                               controller: _scrollController,

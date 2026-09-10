@@ -39,6 +39,11 @@ class _CategoryListPageState extends State<CategoryListPage> {
   double? _lat;
   double? _lng;
 
+  /// Premium Vehicles filters client-side, so it keeps pulling pages until the
+  /// feed is exhausted. Guarded so it fires once per state change (never on
+  /// every rebuild).
+  bool _autoPaging = false;
+
   // Helper method to check if this is Premium Vehicles category
   bool get _isPremiumVehiclesCategory {
     return widget.categoryTitle.toLowerCase().contains('premium');
@@ -111,11 +116,11 @@ class _CategoryListPageState extends State<CategoryListPage> {
             }
           }
         }
-        print(
+        debugPrint(
             '✅ Cached ${_manufacturerPremiumCache.length} manufacturers with isPremium data');
       }
     } catch (e) {
-      print('⚠️ Error fetching manufacturer isPremium: $e');
+      debugPrint('⚠️ Error fetching manufacturer isPremium: $e');
     }
   }
 
@@ -172,6 +177,71 @@ class _CategoryListPageState extends State<CategoryListPage> {
   //     setState(() => _isLoading = false);
   //   }
   // }
+
+  /// Re-applies the currently selected filters. Shared by pull-to-refresh and
+  /// the error-state Retry button so both send exactly the same query.
+  Future<void> _applyCurrentFilters() async {
+    if (widget.categoryId == 'property') {
+      // Property filters
+      context.read<AdvertisementBloc>().add(
+            AdvertisementEvent.applyFilters(
+              categoryId: widget.categoryId,
+              latitude: _lat,
+              longitude: _lng,
+              propertyTypes:
+                  (_filters['propertyTypes'] as List?)?.cast<String>(),
+              minBedrooms: _filters['minBedrooms'] as int?,
+              maxBedrooms: _filters['maxBedrooms'] as int?,
+              minPrice: _filters['minPrice'] as int?,
+              maxPrice: _filters['maxPrice'] as int?,
+              minArea: _filters['minArea'] as int?,
+              maxArea: _filters['maxArea'] as int?,
+              isFurnished: _filters['isFurnished'] as bool?,
+              hasParking: _filters['hasParking'] as bool?,
+            ),
+          );
+    } else {
+      // Vehicle filters
+      // For Premium Vehicles, pass null to fetch all categories
+      context.read<AdvertisementBloc>().add(
+            AdvertisementEvent.applyFilters(
+              categoryId: _effectiveCategoryId,
+              latitude: _lat,
+              longitude: _lng,
+              commercialVehicleTypes:
+                  (_filters['commercialVehicleTypes'] as List?)?.cast<String>(),
+              minYear: _filters['minYear'] as int?,
+              maxYear: _filters['maxYear'] as int?,
+              manufacturerIds:
+                  (_filters['manufacturerIds'] as List?)?.cast<String>(),
+              modelIds: (_filters['modelIds'] as List?)?.cast<String>(),
+              fuelTypeIds: (_filters['fuelTypeIds'] as List?)?.cast<String>(),
+              transmissionTypeIds:
+                  (_filters['transmissionTypeIds'] as List?)?.cast<String>(),
+              minPrice: _filters['minPrice'] as int?,
+              maxPrice: _filters['maxPrice'] as int?,
+            ),
+          );
+    }
+  }
+
+  /// Premium Vehicles filters client-side, so all pages have to be pulled in.
+  /// Runs from the bloc listener (once per state change) rather than from
+  /// `build()`, so it cannot loop on every rebuild.
+  void _maybeAutoPagePremium(AdvertisementState state) {
+    if (!_isPremiumVehiclesCategory) return;
+    if (state is! ListingsLoaded) {
+      _autoPaging = false;
+      return;
+    }
+    // A new state arrived, so any auto-page request we sent has completed.
+    _autoPaging = false;
+    if (!state.hasMore) return;
+    _autoPaging = true;
+    context.read<AdvertisementBloc>().add(
+          const AdvertisementEvent.fetchNextPage(),
+        );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -231,6 +301,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                     final result = await context.push(
                         '/property-filter?categoryId=${widget.categoryId}&title=${Uri.encodeComponent(widget.categoryTitle)}',
                         extra: _filters);
+                    if (!context.mounted) return;
                     if (result is Map<String, dynamic>) {
                       _filters = result;
                       context.read<AdvertisementBloc>().add(
@@ -256,6 +327,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                     final result = await context.push(
                         '/car-filter?categoryId=${widget.categoryId}&title=${Uri.encodeComponent(widget.categoryTitle)}',
                         extra: _filters);
+                    if (!context.mounted) return;
                     if (result is Map<String, dynamic>) {
                       _filters = result;
                       context.read<AdvertisementBloc>().add(
@@ -316,7 +388,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
         body: SafeArea(
           top: false,
           minimum: const EdgeInsets.only(bottom: 30),
-          child: BlocBuilder<AdvertisementBloc, AdvertisementState>(
+          child: BlocConsumer<AdvertisementBloc, AdvertisementState>(
+            listener: (context, state) => _maybeAutoPagePremium(state),
             builder: (context, state) {
               if (state is AdvertisementLoading ||
                   state is AdvertisementInitial) {
@@ -374,14 +447,9 @@ class _CategoryListPageState extends State<CategoryListPage> {
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            // Retry loading
-                            context.read<AdvertisementBloc>().add(
-                                  AdvertisementEvent.applyFilters(
-                                    categoryId: widget.categoryId,
-                                    latitude: _lat,
-                                    longitude: _lng,
-                                  ),
-                                );
+                            // Retry loading with the filters that are actually
+                            // applied (same query as pull-to-refresh).
+                            _applyCurrentFilters();
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryColor,
@@ -414,80 +482,13 @@ class _CategoryListPageState extends State<CategoryListPage> {
                 // For Premium Vehicles: Apply all filters client-side since we fetch all categories
                 // (categoryId is null), so server-side filters may not work correctly
                 if (isPremiumCategory) {
-                  // Debug: Show total items from all pages
-                  print(
-                      '📦 Total items loaded from all pages: ${items.length} (hasMore: ${state.hasMore})');
-
                   // Enrich ads with manufacturer isPremium data from cache
                   items = items.map((ad) => _enrichAdWithPremium(ad)).toList();
 
-                  // Debug: Check what's in the manufacturer objects
-                  print(
-                      '🔍 Premium Category Filter - Total items before filter: ${items.length}');
-
-                  // Check for specific ad ID
-                  final specificAdId = '690325a2fb5f59e577b0208c';
-                  final specificAd =
-                      items.where((ad) => ad.id == specificAdId).firstOrNull;
-                  if (specificAd != null) {
-                    print('🎯 SPECIFIC AD FOUND - ID: ${specificAd.id}');
-                    print('🎯 Manufacturer ID: ${specificAd.manufacturer?.id}');
-                    print(
-                        '🎯 Manufacturer isPremium: ${specificAd.manufacturer?.isPremium}');
-                    print(
-                        '🎯 Manufacturer name: ${specificAd.manufacturer?.name}');
-                    print(
-                        '🎯 Manufacturer object: ${specificAd.manufacturer?.toJson()}');
-                  } else {
-                    print('⚠️ SPECIFIC AD NOT FOUND in items list');
-                  }
-
-                  // Count how many have isPremium == true
-                  final premiumCount = items
-                      .where((ad) => ad.manufacturer?.isPremium == true)
-                      .length;
-                  print(
-                      '📊 Ads with isPremium == true: $premiumCount out of ${items.length}');
-
                   // First filter by isPremium
-                  items = items.where((ad) {
-                    final isPremium = ad.manufacturer?.isPremium == true;
-                    if (ad.id == specificAdId) {
-                      print(
-                          '🎯 FILTERING - Ad ID: ${ad.id}, isPremium result: $isPremium');
-                    }
-                    return isPremium;
-                  }).toList();
-
-                  print(
-                      '✅ Premium Category Filter - Total items after filter: ${items.length}');
-
-                  // Check if specific ad is in filtered list
-                  final isInFilteredList =
-                      items.any((ad) => ad.id == specificAdId);
-                  print('🎯 SPECIFIC AD IN FILTERED LIST: $isInFilteredList');
-
-                  // Debug: Print all filtered ad IDs
-                  print(
-                      '📋 Filtered ad IDs: ${items.map((ad) => ad.id).toList()}');
-
-                  // For premium category, we need to load ALL pages to get all premium items
-                  // Since filtering is client-side, we need all data first
-                  // Auto-load more pages if we have more data available
-                  if (state.hasMore) {
-                    print(
-                        '🔄 Auto-loading more pages for premium category (hasMore: true)...');
-                    // Use Future.microtask to avoid setState during build
-                    Future.microtask(() {
-                      if (mounted) {
-                        context.read<AdvertisementBloc>().add(
-                              const AdvertisementEvent.fetchNextPage(),
-                            );
-                      }
-                    });
-                  } else {
-                    print('✅ All pages loaded (hasMore: false)');
-                  }
+                  items = items
+                      .where((ad) => ad.manufacturer?.isPremium == true)
+                      .toList();
 
                   // Then apply all other filters from _filters map
                   // Manufacturer filter
@@ -731,56 +732,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
     final isPremiumCategory =
         widget.categoryTitle.toLowerCase().contains('premium');
     return RefreshIndicator(
-                  onRefresh: () async {
-                    if (widget.categoryId == 'property') {
-                      // Property filters
-                      context.read<AdvertisementBloc>().add(
-                            AdvertisementEvent.applyFilters(
-                              categoryId: widget.categoryId,
-                              latitude: _lat,
-                              longitude: _lng,
-                              propertyTypes:
-                                  (_filters['propertyTypes'] as List?)
-                                      ?.cast<String>(),
-                              minBedrooms: _filters['minBedrooms'] as int?,
-                              maxBedrooms: _filters['maxBedrooms'] as int?,
-                              minPrice: _filters['minPrice'] as int?,
-                              maxPrice: _filters['maxPrice'] as int?,
-                              minArea: _filters['minArea'] as int?,
-                              maxArea: _filters['maxArea'] as int?,
-                              isFurnished: _filters['isFurnished'] as bool?,
-                              hasParking: _filters['hasParking'] as bool?,
-                            ),
-                          );
-                    } else {
-                      // Vehicle filters
-                      // For Premium Vehicles, pass null to fetch all categories
-                      context.read<AdvertisementBloc>().add(
-                            AdvertisementEvent.applyFilters(
-                              categoryId: _effectiveCategoryId,
-                              latitude: _lat,
-                              longitude: _lng,
-                              commercialVehicleTypes:
-                                  (_filters['commercialVehicleTypes'] as List?)
-                                      ?.cast<String>(),
-                              minYear: _filters['minYear'] as int?,
-                              maxYear: _filters['maxYear'] as int?,
-                              manufacturerIds:
-                                  (_filters['manufacturerIds'] as List?)
-                                      ?.cast<String>(),
-                              modelIds: (_filters['modelIds'] as List?)
-                                  ?.cast<String>(),
-                              fuelTypeIds: (_filters['fuelTypeIds'] as List?)
-                                  ?.cast<String>(),
-                              transmissionTypeIds:
-                                  (_filters['transmissionTypeIds'] as List?)
-                                      ?.cast<String>(),
-                              minPrice: _filters['minPrice'] as int?,
-                              maxPrice: _filters['maxPrice'] as int?,
-                            ),
-                          );
-                    }
-                  },
+                  onRefresh: _applyCurrentFilters,
                   child: GridView.builder(
                     controller: _scrollController,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -791,10 +743,14 @@ class _CategoryListPageState extends State<CategoryListPage> {
                           richAdCardMainAxisExtent(context, columns: 2),
                     ),
                     padding: const EdgeInsets.fromLTRB(15, 10, 15, 100),
-                    // For Premium Vehicles, don't show loading indicator once list is loaded
-                    // For other categories, show loading indicator if more pages are available
+                    // Show the loading indicator while more pages are on the
+                    // way. For Premium Vehicles that is only while the
+                    // client-side auto-paging is still pulling pages.
                     itemCount: items.length +
-                        ((!isPremiumCategory && state.hasMore) ? 1 : 0),
+                        ((state.hasMore &&
+                                (!isPremiumCategory || _autoPaging))
+                            ? 1
+                            : 0),
                     itemBuilder: (context, index) {
                       if (index < items.length) {
                         return RichAdCard(ad: items[index]);

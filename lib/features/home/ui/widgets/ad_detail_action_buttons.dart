@@ -18,16 +18,63 @@ String toTitleCase(String text) {
       .join(' ');
 }
 
-class AdDetailFavoriteButton extends StatelessWidget {
+class AdDetailFavoriteButton extends StatefulWidget {
   final AddModel ad;
 
   const AdDetailFavoriteButton({super.key, required this.ad});
 
   @override
+  State<AdDetailFavoriteButton> createState() => _AdDetailFavoriteButtonState();
+}
+
+class _AdDetailFavoriteButtonState extends State<AdDetailFavoriteButton> {
+  late bool _isFavorited;
+  bool _pendingToggle = false;
+
+  AddModel get ad => widget.ad;
+
+  @override
+  void initState() {
+    super.initState();
+    _isFavorited = widget.ad.isFavorited ?? false;
+  }
+
+  @override
+  void didUpdateWidget(covariant AdDetailFavoriteButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Keep in sync if a different ad (or a refreshed copy) is supplied.
+    if (oldWidget.ad.id != widget.ad.id ||
+        oldWidget.ad.isFavorited != widget.ad.isFavorited) {
+      _isFavorited = widget.ad.isFavorited ?? false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    return BlocListener<FavoriteBloc, FavoriteState>(
+      listener: (context, state) {
+        // Revert the optimistic flip only when the bloc reports a failure
+        // for this exact ad.
+        if (state is FavoriteToggleError && state.adId == ad.id) {
+          if (_pendingToggle) {
+            _pendingToggle = false;
+            setState(() => _isFavorited = !_isFavorited);
+          }
+        } else if (state is FavoriteToggleSuccess && state.adId == ad.id) {
+          _pendingToggle = false;
+          if (_isFavorited != state.isFavorited) {
+            setState(() => _isFavorited = state.isFavorited);
+          }
+        }
+      },
+      child: _buildButton(context),
+    );
+  }
+
+  Widget _buildButton(BuildContext context) {
     return BlocBuilder<FavoriteBloc, FavoriteState>(
       builder: (context, state) {
-        bool isFavorited = ad.isFavorited ?? false;
+        final bool isFavorited = _isFavorited;
 
         if (state is FavoriteToggleLoading && state.adId == ad.id) {
           return Container(
@@ -74,10 +121,6 @@ class AdDetailFavoriteButton extends StatelessWidget {
           );
         }
 
-        if (state is FavoriteToggleSuccess && state.adId == ad.id) {
-          isFavorited = state.isFavorited;
-        }
-
         return InkWell(
           onTap: () async {
             // Check authentication before allowing favorite toggle
@@ -90,11 +133,17 @@ class AdDetailFavoriteButton extends StatelessWidget {
               );
               return;
             }
+            if (!mounted) return;
+
+            final wasFavorited = _isFavorited;
+            // Optimistic flip; reverted by the listener if the toggle fails.
+            _pendingToggle = true;
+            setState(() => _isFavorited = !wasFavorited);
 
             context.read<FavoriteBloc>().add(
                   FavoriteEvent.toggleFavorite(
                     adId: ad.id,
-                    isCurrentlyFavorited: isFavorited,
+                    isCurrentlyFavorited: wasFavorited,
                   ),
                 );
           },

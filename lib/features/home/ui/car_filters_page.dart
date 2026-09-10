@@ -106,6 +106,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
     // Both "Car" and "Premium Vehicles" use categoryId 'private_vehicle'
     // Both should show 'passenger_car' manufacturers
     if (categoryId == 'private_vehicle' || categoryId == 'commercial_vehicle') {
+      // TODO(backend): commercial vehicles should use their own manufacturer category
       return 'passenger_car';
     }
     return null; // No filter if category is not recognized

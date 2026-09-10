@@ -1,3 +1,4 @@
+import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_card_shell.dart';
@@ -46,7 +47,7 @@ class AdDetailDescription extends StatelessWidget {
               Text(
                 ad.description,
                 style: TextStyle(
-                  color: Colors.black,
+                  color: AppColors.blackColor,
                   height: 1.35,
                   fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                       mobile: 14, tablet: 22, largeTablet: 26, desktop: 30),

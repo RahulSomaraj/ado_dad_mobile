@@ -1,0 +1,2496 @@
+diff --git a/lib/common/connectivity_checker.dart b/lib/common/connectivity_checker.dart
+index ee42ab4..dbe091a 100644
+--- a/lib/common/connectivity_checker.dart
++++ b/lib/common/connectivity_checker.dart
+@@ -39,7 +39,7 @@ class _StartupConnectivityGateState extends State<StartupConnectivityGate> {
+ 
+     try {
+       final iface = await Connectivity().checkConnectivity();
+-      final hasInterface = iface != ConnectivityResult.none;
++      final hasInterface = iface.any((r) => r != ConnectivityResult.none);
+ 
+       bool hasInternet = false;
+       if (hasInterface) {
+diff --git a/lib/features/home/bloc/advertisement_bloc.dart b/lib/features/home/bloc/advertisement_bloc.dart
+index 0a49829..911ef01 100644
+--- a/lib/features/home/bloc/advertisement_bloc.dart
++++ b/lib/features/home/bloc/advertisement_bloc.dart
+@@ -1,12 +1,17 @@
+ import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+ import 'package:ado_dad_user/repositories/add_repo.dart';
+ import 'package:bloc/bloc.dart';
++import 'package:flutter/foundation.dart' show debugPrint;
+ import 'package:freezed_annotation/freezed_annotation.dart';
+ 
+ part 'advertisement_event.dart';
+ part 'advertisement_state.dart';
+ part 'advertisement_bloc.freezed.dart';
+ 
++/// Which kind of list the bloc is currently paginating. `fetchNextPage` uses
++/// this to reuse exactly the query that produced page 1.
++enum _ListMode { all, category, filters, location, search, user }
++
+ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+   final AddRepository repository;
+   AdvertisementBloc({required this.repository})
+@@ -30,6 +35,15 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+   double? _locationLatitude;
+   double? _locationLongitude;
+ 
++  /// Active list mode + the query that produced its first page.
++  _ListMode _mode = _ListMode.all;
++  String? _userId;
++
++  /// Incremented for every list-producing request so that a slow, stale
++  /// response (e.g. an older keystroke's search) can never overwrite a newer
++  /// one.
++  int _requestSeq = 0;
++
+   // Location-recommendation pagination: a generous radius, sorted nearest-first
+   // by the backend ($geoNear), so each page returns progressively farther ads.
+   // Once that feed is exhausted, fall back to the full all-ads feed.
+@@ -58,6 +72,15 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+   bool? _isFurnished;
+   bool? _hasParking;
+ 
++  /// Clears the nearby-feed pagination bookkeeping. Called by every list that
++  /// is *not* the location feed, so its next pages cannot be served by the
++  /// location branch.
++  void _resetLocationPaging() {
++    _locationFallbackToAll = false;
++    _locationQueryHasNext = false;
++    _allAdsPage = 1;
++  }
++
+   List<AddModel> _mergeDedupe(
+       List<AddModel> current, List<AddModel> incoming) {
+     final ids = current.map((a) => a.id).toSet();
+@@ -69,7 +92,9 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+ 
+   Future<void> _onFetchAllListings(
+       FetchAllListingsEvent event, Emitter<AdvertisementState> emit) async {
++    final seq = ++_requestSeq;
+     emit(const AdvertisementState.loading());
++    _mode = _ListMode.all;
+     _currentPage = 1;
+ 
+     // clear filters
+@@ -90,16 +115,19 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+     _maxArea = null;
+     _isFurnished = null;
+     _hasParking = null;
++    _searchQuery = null;
++    _userId = null;
+     _locationLatitude = null;
+     _locationLongitude = null;
+-    _locationFallbackToAll = false;
+-    _locationQueryHasNext = false;
++    _resetLocationPaging();
+ 
+     try {
+       final result = await repository.fetchAllAds(page: _currentPage);
++      if (seq != _requestSeq) return;
+       emit(AdvertisementState.listingsLoaded(
+           listings: result.data, hasMore: result.hasNext));
+     } catch (e) {
++      if (seq != _requestSeq) return;
+       // Emit user-friendly message instead of raw exception
+       emit(AdvertisementState.error(
+           "Unable to load recommendations. Please try again later."));
+@@ -113,91 +141,194 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+ 
+     final currentState = state;
+     if (currentState is ListingsLoaded && currentState.hasMore) {
++      final seq = ++_requestSeq;
+       try {
+-        final bool inLocationMode =
+-            _locationLatitude != null && !_locationFallbackToAll;
+-
+-        if (inLocationMode && _locationQueryHasNext) {
+-          // (a) More pages within the location radius. $geoNear sorts
+-          // nearest-first, so each page returns progressively farther ads.
+-          _currentPage += 1;
+-          print("📥 Location page $_currentPage @ ${_locationRadiusKm}km");
+-          final result = await repository.fetchAllAds(
+-            page: _currentPage,
+-            latitude: _locationLatitude,
+-            longitude: _locationLongitude,
+-            maxDistance: _locationRadiusKm,
+-          );
+-          _locationQueryHasNext = result.hasNext;
+-          emit(ListingsLoaded(
+-            listings: _mergeDedupe(currentState.listings, result.data),
+-            hasMore: true,
+-          ));
+-        } else if (inLocationMode) {
+-          // (b) Location feed exhausted → start the full all-ads fallback feed.
+-          _locationFallbackToAll = true;
+-          _allAdsPage = 1;
+-          print("📥 Location exhausted → all-ads fallback page $_allAdsPage");
+-          final result = await repository.fetchAllAds(page: _allAdsPage);
+-          emit(ListingsLoaded(
+-            listings: _mergeDedupe(currentState.listings, result.data),
+-            hasMore: result.hasNext,
+-          ));
+-        } else if (_locationFallbackToAll) {
+-          // (d) Continue the all-ads fallback feed.
+-          _allAdsPage += 1;
+-          print("📥 All-ads fallback page $_allAdsPage");
+-          final result = await repository.fetchAllAds(page: _allAdsPage);
+-          emit(ListingsLoaded(
+-            listings: _mergeDedupe(currentState.listings, result.data),
+-            hasMore: result.hasNext,
+-          ));
+-        } else {
+-          // (e) Normal all-ads / filtered pagination (unchanged behaviour).
+-          _currentPage += 1;
+-          print("📥 Fetching page $_currentPage");
+-          final result = await repository.fetchAllAds(
+-              page: _currentPage,
+-              category: _categoryId,
+-              latitude: _locationLatitude,
+-              longitude: _locationLongitude,
+-              commercialVehicleTypes: _commercialVehicleTypes,
+-              minYear: _minYear,
+-              maxYear: _maxYear,
+-              manufacturerIds: _manufacturerIds,
+-              modelIds: _modelIds,
+-              fuelTypeIds: _fuelTypeIds,
+-              transmissionTypeIds: _transmissionTypeIds,
+-              minPrice: _minPrice,
+-              maxPrice: _maxPrice,
+-              propertyTypes: _propertyTypes,
+-              minBedrooms: _minBedrooms,
+-              maxBedrooms: _maxBedrooms,
+-              minArea: _minArea,
+-              maxArea: _maxArea);
+-          print(
+-              "📦 Received ${result.data.length} ads | hasNext: ${result.hasNext}");
+-          emit(ListingsLoaded(
+-            listings: [...currentState.listings, ...result.data],
+-            hasMore: result.hasNext,
+-          ));
++        switch (_mode) {
++          case _ListMode.location:
++            await _fetchNextLocationPage(currentState, seq, emit);
++            break;
++
++          case _ListMode.category:
++            {
++              _currentPage += 1;
++              final result = await repository.fetchAllAds(
++                page: _currentPage,
++                category: _categoryId,
++              );
++              if (seq != _requestSeq) return;
++              emit(ListingsLoaded(
++                listings: _mergeDedupe(currentState.listings, result.data),
++                hasMore: result.hasNext,
++              ));
++            }
++            break;
++
++          case _ListMode.filters:
++            {
++              _currentPage += 1;
++              final result = await repository.fetchAllAds(
++                page: _currentPage,
++                category: _categoryId,
++                latitude: _locationLatitude,
++                longitude: _locationLongitude,
++                commercialVehicleTypes: _commercialVehicleTypes,
++                minYear: _minYear,
++                maxYear: _maxYear,
++                manufacturerIds: _manufacturerIds,
++                modelIds: _modelIds,
++                fuelTypeIds: _fuelTypeIds,
++                transmissionTypeIds: _transmissionTypeIds,
++                minPrice: _minPrice,
++                maxPrice: _maxPrice,
++                propertyTypes: _propertyTypes,
++                minBedrooms: _minBedrooms,
++                maxBedrooms: _maxBedrooms,
++                minArea: _minArea,
++                maxArea: _maxArea,
++                isFurnished: _isFurnished,
++                hasParking: _hasParking,
++              );
++              if (seq != _requestSeq) return;
++              emit(ListingsLoaded(
++                listings: _mergeDedupe(currentState.listings, result.data),
++                hasMore: result.hasNext,
++              ));
++            }
++            break;
++
++          case _ListMode.search:
++            {
++              if (_searchQuery == null || _searchQuery!.isEmpty) return;
++              _searchPage += 1;
++              final result = await repository.fetchAllAds(
++                page: _searchPage,
++                limit: 20,
++                search: _searchQuery,
++              );
++              if (seq != _requestSeq) return;
++              emit(ListingsLoaded(
++                listings: _mergeDedupe(currentState.listings, result.data),
++                hasMore: result.hasNext,
++              ));
++            }
++            break;
++
++          case _ListMode.user:
++            {
++              if (_userId == null) return;
++              _currentPage += 1;
++              final result = await repository.fetchAdsByUserId(
++                userId: _userId!,
++                page: _currentPage,
++              );
++              if (seq != _requestSeq) return;
++              emit(ListingsLoaded(
++                listings: _mergeDedupe(currentState.listings, result.data),
++                hasMore: result.hasNext,
++              ));
++            }
++            break;
++
++          case _ListMode.all:
++            {
++              _currentPage += 1;
++              final result = await repository.fetchAllAds(page: _currentPage);
++              if (seq != _requestSeq) return;
++              emit(ListingsLoaded(
++                listings: _mergeDedupe(currentState.listings, result.data),
++                hasMore: result.hasNext,
++              ));
++            }
++            break;
+         }
+       } catch (e) {
+-        // Emit user-friendly message instead of raw exception
+-        emit(AdvertisementState.error(
+-            "Unable to load more recommendations. Please try again later."));
++        // Loading a further page failed: keep the pages we already have (an
++        // error state would wipe the list) and roll the page counter back so a
++        // retry re-requests the same page instead of skipping it.
++        _rollBackPageCounter();
++        debugPrint('❌ Failed to load next page (mode: $_mode): $e');
++        if (seq == _requestSeq) emit(currentState);
++      } finally {
++        _isFetching = false;
+       }
++      return;
+     }
+ 
+     _isFetching = false;
+   }
+ 
++  /// Roll the page counter of the active mode back by one after a failed
++  /// next-page request.
++  void _rollBackPageCounter() {
++    switch (_mode) {
++      case _ListMode.search:
++        if (_searchPage > 1) _searchPage -= 1;
++        break;
++      case _ListMode.location:
++        if (_locationFallbackToAll) {
++          if (_allAdsPage > 1) _allAdsPage -= 1;
++        } else if (_currentPage > 1) {
++          _currentPage -= 1;
++        }
++        break;
++      default:
++        if (_currentPage > 1) _currentPage -= 1;
++    }
++  }
++
++  /// The original nearby-feed pagination: page through the radius first, then
++  /// fall back to the full all-ads feed once nearby results are exhausted.
++  Future<void> _fetchNextLocationPage(ListingsLoaded currentState, int seq,
++      Emitter<AdvertisementState> emit) async {
++    final bool inLocationMode =
++        _locationLatitude != null && !_locationFallbackToAll;
++
++    if (inLocationMode && _locationQueryHasNext) {
++      // (a) More pages within the location radius. $geoNear sorts
++      // nearest-first, so each page returns progressively farther ads.
++      _currentPage += 1;
++      final result = await repository.fetchAllAds(
++        page: _currentPage,
++        latitude: _locationLatitude,
++        longitude: _locationLongitude,
++        maxDistance: _locationRadiusKm,
++      );
++      if (seq != _requestSeq) return;
++      _locationQueryHasNext = result.hasNext;
++      emit(ListingsLoaded(
++        listings: _mergeDedupe(currentState.listings, result.data),
++        hasMore: true,
++      ));
++    } else if (inLocationMode) {
++      // (b) Location feed exhausted → start the full all-ads fallback feed.
++      final result = await repository.fetchAllAds(page: 1);
++      if (seq != _requestSeq) return;
++      _locationFallbackToAll = true;
++      _allAdsPage = 1;
++      emit(ListingsLoaded(
++        listings: _mergeDedupe(currentState.listings, result.data),
++        hasMore: result.hasNext,
++      ));
++    } else {
++      // (c) Continue the all-ads fallback feed.
++      _allAdsPage += 1;
++      final result = await repository.fetchAllAds(page: _allAdsPage);
++      if (seq != _requestSeq) return;
++      emit(ListingsLoaded(
++        listings: _mergeDedupe(currentState.listings, result.data),
++        hasMore: result.hasNext,
++      ));
++    }
++  }
++
+   Future<void> _onFetchByCategory(
+     FetchByCategory event,
+     Emitter<AdvertisementState> emit,
+   ) async {
++    final seq = ++_requestSeq;
+     emit(const AdvertisementState.loading());
+ 
++    _mode = _ListMode.category;
+     _categoryId = event.categoryId;
+     _minYear = null;
+     _maxYear = null;
+@@ -217,19 +348,24 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+     _isFurnished = null;
+     _hasParking = null;
+     _commercialVehicleTypes = null;
++    _searchQuery = null;
++    _userId = null;
+     _locationLatitude = null;
+     _locationLongitude = null;
++    _resetLocationPaging();
+ 
+     try {
+       final result = await repository.fetchAllAds(
+         page: _currentPage,
+         category: _categoryId,
+       );
++      if (seq != _requestSeq) return;
+       emit(AdvertisementState.listingsLoaded(
+         listings: result.data,
+         hasMore: result.hasNext,
+       ));
+     } catch (e) {
++      if (seq != _requestSeq) return;
+       // Emit user-friendly message instead of raw exception
+       emit(AdvertisementState.error(
+           "Unable to load recommendations. Please try again later."));
+@@ -238,8 +374,10 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+ 
+   Future<void> _onApplyFilters(
+       ApplyFiltersEvent event, Emitter<AdvertisementState> emit) async {
++    final seq = ++_requestSeq;
+     emit(const AdvertisementState.loading());
+ 
++    _mode = _ListMode.filters;
+     // set/replace filters (category can be re-applied from page)
+     _categoryId = event.categoryId ?? _categoryId;
+     _locationLatitude = event.latitude;
+@@ -260,7 +398,12 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+     _maxArea = event.maxArea;
+     _isFurnished = event.isFurnished;
+     _hasParking = event.hasParking;
++    _searchQuery = null;
++    _userId = null;
+     _currentPage = 1;
++    // The lat/lng here only biases the filtered query; it must not put the
++    // bloc into the nearby-feed pagination mode.
++    _resetLocationPaging();
+ 
+     try {
+       final result = await repository.fetchAllAds(
+@@ -284,11 +427,13 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+           maxArea: _maxArea,
+           isFurnished: _isFurnished,
+           hasParking: _hasParking);
++      if (seq != _requestSeq) return;
+       emit(AdvertisementState.listingsLoaded(
+         listings: result.data,
+         hasMore: result.hasNext,
+       ));
+     } catch (e) {
++      if (seq != _requestSeq) return;
+       // Emit user-friendly message instead of raw exception
+       emit(AdvertisementState.error(
+           "Unable to load recommendations. Please try again later."));
+@@ -321,7 +466,9 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+ 
+   Future<void> _onSearchByLocation(
+       SearchByLocationEvent event, Emitter<AdvertisementState> emit) async {
++    final seq = ++_requestSeq;
+     emit(const AdvertisementState.loading());
++    _mode = _ListMode.location;
+     _currentPage = 1;
+ 
+     // Clear other filters when searching by location
+@@ -342,9 +489,13 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+     _maxArea = null;
+     _isFurnished = null;
+     _hasParking = null;
++    _searchQuery = null;
++    _userId = null;
+     _locationLatitude = event.latitude;
+     _locationLongitude = event.longitude;
+     _locationFallbackToAll = false;
++    _locationQueryHasNext = false;
++    _allAdsPage = 1;
+ 
+     try {
+       final result = await repository.fetchAllAds(
+@@ -353,12 +504,14 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+         longitude: event.longitude,
+         maxDistance: _locationRadiusKm,
+       );
++      if (seq != _requestSeq) return;
+       _locationQueryHasNext = result.hasNext;
+       // Keep hasMore=true so scrolling can widen the radius and then fall back
+       // to the full all-ads feed once nearby results are exhausted.
+       emit(AdvertisementState.listingsLoaded(
+           listings: result.data, hasMore: true));
+     } catch (e) {
++      if (seq != _requestSeq) return;
+       // Emit user-friendly message instead of raw exception
+       emit(AdvertisementState.error(
+           "Unable to load recommendations. Please try again later."));
+@@ -370,23 +523,28 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+     final query = event.query.trim();
+     if (query.isEmpty) return;
+ 
++    final seq = ++_requestSeq;
+     emit(const AdvertisementState.loading());
++    _mode = _ListMode.search;
+     _searchQuery = query;
+     _searchPage = 1;
++    _currentPage = 1;
++    _userId = null;
+     _locationLatitude = null;
+     _locationLongitude = null;
++    _resetLocationPaging();
+ 
+     try {
+-      print(
+-          '🔍 Search API: /v2/ads/list page=$_searchPage limit=20 search="$query"');
+       final result = await repository.fetchAllAds(
+         page: _searchPage,
+         limit: 20,
+         search: query,
+       );
++      if (seq != _requestSeq) return;
+       emit(AdvertisementState.listingsLoaded(
+           listings: result.data, hasMore: result.hasNext));
+     } catch (e) {
++      if (seq != _requestSeq) return;
+       emit(AdvertisementState.error(
+           "Unable to load recommendations. Please try again later."));
+     }
+@@ -400,20 +558,25 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+     final currentState = state;
+     if (currentState is ListingsLoaded && currentState.hasMore) {
+       _isSearchFetching = true;
++      final seq = ++_requestSeq;
+       try {
+         _searchPage += 1;
+-        print(
+-            '🔍 Search API: /v2/ads/list page=$_searchPage limit=20 search="${_searchQuery!}"');
+         final result = await repository.fetchAllAds(
+           page: _searchPage,
+           limit: 20,
+           search: _searchQuery,
+         );
+-        final updatedList = [...currentState.listings, ...result.data];
+-        emit(ListingsLoaded(listings: updatedList, hasMore: result.hasNext));
++        if (seq != _requestSeq) return;
++        emit(ListingsLoaded(
++          listings: _mergeDedupe(currentState.listings, result.data),
++          hasMore: result.hasNext,
++        ));
+       } catch (e) {
+-        emit(AdvertisementState.error(
+-            "Unable to load more recommendations. Please try again later."));
++        // Keep the already-loaded results instead of wiping them with an error
++        // state, and roll the page back so a retry re-requests the same page.
++        if (_searchPage > 1) _searchPage -= 1;
++        debugPrint('❌ Failed to load next search page: $e');
++        if (seq == _requestSeq) emit(currentState);
+       } finally {
+         _isSearchFetching = false;
+       }
+@@ -422,7 +585,10 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+ 
+   Future<void> _onFetchByUserId(
+       FetchByUserIdEvent event, Emitter<AdvertisementState> emit) async {
++    final seq = ++_requestSeq;
+     emit(const AdvertisementState.loading());
++    _mode = _ListMode.user;
++    _userId = event.userId;
+     _currentPage = 1;
+ 
+     // clear filters
+@@ -442,17 +608,21 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
+     _maxArea = null;
+     _isFurnished = null;
+     _hasParking = null;
++    _searchQuery = null;
+     _locationLatitude = null;
+     _locationLongitude = null;
++    _resetLocationPaging();
+ 
+     try {
+       final result = await repository.fetchAdsByUserId(
+         userId: event.userId,
+         page: _currentPage,
+       );
++      if (seq != _requestSeq) return;
+       emit(AdvertisementState.listingsLoaded(
+           listings: result.data, hasMore: result.hasNext));
+     } catch (e) {
++      if (seq != _requestSeq) return;
+       // Emit user-friendly message instead of raw exception
+       emit(AdvertisementState.error(
+           "Unable to load recommendations. Please try again later."));
+diff --git a/lib/features/home/favorite/bloc/favorite_bloc.dart b/lib/features/home/favorite/bloc/favorite_bloc.dart
+index a716f0e..0e537a1 100644
+--- a/lib/features/home/favorite/bloc/favorite_bloc.dart
++++ b/lib/features/home/favorite/bloc/favorite_bloc.dart
+@@ -11,6 +11,10 @@ part 'favorite_bloc.freezed.dart';
+ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
+   final FavoriteRepository _favoriteRepository;
+ 
++  /// Ad ids with a favorite request currently in flight. Guards against a
++  /// rapid double tap firing two identical toggles concurrently.
++  final Set<String> _inFlight = <String>{};
++
+   FavoriteBloc({required FavoriteRepository favoriteRepository})
+       : _favoriteRepository = favoriteRepository,
+         super(const FavoriteState.initial()) {
+@@ -25,54 +29,66 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
+     ToggleFavoriteEvent event,
+     Emitter<FavoriteState> emit,
+   ) async {
+-    emit(FavoriteState.toggleLoading(adId: event.adId));
+-
+-    // Check authentication before favorite operations
+-    final isAuthenticated = await AuthGuard.isAuthenticated();
+-    if (!isAuthenticated) {
+-      emit(FavoriteState.toggleError(
+-        adId: event.adId,
+-        message: "Please login to add items to favorites.",
+-      ));
+-      return;
+-    }
++    // Ignore a second toggle for the same ad while one is still in flight.
++    if (!_inFlight.add(event.adId)) return;
+ 
+     try {
+-      FavoriteResponse response;
++      // Capture the loaded list BEFORE emitting anything, so a single-item
++      // toggle never resets the page or rebuilds the whole list as a skeleton.
++      final currentState = state;
++      final FavoriteLoaded? loadedState =
++          currentState is FavoriteLoaded ? currentState : null;
+ 
+-      if (event.isCurrentlyFavorited) {
+-        response = await _favoriteRepository.removeFromFavorites(event.adId);
+-      } else {
+-        response = await _favoriteRepository.addToFavorites(event.adId);
++      if (loadedState == null) {
++        emit(FavoriteState.toggleLoading(adId: event.adId));
+       }
+ 
+-      // If we're currently in a loaded state, refresh the list to reflect changes
+-      if (state is FavoriteLoaded) {
+-        // Refresh the favorites list to reflect the change
+-        final refreshResponse = await _favoriteRepository.getFavoriteAds(
+-          page: (state as FavoriteLoaded).currentPage,
+-          limit: 20,
+-        );
+-
+-        emit(FavoriteState.loaded(
+-          favorites: refreshResponse.data,
+-          hasNext: refreshResponse.hasNext,
+-          currentPage: (state as FavoriteLoaded).currentPage,
++      // Check authentication before favorite operations
++      final isAuthenticated = await AuthGuard.isAuthenticated();
++      if (!isAuthenticated) {
++        emit(FavoriteState.toggleError(
++          adId: event.adId,
++          message: "Please login to add items to favorites.",
+         ));
+-      } else {
+-        // For other cases, emit toggle success
+-        emit(FavoriteState.toggleSuccess(
++        if (loadedState != null) emit(loadedState);
++        return;
++      }
++
++      try {
++        FavoriteResponse response;
++
++        if (event.isCurrentlyFavorited) {
++          response = await _favoriteRepository.removeFromFavorites(event.adId);
++        } else {
++          response = await _favoriteRepository.addToFavorites(event.adId);
++        }
++
++        if (loadedState != null) {
++          // Apply the change locally instead of refetching the page.
++          final updated = List<dynamic>.from(loadedState.favorites);
++          if (!response.isFavorited) {
++            updated.removeWhere((f) => f.id == event.adId);
++          }
++          emit(loadedState.copyWith(favorites: updated));
++        } else {
++          // For other cases, emit toggle success
++          emit(FavoriteState.toggleSuccess(
++            adId: event.adId,
++            isFavorited: response.isFavorited,
++            favoriteId: response.favoriteId,
++            message: response.message,
++          ));
++        }
++      } catch (e) {
++        emit(FavoriteState.toggleError(
+           adId: event.adId,
+-          isFavorited: response.isFavorited,
+-          favoriteId: response.favoriteId,
+-          message: response.message,
++          message: ErrorMessageUtil.getUserFriendlyMessage(e.toString()),
+         ));
++        // Revert to the untouched list so the page keeps showing its content.
++        if (loadedState != null) emit(loadedState);
+       }
+-    } catch (e) {
+-      emit(FavoriteState.toggleError(
+-        adId: event.adId,
+-        message: ErrorMessageUtil.getUserFriendlyMessage(e.toString()),
+-      ));
++    } finally {
++      _inFlight.remove(event.adId);
+     }
+   }
+ 
+diff --git a/lib/features/home/ui/add_detail_page.dart b/lib/features/home/ui/add_detail_page.dart
+index b75a41f..9bc17a2 100644
+--- a/lib/features/home/ui/add_detail_page.dart
++++ b/lib/features/home/ui/add_detail_page.dart
+@@ -212,7 +212,7 @@ Download Adodad app to contact the seller and view more details!
+   @override
+   Widget build(BuildContext context) {
+     return Scaffold(
+-      backgroundColor: Colors.white,
++      backgroundColor: AppColors.whiteColor,
+       body: SafeArea(
+         top: false,
+         // minimum: const EdgeInsets.only(bottom: 80),
+@@ -896,12 +896,12 @@ Download Adodad app to contact the seller and view more details!
+   }
+ 
+   Widget _buildVideoItem(String videoUrl) {
+-    print('🎥 Building video item with URL: $videoUrl');
++    debugPrint('🎥 Building video item with URL: $videoUrl');
+     // Store callback for video completion
+     _onVideoCompleteCallbacks[videoUrl] = _onVideoComplete;
+     return GestureDetector(
+       onTap: () {
+-        print('🎥 Video tapped, opening full screen...');
++        debugPrint('🎥 Video tapped, opening full screen...');
+         _openVideoFullScreen(context, videoUrl);
+       },
+       behavior: HitTestBehavior.opaque,
+@@ -964,7 +964,7 @@ Download Adodad app to contact the seller and view more details!
+               Positioned.fill(
+                 child: GestureDetector(
+                   onTap: () {
+-                    print('🎥 Video overlay tapped, opening full screen...');
++                    debugPrint('🎥 Video overlay tapped, opening full screen...');
+                     _openVideoFullScreen(context, videoUrl);
+                   },
+                   behavior: HitTestBehavior.opaque,
+@@ -975,7 +975,7 @@ Download Adodad app to contact the seller and view more details!
+                         color: Colors.transparent,
+                         child: InkWell(
+                           onTap: () {
+-                            print(
++                            debugPrint(
+                                 '🎥 Play button tapped, opening full screen...');
+                             _openVideoFullScreen(context, videoUrl);
+                           },
+@@ -1618,7 +1618,7 @@ Download Adodad app to contact the seller and view more details!
+               Text(
+                 ad.description,
+                 style: TextStyle(
+-                  color: Colors.black,
++                  color: AppColors.blackColor,
+                   height: 1.35,
+                   fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                       mobile: 14, tablet: 22, largeTablet: 26, desktop: 30),
+@@ -2176,7 +2176,7 @@ Download Adodad app to contact the seller and view more details!
+             mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
+       ),
+       decoration: BoxDecoration(
+-        color: Colors.white,
++        color: AppColors.whiteColor,
+         borderRadius: BorderRadius.circular(
+           GetResponsiveSize.getResponsiveBorderRadius(context,
+               mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
+@@ -2425,14 +2425,14 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
+   @override
+   void initState() {
+     super.initState();
+-    print(
++    debugPrint(
+         '🎥 _VideoPlayerWidget initState called with URL: ${widget.videoUrl}');
+     _initializeVideo();
+   }
+ 
+   Future<void> _initializeVideo() async {
+     try {
+-      print('🎥 Initializing video: ${widget.videoUrl}');
++      debugPrint('🎥 Initializing video: ${widget.videoUrl}');
+ 
+       // Validate URL
+       if (widget.videoUrl.isEmpty) {
+@@ -2450,11 +2450,11 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
+         throw Exception('Invalid video URL format: $cleanUrl');
+       }
+ 
+-      print('🎥 Creating VideoPlayerController with URI: $uri');
++      debugPrint('🎥 Creating VideoPlayerController with URI: $uri');
+ 
+       // Skip URL accessibility test as it often fails unnecessarily
+       // and video player can handle network issues better
+-      print(
++      debugPrint(
+           '🎥 Skipping URL accessibility test - proceeding with video initialization');
+ 
+       _videoPlayerController = VideoPlayerController.networkUrl(uri);
+@@ -2462,7 +2462,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
+       // Add listener to update UI when video state changes
+       _videoPlayerController!.addListener(_videoListener);
+ 
+-      print('🎥 Starting video initialization...');
++      debugPrint('🎥 Starting video initialization...');
+ 
+       // Add timeout to video initialization
+       await _videoPlayerController!.initialize().timeout(
+@@ -2472,10 +2472,10 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
+         },
+       );
+ 
+-      print('🎥 Video initialized successfully');
+-      print('🎥 Video duration: ${_videoPlayerController!.value.duration}');
+-      print('🎥 Video size: ${_videoPlayerController!.value.size}');
+-      print(
++      debugPrint('🎥 Video initialized successfully');
++      debugPrint('🎥 Video duration: ${_videoPlayerController!.value.duration}');
++      debugPrint('🎥 Video size: ${_videoPlayerController!.value.size}');
++      debugPrint(
+           '🎥 Video aspect ratio: ${_videoPlayerController!.value.aspectRatio}');
+ 
+       // Initialize Chewie controller with proper controls
+@@ -2513,18 +2513,18 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
+           _isInitialized = true;
+           _isLoading = false;
+         });
+-        print('🎥 Video state updated to initialized');
++        debugPrint('🎥 Video state updated to initialized');
+       }
+     } catch (e) {
+-      print('❌ Video initialization error: $e');
+-      print('❌ Error type: ${e.runtimeType}');
++      debugPrint('❌ Video initialization error: $e');
++      debugPrint('❌ Error type: ${e.runtimeType}');
+       if (mounted) {
+         setState(() {
+           _hasError = true;
+           _isLoading = false;
+           _errorMessage = _getUserFriendlyErrorMessage(e);
+         });
+-        print('🎥 Video state updated to error');
++        debugPrint('🎥 Video state updated to error');
+       }
+     }
+   }
+@@ -2532,14 +2532,14 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
+   void _videoListener() {
+     if (mounted && _videoPlayerController != null) {
+       final value = _videoPlayerController!.value;
+-      print(
++      debugPrint(
+           '🎥 Video state: initialized=${value.isInitialized}, error=${value.errorDescription}');
+-      print(
++      debugPrint(
+           '🎥 Video duration: ${value.duration}, position: ${value.position}');
+-      print('🎥 Video size: ${value.size}, aspectRatio: ${value.aspectRatio}');
++      debugPrint('🎥 Video size: ${value.size}, aspectRatio: ${value.aspectRatio}');
+ 
+       if (value.hasError && value.errorDescription != null) {
+-        print('❌ Video player error: ${value.errorDescription}');
++        debugPrint('❌ Video player error: ${value.errorDescription}');
+         setState(() {
+           _hasError = true;
+           _isLoading = false;
+@@ -2550,7 +2550,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
+         setState(() {
+           _isLoading = false;
+         });
+-        print(
++        debugPrint(
+             '🎥 Video player initialized successfully - controls should be available');
+       }
+ 
+@@ -2566,7 +2566,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
+               value.duration - const Duration(milliseconds: 100) &&
+           !_hasCalledCompletion) {
+         // Video has reached the end (with 100ms tolerance)
+-        print('🎥 Video completed - calling completion callback');
++        debugPrint('🎥 Video completed - calling completion callback');
+         _hasCalledCompletion = true;
+         widget.onVideoComplete?.call();
+       }
+@@ -2597,7 +2597,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
+ 
+   Future<void> _testWithSampleVideo() async {
+     try {
+-      print('🎥 Testing with sample video...');
++      debugPrint('🎥 Testing with sample video...');
+ 
+       // Use a known working sample video URL
+       const testVideoUrl =
+@@ -2613,7 +2613,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
+       // Add listener to update UI when video state changes
+       _videoPlayerController!.addListener(_videoListener);
+ 
+-      print('🎥 Starting test video initialization...');
++      debugPrint('🎥 Starting test video initialization...');
+       await _videoPlayerController!.initialize().timeout(
+         const Duration(seconds: 15),
+         onTimeout: () {
+@@ -2621,10 +2621,10 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
+         },
+       );
+ 
+-      print('🎥 Test video initialized successfully');
+-      print(
++      debugPrint('🎥 Test video initialized successfully');
++      debugPrint(
+           '🎥 Test video duration: ${_videoPlayerController!.value.duration}');
+-      print('🎥 Test video size: ${_videoPlayerController!.value.size}');
++      debugPrint('🎥 Test video size: ${_videoPlayerController!.value.size}');
+ 
+       // Initialize Chewie controller for test video
+       _chewieController = ChewieController(
+@@ -2658,10 +2658,10 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
+           _isInitialized = true;
+           _isLoading = false;
+         });
+-        print('🎥 Test video state updated to initialized');
++        debugPrint('🎥 Test video state updated to initialized');
+       }
+     } catch (e) {
+-      print('❌ Test video initialization error: $e');
++      debugPrint('❌ Test video initialization error: $e');
+       if (mounted) {
+         setState(() {
+           _hasError = true;
+@@ -2922,7 +2922,7 @@ class _VideoFullScreenViewerState extends State<_VideoFullScreenViewer> {
+ 
+   Future<void> _initializeVideo() async {
+     try {
+-      print('🎥 Initializing full-screen video: ${widget.videoUrl}');
++      debugPrint('🎥 Initializing full-screen video: ${widget.videoUrl}');
+ 
+       if (widget.videoUrl.isEmpty) {
+         throw Exception('Video URL is empty');
+@@ -2981,7 +2981,7 @@ class _VideoFullScreenViewerState extends State<_VideoFullScreenViewer> {
+         });
+       }
+     } catch (e) {
+-      print('❌ Full-screen video initialization error: $e');
++      debugPrint('❌ Full-screen video initialization error: $e');
+       if (mounted) {
+         setState(() {
+           _hasError = true;
+diff --git a/lib/features/home/ui/car_filters_page.dart b/lib/features/home/ui/car_filters_page.dart
+index 6fa48f7..fe540a0 100644
+--- a/lib/features/home/ui/car_filters_page.dart
++++ b/lib/features/home/ui/car_filters_page.dart
+@@ -106,6 +106,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
+     // Both "Car" and "Premium Vehicles" use categoryId 'private_vehicle'
+     // Both should show 'passenger_car' manufacturers
+     if (categoryId == 'private_vehicle' || categoryId == 'commercial_vehicle') {
++      // TODO(backend): commercial vehicles should use their own manufacturer category
+       return 'passenger_car';
+     }
+     return null; // No filter if category is not recognized
+diff --git a/lib/features/home/ui/category_list_page.dart b/lib/features/home/ui/category_list_page.dart
+index 049dd80..fa7ac85 100644
+--- a/lib/features/home/ui/category_list_page.dart
++++ b/lib/features/home/ui/category_list_page.dart
+@@ -39,6 +39,11 @@ class _CategoryListPageState extends State<CategoryListPage> {
+   double? _lat;
+   double? _lng;
+ 
++  /// Premium Vehicles filters client-side, so it keeps pulling pages until the
++  /// feed is exhausted. Guarded so it fires once per state change (never on
++  /// every rebuild).
++  bool _autoPaging = false;
++
+   // Helper method to check if this is Premium Vehicles category
+   bool get _isPremiumVehiclesCategory {
+     return widget.categoryTitle.toLowerCase().contains('premium');
+@@ -111,11 +116,11 @@ class _CategoryListPageState extends State<CategoryListPage> {
+             }
+           }
+         }
+-        print(
++        debugPrint(
+             '✅ Cached ${_manufacturerPremiumCache.length} manufacturers with isPremium data');
+       }
+     } catch (e) {
+-      print('⚠️ Error fetching manufacturer isPremium: $e');
++      debugPrint('⚠️ Error fetching manufacturer isPremium: $e');
+     }
+   }
+ 
+@@ -173,6 +178,71 @@ class _CategoryListPageState extends State<CategoryListPage> {
+   //   }
+   // }
+ 
++  /// Re-applies the currently selected filters. Shared by pull-to-refresh and
++  /// the error-state Retry button so both send exactly the same query.
++  Future<void> _applyCurrentFilters() async {
++    if (widget.categoryId == 'property') {
++      // Property filters
++      context.read<AdvertisementBloc>().add(
++            AdvertisementEvent.applyFilters(
++              categoryId: widget.categoryId,
++              latitude: _lat,
++              longitude: _lng,
++              propertyTypes:
++                  (_filters['propertyTypes'] as List?)?.cast<String>(),
++              minBedrooms: _filters['minBedrooms'] as int?,
++              maxBedrooms: _filters['maxBedrooms'] as int?,
++              minPrice: _filters['minPrice'] as int?,
++              maxPrice: _filters['maxPrice'] as int?,
++              minArea: _filters['minArea'] as int?,
++              maxArea: _filters['maxArea'] as int?,
++              isFurnished: _filters['isFurnished'] as bool?,
++              hasParking: _filters['hasParking'] as bool?,
++            ),
++          );
++    } else {
++      // Vehicle filters
++      // For Premium Vehicles, pass null to fetch all categories
++      context.read<AdvertisementBloc>().add(
++            AdvertisementEvent.applyFilters(
++              categoryId: _effectiveCategoryId,
++              latitude: _lat,
++              longitude: _lng,
++              commercialVehicleTypes:
++                  (_filters['commercialVehicleTypes'] as List?)?.cast<String>(),
++              minYear: _filters['minYear'] as int?,
++              maxYear: _filters['maxYear'] as int?,
++              manufacturerIds:
++                  (_filters['manufacturerIds'] as List?)?.cast<String>(),
++              modelIds: (_filters['modelIds'] as List?)?.cast<String>(),
++              fuelTypeIds: (_filters['fuelTypeIds'] as List?)?.cast<String>(),
++              transmissionTypeIds:
++                  (_filters['transmissionTypeIds'] as List?)?.cast<String>(),
++              minPrice: _filters['minPrice'] as int?,
++              maxPrice: _filters['maxPrice'] as int?,
++            ),
++          );
++    }
++  }
++
++  /// Premium Vehicles filters client-side, so all pages have to be pulled in.
++  /// Runs from the bloc listener (once per state change) rather than from
++  /// `build()`, so it cannot loop on every rebuild.
++  void _maybeAutoPagePremium(AdvertisementState state) {
++    if (!_isPremiumVehiclesCategory) return;
++    if (state is! ListingsLoaded) {
++      _autoPaging = false;
++      return;
++    }
++    // A new state arrived, so any auto-page request we sent has completed.
++    _autoPaging = false;
++    if (!state.hasMore) return;
++    _autoPaging = true;
++    context.read<AdvertisementBloc>().add(
++          const AdvertisementEvent.fetchNextPage(),
++        );
++  }
++
+   @override
+   Widget build(BuildContext context) {
+     return PopScope(
+@@ -231,6 +301,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
+                     final result = await context.push(
+                         '/property-filter?categoryId=${widget.categoryId}&title=${Uri.encodeComponent(widget.categoryTitle)}',
+                         extra: _filters);
++                    if (!context.mounted) return;
+                     if (result is Map<String, dynamic>) {
+                       _filters = result;
+                       context.read<AdvertisementBloc>().add(
+@@ -256,6 +327,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
+                     final result = await context.push(
+                         '/car-filter?categoryId=${widget.categoryId}&title=${Uri.encodeComponent(widget.categoryTitle)}',
+                         extra: _filters);
++                    if (!context.mounted) return;
+                     if (result is Map<String, dynamic>) {
+                       _filters = result;
+                       context.read<AdvertisementBloc>().add(
+@@ -316,7 +388,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
+         body: SafeArea(
+           top: false,
+           minimum: const EdgeInsets.only(bottom: 30),
+-          child: BlocBuilder<AdvertisementBloc, AdvertisementState>(
++          child: BlocConsumer<AdvertisementBloc, AdvertisementState>(
++            listener: (context, state) => _maybeAutoPagePremium(state),
+             builder: (context, state) {
+               if (state is AdvertisementLoading ||
+                   state is AdvertisementInitial) {
+@@ -374,14 +447,9 @@ class _CategoryListPageState extends State<CategoryListPage> {
+                         ),
+                         ElevatedButton(
+                           onPressed: () {
+-                            // Retry loading
+-                            context.read<AdvertisementBloc>().add(
+-                                  AdvertisementEvent.applyFilters(
+-                                    categoryId: widget.categoryId,
+-                                    latitude: _lat,
+-                                    longitude: _lng,
+-                                  ),
+-                                );
++                            // Retry loading with the filters that are actually
++                            // applied (same query as pull-to-refresh).
++                            _applyCurrentFilters();
+                           },
+                           style: ElevatedButton.styleFrom(
+                             backgroundColor: AppColors.primaryColor,
+@@ -414,80 +482,13 @@ class _CategoryListPageState extends State<CategoryListPage> {
+                 // For Premium Vehicles: Apply all filters client-side since we fetch all categories
+                 // (categoryId is null), so server-side filters may not work correctly
+                 if (isPremiumCategory) {
+-                  // Debug: Show total items from all pages
+-                  print(
+-                      '📦 Total items loaded from all pages: ${items.length} (hasMore: ${state.hasMore})');
+-
+                   // Enrich ads with manufacturer isPremium data from cache
+                   items = items.map((ad) => _enrichAdWithPremium(ad)).toList();
+ 
+-                  // Debug: Check what's in the manufacturer objects
+-                  print(
+-                      '🔍 Premium Category Filter - Total items before filter: ${items.length}');
+-
+-                  // Check for specific ad ID
+-                  final specificAdId = '690325a2fb5f59e577b0208c';
+-                  final specificAd =
+-                      items.where((ad) => ad.id == specificAdId).firstOrNull;
+-                  if (specificAd != null) {
+-                    print('🎯 SPECIFIC AD FOUND - ID: ${specificAd.id}');
+-                    print('🎯 Manufacturer ID: ${specificAd.manufacturer?.id}');
+-                    print(
+-                        '🎯 Manufacturer isPremium: ${specificAd.manufacturer?.isPremium}');
+-                    print(
+-                        '🎯 Manufacturer name: ${specificAd.manufacturer?.name}');
+-                    print(
+-                        '🎯 Manufacturer object: ${specificAd.manufacturer?.toJson()}');
+-                  } else {
+-                    print('⚠️ SPECIFIC AD NOT FOUND in items list');
+-                  }
+-
+-                  // Count how many have isPremium == true
+-                  final premiumCount = items
+-                      .where((ad) => ad.manufacturer?.isPremium == true)
+-                      .length;
+-                  print(
+-                      '📊 Ads with isPremium == true: $premiumCount out of ${items.length}');
+-
+                   // First filter by isPremium
+-                  items = items.where((ad) {
+-                    final isPremium = ad.manufacturer?.isPremium == true;
+-                    if (ad.id == specificAdId) {
+-                      print(
+-                          '🎯 FILTERING - Ad ID: ${ad.id}, isPremium result: $isPremium');
+-                    }
+-                    return isPremium;
+-                  }).toList();
+-
+-                  print(
+-                      '✅ Premium Category Filter - Total items after filter: ${items.length}');
+-
+-                  // Check if specific ad is in filtered list
+-                  final isInFilteredList =
+-                      items.any((ad) => ad.id == specificAdId);
+-                  print('🎯 SPECIFIC AD IN FILTERED LIST: $isInFilteredList');
+-
+-                  // Debug: Print all filtered ad IDs
+-                  print(
+-                      '📋 Filtered ad IDs: ${items.map((ad) => ad.id).toList()}');
+-
+-                  // For premium category, we need to load ALL pages to get all premium items
+-                  // Since filtering is client-side, we need all data first
+-                  // Auto-load more pages if we have more data available
+-                  if (state.hasMore) {
+-                    print(
+-                        '🔄 Auto-loading more pages for premium category (hasMore: true)...');
+-                    // Use Future.microtask to avoid setState during build
+-                    Future.microtask(() {
+-                      if (mounted) {
+-                        context.read<AdvertisementBloc>().add(
+-                              const AdvertisementEvent.fetchNextPage(),
+-                            );
+-                      }
+-                    });
+-                  } else {
+-                    print('✅ All pages loaded (hasMore: false)');
+-                  }
++                  items = items
++                      .where((ad) => ad.manufacturer?.isPremium == true)
++                      .toList();
+ 
+                   // Then apply all other filters from _filters map
+                   // Manufacturer filter
+@@ -731,56 +732,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
+     final isPremiumCategory =
+         widget.categoryTitle.toLowerCase().contains('premium');
+     return RefreshIndicator(
+-                  onRefresh: () async {
+-                    if (widget.categoryId == 'property') {
+-                      // Property filters
+-                      context.read<AdvertisementBloc>().add(
+-                            AdvertisementEvent.applyFilters(
+-                              categoryId: widget.categoryId,
+-                              latitude: _lat,
+-                              longitude: _lng,
+-                              propertyTypes:
+-                                  (_filters['propertyTypes'] as List?)
+-                                      ?.cast<String>(),
+-                              minBedrooms: _filters['minBedrooms'] as int?,
+-                              maxBedrooms: _filters['maxBedrooms'] as int?,
+-                              minPrice: _filters['minPrice'] as int?,
+-                              maxPrice: _filters['maxPrice'] as int?,
+-                              minArea: _filters['minArea'] as int?,
+-                              maxArea: _filters['maxArea'] as int?,
+-                              isFurnished: _filters['isFurnished'] as bool?,
+-                              hasParking: _filters['hasParking'] as bool?,
+-                            ),
+-                          );
+-                    } else {
+-                      // Vehicle filters
+-                      // For Premium Vehicles, pass null to fetch all categories
+-                      context.read<AdvertisementBloc>().add(
+-                            AdvertisementEvent.applyFilters(
+-                              categoryId: _effectiveCategoryId,
+-                              latitude: _lat,
+-                              longitude: _lng,
+-                              commercialVehicleTypes:
+-                                  (_filters['commercialVehicleTypes'] as List?)
+-                                      ?.cast<String>(),
+-                              minYear: _filters['minYear'] as int?,
+-                              maxYear: _filters['maxYear'] as int?,
+-                              manufacturerIds:
+-                                  (_filters['manufacturerIds'] as List?)
+-                                      ?.cast<String>(),
+-                              modelIds: (_filters['modelIds'] as List?)
+-                                  ?.cast<String>(),
+-                              fuelTypeIds: (_filters['fuelTypeIds'] as List?)
+-                                  ?.cast<String>(),
+-                              transmissionTypeIds:
+-                                  (_filters['transmissionTypeIds'] as List?)
+-                                      ?.cast<String>(),
+-                              minPrice: _filters['minPrice'] as int?,
+-                              maxPrice: _filters['maxPrice'] as int?,
+-                            ),
+-                          );
+-                    }
+-                  },
++                  onRefresh: _applyCurrentFilters,
+                   child: GridView.builder(
+                     controller: _scrollController,
+                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+@@ -791,10 +743,14 @@ class _CategoryListPageState extends State<CategoryListPage> {
+                           richAdCardMainAxisExtent(context, columns: 2),
+                     ),
+                     padding: const EdgeInsets.fromLTRB(15, 10, 15, 100),
+-                    // For Premium Vehicles, don't show loading indicator once list is loaded
+-                    // For other categories, show loading indicator if more pages are available
++                    // Show the loading indicator while more pages are on the
++                    // way. For Premium Vehicles that is only while the
++                    // client-side auto-paging is still pulling pages.
+                     itemCount: items.length +
+-                        ((!isPremiumCategory && state.hasMore) ? 1 : 0),
++                        ((state.hasMore &&
++                                (!isPremiumCategory || _autoPaging))
++                            ? 1
++                            : 0),
+                     itemBuilder: (context, index) {
+                       if (index < items.length) {
+                         return RichAdCard(ad: items[index]);
+diff --git a/lib/features/home/ui/edit_add_details/commercial_vehicle_form_edit.dart b/lib/features/home/ui/edit_add_details/commercial_vehicle_form_edit.dart
+index 92f4e69..8e0b52c 100644
+--- a/lib/features/home/ui/edit_add_details/commercial_vehicle_form_edit.dart
++++ b/lib/features/home/ui/edit_add_details/commercial_vehicle_form_edit.dart
+@@ -182,7 +182,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
+     final repo = AddRepository();
+ 
+     // manufacturers with vehicleCategory 'passenger_car'
+-    // TODO(backend): commercial manufacturer category
++    // TODO(backend): commercial vehicles should use their own manufacturer category
+     try {
+       _manufacturers =
+           await repo.fetchManufacturers(vehicleCategory: 'passenger_car');
+@@ -333,19 +333,19 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
+   Future<void> _uploadVideo() async {
+     if (_newVideoFile != null) {
+       try {
+-        print('📹 Starting video upload...');
++        debugPrint('📹 Starting video upload...');
+         final url = await AddRepository().uploadVideoToS3(_newVideoFile!);
+         if (url != null) {
+-          print('✅ Video uploaded successfully: $url');
++          debugPrint('✅ Video uploaded successfully: $url');
+           setState(() {
+             _uploadedVideoUrl = url;
+             _videoRemoved = false; // Reset removal flag when video is uploaded
+           });
+         } else {
+-          print('❌ Video upload returned null URL');
++          debugPrint('❌ Video upload returned null URL');
+         }
+       } catch (e) {
+-        print('❌ Error uploading video: $e');
++        debugPrint('❌ Error uploading video: $e');
+         // Optionally show error to user
+         if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+@@ -666,6 +666,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
+                     errorMsg: 'Please select a manufacturer',
+                     getDisplayText: (item) => item.displayName,
+                     onSearch: (query) async {
++                      // TODO(backend): commercial vehicles should use their own manufacturer category
+                       return await AddRepository().fetchManufacturers(
+                         search: query,
+                         vehicleCategory: 'passenger_car',
+diff --git a/lib/features/home/ui/home_page.dart b/lib/features/home/ui/home_page.dart
+index 6255c76..225a727 100644
+--- a/lib/features/home/ui/home_page.dart
++++ b/lib/features/home/ui/home_page.dart
+@@ -117,7 +117,7 @@ class _HomePageState extends State<HomePage> {
+   void _onScroll() {
+     if (_scrollController.position.pixels >=
+         _scrollController.position.maxScrollExtent - 300) {
+-      print(
++      debugPrint(
+           "🧭 Scroll Position: ${_scrollController.position.pixels} / ${_scrollController.position.maxScrollExtent}");
+ 
+       // Trigger next page load when nearing bottom
+@@ -193,7 +193,7 @@ class _HomePageState extends State<HomePage> {
+           return;
+         }
+       } catch (e) {
+-        print("Google Places reverse geocoding failed: $e");
++        debugPrint("Google Places reverse geocoding failed: $e");
+       }
+ 
+       // Fallback to standard geocoding
+@@ -229,7 +229,7 @@ class _HomePageState extends State<HomePage> {
+       });
+       await _applyLocationBasedRecommendations(newAddress);
+     } catch (e) {
+-      print("Location error: $e");
++      debugPrint("Location error: $e");
+       if (!mounted) return;
+       setState(() {
+         _userLocation = "Location not available";
+@@ -290,7 +290,7 @@ class _HomePageState extends State<HomePage> {
+           setState(() {
+             _isLocationRecommendationsMode = true;
+           });
+-          print("🔍 Searching by location: ${point.lat}, ${point.lng}");
++          debugPrint("🔍 Searching by location: ${point.lat}, ${point.lng}");
+           context.read<AdvertisementBloc>().add(
+                 AdvertisementEvent.searchByLocation(
+                   latitude: point.lat,
+@@ -301,7 +301,7 @@ class _HomePageState extends State<HomePage> {
+         }
+       }
+     } catch (e) {
+-      print('Error applying location recommendations: $e');
++      debugPrint('Error applying location recommendations: $e');
+     }
+ 
+     if (!mounted) return;
+@@ -329,7 +329,7 @@ class _HomePageState extends State<HomePage> {
+ 
+       return null;
+     } catch (e) {
+-      print("Error getting detailed address: $e");
++      debugPrint("Error getting detailed address: $e");
+       return null;
+     }
+   }
+@@ -650,7 +650,7 @@ class _HomePageState extends State<HomePage> {
+                   }
+                 },
+                 color: AppColors.primaryColor,
+-                backgroundColor: Colors.white,
++                backgroundColor: AppColors.whiteColor,
+                 child: SingleChildScrollView(
+                   controller: _scrollController,
+                   physics: const BouncingScrollPhysics(),
+@@ -959,7 +959,7 @@ class _HomePageState extends State<HomePage> {
+     return GestureDetector(
+       onTap: () {
+         _launchURL(link);
+-        print('$link clickkedddd..........');
++        debugPrint('$link clickkedddd..........');
+       },
+       child: Padding(
+         // padding: const EdgeInsets.symmetric(horizontal: 12),
+@@ -988,7 +988,7 @@ class _HomePageState extends State<HomePage> {
+     if (await canLaunchUrl(uri)) {
+       await launchUrl(uri, mode: LaunchMode.externalApplication);
+     } else {
+-      print("❌ Could not launch $url");
++      debugPrint("❌ Could not launch $url");
+     }
+   }
+ 
+@@ -1252,7 +1252,7 @@ class _HomePageState extends State<HomePage> {
+             },
+             // iOS-specific refresh indicator configurations
+             color: AppColors.primaryColor,
+-            backgroundColor: Colors.white,
++            backgroundColor: AppColors.whiteColor,
+             child: LayoutBuilder(
+               builder: (context, constraints) {
+                 final cols = _columnsForWidth(constraints.maxWidth);
+diff --git a/lib/features/home/ui/sellerprofile/bloc/bloc/seller_profile_bloc.dart b/lib/features/home/ui/sellerprofile/bloc/bloc/seller_profile_bloc.dart
+index 8e5d7fc..80f7855 100644
+--- a/lib/features/home/ui/sellerprofile/bloc/bloc/seller_profile_bloc.dart
++++ b/lib/features/home/ui/sellerprofile/bloc/bloc/seller_profile_bloc.dart
+@@ -1,6 +1,7 @@
+ import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+ import 'package:ado_dad_user/repositories/seller_profile_repo.dart';
+ import 'package:bloc/bloc.dart';
++import 'package:flutter/foundation.dart' show debugPrint;
+ import 'package:freezed_annotation/freezed_annotation.dart';
+ 
+ part 'seller_profile_event.dart';
+@@ -56,8 +57,11 @@ class SellerProfileBloc extends Bloc<SellerProfileEvent, SellerProfileState> {
+           isPaging: false,
+         ));
+       } catch (e) {
++        // Keep the already-loaded ads (an error state would wipe them). The
++        // page counter lives in the state and was never advanced, so a retry
++        // re-requests the same page.
++        debugPrint('❌ Failed to load more seller ads: $e');
+         emit(current.copyWith(isPaging: false));
+-        emit(SellerProfileState.error(e.toString()));
+       }
+     }
+   }
+diff --git a/lib/features/home/ui/sellerprofile/seller_profile_page.dart b/lib/features/home/ui/sellerprofile/seller_profile_page.dart
+index ba6d988..3b99853 100644
+--- a/lib/features/home/ui/sellerprofile/seller_profile_page.dart
++++ b/lib/features/home/ui/sellerprofile/seller_profile_page.dart
+@@ -32,17 +32,6 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
+     });
+   }
+ 
+-  @override
+-  void didChangeDependencies() {
+-    super.didChangeDependencies();
+-    // Refresh data when returning to this page
+-    WidgetsBinding.instance.addPostFrameCallback((_) {
+-      context.read<SellerProfileBloc>().add(
+-            SellerProfileEvent.fetchUserAds(widget.seller.id),
+-          );
+-    });
+-  }
+-
+   @override
+   Widget build(BuildContext context) {
+     final theme = Theme.of(context);
+diff --git a/lib/features/home/ui/widgets/ad_detail_action_buttons.dart b/lib/features/home/ui/widgets/ad_detail_action_buttons.dart
+index 8f14d5d..269379a 100644
+--- a/lib/features/home/ui/widgets/ad_detail_action_buttons.dart
++++ b/lib/features/home/ui/widgets/ad_detail_action_buttons.dart
+@@ -18,16 +18,63 @@ String toTitleCase(String text) {
+       .join(' ');
+ }
+ 
+-class AdDetailFavoriteButton extends StatelessWidget {
++class AdDetailFavoriteButton extends StatefulWidget {
+   final AddModel ad;
+ 
+   const AdDetailFavoriteButton({super.key, required this.ad});
+ 
++  @override
++  State<AdDetailFavoriteButton> createState() => _AdDetailFavoriteButtonState();
++}
++
++class _AdDetailFavoriteButtonState extends State<AdDetailFavoriteButton> {
++  late bool _isFavorited;
++  bool _pendingToggle = false;
++
++  AddModel get ad => widget.ad;
++
++  @override
++  void initState() {
++    super.initState();
++    _isFavorited = widget.ad.isFavorited ?? false;
++  }
++
++  @override
++  void didUpdateWidget(covariant AdDetailFavoriteButton oldWidget) {
++    super.didUpdateWidget(oldWidget);
++    // Keep in sync if a different ad (or a refreshed copy) is supplied.
++    if (oldWidget.ad.id != widget.ad.id ||
++        oldWidget.ad.isFavorited != widget.ad.isFavorited) {
++      _isFavorited = widget.ad.isFavorited ?? false;
++    }
++  }
++
+   @override
+   Widget build(BuildContext context) {
++    return BlocListener<FavoriteBloc, FavoriteState>(
++      listener: (context, state) {
++        // Revert the optimistic flip only when the bloc reports a failure
++        // for this exact ad.
++        if (state is FavoriteToggleError && state.adId == ad.id) {
++          if (_pendingToggle) {
++            _pendingToggle = false;
++            setState(() => _isFavorited = !_isFavorited);
++          }
++        } else if (state is FavoriteToggleSuccess && state.adId == ad.id) {
++          _pendingToggle = false;
++          if (_isFavorited != state.isFavorited) {
++            setState(() => _isFavorited = state.isFavorited);
++          }
++        }
++      },
++      child: _buildButton(context),
++    );
++  }
++
++  Widget _buildButton(BuildContext context) {
+     return BlocBuilder<FavoriteBloc, FavoriteState>(
+       builder: (context, state) {
+-        bool isFavorited = ad.isFavorited ?? false;
++        final bool isFavorited = _isFavorited;
+ 
+         if (state is FavoriteToggleLoading && state.adId == ad.id) {
+           return Container(
+@@ -74,10 +121,6 @@ class AdDetailFavoriteButton extends StatelessWidget {
+           );
+         }
+ 
+-        if (state is FavoriteToggleSuccess && state.adId == ad.id) {
+-          isFavorited = state.isFavorited;
+-        }
+-
+         return InkWell(
+           onTap: () async {
+             // Check authentication before allowing favorite toggle
+@@ -90,11 +133,17 @@ class AdDetailFavoriteButton extends StatelessWidget {
+               );
+               return;
+             }
++            if (!mounted) return;
++
++            final wasFavorited = _isFavorited;
++            // Optimistic flip; reverted by the listener if the toggle fails.
++            _pendingToggle = true;
++            setState(() => _isFavorited = !wasFavorited);
+ 
+             context.read<FavoriteBloc>().add(
+                   FavoriteEvent.toggleFavorite(
+                     adId: ad.id,
+-                    isCurrentlyFavorited: isFavorited,
++                    isCurrentlyFavorited: wasFavorited,
+                   ),
+                 );
+           },
+diff --git a/lib/features/home/ui/widgets/ad_detail_description.dart b/lib/features/home/ui/widgets/ad_detail_description.dart
+index 2004341..c75b574 100644
+--- a/lib/features/home/ui/widgets/ad_detail_description.dart
++++ b/lib/features/home/ui/widgets/ad_detail_description.dart
+@@ -1,3 +1,4 @@
++import 'package:ado_dad_user/common/app_colors.dart';
+ import 'package:ado_dad_user/common/get_responsive_size.dart';
+ import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+ import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_card_shell.dart';
+@@ -46,7 +47,7 @@ class AdDetailDescription extends StatelessWidget {
+               Text(
+                 ad.description,
+                 style: TextStyle(
+-                  color: Colors.black,
++                  color: AppColors.blackColor,
+                   height: 1.35,
+                   fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                       mobile: 14, tablet: 22, largeTablet: 26, desktop: 30),
+diff --git a/lib/features/profile/MyAds/ui/my_ads_page.dart b/lib/features/profile/MyAds/ui/my_ads_page.dart
+index 35e8d7c..5628ae8 100644
+--- a/lib/features/profile/MyAds/ui/my_ads_page.dart
++++ b/lib/features/profile/MyAds/ui/my_ads_page.dart
+@@ -25,6 +25,24 @@ class _MyAdsPageState extends State<MyAdsPage> {
+   final ScrollController _scrollController = ScrollController();
+   String _statusFilter = 'all';
+ 
++  /// Page already requested by the "filtered view is empty" auto-pager.
++  /// Guards it against requesting the same page over and over.
++  int? _autoPagingPage;
++
++  /// A status filter can hide every ad on the pages loaded so far, leaving no
++  /// scrollable content and therefore no way to reach the next page. Keep
++  /// pulling pages until something matches or the list is exhausted.
++  void _scheduleAutoLoadMore(int nextPage) {
++    if (_autoPagingPage == nextPage) return;
++    _autoPagingPage = nextPage;
++    WidgetsBinding.instance.addPostFrameCallback((_) {
++      if (!mounted) return;
++      context.read<MyAdsBloc>().add(
++            MyAdsEvent.loadMore(nextPage: nextPage, limit: 20),
++          );
++    });
++  }
++
+   List<MyAd> _filterByStatus(List<MyAd> ads) {
+     switch (_statusFilter) {
+       case 'active':
+@@ -298,12 +316,12 @@ class _MyAdsPageState extends State<MyAdsPage> {
+   @override
+   Widget build(BuildContext context) {
+     return Scaffold(
+-      backgroundColor: const Color(0xFFF6F4FC),
++      backgroundColor: AppColors.whiteColor,
+       appBar: widget.embedded
+           ? null
+           : AppBar(
+               elevation: 0,
+-              backgroundColor: const Color(0xFFF6F4FC),
++              backgroundColor: AppColors.whiteColor,
+               leading: IconButton(
+                 icon: Icon(
+                   (!kIsWeb && Platform.isIOS)
+@@ -316,10 +334,15 @@ class _MyAdsPageState extends State<MyAdsPage> {
+               ),
+               title: BlocBuilder<MyAdsBloc, MyAdsState>(
+                 builder: (context, state) {
+-                  final count = state.maybeMap(
+-                      loaded: (s) => s.ads.length, orElse: () => 0);
++                  // Only the pages loaded so far are counted, so mark the
++                  // total as partial while more pages remain.
++                  final label = state.maybeMap(
++                    loaded: (s) =>
++                        'My Ads (${s.ads.length}${s.hasNext ? '+' : ''})',
++                    orElse: () => 'My Ads',
++                  );
+                   return Text(
+-                    'My Ads ($count)',
++                    label,
+                     style: TextStyle(
+                       fontWeight: FontWeight.w700,
+                       fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+@@ -327,7 +350,7 @@ class _MyAdsPageState extends State<MyAdsPage> {
+                           tablet: 24,
+                           largeTablet: 28,
+                           desktop: 32),
+-                      color: const Color(0xFF16181B),
++                      color: AppColors.blackColor,
+                     ),
+                   );
+                 },
+@@ -365,17 +388,22 @@ class _MyAdsPageState extends State<MyAdsPage> {
+                   );
+                 }
+                 final ads = _filterByStatus(loaded.ads);
++                if (ads.isEmpty && loaded.hasNext && !loaded.isPaging) {
++                  _scheduleAutoLoadMore(loaded.page + 1);
++                }
+                 return Column(
+                   children: [
+                     _buildStatusChips(),
+                     Expanded(
+                       child: ads.isEmpty
+                           ? Center(
+-                              child: Text(
+-                                'No ads in this filter',
+-                                style:
+-                                    TextStyle(color: Colors.grey.shade600),
+-                              ),
++                              child: (loaded.hasNext || loaded.isPaging)
++                                  ? const CircularProgressIndicator()
++                                  : Text(
++                                      'No ads in this filter',
++                                      style: TextStyle(
++                                          color: Colors.grey.shade600),
++                                    ),
+                             )
+                           : GridView.builder(
+                               controller: _scrollController,
+diff --git a/lib/features/profile/ui/profile_page.dart b/lib/features/profile/ui/profile_page.dart
+index 5b10cf1..e8f4103 100644
+--- a/lib/features/profile/ui/profile_page.dart
++++ b/lib/features/profile/ui/profile_page.dart
+@@ -45,6 +45,7 @@ class _ProfilePageState extends State<ProfilePage> {
+   String? _currentProfilePicUrl; // from API or after upload
+   bool _isSaving = false;
+   bool _isUpdatingProfile = false; // Track if we're updating profile
++  bool _isChangingPassword = false; // Track if a password change is in flight
+   UserProfile? _lastLoadedProfile; // Store last loaded profile to show on error
+ 
+   // Change password dialog controllers
+@@ -161,10 +162,10 @@ class _ProfilePageState extends State<ProfilePage> {
+       } else if (_lastLoadedProfile != null) {
+         // If state is Error but we have last loaded profile, use it
+         originalProfile = _lastLoadedProfile!;
+-        print("⚠️ Using last loaded profile due to error state");
++        debugPrint("⚠️ Using last loaded profile due to error state");
+       } else {
+         // No profile data available, try to fetch it
+-        print("⚠️ No profile data available, fetching...");
++        debugPrint("⚠️ No profile data available, fetching...");
+         context.read<ProfileBloc>().add(const ProfileEvent.fetchProfile());
+         throw 'Profile not loaded. Please wait a moment and try again.';
+       }
+@@ -206,10 +207,10 @@ class _ProfilePageState extends State<ProfilePage> {
+         try {
+           final repo = context.read<ProfileBloc>().repository;
+           profilePicUrl = await repo.uploadImageToS3(_pickedImageBytes!);
+-          print("📸 Uploaded new profile pic: $profilePicUrl");
++          debugPrint("📸 Uploaded new profile pic: $profilePicUrl");
+           _currentProfilePicUrl = profilePicUrl;
+         } catch (uploadError) {
+-          print("❌ Profile picture upload failed: $uploadError");
++          debugPrint("❌ Profile picture upload failed: $uploadError");
+           throw 'Failed to upload profile picture. Please try again.';
+         }
+       }
+@@ -243,13 +244,13 @@ class _ProfilePageState extends State<ProfilePage> {
+             profilePicChanged ? profilePicUrl : originalProfile.profilePic,
+       );
+ 
+-      print("🔄 Changes detected:");
+-      print("  - Name: ${nameChanged ? 'CHANGED' : 'unchanged'}");
+-      print("  - Email: ${emailChanged ? 'CHANGED' : 'unchanged'}");
+-      print("  - Phone: ${phoneChanged ? 'CHANGED' : 'unchanged'}");
+-      print(
++      debugPrint("🔄 Changes detected:");
++      debugPrint("  - Name: ${nameChanged ? 'CHANGED' : 'unchanged'}");
++      debugPrint("  - Email: ${emailChanged ? 'CHANGED' : 'unchanged'}");
++      debugPrint("  - Phone: ${phoneChanged ? 'CHANGED' : 'unchanged'}");
++      debugPrint(
+           "  - Country Code: ${countryCodeChanged ? 'CHANGED' : 'unchanged'}");
+-      print("  - Profile Pic: ${profilePicChanged ? 'CHANGED' : 'unchanged'}");
++      debugPrint("  - Profile Pic: ${profilePicChanged ? 'CHANGED' : 'unchanged'}");
+ 
+       // Dispatch update event
+       context
+@@ -263,7 +264,7 @@ class _ProfilePageState extends State<ProfilePage> {
+ 
+       // Success message will be shown in BlocConsumer listener after successful update
+     } catch (e) {
+-      print("❌ Profile save error: $e");
++      debugPrint("❌ Profile save error: $e");
+       ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(
+           content: Text(
+@@ -310,10 +311,11 @@ class _ProfilePageState extends State<ProfilePage> {
+   Future<void> _changePassword() async {
+     if (_changePasswordFormKey.currentState!.validate()) {
+       try {
++        // Close the dialog first so the result snackbar is visible.
++        Navigator.pop(context);
+         context.read<ProfileBloc>().add(
+               ProfileEvent.changePassword(_newPasswordController.text.trim()),
+             );
+-        Navigator.pop(context); // Close the dialog
+       } catch (e) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(
+@@ -375,6 +377,13 @@ class _ProfilePageState extends State<ProfilePage> {
+                     _isUpdatingProfile = true;
+                   }
+ 
++                  // Track when a password change starts, so its failure is
++                  // reported instead of being swallowed by the profile-update
++                  // guard below.
++                  if (state is profile_bloc.ChangingPassword) {
++                    _isChangingPassword = true;
++                  }
++
+                   if (state is profile_bloc.Error) {
+                     // Check if error is related to token expiration (silent logout)
+                     final isTokenExpirationError = state.message
+@@ -387,7 +396,7 @@ class _ProfilePageState extends State<ProfilePage> {
+ 
+                     // Don't show error UI for token expiration - logout is already in progress
+                     if (isTokenExpirationError) {
+-                      print(
++                      debugPrint(
+                           '🔇 Suppressing token expiration error in ProfilePage - logout in progress');
+                       _isUpdatingProfile = false;
+                       return; // Skip showing snackbar
+@@ -411,6 +420,27 @@ class _ProfilePageState extends State<ProfilePage> {
+                           backgroundColor: Colors.red.shade300.withOpacity(0.9),
+                         ),
+                       );
++                    } else if (_isChangingPassword) {
++                      // Password change failed: show the real server message
++                      // and put the page back into a loaded state.
++                      _isChangingPassword = false;
++                      ScaffoldMessenger.of(context).showSnackBar(
++                        SnackBar(
++                          content: Text(
++                            _cleanErrorMessage(state.message),
++                            style: const TextStyle(color: Colors.white),
++                          ),
++                          backgroundColor: Colors.red.shade300.withOpacity(0.9),
++                          duration: const Duration(seconds: 5),
++                        ),
++                      );
++                      WidgetsBinding.instance.addPostFrameCallback((_) {
++                        if (mounted) {
++                          context
++                              .read<ProfileBloc>()
++                              .add(const ProfileEvent.fetchProfile());
++                        }
++                      });
+                     } else {
+                       // Only show error message if it's a profile update error (not initial load error)
+                       if (_isUpdatingProfile) {
+@@ -433,6 +463,7 @@ class _ProfilePageState extends State<ProfilePage> {
+                   }
+ 
+                   if (state is profile_bloc.PasswordChanged) {
++                    _isChangingPassword = false;
+                     ScaffoldMessenger.of(context).showSnackBar(
+                       SnackBar(
+                         content: const Text(
+@@ -442,8 +473,15 @@ class _ProfilePageState extends State<ProfilePage> {
+                         backgroundColor: AppColors.primaryColor,
+                       ),
+                     );
+-                    // Navigate back to profile page
+-                    context.go('/profile');
++                    // Already on the profile page: reload it so the bloc
++                    // leaves the PasswordChanged state (which renders nothing).
++                    WidgetsBinding.instance.addPostFrameCallback((_) {
++                      if (mounted) {
++                        context
++                            .read<ProfileBloc>()
++                            .add(const ProfileEvent.fetchProfile());
++                      }
++                    });
+                   }
+ 
+                   if (state is profile_bloc.DataDeleted) {
+@@ -480,13 +518,13 @@ class _ProfilePageState extends State<ProfilePage> {
+                     phoneController.text = state.profile.phoneNumber;
+                     _countryCode = state.profile.countryCode ?? "+1";
+ 
+-                    print(
++                    debugPrint(
+                         "🔍 Original profile pic from API: ${state.profile.profilePic}");
+ 
+                     // Keep the original profile pic value as is
+                     _currentProfilePicUrl = state.profile.profilePic;
+ 
+-                    print(
++                    debugPrint(
+                         "🔍 Processed profile pic URL: $_currentProfilePicUrl");
+                     _seededOnce = true;
+                   }
+@@ -556,8 +594,20 @@ class _ProfilePageState extends State<ProfilePage> {
+                   }
+ 
+                   // Show profile content when loaded, while saving, or on error (if we have last loaded profile)
++                  // Transient states (password change, data delete) must
++                  // keep rendering the last loaded profile — otherwise the
++                  // builder falls through to SizedBox.shrink() and the whole
++                  // page goes blank.
++                  final isTransientWithProfile =
++                      (state is profile_bloc.ChangingPassword ||
++                              state is profile_bloc.PasswordChanged ||
++                              state is profile_bloc.DeletingData ||
++                              state is profile_bloc.DataDeleted) &&
++                          _lastLoadedProfile != null;
++
+                   if (state is Loaded ||
+                       state is Saving ||
++                      isTransientWithProfile ||
+                       (state is profile_bloc.Error &&
+                           _lastLoadedProfile != null)) {
+                     // if (state is Loaded) {
+diff --git a/lib/features/profile/ui/widgets/profile_card.dart b/lib/features/profile/ui/widgets/profile_card.dart
+index 129a3c1..5a58772 100644
+--- a/lib/features/profile/ui/widgets/profile_card.dart
++++ b/lib/features/profile/ui/widgets/profile_card.dart
+@@ -49,7 +49,7 @@ class ProfileCard extends StatelessWidget {
+           ),
+         ),
+         decoration: BoxDecoration(
+-          color: Colors.white,
++          color: AppColors.whiteColor,
+           borderRadius: BorderRadius.circular(20),
+           boxShadow: const [
+             BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 2),
+diff --git a/lib/features/profile/wishlist/wishlist_page.dart b/lib/features/profile/wishlist/wishlist_page.dart
+index 0f16c8c..9b67f2d 100644
+--- a/lib/features/profile/wishlist/wishlist_page.dart
++++ b/lib/features/profile/wishlist/wishlist_page.dart
+@@ -21,6 +21,10 @@ class WishlistPage extends StatefulWidget {
+ }
+ 
+ class _WishlistPageState extends State<WishlistPage> {
++  /// Last successfully loaded list. Kept so transient toggle states never
++  /// blank the page out with a full skeleton.
++  FavoriteLoaded? _lastLoaded;
++
+   @override
+   void initState() {
+     super.initState();
+@@ -99,7 +103,7 @@ class _WishlistPageState extends State<WishlistPage> {
+         }
+       },
+       child: Scaffold(
+-        backgroundColor: Colors.grey[50],
++        backgroundColor: AppColors.whiteColor,
+         appBar: widget.embedded
+             ? null
+             : AppBar(
+@@ -141,7 +145,7 @@ class _WishlistPageState extends State<WishlistPage> {
+           minimum: const EdgeInsets.only(bottom: 30),
+           child: BlocBuilder<FavoriteBloc, FavoriteState>(
+             builder: (context, state) {
+-              if (state is FavoriteLoading || state is FavoriteToggleLoading) {
++              if (state is FavoriteLoading) {
+                 return const SkeletonList();
+               } else if (state is FavoriteError) {
+                 return Center(
+@@ -251,7 +255,33 @@ class _WishlistPageState extends State<WishlistPage> {
+                   ),
+                 );
+               } else if (state is FavoriteLoaded) {
+-                if (state.favorites.isEmpty) {
++                _lastLoaded = state;
++                return _buildLoadedBody(context, state);
++              } else if (_lastLoaded != null) {
++                // Toggle in progress / finished: keep showing the list.
++                return _buildLoadedBody(context, _lastLoaded!);
++              } else if (state is FavoriteToggleLoading ||
++                  state is FavoriteToggleSuccess) {
++                return const Center(
++                  child: CircularProgressIndicator(
++                    valueColor:
++                        AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
++                  ),
++                );
++              }
++
++              return const Center(
++                child: Text('No data available'),
++              );
++            },
++          ),
++        ),
++      ),
++    );
++  }
++
++  Widget _buildLoadedBody(BuildContext context, FavoriteLoaded state) {
++    if (state.favorites.isEmpty) {
+                   return Center(
+                     child: Column(
+                       mainAxisAlignment: MainAxisAlignment.center,
+@@ -314,24 +344,6 @@ class _WishlistPageState extends State<WishlistPage> {
+                     },
+                   ),
+                 );
+-              } else if (state is FavoriteToggleSuccess) {
+-                // Show loading while refreshing after toggle success
+-                return const Center(
+-                  child: CircularProgressIndicator(
+-                    valueColor:
+-                        AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
+-                  ),
+-                );
+-              }
+-
+-              return const Center(
+-                child: Text('No data available'),
+-              );
+-            },
+-          ),
+-        ),
+-      ),
+-    );
+   }
+ 
+   Widget buildFavoriteCard(favorite) {
+@@ -629,7 +641,7 @@ class _WishlistPageState extends State<WishlistPage> {
+                               largeTablet: 18,
+                               desktop: 20,
+                             ),
+-                            color: Colors.black,
++                            color: AppColors.blackColor,
+                           ),
+                           SizedBox(
+                             width: GetResponsiveSize.getResponsiveSize(
+diff --git a/lib/features/search/ui/search_page.dart b/lib/features/search/ui/search_page.dart
+index 9aceadc..69035bf 100644
+--- a/lib/features/search/ui/search_page.dart
++++ b/lib/features/search/ui/search_page.dart
+@@ -1,3 +1,4 @@
++import 'dart:async';
+ import 'dart:io' show Platform;
+ import 'package:flutter/foundation.dart';
+ import 'package:ado_dad_user/common/app_colors.dart';
+@@ -33,6 +34,10 @@ class _SearchPageState extends State<SearchPage> {
+   late GooglePlacesService _placesService;
+   late ScrollController _scrollController;
+ 
++  /// Debounces the search dispatch so a fast typist does not fire one request
++  /// per keystroke (and race their responses against each other).
++  Timer? _debounce;
++
+   // --- Filters (applied client-side over the loaded results) ---
+   String? _filterCategory; // null = all
+   int? _minPrice;
+@@ -423,10 +428,11 @@ class _SearchPageState extends State<SearchPage> {
+       _isLocationSearchMode = !_isLocationSearchMode;
+       // Clear search when switching modes
+       _searchController.clear();
+-      _filterAds('');
+       _showSuggestions = false;
+       _addressSuggestions.clear();
+     });
++    // Resets the bloc back to the all-ads feed (own setState inside).
++    _filterAds('');
+   }
+ 
+   void _generateAddressSuggestions(String query) async {
+@@ -455,6 +461,8 @@ class _SearchPageState extends State<SearchPage> {
+         language: 'en',
+       );
+ 
++      if (!mounted) return;
++
+       if (predictions.isNotEmpty) {
+         // Extract descriptions from predictions
+         final suggestions = predictions
+@@ -462,10 +470,10 @@ class _SearchPageState extends State<SearchPage> {
+             .take(10) // Limit to 10 suggestions
+             .toList();
+ 
+-        print(
++        debugPrint(
+             '🔍 Location suggestions for "$query": ${suggestions.length} found');
+         for (int i = 0; i < suggestions.length; i++) {
+-          print('  ${i + 1}. ${suggestions[i]}');
++          debugPrint('  ${i + 1}. ${suggestions[i]}');
+         }
+ 
+         setState(() {
+@@ -474,17 +482,19 @@ class _SearchPageState extends State<SearchPage> {
+         });
+       } else {
+         // If no Google Places results, fall back to existing ad locations
+-        print('🔍 No Google Places results for "$query", using fallback');
++        debugPrint('🔍 No Google Places results for "$query", using fallback');
+         _fallbackToExistingLocations(query);
+       }
+     } catch (e) {
+-      print('Google Places API error: $e');
++      debugPrint('Google Places API error: $e');
++      if (!mounted) return;
+       // Fall back to existing ad locations if API fails
+       _fallbackToExistingLocations(query);
+     }
+   }
+ 
+   void _fallbackToExistingLocations(String query) {
++    if (!mounted) return;
+     // Get unique locations from all ads as fallback
+     final uniqueLocations = allAds
+         .map((ad) => ad.location)
+@@ -519,15 +529,36 @@ class _SearchPageState extends State<SearchPage> {
+     });
+   }
+ 
++  /// Called on every keystroke: updates the field-dependent UI immediately but
++  /// only hits the API once the user pauses typing.
++  void _onSearchChanged(String value) {
++    _debounce?.cancel();
++    if (value.trim().isEmpty) {
++      _filterAds('');
++      return;
++    }
++    setState(() {
++      _isSearching = true;
++    });
++    _debounce = Timer(const Duration(milliseconds: 350), () {
++      if (!mounted) return;
++      _filterAds(value);
++    });
++  }
++
+   // Function to filter ads based on the search term
+   void _filterAds(String query) {
+     if (query.isEmpty) {
++      _debounce?.cancel();
+       setState(() {
+-        filteredAds = allAds;
+         _isSearching = false;
+         _showSuggestions = false;
+         _addressSuggestions.clear();
+       });
++      // Reset the bloc back to the all-ads feed. Restoring a local snapshot
++      // would leave the bloc holding search results, so the next scroll would
++      // append all-ads pages onto them.
++      context.read<AdvertisementBloc>().add(const FetchAllListingsEvent());
+       return;
+     }
+ 
+@@ -573,14 +604,16 @@ class _SearchPageState extends State<SearchPage> {
+           selectedPrediction.placeId,
+         );
+ 
++        if (!mounted) return;
++
+         if (placeDetails?.geometry?.location != null) {
+           final location = placeDetails!.geometry!.location;
+ 
+           // Print location data to console
+-          print('📍 Selected Location: $address');
+-          print('🌍 Latitude: ${location.lat}');
+-          print('🌍 Longitude: ${location.lng}');
+-          print('📍 Formatted Address: ${placeDetails.formattedAddress}');
++          debugPrint('📍 Selected Location: $address');
++          debugPrint('🌍 Latitude: ${location.lat}');
++          debugPrint('🌍 Longitude: ${location.lng}');
++          debugPrint('📍 Formatted Address: ${placeDetails.formattedAddress}');
+ 
+           // Call the location-based API
+           context.read<AdvertisementBloc>().add(
+@@ -597,12 +630,14 @@ class _SearchPageState extends State<SearchPage> {
+         }
+       }
+     } catch (e) {
+-      print('Error getting coordinates for location: $e');
++      debugPrint('Error getting coordinates for location: $e');
+     }
+ 
++    if (!mounted) return;
++
+     // Fallback to text-based filtering if coordinates are not available
+-    print('📍 Fallback Location Search: $address');
+-    print('⚠️ Coordinates not available, using text-based filtering');
++    debugPrint('📍 Fallback Location Search: $address');
++    debugPrint('⚠️ Coordinates not available, using text-based filtering');
+ 
+     final filteredList = allAds.where((ad) {
+       return ad.location.toLowerCase().contains(address.toLowerCase());
+@@ -616,6 +651,7 @@ class _SearchPageState extends State<SearchPage> {
+ 
+   @override
+   void dispose() {
++    _debounce?.cancel();
+     _scrollController.dispose();
+     _searchController.dispose();
+     super.dispose();
+@@ -762,8 +798,9 @@ class _SearchPageState extends State<SearchPage> {
+                   ),
+                 ),
+                 decoration: InputDecoration(
+-                  fillColor:
+-                      _isLocationSearchMode ? Colors.blue[50] : Colors.grey[50],
++                  fillColor: _isLocationSearchMode
++                      ? Colors.blue[50]
++                      : AppColors.whiteColor,
+                   hintText: _isLocationSearchMode
+                       ? "Search by location..."
+                       : "Search ads...",
+@@ -886,7 +923,7 @@ class _SearchPageState extends State<SearchPage> {
+                       : null,
+                 ),
+                 onChanged: (value) {
+-                  _filterAds(value);
++                  _onSearchChanged(value);
+                   setState(() {});
+                 },
+                 onSubmitted: (value) {
+@@ -1069,7 +1106,7 @@ class _SearchPageState extends State<SearchPage> {
+                           desktop: 40),
+                     ),
+                     decoration: BoxDecoration(
+-                      color: Colors.white,
++                      color: AppColors.whiteColor,
+                       borderRadius: BorderRadius.circular(
+                         GetResponsiveSize.getResponsiveBorderRadius(context,
+                             mobile: 8,
+@@ -1487,7 +1524,7 @@ class _SearchPageState extends State<SearchPage> {
+                                   largeTablet: 18,
+                                   desktop: 20,
+                                 ),
+-                                color: Colors.black,
++                                color: AppColors.blackColor,
+                               ),
+                               SizedBox(
+                                 width: GetResponsiveSize.getResponsiveSize(
+diff --git a/lib/features/sell/ui/form/add_commercial_vehicle_form.dart b/lib/features/sell/ui/form/add_commercial_vehicle_form.dart
+index 9198a55..c847061 100644
+--- a/lib/features/sell/ui/form/add_commercial_vehicle_form.dart
++++ b/lib/features/sell/ui/form/add_commercial_vehicle_form.dart
+@@ -99,7 +99,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
+   Future<void> _loadManufacturers() async {
+     // For commercial_vehicle category,
+     // fetch manufacturers with vehicleCategory 'passenger_car'
+-    // TODO(backend): commercial manufacturer category
++    // TODO(backend): commercial vehicles should use their own manufacturer category
+     try {
+       final manufacturers = await AddRepository().fetchManufacturers(
+         vehicleCategory: 'passenger_car',
+@@ -263,7 +263,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
+               (!kIsWeb && Platform.isIOS)
+                   ? Icons.arrow_back_ios
+                   : Icons.arrow_back,
+-              color: Colors.black,
++              color: AppColors.blackColor,
+               size: GetResponsiveSize.getResponsiveSize(
+                 context,
+                 mobile: 24,
+@@ -553,6 +553,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
+                             errorMsg: 'Please select a manufacturer',
+                             getDisplayText: (item) => item.displayName,
+                             onSearch: (query) async {
++                              // TODO(backend): commercial vehicles should use their own manufacturer category
+                               return await AddRepository().fetchManufacturers(
+                                 search: query,
+                                 vehicleCategory: 'passenger_car',
+diff --git a/lib/features/showroom/bloc/showroom_bloc.dart b/lib/features/showroom/bloc/showroom_bloc.dart
+index afaffec..51e3a6f 100644
+--- a/lib/features/showroom/bloc/showroom_bloc.dart
++++ b/lib/features/showroom/bloc/showroom_bloc.dart
+@@ -1,6 +1,7 @@
+ import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+ import 'package:ado_dad_user/repositories/showroom_repo.dart';
+ import 'package:bloc/bloc.dart';
++import 'package:flutter/foundation.dart';
+ import 'package:freezed_annotation/freezed_annotation.dart';
+ 
+ part 'showroom_event.dart';
+@@ -46,7 +47,7 @@ class ShowroomBloc extends Bloc<ShowroomEvent, ShowroomState> {
+     if (currentState is AdsLoaded && currentState.hasMore) {
+       try {
+         _currentPage += 1;
+-        print(
++        debugPrint(
+             "📥 Fetching showroom ads page $_currentPage for user $_currentUserId");
+         final moreAds = await repository.fetchShowroomUserAds(
+           userId: _currentUserId!,
+@@ -59,8 +60,11 @@ class ShowroomBloc extends Bloc<ShowroomEvent, ShowroomState> {
+             hasMore: moreAds.length >= 20,
+             userId: _currentUserId!));
+       } catch (e) {
+-        print("❌ Error fetching next page: $e");
+-        emit(ShowroomState.error("Failed to load more ads: $e"));
++        // Keep the pages already loaded instead of replacing the list with an
++        // error state, and roll the page back so a retry re-requests it.
++        if (_currentPage > 1) _currentPage -= 1;
++        debugPrint("❌ Error fetching next page: $e");
++        emit(currentState);
+       } finally {
+         _isFetching = false;
+       }
+diff --git a/lib/features/showroom/ui/showroom_user_ads_page.dart b/lib/features/showroom/ui/showroom_user_ads_page.dart
+index a673013..856c420 100644
+--- a/lib/features/showroom/ui/showroom_user_ads_page.dart
++++ b/lib/features/showroom/ui/showroom_user_ads_page.dart
+@@ -45,17 +45,6 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
+     });
+   }
+ 
+-  @override
+-  void didChangeDependencies() {
+-    super.didChangeDependencies();
+-    // Refresh data when returning to this page
+-    WidgetsBinding.instance.addPostFrameCallback((_) {
+-      context.read<ShowroomBloc>().add(
+-            ShowroomEvent.fetchShowroomUserAds(userId: widget.userId),
+-          );
+-    });
+-  }
+-
+   @override
+   Widget build(BuildContext context) {
+     final theme = Theme.of(context);
+diff --git a/lib/features/showroom/ui/showroom_users_page.dart b/lib/features/showroom/ui/showroom_users_page.dart
+index a745e9c..b8e0535 100644
+--- a/lib/features/showroom/ui/showroom_users_page.dart
++++ b/lib/features/showroom/ui/showroom_users_page.dart
+@@ -10,6 +10,13 @@ import 'package:ado_dad_user/repositories/showroom_repo.dart';
+ import 'package:flutter/material.dart';
+ import 'package:go_router/go_router.dart';
+ 
++/// A profile picture is only usable as a [NetworkImage] when it is a
++/// non-empty http(s) URL; anything else falls back to a placeholder icon.
++bool _isValidImageUrl(String? url) {
++  final value = url?.trim() ?? '';
++  return value.isNotEmpty && value.startsWith('http');
++}
++
+ class ShowroomUsersPage extends StatefulWidget {
+   const ShowroomUsersPage({super.key});
+ 
+@@ -22,6 +29,7 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
+   List<ShowroomUser> _showroomUsers = [];
+   bool _isLoading = true;
+   String? _error;
++  bool _didDependencyRefetch = false;
+ 
+   String _maskPhoneNumber(String phoneNumber) {
+     final digitsOnly = phoneNumber.replaceAll(RegExp(r'\D'), '');
+@@ -44,8 +52,11 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
+     super.didChangeDependencies();
+     // Re-check auth when returning from login (e.g., after successful login redirect)
+     // This ensures data is fetched if user logged in and was redirected back
++    if (_didDependencyRefetch) return;
+     WidgetsBinding.instance.addPostFrameCallback((_) {
++      if (!mounted || _didDependencyRefetch) return;
+       if (!_isLoading && _showroomUsers.isEmpty && _error == null) {
++        _didDependencyRefetch = true;
+         _checkAuthAndFetch();
+       }
+     });
+@@ -54,6 +65,7 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
+   Future<void> _checkAuthAndFetch() async {
+     // Check authentication status
+     final isAuthenticated = await AuthGuard.isAuthenticated();
++    if (!mounted) return;
+ 
+     // Fetch showroom users - use public endpoint if not authenticated, authenticated endpoint if authenticated
+     _fetchShowroomUsers(isAuthenticated: isAuthenticated);
+@@ -61,7 +73,7 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
+ 
+   Future<void> _fetchShowroomUsers({required bool isAuthenticated}) async {
+     try {
+-      print(
++      debugPrint(
+           '🚀 Starting to fetch showroom users (authenticated: $isAuthenticated)...');
+       setState(() {
+         _isLoading = true;
+@@ -73,15 +85,16 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
+           ? await _showroomRepo.fetchShowroomUsers()
+           : await _showroomRepo.fetchPublicShowroomUsers();
+ 
+-      print('✅ Successfully fetched ${users.length} showroom users');
++      debugPrint('✅ Successfully fetched ${users.length} showroom users');
+ 
++      if (!mounted) return;
+       setState(() {
+         _showroomUsers = users;
+         _isLoading = false;
+       });
+     } catch (e) {
+-      print('❌ Error in _fetchShowroomUsers: $e');
+-      print('❌ Error type: ${e.runtimeType}');
++      debugPrint('❌ Error in _fetchShowroomUsers: $e');
++      debugPrint('❌ Error type: ${e.runtimeType}');
+ 
+       // Extract user-friendly error message
+       String errorMessage =
+@@ -89,7 +102,7 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
+ 
+       if (e is Exception) {
+         final exceptionMessage = e.toString();
+-        print('❌ Exception message: $exceptionMessage');
++        debugPrint('❌ Exception message: $exceptionMessage');
+ 
+         // Extract the actual error message from Exception: "message"
+         // Remove "Exception: " prefix if present
+@@ -112,6 +125,7 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
+         errorMessage = "An unexpected error occurred. Please try again later.";
+       }
+ 
++      if (!mounted) return;
+       setState(() {
+         _error = errorMessage;
+         _isLoading = false;
+@@ -367,14 +381,14 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
+                 decoration: BoxDecoration(
+                   shape: BoxShape.circle,
+                   color: AppColors.primaryColor.withOpacity(0.1),
+-                  image: user.profilePic != null
++                  image: _isValidImageUrl(user.profilePic)
+                       ? DecorationImage(
+                           image: NetworkImage(user.profilePic!),
+                           fit: BoxFit.cover,
+                         )
+                       : null,
+                 ),
+-                child: user.profilePic == null
++                child: !_isValidImageUrl(user.profilePic)
+                     ? Icon(
+                         Icons.business,
+                         size: GetResponsiveSize.getResponsiveSize(
+diff --git a/lib/features/splash/splash_screen.dart b/lib/features/splash/splash_screen.dart
+index bda13ad..89380b6 100644
+--- a/lib/features/splash/splash_screen.dart
++++ b/lib/features/splash/splash_screen.dart
+@@ -17,6 +17,7 @@ class _SplashScreenState extends State<SplashScreen>
+     with SingleTickerProviderStateMixin {
+   Timer? _navigationTimer;
+   Timer? _fallbackTimer;
++  StreamSubscription? _sub;
+   bool _canNavigate = false;
+   bool _hasNavigated = false;
+ 
+@@ -47,6 +48,7 @@ class _SplashScreenState extends State<SplashScreen>
+   void dispose() {
+     _navigationTimer?.cancel();
+     _fallbackTimer?.cancel();
++    _sub?.cancel();
+     super.dispose();
+   }
+ 
+@@ -58,7 +60,8 @@ class _SplashScreenState extends State<SplashScreen>
+     }
+ 
+     // Listen to future login state changes
+-    context.read<LoginBloc>().stream.listen((loginState) {
++    _sub?.cancel();
++    _sub = context.read<LoginBloc>().stream.listen((loginState) {
+       if (mounted && _canNavigate) {
+         _navigateBasedOnState(loginState);
+       }
+diff --git a/lib/models/advertisement_post_model/two_wheeler_model/two_wheeler_ad_model.dart b/lib/models/advertisement_post_model/two_wheeler_model/two_wheeler_ad_model.dart
+index 421202b..9174b6e 100644
+--- a/lib/models/advertisement_post_model/two_wheeler_model/two_wheeler_ad_model.dart
++++ b/lib/models/advertisement_post_model/two_wheeler_model/two_wheeler_ad_model.dart
+@@ -7,7 +7,7 @@ class TwoWheelerAdModel {
+   final String vehicleType;
+   final String manufacturerId;
+   final String modelId;
+-  final String variantId;
++  final String? variantId;
+   final int year;
+   final int mileage;
+   final String transmissionTypeId;
+@@ -28,7 +28,7 @@ class TwoWheelerAdModel {
+     required this.vehicleType,
+     required this.manufacturerId,
+     required this.modelId,
+-    required this.variantId,
++    this.variantId,
+     required this.year,
+     required this.mileage,
+     required this.transmissionTypeId,
+@@ -51,7 +51,7 @@ class TwoWheelerAdModel {
+       'vehicleType': vehicleType,
+       'manufacturerId': manufacturerId,
+       'modelId': modelId,
+-      'variantId': variantId,
++      if (variantId != null) 'variantId': variantId,
+       'year': year,
+       'mileage': mileage,
+       'transmissionTypeId': transmissionTypeId,
+diff --git a/lib/repositories/profile_repo.dart b/lib/repositories/profile_repo.dart
+index ee90dea..a3834ea 100644
+--- a/lib/repositories/profile_repo.dart
++++ b/lib/repositories/profile_repo.dart
+@@ -4,6 +4,7 @@ import 'package:ado_dad_user/common/api_service.dart';
+ import 'package:ado_dad_user/common/shared_pref.dart';
+ import 'package:ado_dad_user/models/profile_model.dart';
+ import 'package:dio/dio.dart';
++import 'package:flutter/foundation.dart';
+ import 'package:mime/mime.dart';
+ 
+ class ProfileRepo {
+@@ -244,6 +245,25 @@ class ProfileRepo {
+     }
+   }
+ 
++  /// Pulls a human-readable message out of an API error body so the user sees
++  /// what the server actually complained about (e.g. "password too weak",
++  /// "current password required") instead of a generic failure.
++  static String? _serverMessage(dynamic data) {
++    if (data == null) return null;
++    if (data is String) {
++      final t = data.trim();
++      return t.isEmpty ? null : t;
++    }
++    if (data is Map) {
++      final value = data['message'] ?? data['error'] ?? data['detail'];
++      if (value is String && value.trim().isNotEmpty) return value.trim();
++      if (value is List && value.isNotEmpty) {
++        return value.map((e) => e.toString()).join(', ');
++      }
++    }
++    return null;
++  }
++
+   Future<void> changePassword(String newPassword) async {
+     try {
+       final userId = await SharedPrefs().getUserId();
+@@ -256,23 +276,32 @@ class ProfileRepo {
+       final response = await _dio.put(
+         "/users/$userId",
+         data: body,
+-        options: Options(headers: {
+-          'Content-Type': 'application/json',
+-        }),
++        options: Options(
++          headers: {
++            'Content-Type': 'application/json',
++          },
++          // Read the body ourselves for any status so the real server message
++          // reaches the UI instead of a generic Dio error.
++          validateStatus: (status) => status != null && status < 500,
++        ),
+       );
+ 
+-      print("✅ Password change response: ${response.statusCode}");
+-      print("📄 Response data: ${response.data}");
++      final status = response.statusCode ?? 0;
++      debugPrint("Password change response: $status");
++      debugPrint("Password change body: ${response.data}");
+ 
+-      if (response.statusCode != 200) {
+-        throw Exception("Failed to change password.");
++      // Accept any 2xx — the API may answer 200, 201 or 204 (No Content).
++      if (status < 200 || status >= 300) {
++        throw Exception(_serverMessage(response.data) ??
++            "Failed to change password (HTTP $status).");
+       }
+     } on DioException catch (e) {
+-      print("❌ DioException in changePassword: ${e.response?.data}");
+-      throw Exception(DioErrorHandler.handleError(e));
++      debugPrint("DioException in changePassword: ${e.response?.data}");
++      throw Exception(_serverMessage(e.response?.data) ??
++          DioErrorHandler.handleError(e));
+     } catch (e) {
+-      print("❌ General error in changePassword: $e");
+-      throw Exception("Error changing password: $e");
++      debugPrint("General error in changePassword: $e");
++      rethrow;
+     }
+   }
+ 

@@ -48,8 +48,6 @@ class RichAdCard extends StatelessWidget {
     return _isRent ? '$base/mo' : base;
   }
 
-  String _emiText(int price) => '₹${inr((price * 0.018).round())}/mo';
-
   String get _cardTitle {
     if ((ad.title ?? '').trim().isNotEmpty) return ad.title!.trim();
     final parts = <String>[];
@@ -327,18 +325,6 @@ class RichAdCard extends StatelessWidget {
                                   color: AppColors.blackColor),
                             ),
                           ),
-                          if (!property && ad.price > 0) ...[
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                'EMI ${_emiText(ad.price)}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    fontSize: 9, color: AppColors.greyColor),
-                              ),
-                            ),
-                          ],
                         ],
                       ),
                       const SizedBox(height: 3),

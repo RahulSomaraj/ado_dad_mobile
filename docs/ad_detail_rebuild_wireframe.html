@@ -1,0 +1,1060 @@
+<title>Ado-Dad Ad Detail Rebuild</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+:root{
+  --paper:#EFF0F3; --surface:#FFFFFF; --surface-2:#F6F7F9; --surface-3:#ECEEF2;
+  --ink:#171A21; --ink-2:#4A5160; --ink-3:#7D8496;
+  --line:#D8DBE3; --line-2:#E8EAF0;
+  --accent:#4F48EC; --accent-soft:#EEECFF; --accent-ink:#4F48EC;
+  --flag:#B93D28; --flag-soft:#FBEAE6;
+  --good:#136B49; --good-soft:#E3F0E9;
+  --hatch:#E2E5EB;
+  --shadow:0 1px 2px rgba(23,26,33,.05), 0 12px 28px -18px rgba(23,26,33,.35);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1116; --surface:#181B22; --surface-2:#1E222A; --surface-3:#252A33;
+    --ink:#E9EBF1; --ink-2:#A9B0BF; --ink-3:#79808F;
+    --line:#2C313B; --line-2:#242932;
+    --accent:#8F89FF; --accent-soft:#262452; --accent-ink:#A9A4FF;
+    --flag:#EE8E77; --flag-soft:#3A211B;
+    --good:#5FC79B; --good-soft:#153024;
+    --hatch:#232830;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 30px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1116; --surface:#181B22; --surface-2:#1E222A; --surface-3:#252A33;
+  --ink:#E9EBF1; --ink-2:#A9B0BF; --ink-3:#79808F;
+  --line:#2C313B; --line-2:#242932;
+  --accent:#8F89FF; --accent-soft:#262452; --accent-ink:#A9A4FF;
+  --flag:#EE8E77; --flag-soft:#3A211B;
+  --good:#5FC79B; --good-soft:#153024;
+  --hatch:#232830;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 30px -18px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:Archivo,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1200px; margin:0 auto; padding:56px 28px 120px}
+
+/* ---------- masthead ---------- */
+.mast{border-bottom:2px solid var(--ink); padding-bottom:22px; margin-bottom:34px}
+.kicker{font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-3); display:flex; flex-wrap:wrap; gap:14px}
+.kicker b{color:var(--accent-ink); font-weight:500}
+h1{font-size:clamp(34px,5.2vw,54px); line-height:1.02; letter-spacing:-.028em; font-weight:700; margin:16px 0 12px; text-wrap:balance; max-width:16ch}
+.dek{font-family:"Source Serif 4",Georgia,serif; font-size:18px; line-height:1.5; color:var(--ink-2); max-width:62ch; margin:0}
+
+/* ---------- generic type ---------- */
+h2{font-size:13px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin:0 0 6px; font-family:"IBM Plex Mono",monospace}
+h3{font-size:26px; line-height:1.15; letter-spacing:-.02em; font-weight:600; margin:0 0 10px; text-wrap:balance}
+p.lede{font-family:"Source Serif 4",Georgia,serif; font-size:17px; line-height:1.55; color:var(--ink-2); max-width:64ch; margin:0 0 28px}
+code,.mono{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-2)}
+code{background:var(--surface-2); border:1px solid var(--line-2); border-radius:4px; padding:1px 5px; white-space:nowrap}
+
+/* ---------- legend ---------- */
+.legend{display:flex; flex-wrap:wrap; gap:10px 22px; margin:26px 0 0; font-size:13px; color:var(--ink-2); font-family:"Source Serif 4",Georgia,serif}
+.legend span{display:flex; align-items:center; gap:8px}
+.swatch{width:13px; height:13px; border-radius:3px; flex:none}
+
+/* ---------- diagnosis table ---------- */
+.diag-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+table.diag{border-collapse:collapse; width:100%; min-width:720px; font-size:14px}
+table.diag th{
+  text-align:left; font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:500; padding:12px 16px; border-bottom:1px solid var(--line);
+}
+table.diag td{padding:13px 16px; border-bottom:1px solid var(--line-2); vertical-align:top; color:var(--ink-2); line-height:1.45}
+table.diag tr:last-child td{border-bottom:0}
+table.diag tr:nth-child(even) td{background:var(--surface-2)}
+table.diag td:first-child{color:var(--ink); font-weight:500; width:27%}
+table.diag td.ref{font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-3); width:24%}
+.plate-tag{display:inline-block; font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--accent-ink); background:var(--accent-soft); border-radius:4px; padding:2px 6px; white-space:nowrap}
+
+/* ---------- plate layout ---------- */
+.plate{margin-top:76px; padding-top:30px; border-top:1px solid var(--line)}
+.plate-head{display:flex; align-items:baseline; gap:14px; margin-bottom:6px}
+.plate-num{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--accent-ink); letter-spacing:.1em}
+.grid{display:grid; grid-template-columns:392px minmax(0,1fr); gap:44px; align-items:start; margin-top:28px}
+.stage{position:sticky; top:24px}
+.stage-row{display:flex; gap:22px; flex-wrap:wrap}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr; gap:30px}
+  .stage{position:static}
+  .wrap{padding:36px 18px 80px}
+}
+
+/* ---------- notes ---------- */
+.notes{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:22px}
+.notes li{display:grid; grid-template-columns:26px minmax(0,1fr); gap:14px}
+.num{
+  width:22px; height:22px; border-radius:50%; background:var(--accent); color:#fff;
+  font-family:"IBM Plex Mono",monospace; font-size:11px; display:flex; align-items:center; justify-content:center;
+  margin-top:2px;
+}
+.num.flagged{background:var(--flag)}
+.notes h4{margin:0 0 4px; font-size:15px; font-weight:600; letter-spacing:-.005em}
+.notes p{margin:0; font-family:"Source Serif 4",Georgia,serif; font-size:15.5px; line-height:1.52; color:var(--ink-2)}
+.notes p + p{margin-top:7px}
+.evi{
+  display:block; margin-top:7px; font-family:"IBM Plex Mono",monospace; font-size:11px; line-height:1.5;
+  color:var(--ink-3); border-left:2px solid var(--line); padding-left:9px;
+}
+.evi b{color:var(--ink-2); font-weight:500}
+.was{color:var(--flag)}
+
+/* ---------- phone ---------- */
+.phone{
+  width:360px; max-width:100%; background:var(--surface); border:1px solid var(--line);
+  border-radius:26px; box-shadow:var(--shadow); overflow:hidden; position:relative;
+}
+.phone.sm{width:236px; border-radius:20px}
+.caption{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--ink-3); margin:11px 0 0; text-align:center;
+}
+.scrollcut{
+  border-top:1px dashed var(--line); text-align:center; padding:5px 0;
+  font-family:"IBM Plex Mono",monospace; font-size:9.5px; letter-spacing:.14em; color:var(--ink-3); background:var(--surface-2);
+}
+
+/* wireframe atoms */
+.pad{padding:14px 16px}
+.img{
+  position:relative; background:
+    repeating-linear-gradient(135deg,var(--hatch) 0 8px,transparent 8px 16px), var(--surface-2);
+  display:flex; align-items:center; justify-content:center;
+}
+.img .imglab{font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.1em; color:var(--ink-3)}
+.hero{aspect-ratio:16/10}
+.ovl{position:absolute; display:flex; gap:8px}
+.ovl.tl{top:12px; left:12px} .ovl.tr{top:12px; right:12px}
+.ovl.bl{bottom:12px; left:12px} .ovl.br{bottom:12px; right:12px}
+.cbtn{
+  width:36px; height:36px; border-radius:50%; background:rgba(20,22,28,.55); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:14px; backdrop-filter:blur(3px);
+}
+.pill{
+  background:rgba(20,22,28,.62); color:#fff; border-radius:20px; padding:3px 9px;
+  font-size:10.5px; font-family:"IBM Plex Mono",monospace; letter-spacing:.04em;
+}
+.thumbs{display:flex; gap:6px; padding:8px 16px 0; background:var(--surface)}
+.thumb{width:44px; height:34px; border-radius:6px; background:repeating-linear-gradient(135deg,var(--hatch) 0 6px,transparent 6px 12px),var(--surface-2); border:1px solid var(--line-2); flex:none; position:relative}
+.thumb.on{border:2px solid var(--accent)}
+.thumb .vd{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--ink-2)}
+.thumb.more{display:flex; align-items:center; justify-content:center; font-family:"IBM Plex Mono",monospace; font-size:10px; color:var(--ink-3); background:var(--surface-2)}
+
+.price{font-size:25px; font-weight:700; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+.title{font-size:14.5px; font-weight:500; color:var(--ink); line-height:1.3; margin-top:2px}
+.meta{font-size:11.5px; color:var(--ink-3); margin-top:6px; display:flex; gap:7px; flex-wrap:wrap; align-items:center}
+.dot{width:3px; height:3px; border-radius:50%; background:var(--ink-3); display:inline-block}
+
+.chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:11px}
+.chip{
+  border:1px solid var(--line); border-radius:7px; padding:5px 9px; font-size:11.5px; color:var(--ink-2);
+  background:var(--surface); display:flex; gap:5px; align-items:center;
+}
+.chip b{font-weight:600; color:var(--ink)}
+.chip.key{background:var(--surface-2)}
+.chip.on{border-color:var(--accent); color:var(--accent-ink); background:var(--accent-soft)}
+.chip.good{border-color:transparent; background:var(--good-soft); color:var(--good)}
+
+.band{
+  display:flex; align-items:center; gap:9px; margin-top:12px; padding:9px 11px; border-radius:9px;
+  background:var(--good-soft); color:var(--good); font-size:12px; line-height:1.35;
+}
+.band.neutral{background:var(--surface-2); color:var(--ink-2)}
+.band .bt{font-weight:600}
+.gauge{flex:none; width:58px; height:5px; border-radius:3px; background:linear-gradient(90deg,var(--good) 0 45%,var(--line) 45% 100%); position:relative}
+.gauge i{position:absolute; left:42%; top:-3px; width:2px; height:11px; background:var(--ink); border-radius:2px}
+
+hr.sep{border:0; border-top:1px solid var(--line-2); margin:14px 16px}
+.sec{font-size:13px; font-weight:600; letter-spacing:-.005em; margin:0 0 9px; display:flex; align-items:center; justify-content:space-between}
+.sec .link{font-size:11.5px; color:var(--accent-ink); font-weight:500}
+
+.spec{display:flex; justify-content:space-between; gap:12px; font-size:12px; padding:7px 8px; border-radius:5px; color:var(--ink-2)}
+.spec:nth-child(odd){background:var(--surface-2)}
+.spec b{font-weight:500; color:var(--ink); text-align:right; font-variant-numeric:tabular-nums}
+.grouplab{font-family:"IBM Plex Mono",monospace; font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-3); margin:12px 0 5px}
+
+.bar{height:7px; border-radius:4px; background:var(--line-2)}
+.bar+.bar{margin-top:7px}
+.readmore{font-size:11.5px; color:var(--accent-ink); font-weight:500; margin-top:8px}
+
+.seller{display:flex; gap:11px; align-items:center; border:1px solid var(--line); border-radius:12px; padding:11px}
+.av{width:40px; height:40px; border-radius:50%; background:var(--surface-3); flex:none; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:15px; color:var(--ink-2)}
+.sname{font-size:13.5px; font-weight:600; display:flex; align-items:center; gap:5px}
+.vb{font-size:9.5px; background:var(--accent-soft); color:var(--accent-ink); border-radius:4px; padding:1px 5px; font-family:"IBM Plex Mono",monospace; letter-spacing:.03em}
+.strust{font-size:11px; color:var(--ink-3); margin-top:3px; line-height:1.45}
+
+.safety{
+  display:flex; gap:9px; align-items:flex-start; border:1px dashed var(--line); border-radius:10px;
+  padding:10px 11px; font-size:11.5px; color:var(--ink-2); line-height:1.42; background:var(--surface-2);
+}
+.rail{display:flex; gap:10px; overflow:hidden; padding-bottom:2px}
+.mini{width:118px; flex:none}
+.mini .img{aspect-ratio:16/10; border-radius:9px}
+.mini .mp{font-size:12.5px; font-weight:700; margin-top:6px; font-variant-numeric:tabular-nums}
+.mini .mt{font-size:10.5px; color:var(--ink-3); line-height:1.3; margin-top:2px}
+
+.bottombar{
+  border-top:1px solid var(--line); background:var(--surface); padding:10px 14px 14px;
+  display:flex; gap:9px; align-items:center; position:sticky; bottom:0;
+}
+.btn{
+  height:44px; border-radius:11px; display:flex; align-items:center; justify-content:center; gap:7px;
+  font-size:13.5px; font-weight:600; flex:1;
+}
+.btn.primary{background:var(--accent); color:#fff}
+.btn.ghost{border:1px solid var(--line); color:var(--ink)}
+.btn.sq{flex:none; width:44px}
+.btn.call{flex:none; width:44px; border:1px solid var(--line); color:var(--good)}
+
+.sheetgrab{width:34px; height:4px; border-radius:3px; background:var(--line); margin:9px auto 4px}
+.tmpl{border:1px solid var(--line); border-radius:20px; padding:8px 12px; font-size:12px; color:var(--ink-2); margin-bottom:7px}
+.tmpl.on{border-color:var(--accent); background:var(--accent-soft); color:var(--accent-ink)}
+.field{border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:12.5px; color:var(--ink-3); display:flex; justify-content:space-between}
+
+.owner-stats{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line-2); border:1px solid var(--line-2); border-radius:11px; overflow:hidden}
+.ost{background:var(--surface); padding:10px 6px; text-align:center}
+.ost b{display:block; font-size:16px; font-weight:700; font-variant-numeric:tabular-nums}
+.ost span{font-size:9.5px; color:var(--ink-3); font-family:"IBM Plex Mono",monospace; letter-spacing:.05em}
+
+/* ad card */
+.card{border:1px solid var(--line); border-radius:14px; overflow:hidden; width:168px; background:var(--surface)}
+.card .img{aspect-ratio:16/10}
+.card .cbody{padding:9px 10px 11px}
+.card .cp{font-size:14px; font-weight:700; font-variant-numeric:tabular-nums}
+.card .ct{font-size:11px; color:var(--ink); margin-top:2px; line-height:1.3}
+.card .cs{font-size:10px; color:var(--ink-3); margin-top:6px; line-height:1.4}
+.badgerow{display:flex; gap:4px}
+.bdg{font-size:8.5px; font-family:"IBM Plex Mono",monospace; letter-spacing:.06em; padding:2px 5px; border-radius:4px; background:var(--accent); color:#fff}
+.bdg.rent{background:#1D5FA8} .bdg.new{background:var(--good)}
+.heart{width:32px; height:32px; border-radius:50%; background:var(--surface); border:1px solid var(--line-2); display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--ink-2)}
+
+/* state frames */
+.sk{background:var(--surface-2); border-radius:6px}
+.errbox{text-align:center; padding:44px 20px}
+.errbox .eh{font-size:14px; font-weight:600; margin-top:12px}
+.errbox .ep{font-size:12px; color:var(--ink-3); margin-top:6px; line-height:1.45}
+
+/* build order */
+.steps{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:12px; overflow:hidden; margin-top:24px}
+.step{background:var(--surface); padding:18px}
+.step .sn{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--accent-ink); letter-spacing:.1em}
+.step h4{margin:8px 0 7px; font-size:15.5px; font-weight:600; letter-spacing:-.01em}
+.step p{margin:0; font-family:"Source Serif 4",Georgia,serif; font-size:14.5px; line-height:1.5; color:var(--ink-2)}
+.step .cost{margin-top:10px; font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-3)}
+
+.qs{margin:22px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:12px}
+.qs li{font-family:"Source Serif 4",Georgia,serif; font-size:16px; line-height:1.5; color:var(--ink-2); padding-left:20px; position:relative}
+.qs li::before{content:"?"; position:absolute; left:0; top:0; font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--accent-ink)}
+
+footer{margin-top:80px; padding-top:22px; border-top:1px solid var(--line); font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-3); line-height:1.7}
+footer a{color:var(--accent-ink)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <div class="kicker">
+    <span>ado·dad — mobile</span>
+    <span>Wireframe pass 3</span>
+    <span>9 Sep 2026</span>
+    <span><b>branch</b> dev_redesign</span>
+  </div>
+  <h1>Ad detail, rebuilt around the decision</h1>
+  <p class="dek">The detail page is where a listing either earns a call or gets swiped away. Today it renders every category through one vehicle template, prints the price without separators, auto-advances the gallery while the buyer is reading it, labels the odometer “Kmpl”, and hides half of what the API already returns. These plates rework the page around the four questions a buyer actually asks — <em>what is it, what condition, what price, who's selling</em> — and carry the same fixes out to the card, the gallery and the states.</p>
+  <div class="legend">
+    <span><i class="swatch" style="background:var(--accent)"></i> New or reworked in this pass</span>
+    <span><i class="swatch" style="background:var(--flag)"></i> Removed / currently wrong</span>
+    <span><i class="swatch" style="background:var(--hatch)"></i> Photo region</span>
+    <span><code>file.dart:120</code> anchor into today's code</span>
+  </div>
+</header>
+
+<section>
+  <h2>Diagnosis</h2>
+  <h3>What's actually wrong today</h3>
+  <p class="lede">From a read of <code>add_detail_page.dart</code> (3,083 lines) and its widgets. Sorted by what a buyer feels, not by what's easiest to fix.</p>
+  <div class="diag-wrap">
+    <table class="diag">
+      <thead><tr><th>Problem</th><th>Where</th><th>Why it costs you leads</th><th>Fixed in</th></tr></thead>
+      <tbody>
+        <tr><td>Price prints as <code>₹ 485000</code></td><td class="ref">ad_detail_title_price.dart — raw int; the file's own <code>_formatInr()</code> is used only by the EMI chip</td><td>Unreadable at a glance, and it's the single most-read number on the page. Same 16 sp as the title, so there's no hierarchy either.</td><td><span class="plate-tag">Plate 1</span></td></tr>
+        <tr><td>Gallery auto-advances every 3 s</td><td class="ref">add_detail_page.dart:132 timer, restarted from inside build at :846</td><td>Steals the frame the buyer is inspecting. Photos are the first thing 56% of users go to — the gallery should never move on its own.</td><td><span class="plate-tag">Plate 1</span> <span class="plate-tag">4</span></td></tr>
+        <tr><td>Odometer labelled “Kmpl”</td><td class="ref">add_detail_page.dart:1163 — <code>'${ad.mileage} Kmpl'</code>, while the post form asks for “Mileage (km)”</td><td>In India “mileage” means fuel economy. 42,300 Kmpl is nonsense; buyers either laugh or distrust the whole listing.</td><td><span class="plate-tag">Plate 2</span></td></tr>
+        <tr><td>One vehicle template for all four categories</td><td class="ref">_specsCard:1120 — only <code>property</code> branches; everything else falls to a shared default at :1166</td><td>Commercial listings render as cars. <code>bodyType</code>, <code>payloadCapacity</code>, <code>axleCount</code>, <code>seatingCapacity</code>, <code>hasFitness</code>, <code>hasPermit</code> are parsed and never shown.</td><td><span class="plate-tag">Plate 5</span></td></tr>
+        <tr><td>Fields parsed but never displayed</td><td class="ref">add_model.dart — <code>variant</code>, <code>color</code>, <code>hasInsurance</code>, <code>hasRcBook</code>, <code>additionalFeatures</code></td><td>RC and insurance status are the two things every used-vehicle buyer asks in the first message. You have them and don't show them.</td><td><span class="plate-tag">Plate 2</span></td></tr>
+        <tr><td>Property booleans render as positive chips</td><td class="ref">_specsCard property branch — booleans never filtered</td><td>“No Parking”, “No Garden”, “Unfurnished” sit in the same chip style as real amenities and read as features.</td><td><span class="plate-tag">Plate 5</span></td></tr>
+        <tr><td>Fabricated EMI</td><td class="ref"><code>price * 0.018</code> in both the card and the detail header</td><td>A monthly figure with no rate, tenure or down payment isn't a quote — it's a number you made up, on a page you don't lend on.</td><td><span class="plate-tag">Plate 1</span></td></tr>
+        <tr><td>Three CTAs of equal weight + a green icon-only call button</td><td class="ref">bottomNavigationBar:359 — Chat flex 2, Make an Offer flex 3, Call 48×48</td><td>“Make an Offer” is visually the biggest, but it's the highest-commitment action. And <code>SafeArea(minimum: …65)</code> hardcodes a 65 px gap that misaligns on gesture-nav phones.</td><td><span class="plate-tag">Plate 3</span></td></tr>
+        <tr><td>Call isn't auth-gated and dials raw</td><td class="ref">_handleCall:1994 — ignores <code>AdUser.countryCode</code>, unlike seller_profile_page.dart:377</td><td>Seller's real number is exposed to anonymous users, and international numbers dial wrong.</td><td><span class="plate-tag">Plate 3</span></td></tr>
+        <tr><td>Login prompt returns to a route that crashes</td><td class="ref">app_routes.dart:174 — <code>state.extra as AddModel</code> unguarded; redirect passes no <code>extra</code></td><td>Every auth-gated action (save, chat, offer, report) can drop the user into a crash on the way back.</td><td><span class="plate-tag">Plate 8</span></td></tr>
+        <tr><td>Error state is the raw exception</td><td class="ref"><code>Center(Text('Error: $e'))</code>, no retry, plus a red snackbar with the same string</td><td>No recovery path on the page that matters most, and stack-trace text in front of a buyer.</td><td><span class="plate-tag">Plate 8</span></td></tr>
+        <tr><td>~700 lines of dead code, 5× duplicated build tree</td><td class="ref">_otherDetailsCard:1388, _sellerTile:1671, _makeOfferBtn:2050, _handleMarkAsSold:401 …</td><td>Every state (<code>loaded</code>, <code>markingAsSold</code>, <code>markedAsSold</code>, <code>deleting</code>) re-lists the same slivers with small divergences. Any fix has to be made four times.</td><td><span class="plate-tag">Build</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ PLATE 1 ============ -->
+<section class="plate">
+  <div class="plate-head"><span class="plate-num">PLATE 1</span></div>
+  <h3>Fold one — decide in one screen</h3>
+  <p class="lede">Roughly three-quarters of viewing time on a page is spent in the first two screenfuls. Everything a buyer needs to decide “worth contacting?” goes here: photo, price, what it is, the four specs that set value, and how fresh the ad is.</p>
+
+  <div class="grid">
+    <div class="stage">
+      <div class="phone">
+        <div class="img hero">
+          <span class="imglab">PHOTO 1 · 16:10</span>
+          <div class="ovl tl"><div class="cbtn">←</div></div>
+          <div class="ovl tr"><div class="cbtn">↗</div><div class="cbtn">♡</div></div>
+          <div class="ovl br"><span class="pill">1 / 14</span></div>
+        </div>
+        <div class="thumbs">
+          <div class="thumb on"></div><div class="thumb"></div><div class="thumb"><span class="vd">▶</span></div>
+          <div class="thumb"></div><div class="thumb"></div><div class="thumb more">+9</div>
+        </div>
+        <div class="pad">
+          <div class="price">₹4,85,000</div>
+          <div class="band"><span class="gauge"><i></i></span><span><span class="bt">Fair price</span> · 42 similar Swifts in Ernakulam</span></div>
+          <div class="title">2019 Maruti Suzuki Swift VXi</div>
+          <div class="meta"><span>↓ ₹20,000 since 2 Sep</span></div>
+          <div class="chips">
+            <span class="chip key"><b>2019</b> reg</span>
+            <span class="chip key"><b>42,300</b> km</span>
+            <span class="chip key">Petrol</span>
+            <span class="chip key">Manual</span>
+            <span class="chip key"><b>1st</b> owner</span>
+          </div>
+          <div class="meta" style="margin-top:11px">
+            <span>Kakkanad, Ernakulam</span><i class="dot"></i><span>4.2 km away</span><i class="dot"></i><span>3 days ago</span>
+          </div>
+        </div>
+        <div class="scrollcut">SCROLL</div>
+        <div class="bottombar">
+          <div class="btn primary">Chat with seller</div>
+          <div class="btn call">📞</div>
+          <div class="btn sq ghost">♡</div>
+        </div>
+      </div>
+      <p class="caption">Ad detail · buyer · vehicle</p>
+    </div>
+
+    <ol class="notes">
+      <li><span class="num">1</span><div>
+        <h4>Thumbnail strip instead of dots</h4>
+        <p>Six 44 dp thumbnails under the hero, current one outlined, video shown in place with a ▶ badge, a <code>+9</code> tile for the rest. Dots are tiny, closely-spaced hit areas that cause mis-taps and hide how many photos exist; a strip both signposts the count and gives a real target.</p>
+        <span class="evi"><b>Baymard</b> only 24% of mobile sites use thumbnails; half of users failed to find extra images when only dots were shown. <b>Material</b> 48 dp minimum target.</span>
+      </div></li>
+      <li><span class="num flagged">2</span><div>
+        <h4>Kill the auto-advance and the baked-in gradient</h4>
+        <p>Remove the 3 s / 5 s <code>Timer</code> entirely — a detail gallery that moves while you're reading is hostile, and it's currently restarted from inside <code>build</code>. Also drop the <code>0x99000000 → 0xAA000000</code> gradient painted over <em>every</em> photo; replace it with a scrim only behind the control clusters, so buyers judge paint and damage on the real image.</p>
+        <span class="evi"><b>Today</b> add_detail_page.dart:132, :846, :1005–1021</span>
+      </div></li>
+      <li><span class="num">3</span><div>
+        <h4>Price is the headline, at 25 sp with separators</h4>
+        <p>Indian grouping (<code>₹4,85,000</code>), tabular figures, and clear separation from the title — the title drops to 14.5 sp regular. <code>inr()</code> already exists in <code>rich_ad_card.dart</code>; lift it into <code>lib/common</code> and use it everywhere. Rent listings keep the <code>/mo</code> suffix.</p>
+      </div></li>
+      <li><span class="num">4</span><div>
+        <h4>Price context band — but only when you can back it</h4>
+        <p>“Fair price · 42 similar Swifts in Ernakulam” converts an unknowable number into a judgement, which is exactly why CarDekho ships Great&nbsp;/&nbsp;Fair&nbsp;/&nbsp;Above&nbsp;Market. Render it only above a comparables threshold (say ≥ 15 same model-year listings in the region) and always name the basis. A wrong “Above market” on an honest seller's ad is worse than no band at all — so it needs a backend endpoint, not a client-side guess.</p>
+      </div></li>
+      <li><span class="num">5</span><div>
+        <h4>Price drop replaces “Posted On”</h4>
+        <p>“↓ ₹20,000 since 2 Sep” is honest urgency and signals a motivated seller. The posting date moves down to the location line as a relative time (“3 days ago”), where OLX puts it.</p>
+      </div></li>
+      <li><span class="num flagged">6</span><div>
+        <h4>The EMI chip goes</h4>
+        <p><code>price * 0.018</code> presented as a monthly figure is a made-up number with no rate, tenure or down payment — and you're not the lender. Either remove it, or make it a tappable “EMI from ₹8,499/mo” that opens a calculator with visible defaults (11.5% p.a. · 60 months · 20% down · indicative, not an offer). Same call applies on the card.</p>
+        <span class="evi">RBI's digital-lending direction is toward all-in cost disclosure, not headline instalments.</span>
+      </div></li>
+      <li><span class="num">7</span><div>
+        <h4>Five key chips, chosen by category</h4>
+        <p>Reg year · kms driven · fuel · transmission · owner number. These are the value-setting facts; everything else moves into the grouped table in Plate 2. Two tiers beats one flat <code>Wrap</code> where brand and mileage carry equal weight.</p>
+        <span class="evi"><b>Baymard</b> only 3% of sites summarise critical specs; 50% have spec sheets users can't scan.</span>
+      </div></li>
+      <li><span class="num">8</span><div>
+        <h4>Sticky bar: one primary, one call, one save</h4>
+        <p>Chat is the primary because it keeps the lead on-platform and maskable. Call sits beside it as a 44 dp target. “Make an offer” drops into the chat sheet (Plate 3) — three equal-weight CTAs make the highest-commitment action the loudest one. Replace the hardcoded <code>SafeArea(minimum: 65)</code> with the real system inset.</p>
+        <span class="evi"><b>Growth Rock A/B</b> a sticky bar that <em>opens</em> the action gained +5.2% orders; one that merely scrolled to the CTA gained nothing.</span>
+      </div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ PLATE 2 ============ -->
+<section class="plate">
+  <div class="plate-head"><span class="plate-num">PLATE 2</span></div>
+  <h3>The body — condition, documents, seller</h3>
+  <p class="lede">One long page with grouped sections, not tabs or subpages. Users miss content behind horizontal tabs and get lost coming back from subpages. Order follows doubt: what it is → what condition → what the seller says → who they are → what else is around.</p>
+
+  <div class="grid">
+    <div class="stage">
+      <div class="phone">
+        <div class="scrollcut">↑ FOLD ONE</div>
+        <div class="pad">
+          <div class="sec">Vehicle</div>
+          <div class="spec"><span>Brand &amp; model</span><b>Maruti Suzuki Swift</b></div>
+          <div class="spec"><span>Variant</span><b>VXi</b></div>
+          <div class="spec"><span>Kms driven</span><b>42,300 km</b></div>
+          <div class="spec"><span>Registration year</span><b>2019 · KL-07 Ernakulam</b></div>
+          <div class="spec"><span>Colour</span><b>Pearl Arctic White</b></div>
+          <div class="grouplab">Documents &amp; condition</div>
+          <div class="spec"><span>RC book</span><b>Available · original</b></div>
+          <div class="spec"><span>Insurance</span><b>Comprehensive · valid to Mar 2027</b></div>
+          <div class="spec"><span>Ownership</span><b>1st owner</b></div>
+          <div class="spec"><span>Loan / hypothecation</span><b>Not declared</b></div>
+        </div>
+        <hr class="sep">
+        <div class="pad">
+          <div class="sec">Seller's description</div>
+          <div class="bar" style="width:100%"></div><div class="bar" style="width:96%"></div><div class="bar" style="width:62%"></div>
+          <div class="readmore">Read more</div>
+        </div>
+        <hr class="sep">
+        <div class="pad">
+          <div class="seller">
+            <div class="av">R</div>
+            <div style="flex:1">
+              <div class="sname">Rahul S. <span class="vb">PHONE VERIFIED</span></div>
+              <div class="strust">Member since 2023 · 6 ads · usually replies in ~10 min</div>
+            </div>
+            <span style="color:var(--ink-3)">›</span>
+          </div>
+          <div class="chips" style="margin-top:9px">
+            <span class="chip">Report this ad</span><span class="chip">Block seller</span>
+          </div>
+        </div>
+        <div class="pad" style="padding-top:0">
+          <div class="safety"><span>⚠</span><span><b>Never pay in advance.</b> Ado·dad never asks for a token, booking or delivery fee. Meet in a public place and see the RC before paying.</span></div>
+        </div>
+        <hr class="sep">
+        <div class="pad">
+          <div class="sec">Similar Swifts nearby <span class="link">See all 42</span></div>
+          <div class="rail">
+            <div class="mini"><div class="img"><span class="imglab">PHOTO</span></div><div class="mp">₹4,60,000</div><div class="mt">2018 Swift VDi · 51k km</div></div>
+            <div class="mini"><div class="img"><span class="imglab">PHOTO</span></div><div class="mp">₹5,10,000</div><div class="mt">2020 Swift ZXi · 33k km</div></div>
+            <div class="mini"><div class="img"><span class="imglab">PHOTO</span></div><div class="mp">₹4,25,000</div><div class="mt">2017 Swift VXi · 68k km</div></div>
+          </div>
+        </div>
+        <div class="bottombar">
+          <div class="btn primary">Chat with seller</div>
+          <div class="btn call">📞</div>
+          <div class="btn sq ghost">♡</div>
+        </div>
+      </div>
+      <p class="caption">Ad detail · scrolled</p>
+    </div>
+
+    <ol class="notes">
+      <li><span class="num">9</span><div>
+        <h4>Two groups, single column, alternating rows</h4>
+        <p>“Vehicle” (what it is) and “Documents &amp; condition” (what you're buying into). Single column with alternating row tint — eye-tracking shows it improves both speed and accuracy of tracing a label across to its value. Multi-column spec blocks get misread as comparison tables.</p>
+        <span class="evi"><b>Baymard</b> 23% of sites don't group specs semantically; 20% use multi-column and confuse users.</span>
+      </div></li>
+      <li><span class="num flagged">10</span><div>
+        <h4>“Kms driven”, never “Mileage”</h4>
+        <p>Rename the field everywhere — detail, card, post form, edit form. If you ever add real fuel economy, that's a separate field called “Mileage (kmpl)”. Fixing the label alone is a one-line change with outsized trust value.</p>
+      </div></li>
+      <li><span class="num">11</span><div>
+        <h4>Surface RC, insurance, ownership, RTO</h4>
+        <p><code>hasRcBook</code> and <code>hasInsurance</code> are already in the model and never rendered. Registration state and RTO code drive re-registration cost, so they belong beside the year. “Loan / hypothecation — not declared” is worth adding to the post form: an undisclosed loan is a top cause of failed C2C deals.</p>
+      </div></li>
+      <li><span class="num">12</span><div>
+        <h4>Description truncates to 3 lines, expands in place</h4>
+        <p>Seller-written text is messy. Truncate with an inline “Read more” that expands on the same screen — never a new route. Where the free text contains structured facts (“insurance till March”, “single owner”), pull them into the table over time.</p>
+        <span class="evi"><b>Baymard</b> every test user relied on the description; 78% of sites dump it as an unstructured wall.</span>
+      </div></li>
+      <li><span class="num">13</span><div>
+        <h4>One verification signal, not three</h4>
+        <p>Today “verified” appears as a gallery badge, a purple tick on the tile, and an unused <code>SellerStats.isVerified</code>. Keep one badge that says <em>what</em> was verified — “Phone verified” — on the seller card. Vague ticks read as decoration; specific ones read as fact.</p>
+      </div></li>
+      <li><span class="num">14</span><div>
+        <h4>The trust row needs its own states</h4>
+        <p><code>GET /v2/ads/sellers/:id/stats</code> is fetched in <code>initState</code> and failures are swallowed, so the row silently appears late or never. Reserve its height, show a skeleton, and fall back to “Member since 2023” alone. Ship “replies in ~10 min” but instrument it — there's no published evidence that response badges lift contact rate, only widespread practice.</p>
+      </div></li>
+      <li><span class="num">15</span><div>
+        <h4>Report and block, one tap, always visible</h4>
+        <p>Currently a right-aligned text button floating between description and seller. Attach both to the seller card where the mistrust actually forms.</p>
+      </div></li>
+      <li><span class="num">16</span><div>
+        <h4>Safety note inline, near the CTA — not an interstitial</h4>
+        <p>The dominant fraud pattern in India is an impersonated “army officer” demanding an advance over UPI, so the copy names the behaviour rather than saying “be careful”. Keep it inline and dismissible. A full-screen safety gate before revealing contact gets dismissed blind and costs you the lead.</p>
+      </div></li>
+      <li><span class="num">17</span><div>
+        <h4>Similar ads must actually be similar</h4>
+        <p>Same model, ±20% price, same city — and “See all” carries those filters into search. Today it opens a bare <code>/search?from=ad-detail</code> with nothing applied. Alternatives are what matter in classifieds; there's no such thing as a complementary purchase here.</p>
+      </div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ PLATE 3 ============ -->
+<section class="plate">
+  <div class="plate-head"><span class="plate-num">PLATE 3</span></div>
+  <h3>Contact — the part that has to be effortless</h3>
+  <p class="lede">Everything above this page exists to produce one tap. Two sheets replace the third bottom-bar button: a chat opener with tappable templates, and an offer sheet with presets so nobody has to invent a number.</p>
+
+  <div class="grid">
+    <div class="stage">
+      <div class="stage-row">
+        <div>
+          <div class="phone sm">
+            <div class="scrollcut">DIMMED PAGE</div>
+            <div style="height:74px" class="img"><span class="imglab">AD THUMB + PRICE</span></div>
+            <div class="sheetgrab"></div>
+            <div class="pad" style="padding-top:6px">
+              <div class="sec">Message Rahul</div>
+              <div class="tmpl on">Is this still available?</div>
+              <div class="tmpl">Is the price negotiable?</div>
+              <div class="tmpl">Can I see it this weekend?</div>
+              <div class="tmpl">Any accident history?</div>
+              <div class="field" style="margin-top:10px"><span>Write your own…</span><span>↑</span></div>
+              <div class="chips" style="margin-top:12px"><span class="chip">₹ Make an offer</span></div>
+            </div>
+          </div>
+          <p class="caption">Chat sheet</p>
+        </div>
+        <div>
+          <div class="phone sm">
+            <div class="scrollcut">DIMMED PAGE</div>
+            <div class="sheetgrab"></div>
+            <div class="pad" style="padding-top:6px">
+              <div class="sec">Your offer</div>
+              <div class="meta" style="margin-top:0">Asking ₹4,85,000</div>
+              <div class="chips" style="margin-top:10px">
+                <span class="chip on">₹4,60,000 <b>−5%</b></span>
+                <span class="chip">₹4,36,500 <b>−10%</b></span>
+                <span class="chip">₹4,85,000 <b>asking</b></span>
+              </div>
+              <div class="field" style="margin-top:10px"><span>Other amount</span><span>₹</span></div>
+              <div class="btn primary" style="margin-top:12px">Send offer</div>
+              <div class="strust" style="margin-top:9px; text-align:center">2 of 3 offers left on this ad</div>
+            </div>
+          </div>
+          <p class="caption">Offer sheet</p>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="num">18</span><div>
+        <h4>Pre-filled openers, in Malayalam and English</h4>
+        <p>OLX ships saved chat templates explicitly for first-time-internet users, and it's the single cheapest lift to first-contact rate: the buyer never faces an empty text field. Four openers, one tap, editable before send.</p>
+      </div></li>
+      <li><span class="num">19</span><div>
+        <h4>Offer presets remove the “what's a rude number?” freeze</h4>
+        <p>Asking · −5% · −10% · custom, mirroring Facebook Marketplace and eBay. Cap at 3 offers per ad per buyer (eBay's cap; Vinted uses 5/day) so sellers don't get ground down. Show the remaining count — it makes the cap feel like a rule, not a bug.</p>
+        <span class="evi">Convergent practice across marketplaces; no published conversion data. Instrument it.</span>
+      </div></li>
+      <li><span class="num">20</span><div>
+        <h4>Call through a masked number, and gate it</h4>
+        <p>Call is currently the one action a logged-out user can take, and it dials <code>ad.user.phone</code> raw, ignoring <code>countryCode</code>. Route calls through a virtual number so a seller's personal line is never exposed — OLX has hidden numbers by default since 2016 — and require login, like every other action.</p>
+      </div></li>
+      <li><span class="num">21</span><div>
+        <h4>The offer sheet carries the ad, not the description</h4>
+        <p><code>ChatService</code> and <code>OfferService</code> are handed <code>ad.description</code> as the title today, so chat rooms are headed by a paragraph. Pass <code>ad.title</code> with the price and thumbnail.</p>
+        <span class="evi"><b>Today</b> add_detail_page.dart:1972, :2032</span>
+      </div></li>
+      <li><span class="num">22</span><div>
+        <h4>Deliberate: no WhatsApp button</h4>
+        <p>WhatsApp deep-links convert well in India, but the moment the lead leaves you can't moderate it, measure it or monetise it — and off-platform contact is exactly the channel the advance-payment scams run on. If it ships, it ships as a business decision with instrumentation, not as a convenience.</p>
+      </div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ PLATE 4 ============ -->
+<section class="plate">
+  <div class="plate-head"><span class="plate-num">PLATE 4</span></div>
+  <h3>Fullscreen gallery</h3>
+  <p class="lede">The existing <code>PhotoViewGallery</code> is fine — pinch zoom, hero transition, counter. Three things are missing, and the video is locked out of it entirely.</p>
+
+  <div class="grid">
+    <div class="stage">
+      <div class="phone">
+        <div style="background:#101216; padding:0">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 16px; color:#fff">
+            <span style="font-size:16px">✕</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:12px">4 / 14</span>
+            <span style="font-size:15px">↗</span>
+          </div>
+          <div class="img" style="aspect-ratio:4/5; background:#1B1E24">
+            <span class="imglab" style="color:#6C7482">PHOTO 4 — PINCH ZOOM</span>
+          </div>
+          <div style="display:flex; gap:6px; padding:12px 14px 16px; overflow:hidden">
+            <div class="thumb" style="background:#232830; border-color:#2E343E"></div>
+            <div class="thumb" style="background:#232830; border-color:#2E343E"></div>
+            <div class="thumb" style="background:#232830; border-color:#2E343E"></div>
+            <div class="thumb on" style="background:#232830"></div>
+            <div class="thumb" style="background:#232830; border-color:#2E343E"><span class="vd" style="color:#9AA2B1">▶</span></div>
+            <div class="thumb more" style="background:#232830; border-color:#2E343E; color:#9AA2B1">+9</div>
+          </div>
+        </div>
+      </div>
+      <p class="caption">Fullscreen viewer</p>
+    </div>
+
+    <ol class="notes">
+      <li><span class="num">23</span><div>
+        <h4>Video belongs in the same viewer</h4>
+        <p>Today video is forced to carousel index 0 on the page but excluded from the fullscreen gallery, which opens a separate Chewie route. One viewer, one index space: swiping past photo 3 should land on the video, not exit into another screen.</p>
+        <span class="evi"><b>Today</b> add_detail_page.dart:833, :1029, :2849</span>
+      </div></li>
+      <li><span class="num">24</span><div>
+        <h4>Thumbnail strip carries into fullscreen</h4>
+        <p>Same strip, same selected state, so the buyer keeps their place. It also answers “how many more are there?” without swiping to the end.</p>
+      </div></li>
+      <li><span class="num">25</span><div>
+        <h4>Neutral dark, never pure black</h4>
+        <p>A <code>#1B1E24</code> surface keeps photo edges visible instead of bleeding into the background. And never dim or tint listing photos in dark mode — buyers judge paint, rust and interior wear from them.</p>
+      </div></li>
+      <li><span class="num">26</span><div>
+        <h4>Empty gallery needs a real fallback</h4>
+        <p><code>images.isEmpty</code> currently produces an empty carousel and <code>_openImageGallery</code> silently returns. Show a “No photos yet” panel with the category glyph — and, on the owner's own ad, an “Add photos” button, since photo-less ads are the ones that never sell.</p>
+      </div></li>
+      <li><span class="num">27</span><div>
+        <h4>Low-bandwidth path</h4>
+        <p>WebP with a ~25 KB blurred placeholder, lazy-load beyond image 2, and never block first paint on the gallery: price, title and chips should render while photos stream. Sellers' phone photos are the root cause — compress at pick time in the post flow.</p>
+      </div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ PLATE 5 ============ -->
+<section class="plate">
+  <div class="plate-head"><span class="plate-num">PLATE 5</span></div>
+  <h3>Category variants — property and commercial</h3>
+  <p class="lede">Same page skeleton, different truth. A <code>PropertySpecs</code> / <code>VehicleSpecs</code> / <code>CommercialSpecs</code> section widget behind one interface replaces the single <code>if (category == 'property')</code> branch.</p>
+
+  <div class="grid">
+    <div class="stage">
+      <div class="stage-row">
+        <div>
+          <div class="phone sm">
+            <div class="img" style="aspect-ratio:16/10"><span class="imglab">PHOTO</span><div class="ovl tl"><span class="pill">FOR RENT</span></div></div>
+            <div class="pad">
+              <div class="price" style="font-size:20px">₹18,000<span style="font-size:12px; font-weight:500; color:var(--ink-3)">/mo</span></div>
+              <div class="title">2 BHK apartment, Kakkanad</div>
+              <div class="chips">
+                <span class="chip key"><b>2</b> BHK</span><span class="chip key"><b>820</b> sqft carpet</span>
+                <span class="chip key">Floor 4/7</span><span class="chip key">Semi-furnished</span>
+              </div>
+              <div class="grouplab">Property</div>
+              <div class="spec"><span>Carpet area</span><b>820 sqft</b></div>
+              <div class="spec"><span>Built-up area</span><b>1,010 sqft</b></div>
+              <div class="spec"><span>Available from</span><b>1 Oct 2026</b></div>
+              <div class="spec"><span>RERA ID</span><b>K-RERA/PRJ/…</b></div>
+              <div class="grouplab">Amenities</div>
+              <div class="chips"><span class="chip good">Covered parking</span><span class="chip good">Lift</span><span class="chip good">Power backup</span></div>
+            </div>
+          </div>
+          <p class="caption">Property</p>
+        </div>
+        <div>
+          <div class="phone sm">
+            <div class="img" style="aspect-ratio:16/10"><span class="imglab">PHOTO</span></div>
+            <div class="pad">
+              <div class="price" style="font-size:20px">₹8,20,000</div>
+              <div class="title">2017 Tata 407 Gold SFC</div>
+              <div class="chips">
+                <span class="chip key"><b>2017</b></span><span class="chip key"><b>1.9L</b> km</span>
+                <span class="chip key"><b>2,500</b> kg payload</span><span class="chip key">Diesel</span>
+              </div>
+              <div class="grouplab">Vehicle</div>
+              <div class="spec"><span>Body type</span><b>Flatbed</b></div>
+              <div class="spec"><span>Axles / seating</span><b>2 · 3</b></div>
+              <div class="grouplab">Documents</div>
+              <div class="spec"><span>Fitness certificate</span><b>Valid to Jun 2027</b></div>
+              <div class="spec"><span>Permit</span><b>National · valid</b></div>
+              <div class="spec"><span>RC validity</span><b>Aug 2027</b></div>
+            </div>
+          </div>
+          <p class="caption">Commercial vehicle</p>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="num">28</span><div>
+        <h4>Carpet area is the primary figure — this one is legal, not aesthetic</h4>
+        <p>RERA defines carpet area, and marketing property on super built-up has been called out by state authorities as a misleading and unfair trade practice, with penalties running to a percentage of project cost. Show carpet area as the headline number; built-up secondary and explicitly labelled. Add a RERA ID field for regulated projects.</p>
+      </div></li>
+      <li><span class="num flagged">29</span><div>
+        <h4>Only render amenities that are true</h4>
+        <p>Today booleans always render, so “No Parking” and “No Garden” sit in the same chip style as real features. Filter to true values; if a seller left them unset, say nothing rather than “No”.</p>
+      </div></li>
+      <li><span class="num">30</span><div>
+        <h4>Commercial vehicles finally get their own fields</h4>
+        <p><code>bodyType</code>, <code>payloadCapacity</code>, <code>axleCount</code>, <code>seatingCapacity</code>, <code>commercialVehicleType</code>, <code>hasFitness</code>, <code>hasPermit</code> are all parsed today and none reach the screen. Fitness and permit validity are the first two things a fleet buyer checks — a commercial listing without them is unusable.</p>
+      </div></li>
+      <li><span class="num">31</span><div>
+        <h4>Two-wheeler is not the same as a car</h4>
+        <p>It shares the vehicle template but should drop transmission and show engine cc, and its chips should lead with year · kms · owner. Cheap to add once the section widget exists.</p>
+      </div></li>
+      <li><span class="num">32</span><div>
+        <h4>Stop comparing raw category strings</h4>
+        <p><code>'two_wheeler' | 'private_vehicle' | 'commercial_vehicle' | 'property'</code> are compared as literals in five or more places across the page. One enum with an extension for label, icon, spec-section and edit route removes an entire class of silent bugs.</p>
+      </div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ PLATE 6 ============ -->
+<section class="plate">
+  <div class="plate-head"><span class="plate-num">PLATE 6</span></div>
+  <h3>The seller looking at their own ad</h3>
+  <p class="lede">A different job entirely: not “should I buy this?” but “is this working?”. Today ownership is resolved by an async lookup fed into six separate <code>FutureBuilder</code>s — four of them in the header just to compute spacing — so owner chrome visibly pops in a frame late.</p>
+
+  <div class="grid">
+    <div class="stage">
+      <div class="phone">
+        <div class="img hero"><span class="imglab">PHOTO 1 · 16:10</span>
+          <div class="ovl tl"><div class="cbtn">←</div></div>
+          <div class="ovl tr"><div class="cbtn">✎</div><div class="cbtn">↗</div></div>
+          <div class="ovl br"><span class="pill">1 / 14</span></div>
+        </div>
+        <div class="pad">
+          <div class="chips" style="margin-top:0"><span class="chip on">Your ad · Live</span></div>
+          <div class="price" style="margin-top:9px">₹4,85,000</div>
+          <div class="title">2019 Maruti Suzuki Swift VXi</div>
+          <div class="owner-stats" style="margin-top:13px">
+            <div class="ost"><b>412</b><span>VIEWS</span></div>
+            <div class="ost"><b>18</b><span>SAVED</span></div>
+            <div class="ost"><b>7</b><span>CHATS</span></div>
+            <div class="ost"><b>2</b><span>OFFERS</span></div>
+          </div>
+          <div class="band neutral" style="margin-top:11px"><span>↑</span><span>Ads with 8+ photos get <b>2× more chats</b>. You have 5 — <span style="color:var(--accent-ink)">add photos</span></span></div>
+          <div class="chips" style="margin-top:13px">
+            <span class="chip">✎ Edit ad</span><span class="chip">↑ Boost</span><span class="chip">✓ Mark as sold</span><span class="chip">🗑 Delete</span>
+          </div>
+        </div>
+        <hr class="sep">
+        <div class="pad">
+          <div class="sec">Offers <span class="link">2 new</span></div>
+          <div class="seller"><div class="av">A</div><div style="flex:1"><div class="sname">Anjali M.</div><div class="strust">Offered ₹4,60,000 · 2 h ago</div></div><span class="chip on">Reply</span></div>
+        </div>
+        <div class="scrollcut">SPECS AS BUYERS SEE THEM ↓</div>
+      </div>
+      <p class="caption">Ad detail · owner</p>
+    </div>
+
+    <ol class="notes">
+      <li><span class="num">33</span><div>
+        <h4>Resolve ownership once, above the tree</h4>
+        <p><code>isOwner</code> belongs in the bloc state, resolved before the page paints, not in six <code>FutureBuilder</code>s that each return <code>false</code> on the first frame. This also removes the awkward split where share sits in the header for buyers and next to the title for owners.</p>
+      </div></li>
+      <li><span class="num">34</span><div>
+        <h4>Performance strip answers the real question</h4>
+        <p>Views · saved · chats · offers. Sellers who see their ad underperforming will fix it; sellers who see nothing assume the platform is dead and stop posting. This is retention work disguised as a detail page.</p>
+      </div></li>
+      <li><span class="num">35</span><div>
+        <h4>One actionable nudge, tied to their numbers</h4>
+        <p>Photo count, missing price, stale ad — one at a time, and only when it's true of this ad. Generic “tips to sell faster” blocks get ignored.</p>
+      </div></li>
+      <li><span class="num">36</span><div>
+        <h4>Status pill, not a hidden state</h4>
+        <p>Live / Under review / Sold / Expired as a single pill under the hero. Today “sold” is a full-cover scrim and a divergent copy of the whole build tree; make it a state on one tree.</p>
+      </div></li>
+      <li><span class="num">37</span><div>
+        <h4>Offers surface here, not only in chat</h4>
+        <p>The offer flow already exists but a seller has to dig through chat rooms to find one. Two taps from their own ad to accept or counter.</p>
+      </div></li>
+      <li><span class="num flagged">38</span><div>
+        <h4>Retire the platform-split sold dialog</h4>
+        <p><code>_handleMarkAsSold</code> at :401 — around 180 lines of Cupertino/Material branching — is dead code, and so are <code>_otherDetailsCard</code>, <code>_sellerTile</code>, <code>_makeOfferBtn</code>, <code>_chatBtn</code>, <code>_circleIconButton</code> and roughly 700 lines besides. Delete before rebuilding, or the redesign inherits three versions of every widget.</p>
+      </div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ PLATE 7 ============ -->
+<section class="plate">
+  <div class="plate-head"><span class="plate-num">PLATE 7</span></div>
+  <h3>The card that leads here</h3>
+  <p class="lede"><code>rich_ad_card.dart</code> is genuinely good work — one shared widget across all eight browse surfaces, Indian price grouping, relative time. Four things hold it back, and they're all small.</p>
+
+  <div class="grid">
+    <div class="stage">
+      <div class="stage-row" style="gap:14px">
+        <div class="card">
+          <div class="img"><span class="imglab">PHOTO</span>
+            <div class="ovl tl"><div class="badgerow"><span class="bdg">PREMIUM</span><span class="bdg new">NEW</span></div></div>
+            <div class="ovl tr"><div class="heart">♡</div></div>
+            <div class="ovl br"><span class="pill">14 📷</span></div>
+          </div>
+          <div class="cbody">
+            <div class="cp">₹4,85,000</div>
+            <div class="ct">2019 Swift VXi</div>
+            <div class="chips" style="margin-top:6px; gap:4px">
+              <span class="chip" style="font-size:9.5px; padding:3px 6px">42,300 km</span>
+              <span class="chip" style="font-size:9.5px; padding:3px 6px">Petrol</span>
+            </div>
+            <div class="cs">Kakkanad · 4.2 km · 3 d ago</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="img"><span class="imglab">PHOTO</span>
+            <div class="ovl tl"><div class="badgerow"><span class="bdg rent">FOR RENT</span></div></div>
+            <div class="ovl tr"><div class="heart">♥</div></div>
+            <div class="ovl br"><span class="pill">8 📷 · ▶</span></div>
+          </div>
+          <div class="cbody">
+            <div class="cp">₹18,000<span style="font-size:10px; font-weight:500; color:var(--ink-3)">/mo</span></div>
+            <div class="ct">2 BHK, Kakkanad</div>
+            <div class="chips" style="margin-top:6px; gap:4px">
+              <span class="chip" style="font-size:9.5px; padding:3px 6px">820 sqft</span>
+              <span class="chip" style="font-size:9.5px; padding:3px 6px">Floor 4</span>
+            </div>
+            <div class="cs">Ernakulam · 1.1 km · today</div>
+          </div>
+        </div>
+      </div>
+      <p class="caption">Ad card v2 · 2-up grid</p>
+    </div>
+
+    <ol class="notes">
+      <li><span class="num flagged">39</span><div>
+        <h4>Badges stack; today they're mutually exclusive</h4>
+        <p>PREMIUM / FOR RENT / NEW are an <code>if / else if</code> chain, so a premium property can never show FOR SALE and a new premium listing loses its freshness signal. Allow up to two, ordered by value.</p>
+      </div></li>
+      <li><span class="num flagged">40</span><div>
+        <h4>The favourite target is 28×28</h4>
+        <p>Below every guideline — Material asks 48 dp, Apple 44 pt. Grow the hit area to 44 dp with the visual circle at 32, and make the toggle optimistic instead of showing a spinner in place of the heart.</p>
+      </div></li>
+      <li><span class="num flagged">41</span><div>
+        <h4>Drop the card EMI</h4>
+        <p>Same fabricated <code>price * 0.018</code>. On a 168 px card there is no room to qualify it, so it can only mislead. The space is better spent on the second spec chip.</p>
+      </div></li>
+      <li><span class="num">42</span><div>
+        <h4>One height constant, one owner</h4>
+        <p><code>richAdCardMainAxisExtent()</code> and the identical magic sum in <code>home_page.dart:1214</code> will drift apart the first time someone changes a padding. Export the function; delete the copy. Same for the orphaned <code>_buildAdCard</code> still sitting in <code>search_page.dart:1283</code> and <code>category_list_page.dart:810</code>.</p>
+      </div></li>
+      <li><span class="num">43</span><div>
+        <h4>Spec chips should follow the category, not a fixed pair</h4>
+        <p>Vehicles lead with kms and fuel; property with area and floor; commercial with payload. Two chips is the right budget — pick them per category rather than from one truncated list.</p>
+      </div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ PLATE 8 ============ -->
+<section class="plate">
+  <div class="plate-head"><span class="plate-num">PLATE 8</span></div>
+  <h3>The states nobody designs</h3>
+  <p class="lede">Four of these ship today as a raw exception string, a bare “Waiting for details…”, a skeleton that doesn't match the layout it precedes, and a login redirect that crashes on return.</p>
+
+  <div class="grid">
+    <div class="stage">
+      <div class="stage-row" style="gap:14px">
+        <div>
+          <div class="phone sm">
+            <div class="sk" style="aspect-ratio:16/10; border-radius:0"></div>
+            <div style="display:flex; gap:6px; padding:8px 14px 0"><div class="sk" style="width:40px;height:30px"></div><div class="sk" style="width:40px;height:30px"></div><div class="sk" style="width:40px;height:30px"></div></div>
+            <div class="pad">
+              <div class="sk" style="height:22px; width:46%"></div>
+              <div class="sk" style="height:12px; width:78%; margin-top:9px"></div>
+              <div style="display:flex; gap:5px; margin-top:11px"><div class="sk" style="height:22px;width:52px"></div><div class="sk" style="height:22px;width:60px"></div><div class="sk" style="height:22px;width:46px"></div></div>
+              <div class="sk" style="height:10px; width:64%; margin-top:12px"></div>
+            </div>
+          </div>
+          <p class="caption">Loading — matches the real 16:10</p>
+        </div>
+        <div>
+          <div class="phone sm">
+            <div class="errbox">
+              <div style="font-size:26px">⚠</div>
+              <div class="eh">Couldn't load this ad</div>
+              <div class="ep">Check your connection and try again. If it keeps failing the ad may have been removed.</div>
+              <div class="btn ghost" style="margin-top:16px; height:40px">Try again</div>
+              <div class="strust" style="margin-top:10px">Back to search</div>
+            </div>
+          </div>
+          <p class="caption">Error — recoverable, human</p>
+        </div>
+        <div>
+          <div class="phone sm">
+            <div class="img" style="aspect-ratio:16/10"><span class="imglab">NO PHOTOS YET</span></div>
+            <div class="pad">
+              <div class="price" style="font-size:20px">₹4,85,000</div>
+              <div class="title">2019 Maruti Suzuki Swift VXi</div>
+              <div class="band neutral" style="margin-top:10px"><span>ℹ</span><span>This seller hasn't added photos. Ask for some before you travel.</span></div>
+            </div>
+          </div>
+          <p class="caption">No photos</p>
+        </div>
+        <div>
+          <div class="phone sm">
+            <div class="sheetgrab"></div>
+            <div class="pad">
+              <div class="sec">Log in to save this ad</div>
+              <div class="strust">You'll come straight back to this Swift.</div>
+              <div class="btn primary" style="margin-top:14px">Continue with phone</div>
+              <div class="strust" style="margin-top:10px; text-align:center">Not now</div>
+            </div>
+          </div>
+          <p class="caption">Auth gate — returns to the ad</p>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="num">44</span><div>
+        <h4>Skeleton has to match the layout it replaces</h4>
+        <p><code>SkeletonDetail</code> hardcodes a 230 px hero against a real 16:10 one, so the page jumps when data lands. Mirror the fold-one structure exactly: hero, thumb strip, price, title, chip row, meta line.</p>
+      </div></li>
+      <li><span class="num flagged">45</span><div>
+        <h4>Never show the exception</h4>
+        <p><code>Center(Text('Error: $e'))</code> plus a red snackbar carrying the same string, with no retry. Replace with a cause-agnostic message, a Try again that re-dispatches the fetch, and a way out. Also add offline detection — <code>connectivity_checker.dart</code> already exists.</p>
+      </div></li>
+      <li><span class="num flagged">46</span><div>
+        <h4>Fix the login round-trip before anything else here</h4>
+        <p>The prompt redirects to <code>/add-detail-page</code> with no <code>extra</code>, and the route does <code>state.extra as AddModel</code> unguarded — so returning from login can crash. Switch the route to <code>/ad/:id</code> with the id in the path and the model as an optional cache. This is a real crash on your most-trafficked screen.</p>
+        <span class="evi"><b>Today</b> app_routes.dart:174</span>
+      </div></li>
+      <li><span class="num">47</span><div>
+        <h4>Pull-to-refresh and “still available?”</h4>
+        <p>There's no refresh on the detail page at all. Add one, and after ~7 days show buyers a “Still available?” ping that nudges the seller — freshness is the top signal in a C2C feed and it costs nothing to collect.</p>
+      </div></li>
+      <li><span class="num">48</span><div>
+        <h4>Gate copy names the ad</h4>
+        <p>“You'll come straight back to this Swift” rather than a generic login wall. The gate is a detour; say where it returns to.</p>
+      </div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ BROWSE ============ -->
+<section class="plate">
+  <div class="plate-head"><span class="plate-num">ADJACENT</span></div>
+  <h3>Three things upstream that undercut all of this</h3>
+  <p class="lede">Found while reading home, search, filters and category list. They're not detail-page work, but they decide whether anyone reaches a detail page at all.</p>
+
+  <div class="grid">
+    <div class="stage">
+      <div class="phone">
+        <div class="pad" style="background:var(--accent); color:#fff; padding-bottom:16px">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px"><span>ado·dad</span><span>🔔 📍 Kakkanad</span></div>
+          <div style="background:rgba(255,255,255,.16); border-radius:11px; padding:11px 13px; margin-top:12px; font-size:12.5px">Search cars, bikes, property…</div>
+        </div>
+        <div class="pad">
+          <div class="sec">Filters <span class="link">Clear all</span></div>
+          <div class="chips">
+            <span class="chip on">Cars</span><span class="chip on">Under ₹5L</span>
+            <span class="chip on">Within 25 km</span><span class="chip">+ Add filter</span>
+          </div>
+          <div class="chips" style="margin-top:10px">
+            <span class="chip">Sort: Price ↑</span>
+            <span class="chip on">🔔 Save this search</span>
+          </div>
+          <div class="strust" style="margin-top:10px">312 results · sorted on the server</div>
+        </div>
+        <hr class="sep">
+        <div class="pad" style="display:flex; gap:12px">
+          <div style="flex:1"><div class="img" style="aspect-ratio:16/10; border-radius:10px"><span class="imglab">PHOTO</span></div><div class="mp" style="font-size:13px; font-weight:700; margin-top:6px">₹4,25,000</div><div class="mt" style="font-size:10px; color:var(--ink-3)">2017 Swift VXi</div></div>
+          <div style="flex:1"><div class="img" style="aspect-ratio:16/10; border-radius:10px"><span class="imglab">PHOTO</span></div><div class="mp" style="font-size:13px; font-weight:700; margin-top:6px">₹4,60,000</div><div class="mt" style="font-size:10px; color:var(--ink-3)">2018 Swift VDi</div></div>
+        </div>
+      </div>
+      <p class="caption">Search results — server-side</p>
+    </div>
+
+    <ol class="notes">
+      <li><span class="num flagged">49</span><div>
+        <h4>Sort and filter are client-side over one page of 20</h4>
+        <p><code>_applyFilters</code> sorts whatever happens to be loaded, and pagination is switched <em>off</em> whenever a filter is active. So “Price: low to high” shows the cheapest of 20 ads, not the cheapest of 312 — and the user has no way to know. This is the single most damaging bug in the browse flow: it silently lies. Move both to the API and restore paging.</p>
+        <span class="evi"><b>Today</b> search_page.dart:63–86, :1223</span>
+      </div></li>
+      <li><span class="num flagged">50</span><div>
+        <h4>Every keystroke fires a search</h4>
+        <p><code>onChanged</code> dispatches straight through with no debounce and no bloc transformer — typing “Innova” is six network calls. Add a 350 ms debounce and <code>restartable()</code>. While you're there: there's no query autocomplete at all, only Google Places suggestions for locations, and the trending list is a hardcoded const.</p>
+      </div></li>
+      <li><span class="num">51</span><div>
+        <h4>No radius filter, no saved searches</h4>
+        <p>Location currently re-seeds recommendations but can't constrain results — the card shows “4.2 km away” on an ad you can't restrict by distance. And <code>FilterStateService</code> is an in-memory map cleared on exit, so filters die with the process. A “Within 25 km” chip plus a saved search with new-match alerts is the retention loop this app is missing; roughly 89% of marketplaces still don't make saving easy.</p>
+      </div></li>
+      <li><span class="num">52</span><div>
+        <h4>Sort exists in three places with three different UIs</h4>
+        <p>Chips on category list, pills in the search sheet, nothing at all on home. One sort control, one option set, one place — beside the filter chips, where the result count lives.</p>
+      </div></li>
+      <li><span class="num">53</span><div>
+        <h4>Design tokens exist but are bypassed</h4>
+        <p>The detail page uses <code>AppTextstyle</code> zero times — every style is an inline <code>TextStyle</code> with a four-breakpoint responsive call, and there are 146 raw <code>Colors.*</code> references across the five browse files. <code>AppColors</code> already has dark-mode getters, so dark mode is broken mostly by bypass. Extend the type scale to include price / body / caption / label roles, add a spacing scale, and the redesign becomes a find-and-replace rather than a rewrite.</p>
+      </div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ BUILD ORDER ============ -->
+<section class="plate">
+  <div class="plate-head"><span class="plate-num">BUILD</span></div>
+  <h3>Order of work</h3>
+  <p class="lede">Ordered by user-visible value per hour, not by plate number. The first column is a day's work and fixes the things that make the app look careless.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="sn">01 · SAME DAY</div>
+      <h4>The embarrassments</h4>
+      <p>Price separators. “Kms driven” instead of “Kmpl”. Kill the carousel timer and the permanent photo gradient. Filter property booleans. Guard the <code>/add-detail-page</code> extra cast. Route the call through <code>countryCode</code>.</p>
+      <div class="cost">~6 small diffs · no backend</div>
+    </div>
+    <div class="step">
+      <div class="sn">02 · WEEK 1</div>
+      <h4>Delete, then split</h4>
+      <p>Remove the ~700 dead lines and collapse the five duplicated build trees into one state-driven tree. Extract <code>AdDetailGallery</code>, <code>AdDetailHeader</code>, <code>SpecsSection</code> (vehicle / commercial / property / two-wheeler), <code>SellerCard</code>, <code>ContactBar</code>. Move <code>isOwner</code> into bloc state.</p>
+      <div class="cost">Refactor only · no visual change</div>
+    </div>
+    <div class="step">
+      <div class="sn">03 · WEEK 2</div>
+      <h4>Fold one + gallery</h4>
+      <p>Plates 1 and 4: thumbnail strip, price hierarchy, five key chips, unified video index, empty-photo fallback, real skeleton and error states. Sticky bar down to Chat · Call · Save.</p>
+      <div class="cost">Frontend only</div>
+    </div>
+    <div class="step">
+      <div class="sn">04 · WEEK 2–3</div>
+      <h4>Specs, documents, categories</h4>
+      <p>Plates 2 and 5: grouped tables, RC / insurance / RTO surfaced, commercial fields wired, carpet area and RERA ID for property, description truncation, seller trust row with states.</p>
+      <div class="cost">Needs post-form fields for loan &amp; RERA</div>
+    </div>
+    <div class="step">
+      <div class="sn">05 · WEEK 3</div>
+      <h4>Contact</h4>
+      <p>Plate 3: chat templates, offer presets with a cap, masked call number, correct ad title into chat. Owner view (Plate 6) rides along with the ownership refactor.</p>
+      <div class="cost">Masked numbers need telephony</div>
+    </div>
+    <div class="step">
+      <div class="sn">06 · PARALLEL</div>
+      <h4>Server-side search</h4>
+      <p>Sort and filter move to the API with paging restored; debounce the query; add radius; persist filters; saved search + alerts. Independent of the detail work and arguably higher value.</p>
+      <div class="cost">Backend</div>
+    </div>
+  </div>
+
+  <h2 style="margin-top:52px">Open questions</h2>
+  <ul class="qs">
+    <li>Does the API have enough comparables to support a price band, or is that a later data project? Ship the band only when it can be right.</li>
+    <li>Keep EMI at all? If there's no lender partner, removing it is cleaner than qualifying it.</li>
+    <li>Is there a moderation step before publish? That decides whether the owner status pill needs “Under review”.</li>
+    <li>Masked call numbers need a telephony provider — worth it, but it's a procurement decision, not a sprint.</li>
+    <li>Should the detail route become <code>/ad/:id</code>? It fixes deep links, share targets and the login round-trip in one change.</li>
+    <li>Response-time badges and offer presets have no published conversion evidence. Ship both, but instrument first-contact rate so the next pass has real numbers.</li>
+  </ul>
+</section>
+
+<footer>
+  Wireframes for ado·dad mobile · pass 3 · 9 Sep 2026 · branch dev_redesign<br>
+  Code anchors from add_detail_page.dart (3,083 lines), rich_ad_card.dart, search_page.dart, app_routes.dart, add_model.dart<br>
+  Evidence: Baymard Institute product-page &amp; image-gallery research · NN/g scrolling and attention · Growth Rock sticky-CTA A/B · OLX India help centre · CarDekho used-car listings · RERA §2(k) carpet area · Material and Apple target-size guidance<br>
+  Companion docs: login_otp_first_plan.md · post_ad_photo_first_plan.md
+</footer>
+
+</div>

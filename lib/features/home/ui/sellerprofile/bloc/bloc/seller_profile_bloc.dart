@@ -1,6 +1,7 @@
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/repositories/seller_profile_repo.dart';
 import 'package:bloc/bloc.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'seller_profile_event.dart';
@@ -56,8 +57,11 @@ class SellerProfileBloc extends Bloc<SellerProfileEvent, SellerProfileState> {
           isPaging: false,
         ));
       } catch (e) {
+        // Keep the already-loaded ads (an error state would wipe them). The
+        // page counter lives in the state and was never advanced, so a retry
+        // re-requests the same page.
+        debugPrint('❌ Failed to load more seller ads: $e');
         emit(current.copyWith(isPaging: false));
-        emit(SellerProfileState.error(e.toString()));
       }
     }
   }

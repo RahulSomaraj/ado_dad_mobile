@@ -1,11 +1,16 @@
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:bloc/bloc.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'advertisement_event.dart';
 part 'advertisement_state.dart';
 part 'advertisement_bloc.freezed.dart';
+
+/// Which kind of list the bloc is currently paginating. `fetchNextPage` uses
+/// this to reuse exactly the query that produced page 1.
+enum _ListMode { all, category, filters, location, search, user }
 
 class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
   final AddRepository repository;
@@ -29,6 +34,15 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
   String? _searchQuery;
   double? _locationLatitude;
   double? _locationLongitude;
+
+  /// Active list mode + the query that produced its first page.
+  _ListMode _mode = _ListMode.all;
+  String? _userId;
+
+  /// Incremented for every list-producing request so that a slow, stale
+  /// response (e.g. an older keystroke's search) can never overwrite a newer
+  /// one.
+  int _requestSeq = 0;
 
   // Location-recommendation pagination: a generous radius, sorted nearest-first
   // by the backend ($geoNear), so each page returns progressively farther ads.
@@ -58,6 +72,15 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
   bool? _isFurnished;
   bool? _hasParking;
 
+  /// Clears the nearby-feed pagination bookkeeping. Called by every list that
+  /// is *not* the location feed, so its next pages cannot be served by the
+  /// location branch.
+  void _resetLocationPaging() {
+    _locationFallbackToAll = false;
+    _locationQueryHasNext = false;
+    _allAdsPage = 1;
+  }
+
   List<AddModel> _mergeDedupe(
       List<AddModel> current, List<AddModel> incoming) {
     final ids = current.map((a) => a.id).toSet();
@@ -69,7 +92,9 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
 
   Future<void> _onFetchAllListings(
       FetchAllListingsEvent event, Emitter<AdvertisementState> emit) async {
+    final seq = ++_requestSeq;
     emit(const AdvertisementState.loading());
+    _mode = _ListMode.all;
     _currentPage = 1;
 
     // clear filters
@@ -90,16 +115,19 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _maxArea = null;
     _isFurnished = null;
     _hasParking = null;
+    _searchQuery = null;
+    _userId = null;
     _locationLatitude = null;
     _locationLongitude = null;
-    _locationFallbackToAll = false;
-    _locationQueryHasNext = false;
+    _resetLocationPaging();
 
     try {
       final result = await repository.fetchAllAds(page: _currentPage);
+      if (seq != _requestSeq) return;
       emit(AdvertisementState.listingsLoaded(
           listings: result.data, hasMore: result.hasNext));
     } catch (e) {
+      if (seq != _requestSeq) return;
       // Emit user-friendly message instead of raw exception
       emit(AdvertisementState.error(
           "Unable to load recommendations. Please try again later."));
@@ -113,91 +141,194 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
 
     final currentState = state;
     if (currentState is ListingsLoaded && currentState.hasMore) {
+      final seq = ++_requestSeq;
       try {
-        final bool inLocationMode =
-            _locationLatitude != null && !_locationFallbackToAll;
+        switch (_mode) {
+          case _ListMode.location:
+            await _fetchNextLocationPage(currentState, seq, emit);
+            break;
 
-        if (inLocationMode && _locationQueryHasNext) {
-          // (a) More pages within the location radius. $geoNear sorts
-          // nearest-first, so each page returns progressively farther ads.
-          _currentPage += 1;
-          print("📥 Location page $_currentPage @ ${_locationRadiusKm}km");
-          final result = await repository.fetchAllAds(
-            page: _currentPage,
-            latitude: _locationLatitude,
-            longitude: _locationLongitude,
-            maxDistance: _locationRadiusKm,
-          );
-          _locationQueryHasNext = result.hasNext;
-          emit(ListingsLoaded(
-            listings: _mergeDedupe(currentState.listings, result.data),
-            hasMore: true,
-          ));
-        } else if (inLocationMode) {
-          // (b) Location feed exhausted → start the full all-ads fallback feed.
-          _locationFallbackToAll = true;
-          _allAdsPage = 1;
-          print("📥 Location exhausted → all-ads fallback page $_allAdsPage");
-          final result = await repository.fetchAllAds(page: _allAdsPage);
-          emit(ListingsLoaded(
-            listings: _mergeDedupe(currentState.listings, result.data),
-            hasMore: result.hasNext,
-          ));
-        } else if (_locationFallbackToAll) {
-          // (d) Continue the all-ads fallback feed.
-          _allAdsPage += 1;
-          print("📥 All-ads fallback page $_allAdsPage");
-          final result = await repository.fetchAllAds(page: _allAdsPage);
-          emit(ListingsLoaded(
-            listings: _mergeDedupe(currentState.listings, result.data),
-            hasMore: result.hasNext,
-          ));
-        } else {
-          // (e) Normal all-ads / filtered pagination (unchanged behaviour).
-          _currentPage += 1;
-          print("📥 Fetching page $_currentPage");
-          final result = await repository.fetchAllAds(
-              page: _currentPage,
-              category: _categoryId,
-              latitude: _locationLatitude,
-              longitude: _locationLongitude,
-              commercialVehicleTypes: _commercialVehicleTypes,
-              minYear: _minYear,
-              maxYear: _maxYear,
-              manufacturerIds: _manufacturerIds,
-              modelIds: _modelIds,
-              fuelTypeIds: _fuelTypeIds,
-              transmissionTypeIds: _transmissionTypeIds,
-              minPrice: _minPrice,
-              maxPrice: _maxPrice,
-              propertyTypes: _propertyTypes,
-              minBedrooms: _minBedrooms,
-              maxBedrooms: _maxBedrooms,
-              minArea: _minArea,
-              maxArea: _maxArea);
-          print(
-              "📦 Received ${result.data.length} ads | hasNext: ${result.hasNext}");
-          emit(ListingsLoaded(
-            listings: [...currentState.listings, ...result.data],
-            hasMore: result.hasNext,
-          ));
+          case _ListMode.category:
+            {
+              _currentPage += 1;
+              final result = await repository.fetchAllAds(
+                page: _currentPage,
+                category: _categoryId,
+              );
+              if (seq != _requestSeq) return;
+              emit(ListingsLoaded(
+                listings: _mergeDedupe(currentState.listings, result.data),
+                hasMore: result.hasNext,
+              ));
+            }
+            break;
+
+          case _ListMode.filters:
+            {
+              _currentPage += 1;
+              final result = await repository.fetchAllAds(
+                page: _currentPage,
+                category: _categoryId,
+                latitude: _locationLatitude,
+                longitude: _locationLongitude,
+                commercialVehicleTypes: _commercialVehicleTypes,
+                minYear: _minYear,
+                maxYear: _maxYear,
+                manufacturerIds: _manufacturerIds,
+                modelIds: _modelIds,
+                fuelTypeIds: _fuelTypeIds,
+                transmissionTypeIds: _transmissionTypeIds,
+                minPrice: _minPrice,
+                maxPrice: _maxPrice,
+                propertyTypes: _propertyTypes,
+                minBedrooms: _minBedrooms,
+                maxBedrooms: _maxBedrooms,
+                minArea: _minArea,
+                maxArea: _maxArea,
+                isFurnished: _isFurnished,
+                hasParking: _hasParking,
+              );
+              if (seq != _requestSeq) return;
+              emit(ListingsLoaded(
+                listings: _mergeDedupe(currentState.listings, result.data),
+                hasMore: result.hasNext,
+              ));
+            }
+            break;
+
+          case _ListMode.search:
+            {
+              if (_searchQuery == null || _searchQuery!.isEmpty) return;
+              _searchPage += 1;
+              final result = await repository.fetchAllAds(
+                page: _searchPage,
+                limit: 20,
+                search: _searchQuery,
+              );
+              if (seq != _requestSeq) return;
+              emit(ListingsLoaded(
+                listings: _mergeDedupe(currentState.listings, result.data),
+                hasMore: result.hasNext,
+              ));
+            }
+            break;
+
+          case _ListMode.user:
+            {
+              if (_userId == null) return;
+              _currentPage += 1;
+              final result = await repository.fetchAdsByUserId(
+                userId: _userId!,
+                page: _currentPage,
+              );
+              if (seq != _requestSeq) return;
+              emit(ListingsLoaded(
+                listings: _mergeDedupe(currentState.listings, result.data),
+                hasMore: result.hasNext,
+              ));
+            }
+            break;
+
+          case _ListMode.all:
+            {
+              _currentPage += 1;
+              final result = await repository.fetchAllAds(page: _currentPage);
+              if (seq != _requestSeq) return;
+              emit(ListingsLoaded(
+                listings: _mergeDedupe(currentState.listings, result.data),
+                hasMore: result.hasNext,
+              ));
+            }
+            break;
         }
       } catch (e) {
-        // Emit user-friendly message instead of raw exception
-        emit(AdvertisementState.error(
-            "Unable to load more recommendations. Please try again later."));
+        // Loading a further page failed: keep the pages we already have (an
+        // error state would wipe the list) and roll the page counter back so a
+        // retry re-requests the same page instead of skipping it.
+        _rollBackPageCounter();
+        debugPrint('❌ Failed to load next page (mode: $_mode): $e');
+        if (seq == _requestSeq) emit(currentState);
+      } finally {
+        _isFetching = false;
       }
+      return;
     }
 
     _isFetching = false;
+  }
+
+  /// Roll the page counter of the active mode back by one after a failed
+  /// next-page request.
+  void _rollBackPageCounter() {
+    switch (_mode) {
+      case _ListMode.search:
+        if (_searchPage > 1) _searchPage -= 1;
+        break;
+      case _ListMode.location:
+        if (_locationFallbackToAll) {
+          if (_allAdsPage > 1) _allAdsPage -= 1;
+        } else if (_currentPage > 1) {
+          _currentPage -= 1;
+        }
+        break;
+      default:
+        if (_currentPage > 1) _currentPage -= 1;
+    }
+  }
+
+  /// The original nearby-feed pagination: page through the radius first, then
+  /// fall back to the full all-ads feed once nearby results are exhausted.
+  Future<void> _fetchNextLocationPage(ListingsLoaded currentState, int seq,
+      Emitter<AdvertisementState> emit) async {
+    final bool inLocationMode =
+        _locationLatitude != null && !_locationFallbackToAll;
+
+    if (inLocationMode && _locationQueryHasNext) {
+      // (a) More pages within the location radius. $geoNear sorts
+      // nearest-first, so each page returns progressively farther ads.
+      _currentPage += 1;
+      final result = await repository.fetchAllAds(
+        page: _currentPage,
+        latitude: _locationLatitude,
+        longitude: _locationLongitude,
+        maxDistance: _locationRadiusKm,
+      );
+      if (seq != _requestSeq) return;
+      _locationQueryHasNext = result.hasNext;
+      emit(ListingsLoaded(
+        listings: _mergeDedupe(currentState.listings, result.data),
+        hasMore: true,
+      ));
+    } else if (inLocationMode) {
+      // (b) Location feed exhausted → start the full all-ads fallback feed.
+      final result = await repository.fetchAllAds(page: 1);
+      if (seq != _requestSeq) return;
+      _locationFallbackToAll = true;
+      _allAdsPage = 1;
+      emit(ListingsLoaded(
+        listings: _mergeDedupe(currentState.listings, result.data),
+        hasMore: result.hasNext,
+      ));
+    } else {
+      // (c) Continue the all-ads fallback feed.
+      _allAdsPage += 1;
+      final result = await repository.fetchAllAds(page: _allAdsPage);
+      if (seq != _requestSeq) return;
+      emit(ListingsLoaded(
+        listings: _mergeDedupe(currentState.listings, result.data),
+        hasMore: result.hasNext,
+      ));
+    }
   }
 
   Future<void> _onFetchByCategory(
     FetchByCategory event,
     Emitter<AdvertisementState> emit,
   ) async {
+    final seq = ++_requestSeq;
     emit(const AdvertisementState.loading());
 
+    _mode = _ListMode.category;
     _categoryId = event.categoryId;
     _minYear = null;
     _maxYear = null;
@@ -217,19 +348,24 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _isFurnished = null;
     _hasParking = null;
     _commercialVehicleTypes = null;
+    _searchQuery = null;
+    _userId = null;
     _locationLatitude = null;
     _locationLongitude = null;
+    _resetLocationPaging();
 
     try {
       final result = await repository.fetchAllAds(
         page: _currentPage,
         category: _categoryId,
       );
+      if (seq != _requestSeq) return;
       emit(AdvertisementState.listingsLoaded(
         listings: result.data,
         hasMore: result.hasNext,
       ));
     } catch (e) {
+      if (seq != _requestSeq) return;
       // Emit user-friendly message instead of raw exception
       emit(AdvertisementState.error(
           "Unable to load recommendations. Please try again later."));
@@ -238,8 +374,10 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
 
   Future<void> _onApplyFilters(
       ApplyFiltersEvent event, Emitter<AdvertisementState> emit) async {
+    final seq = ++_requestSeq;
     emit(const AdvertisementState.loading());
 
+    _mode = _ListMode.filters;
     // set/replace filters (category can be re-applied from page)
     _categoryId = event.categoryId ?? _categoryId;
     _locationLatitude = event.latitude;
@@ -260,7 +398,12 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _maxArea = event.maxArea;
     _isFurnished = event.isFurnished;
     _hasParking = event.hasParking;
+    _searchQuery = null;
+    _userId = null;
     _currentPage = 1;
+    // The lat/lng here only biases the filtered query; it must not put the
+    // bloc into the nearby-feed pagination mode.
+    _resetLocationPaging();
 
     try {
       final result = await repository.fetchAllAds(
@@ -284,11 +427,13 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
           maxArea: _maxArea,
           isFurnished: _isFurnished,
           hasParking: _hasParking);
+      if (seq != _requestSeq) return;
       emit(AdvertisementState.listingsLoaded(
         listings: result.data,
         hasMore: result.hasNext,
       ));
     } catch (e) {
+      if (seq != _requestSeq) return;
       // Emit user-friendly message instead of raw exception
       emit(AdvertisementState.error(
           "Unable to load recommendations. Please try again later."));
@@ -321,7 +466,9 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
 
   Future<void> _onSearchByLocation(
       SearchByLocationEvent event, Emitter<AdvertisementState> emit) async {
+    final seq = ++_requestSeq;
     emit(const AdvertisementState.loading());
+    _mode = _ListMode.location;
     _currentPage = 1;
 
     // Clear other filters when searching by location
@@ -342,9 +489,13 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _maxArea = null;
     _isFurnished = null;
     _hasParking = null;
+    _searchQuery = null;
+    _userId = null;
     _locationLatitude = event.latitude;
     _locationLongitude = event.longitude;
     _locationFallbackToAll = false;
+    _locationQueryHasNext = false;
+    _allAdsPage = 1;
 
     try {
       final result = await repository.fetchAllAds(
@@ -353,12 +504,14 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
         longitude: event.longitude,
         maxDistance: _locationRadiusKm,
       );
+      if (seq != _requestSeq) return;
       _locationQueryHasNext = result.hasNext;
       // Keep hasMore=true so scrolling can widen the radius and then fall back
       // to the full all-ads feed once nearby results are exhausted.
       emit(AdvertisementState.listingsLoaded(
           listings: result.data, hasMore: true));
     } catch (e) {
+      if (seq != _requestSeq) return;
       // Emit user-friendly message instead of raw exception
       emit(AdvertisementState.error(
           "Unable to load recommendations. Please try again later."));
@@ -370,23 +523,28 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     final query = event.query.trim();
     if (query.isEmpty) return;
 
+    final seq = ++_requestSeq;
     emit(const AdvertisementState.loading());
+    _mode = _ListMode.search;
     _searchQuery = query;
     _searchPage = 1;
+    _currentPage = 1;
+    _userId = null;
     _locationLatitude = null;
     _locationLongitude = null;
+    _resetLocationPaging();
 
     try {
-      print(
-          '🔍 Search API: /v2/ads/list page=$_searchPage limit=20 search="$query"');
       final result = await repository.fetchAllAds(
         page: _searchPage,
         limit: 20,
         search: query,
       );
+      if (seq != _requestSeq) return;
       emit(AdvertisementState.listingsLoaded(
           listings: result.data, hasMore: result.hasNext));
     } catch (e) {
+      if (seq != _requestSeq) return;
       emit(AdvertisementState.error(
           "Unable to load recommendations. Please try again later."));
     }
@@ -400,20 +558,25 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     final currentState = state;
     if (currentState is ListingsLoaded && currentState.hasMore) {
       _isSearchFetching = true;
+      final seq = ++_requestSeq;
       try {
         _searchPage += 1;
-        print(
-            '🔍 Search API: /v2/ads/list page=$_searchPage limit=20 search="${_searchQuery!}"');
         final result = await repository.fetchAllAds(
           page: _searchPage,
           limit: 20,
           search: _searchQuery,
         );
-        final updatedList = [...currentState.listings, ...result.data];
-        emit(ListingsLoaded(listings: updatedList, hasMore: result.hasNext));
+        if (seq != _requestSeq) return;
+        emit(ListingsLoaded(
+          listings: _mergeDedupe(currentState.listings, result.data),
+          hasMore: result.hasNext,
+        ));
       } catch (e) {
-        emit(AdvertisementState.error(
-            "Unable to load more recommendations. Please try again later."));
+        // Keep the already-loaded results instead of wiping them with an error
+        // state, and roll the page back so a retry re-requests the same page.
+        if (_searchPage > 1) _searchPage -= 1;
+        debugPrint('❌ Failed to load next search page: $e');
+        if (seq == _requestSeq) emit(currentState);
       } finally {
         _isSearchFetching = false;
       }
@@ -422,7 +585,10 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
 
   Future<void> _onFetchByUserId(
       FetchByUserIdEvent event, Emitter<AdvertisementState> emit) async {
+    final seq = ++_requestSeq;
     emit(const AdvertisementState.loading());
+    _mode = _ListMode.user;
+    _userId = event.userId;
     _currentPage = 1;
 
     // clear filters
@@ -442,17 +608,21 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _maxArea = null;
     _isFurnished = null;
     _hasParking = null;
+    _searchQuery = null;
     _locationLatitude = null;
     _locationLongitude = null;
+    _resetLocationPaging();
 
     try {
       final result = await repository.fetchAdsByUserId(
         userId: event.userId,
         page: _currentPage,
       );
+      if (seq != _requestSeq) return;
       emit(AdvertisementState.listingsLoaded(
           listings: result.data, hasMore: result.hasNext));
     } catch (e) {
+      if (seq != _requestSeq) return;
       // Emit user-friendly message instead of raw exception
       emit(AdvertisementState.error(
           "Unable to load recommendations. Please try again later."));

@@ -13,6 +13,7 @@ import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/features/home/services/offer_service.dart';
 import 'package:ado_dad_user/features/home/services/chat_service.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
+import 'package:ado_dad_user/common/phone_number_util.dart';
 import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
 import 'package:ado_dad_user/features/home/ui/report_ad_dialog.dart';
 import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_title_price.dart';
@@ -37,7 +38,6 @@ import 'package:chewie/chewie.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
-import 'dart:async';
 
 class AdDetailPage extends StatefulWidget {
   // final String adId;
@@ -53,7 +53,6 @@ class _AdDetailPageState extends State<AdDetailPage> {
   VideoPlayerController? _videoController;
   final CarouselSliderController _carouselController =
       CarouselSliderController();
-  Timer? _autoPlayTimer;
   bool _hasVideo = false;
   final Map<String, VideoPlayerController?> _videoControllers = {};
   final Map<String, VoidCallback?> _onVideoCompleteCallbacks = {};
@@ -165,42 +164,10 @@ Download Adodad app to contact the seller and view more details!
   @override
   void dispose() {
     _videoController?.dispose();
-    _autoPlayTimer?.cancel();
     for (var controller in _videoControllers.values) {
       controller?.dispose();
     }
     super.dispose();
-  }
-
-  void _startAutoPlay(AddModel ad) {
-    _autoPlayTimer?.cancel();
-
-    final totalItems = _getTotalCarouselItems(ad);
-    // Nothing to advance to when there's a single item — avoid an endless
-    // 3s timer → nextPage → rebuild loop that spams logs and wastes CPU.
-    if (totalItems <= 1) return;
-    if (_currentIndex >= totalItems) return;
-
-    // Check if current item is video (video is always first item if exists)
-    final isVideo = _hasVideo && _currentIndex == 0;
-
-    if (isVideo) {
-      // For video in carousel, advance after a fixed duration (5 seconds)
-      // Since we disabled auto-play on video to prevent tap conflicts,
-      // we'll just advance after a delay
-      _autoPlayTimer = Timer(const Duration(seconds: 5), () {
-        if (mounted) {
-          _carouselController.nextPage();
-        }
-      });
-    } else {
-      // For images, auto-advance after 3 seconds
-      _autoPlayTimer = Timer(const Duration(seconds: 3), () {
-        if (mounted) {
-          _carouselController.nextPage();
-        }
-      });
-    }
   }
 
   void _onVideoComplete() {
@@ -212,7 +179,7 @@ Download Adodad app to contact the seller and view more details!
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.whiteColor,
       body: SafeArea(
         top: false,
         // minimum: const EdgeInsets.only(bottom: 80),
@@ -642,13 +609,42 @@ Download Adodad app to contact the seller and view more details!
             options: CarouselOptions(
               viewportFraction: 1,
               height: double.infinity,
-              autoPlay: false, // Disable autoPlay, we'll handle it manually
+              // The gallery advances only on a deliberate swipe — a photo
+              // must never slide away while the buyer is looking at it.
+              autoPlay: false,
               onPageChanged: (i, _) {
                 setState(() => _currentIndex = i);
-                _startAutoPlay(ad); // Restart auto-play for new item
               },
             ),
             items: _buildCarouselItems(ad),
+          ),
+        ),
+        // Localised scrim behind the top control cluster only. The back /
+        // edit / share / favourite circles sit on 35%-black discs, which on
+        // their own read at ~2.4:1 against a bright photo. The scrim holds
+        // ~30-34% black across the band the buttons occupy (y 50-86), taking
+        // them to ~4.7:1, then fades out by 100px. The rest of the photo is
+        // left untouched so buyers can judge condition.
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 100,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0x66000000),
+                    Color(0x4D000000),
+                    Color(0x00000000),
+                  ],
+                  stops: [0.0, 0.86, 1.0],
+                ),
+              ),
+            ),
           ),
         ),
         // floating top actions
@@ -885,23 +881,16 @@ Download Adodad app to contact the seller and view more details!
     // Add all images
     items.addAll(ad.images.map((img) => _buildImageItem(img, ad)));
 
-    // Start auto-play after building items
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _startAutoPlay(ad);
-      }
-    });
-
     return items;
   }
 
   Widget _buildVideoItem(String videoUrl) {
-    print('🎥 Building video item with URL: $videoUrl');
+    debugPrint('🎥 Building video item with URL: $videoUrl');
     // Store callback for video completion
     _onVideoCompleteCallbacks[videoUrl] = _onVideoComplete;
     return GestureDetector(
       onTap: () {
-        print('🎥 Video tapped, opening full screen...');
+        debugPrint('🎥 Video tapped, opening full screen...');
         _openVideoFullScreen(context, videoUrl);
       },
       behavior: HitTestBehavior.opaque,
@@ -964,7 +953,7 @@ Download Adodad app to contact the seller and view more details!
               Positioned.fill(
                 child: GestureDetector(
                   onTap: () {
-                    print('🎥 Video overlay tapped, opening full screen...');
+                    debugPrint('🎥 Video overlay tapped, opening full screen...');
                     _openVideoFullScreen(context, videoUrl);
                   },
                   behavior: HitTestBehavior.opaque,
@@ -975,7 +964,7 @@ Download Adodad app to contact the seller and view more details!
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () {
-                            print(
+                            debugPrint(
                                 '🎥 Play button tapped, opening full screen...');
                             _openVideoFullScreen(context, videoUrl);
                           },
@@ -1033,6 +1022,9 @@ Download Adodad app to contact the seller and view more details!
   Widget _buildImageItem(String img, AddModel ad) {
     return GestureDetector(
       onTap: () => _openImageGallery(context, ad, img),
+      // No overlay on the photo itself — buyers judge condition from an
+      // unaltered image. Contrast for the floating controls comes from a
+      // small scrim behind the top cluster only (see _headerCarousel).
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -1044,22 +1036,6 @@ Download Adodad app to contact the seller and view more details!
                 borderRadius: BorderRadius.zero,
                 child: AppNetworkImage(url: img, fit: BoxFit.cover),
               )),
-          // dark gradient overlay (top+bottom)
-          Container(
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.zero,
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0x99000000),
-                  Color(0x00000000),
-                  Color(0xAA000000),
-                ],
-                stops: [0.0, 0.55, 1.0],
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -1175,13 +1151,14 @@ Download Adodad app to contact the seller and view more details!
             icon: Icons.square_foot),
         _Spec('Floor', ad.floor != null ? 'Floor ${ad.floor}' : '-',
             icon: Icons.apartment),
-        _Spec('Furnished',
-            ad.isFurnished == true ? 'Furnished' : 'Unfurnished',
-            icon: Icons.chair_alt),
-        _Spec('Parking', ad.hasParking == true ? 'Parking' : 'No Parking',
-            icon: Icons.local_parking),
-        _Spec('Garden', ad.hasGarden == true ? 'Garden' : 'No Garden',
-            icon: Icons.park),
+        // Amenities are chips that read as features — only show the ones
+        // the property actually has. A missing/false flag is omitted rather
+        // than rendered as a look-alike "No Parking" chip.
+        if (ad.isFurnished == true)
+          _Spec('Furnished', 'Furnished', icon: Icons.chair_alt),
+        if (ad.hasParking == true)
+          _Spec('Parking', 'Parking', icon: Icons.local_parking),
+        if (ad.hasGarden == true) _Spec('Garden', 'Garden', icon: Icons.park),
       ];
 
       return _specChips(items, amenities: ad.amenities);
@@ -1203,7 +1180,9 @@ Download Adodad app to contact the seller and view more details!
           'Registration Year',
           (ad.year != null && ad.year != 0) ? '${ad.year}' : '-',
           icon: Icons.calendar_today),
-      _Spec('Mileage', (ad.mileage != null) ? '${ad.mileage} Kmpl' : '-',
+      _Spec(
+          'Kms driven',
+          (ad.mileage != null) ? '${RichAdCard.inr(ad.mileage!)} km' : '-',
           icon: Icons.speed),
       if (ad.isFirstOwner != null)
         _Spec('Owner', ad.isFirstOwner == true ? '1st owner' : '2nd+ owner',
@@ -1618,7 +1597,7 @@ Download Adodad app to contact the seller and view more details!
               Text(
                 ad.description,
                 style: TextStyle(
-                  color: Colors.black,
+                  color: AppColors.blackColor,
                   height: 1.35,
                   fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                       mobile: 14, tablet: 22, largeTablet: 26, desktop: 30),
@@ -2037,10 +2016,31 @@ Download Adodad app to contact the seller and view more details!
     );
   }
 
+  /// Builds the number to dial. `phone` is stored nationally, so the seller's
+  /// `countryCode` has to be put back or the call fails for anyone roaming or
+  /// on a non-Indian SIM. Matches SellerProfile's phone display.
+  String _dialNumber(AddModel ad) {
+    final raw = ad.user?.phone?.trim() ?? '';
+    if (raw.isEmpty) return '';
+    final cc = ad.user?.countryCode?.trim() ?? '';
+    if (cc.isEmpty) return raw;
+    // Already carries a country code (either "+91…" or "0091…").
+    if (raw.startsWith('+') || raw.startsWith('00')) return raw;
+    final normalised = PhoneNumberUtil.normalise(raw, cc);
+    return normalised.e164;
+  }
+
   // Place a phone call to the seller using the device dialer.
   Future<void> _handleCall(BuildContext context, AddModel ad) async {
-    final rawPhone = ad.user?.phone?.trim() ?? '';
-    if (rawPhone.isEmpty) return;
+    final rawPhone = _dialNumber(ad);
+    if (rawPhone.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Seller phone number unavailable')),
+        );
+      }
+      return;
+    }
     final uri = Uri(scheme: 'tel', path: rawPhone);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
@@ -2176,7 +2176,7 @@ Download Adodad app to contact the seller and view more details!
             mobile: 8, tablet: 10, largeTablet: 12, desktop: 14),
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.whiteColor,
         borderRadius: BorderRadius.circular(
           GetResponsiveSize.getResponsiveBorderRadius(context,
               mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
@@ -2425,14 +2425,14 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
   @override
   void initState() {
     super.initState();
-    print(
+    debugPrint(
         '🎥 _VideoPlayerWidget initState called with URL: ${widget.videoUrl}');
     _initializeVideo();
   }
 
   Future<void> _initializeVideo() async {
     try {
-      print('🎥 Initializing video: ${widget.videoUrl}');
+      debugPrint('🎥 Initializing video: ${widget.videoUrl}');
 
       // Validate URL
       if (widget.videoUrl.isEmpty) {
@@ -2450,11 +2450,11 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
         throw Exception('Invalid video URL format: $cleanUrl');
       }
 
-      print('🎥 Creating VideoPlayerController with URI: $uri');
+      debugPrint('🎥 Creating VideoPlayerController with URI: $uri');
 
       // Skip URL accessibility test as it often fails unnecessarily
       // and video player can handle network issues better
-      print(
+      debugPrint(
           '🎥 Skipping URL accessibility test - proceeding with video initialization');
 
       _videoPlayerController = VideoPlayerController.networkUrl(uri);
@@ -2462,7 +2462,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
       // Add listener to update UI when video state changes
       _videoPlayerController!.addListener(_videoListener);
 
-      print('🎥 Starting video initialization...');
+      debugPrint('🎥 Starting video initialization...');
 
       // Add timeout to video initialization
       await _videoPlayerController!.initialize().timeout(
@@ -2472,10 +2472,10 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
         },
       );
 
-      print('🎥 Video initialized successfully');
-      print('🎥 Video duration: ${_videoPlayerController!.value.duration}');
-      print('🎥 Video size: ${_videoPlayerController!.value.size}');
-      print(
+      debugPrint('🎥 Video initialized successfully');
+      debugPrint('🎥 Video duration: ${_videoPlayerController!.value.duration}');
+      debugPrint('🎥 Video size: ${_videoPlayerController!.value.size}');
+      debugPrint(
           '🎥 Video aspect ratio: ${_videoPlayerController!.value.aspectRatio}');
 
       // Initialize Chewie controller with proper controls
@@ -2513,18 +2513,18 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
           _isInitialized = true;
           _isLoading = false;
         });
-        print('🎥 Video state updated to initialized');
+        debugPrint('🎥 Video state updated to initialized');
       }
     } catch (e) {
-      print('❌ Video initialization error: $e');
-      print('❌ Error type: ${e.runtimeType}');
+      debugPrint('❌ Video initialization error: $e');
+      debugPrint('❌ Error type: ${e.runtimeType}');
       if (mounted) {
         setState(() {
           _hasError = true;
           _isLoading = false;
           _errorMessage = _getUserFriendlyErrorMessage(e);
         });
-        print('🎥 Video state updated to error');
+        debugPrint('🎥 Video state updated to error');
       }
     }
   }
@@ -2532,14 +2532,14 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
   void _videoListener() {
     if (mounted && _videoPlayerController != null) {
       final value = _videoPlayerController!.value;
-      print(
+      debugPrint(
           '🎥 Video state: initialized=${value.isInitialized}, error=${value.errorDescription}');
-      print(
+      debugPrint(
           '🎥 Video duration: ${value.duration}, position: ${value.position}');
-      print('🎥 Video size: ${value.size}, aspectRatio: ${value.aspectRatio}');
+      debugPrint('🎥 Video size: ${value.size}, aspectRatio: ${value.aspectRatio}');
 
       if (value.hasError && value.errorDescription != null) {
-        print('❌ Video player error: ${value.errorDescription}');
+        debugPrint('❌ Video player error: ${value.errorDescription}');
         setState(() {
           _hasError = true;
           _isLoading = false;
@@ -2550,7 +2550,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
         setState(() {
           _isLoading = false;
         });
-        print(
+        debugPrint(
             '🎥 Video player initialized successfully - controls should be available');
       }
 
@@ -2566,7 +2566,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
               value.duration - const Duration(milliseconds: 100) &&
           !_hasCalledCompletion) {
         // Video has reached the end (with 100ms tolerance)
-        print('🎥 Video completed - calling completion callback');
+        debugPrint('🎥 Video completed - calling completion callback');
         _hasCalledCompletion = true;
         widget.onVideoComplete?.call();
       }
@@ -2597,7 +2597,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
 
   Future<void> _testWithSampleVideo() async {
     try {
-      print('🎥 Testing with sample video...');
+      debugPrint('🎥 Testing with sample video...');
 
       // Use a known working sample video URL
       const testVideoUrl =
@@ -2613,7 +2613,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
       // Add listener to update UI when video state changes
       _videoPlayerController!.addListener(_videoListener);
 
-      print('🎥 Starting test video initialization...');
+      debugPrint('🎥 Starting test video initialization...');
       await _videoPlayerController!.initialize().timeout(
         const Duration(seconds: 15),
         onTimeout: () {
@@ -2621,10 +2621,10 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
         },
       );
 
-      print('🎥 Test video initialized successfully');
-      print(
+      debugPrint('🎥 Test video initialized successfully');
+      debugPrint(
           '🎥 Test video duration: ${_videoPlayerController!.value.duration}');
-      print('🎥 Test video size: ${_videoPlayerController!.value.size}');
+      debugPrint('🎥 Test video size: ${_videoPlayerController!.value.size}');
 
       // Initialize Chewie controller for test video
       _chewieController = ChewieController(
@@ -2658,10 +2658,10 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
           _isInitialized = true;
           _isLoading = false;
         });
-        print('🎥 Test video state updated to initialized');
+        debugPrint('🎥 Test video state updated to initialized');
       }
     } catch (e) {
-      print('❌ Test video initialization error: $e');
+      debugPrint('❌ Test video initialization error: $e');
       if (mounted) {
         setState(() {
           _hasError = true;
@@ -2922,7 +2922,7 @@ class _VideoFullScreenViewerState extends State<_VideoFullScreenViewer> {
 
   Future<void> _initializeVideo() async {
     try {
-      print('🎥 Initializing full-screen video: ${widget.videoUrl}');
+      debugPrint('🎥 Initializing full-screen video: ${widget.videoUrl}');
 
       if (widget.videoUrl.isEmpty) {
         throw Exception('Video URL is empty');
@@ -2981,7 +2981,7 @@ class _VideoFullScreenViewerState extends State<_VideoFullScreenViewer> {
         });
       }
     } catch (e) {
-      print('❌ Full-screen video initialization error: $e');
+      debugPrint('❌ Full-screen video initialization error: $e');
       if (mounted) {
         setState(() {
           _hasError = true;

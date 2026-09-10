@@ -182,7 +182,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
     final repo = AddRepository();
 
     // manufacturers with vehicleCategory 'passenger_car'
-    // TODO(backend): commercial manufacturer category
+    // TODO(backend): commercial vehicles should use their own manufacturer category
     try {
       _manufacturers =
           await repo.fetchManufacturers(vehicleCategory: 'passenger_car');
@@ -333,19 +333,19 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
   Future<void> _uploadVideo() async {
     if (_newVideoFile != null) {
       try {
-        print('📹 Starting video upload...');
+        debugPrint('📹 Starting video upload...');
         final url = await AddRepository().uploadVideoToS3(_newVideoFile!);
         if (url != null) {
-          print('✅ Video uploaded successfully: $url');
+          debugPrint('✅ Video uploaded successfully: $url');
           setState(() {
             _uploadedVideoUrl = url;
             _videoRemoved = false; // Reset removal flag when video is uploaded
           });
         } else {
-          print('❌ Video upload returned null URL');
+          debugPrint('❌ Video upload returned null URL');
         }
       } catch (e) {
-        print('❌ Error uploading video: $e');
+        debugPrint('❌ Error uploading video: $e');
         // Optionally show error to user
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -666,6 +666,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
                     errorMsg: 'Please select a manufacturer',
                     getDisplayText: (item) => item.displayName,
                     onSearch: (query) async {
+                      // TODO(backend): commercial vehicles should use their own manufacturer category
                       return await AddRepository().fetchManufacturers(
                         search: query,
                         vehicleCategory: 'passenger_car',

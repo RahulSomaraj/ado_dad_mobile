@@ -21,6 +21,10 @@ class WishlistPage extends StatefulWidget {
 }
 
 class _WishlistPageState extends State<WishlistPage> {
+  /// Last successfully loaded list. Kept so transient toggle states never
+  /// blank the page out with a full skeleton.
+  FavoriteLoaded? _lastLoaded;
+
   @override
   void initState() {
     super.initState();
@@ -99,7 +103,7 @@ class _WishlistPageState extends State<WishlistPage> {
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.grey[50],
+        backgroundColor: AppColors.whiteColor,
         appBar: widget.embedded
             ? null
             : AppBar(
@@ -141,7 +145,7 @@ class _WishlistPageState extends State<WishlistPage> {
           minimum: const EdgeInsets.only(bottom: 30),
           child: BlocBuilder<FavoriteBloc, FavoriteState>(
             builder: (context, state) {
-              if (state is FavoriteLoading || state is FavoriteToggleLoading) {
+              if (state is FavoriteLoading) {
                 return const SkeletonList();
               } else if (state is FavoriteError) {
                 return Center(
@@ -251,7 +255,33 @@ class _WishlistPageState extends State<WishlistPage> {
                   ),
                 );
               } else if (state is FavoriteLoaded) {
-                if (state.favorites.isEmpty) {
+                _lastLoaded = state;
+                return _buildLoadedBody(context, state);
+              } else if (_lastLoaded != null) {
+                // Toggle in progress / finished: keep showing the list.
+                return _buildLoadedBody(context, _lastLoaded!);
+              } else if (state is FavoriteToggleLoading ||
+                  state is FavoriteToggleSuccess) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
+                  ),
+                );
+              }
+
+              return const Center(
+                child: Text('No data available'),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadedBody(BuildContext context, FavoriteLoaded state) {
+    if (state.favorites.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -314,24 +344,6 @@ class _WishlistPageState extends State<WishlistPage> {
                     },
                   ),
                 );
-              } else if (state is FavoriteToggleSuccess) {
-                // Show loading while refreshing after toggle success
-                return const Center(
-                  child: CircularProgressIndicator(
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
-                  ),
-                );
-              }
-
-              return const Center(
-                child: Text('No data available'),
-              );
-            },
-          ),
-        ),
-      ),
-    );
   }
 
   Widget buildFavoriteCard(favorite) {
@@ -629,7 +641,7 @@ class _WishlistPageState extends State<WishlistPage> {
                               largeTablet: 18,
                               desktop: 20,
                             ),
-                            color: Colors.black,
+                            color: AppColors.blackColor,
                           ),
                           SizedBox(
                             width: GetResponsiveSize.getResponsiveSize(

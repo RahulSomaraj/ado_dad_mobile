@@ -46,17 +46,6 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Refresh data when returning to this page
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ShowroomBloc>().add(
-            ShowroomEvent.fetchShowroomUserAds(userId: widget.userId),
-          );
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 

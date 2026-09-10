@@ -1,6 +1,5 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
-import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/features/home/ui/widgets/ad_detail_action_buttons.dart';
@@ -29,15 +28,6 @@ String _formatInr(num n) {
   if (rest.isNotEmpty) buf.insert(0, rest);
   return '${buf.join(',')},$last3';
 }
-
-// EMI is only meaningful for financeable items (vehicles), not property/rentals.
-bool _isFinanceable(AddModel ad) {
-  final c = ad.category.toLowerCase();
-  return !c.contains('propert') && !c.contains('rent') && ad.price > 0;
-}
-
-// Indicative EMI ~1.8% of price per month (matches the listing card estimate).
-String _emiEstimate(int price) => '₹${_formatInr(price * 0.018)}/mo';
 
 String _niceDate(String iso) {
   try {
@@ -108,11 +98,11 @@ class AdDetailTitlePrice extends StatelessWidget {
                         style: TextStyle(
                             fontSize: GetResponsiveSize.getResponsiveFontSize(
                                 context,
-                                mobile: isIOS ? 14 : 16,
-                                tablet: 25,
-                                largeTablet: 29,
-                                desktop: 33),
-                            fontWeight: FontWeight.bold),
+                                mobile: isIOS ? 13.5 : 14.5,
+                                tablet: 20,
+                                largeTablet: 23,
+                                desktop: 26),
+                            fontWeight: FontWeight.w500),
                         maxLines: isIOS ? null : 2,
                         overflow: isIOS
                             ? TextOverflow.visible
@@ -184,68 +174,20 @@ class AdDetailTitlePrice extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '₹ ${(ad.price)}',
+                  '₹ ${_formatInr(ad.price)}',
                   style: TextStyle(
                     fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                        mobile: isIOS ? 13 : 16,
-                        tablet: 25,
-                        largeTablet: 29,
-                        desktop: 33),
-                    fontWeight: FontWeight.w800,
+                        mobile: isIOS ? 23 : 25,
+                        tablet: 30,
+                        largeTablet: 34,
+                        desktop: 38),
+                    fontWeight: FontWeight.w700,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (_isFinanceable(ad)) ...[
-                const SizedBox(width: 8),
-                // EMI promoted to a chip so it reads as a feature, not fine
-                // print, beside the price.
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: GetResponsiveSize.getResponsiveSize(context,
-                        mobile: 8, tablet: 12, largeTablet: 14, desktop: 16),
-                    vertical: GetResponsiveSize.getResponsiveSize(context,
-                        mobile: 4, tablet: 6, largeTablet: 7, desktop: 8),
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryColor.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: AppColors.primaryColor.withOpacity(0.25),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.credit_card,
-                        size: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 13,
-                            tablet: 17,
-                            largeTablet: 19,
-                            desktop: 21),
-                        color: AppColors.primaryColor,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'EMI ${_emiEstimate(ad.price)}',
-                        style: TextStyle(
-                          fontSize: GetResponsiveSize.getResponsiveFontSize(
-                              context,
-                              mobile: isIOS ? 10 : 12,
-                              tablet: 16,
-                              largeTablet: 18,
-                              desktop: 20),
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
             ],
           ),
           if (ad.distance != null && ad.distance! > 0) ...[

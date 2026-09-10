@@ -10,6 +10,13 @@ import 'package:ado_dad_user/repositories/showroom_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+/// A profile picture is only usable as a [NetworkImage] when it is a
+/// non-empty http(s) URL; anything else falls back to a placeholder icon.
+bool _isValidImageUrl(String? url) {
+  final value = url?.trim() ?? '';
+  return value.isNotEmpty && value.startsWith('http');
+}
+
 class ShowroomUsersPage extends StatefulWidget {
   const ShowroomUsersPage({super.key});
 
@@ -22,6 +29,7 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
   List<ShowroomUser> _showroomUsers = [];
   bool _isLoading = true;
   String? _error;
+  bool _didDependencyRefetch = false;
 
   String _maskPhoneNumber(String phoneNumber) {
     final digitsOnly = phoneNumber.replaceAll(RegExp(r'\D'), '');
@@ -44,8 +52,11 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
     super.didChangeDependencies();
     // Re-check auth when returning from login (e.g., after successful login redirect)
     // This ensures data is fetched if user logged in and was redirected back
+    if (_didDependencyRefetch) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _didDependencyRefetch) return;
       if (!_isLoading && _showroomUsers.isEmpty && _error == null) {
+        _didDependencyRefetch = true;
         _checkAuthAndFetch();
       }
     });
@@ -54,6 +65,7 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
   Future<void> _checkAuthAndFetch() async {
     // Check authentication status
     final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!mounted) return;
 
     // Fetch showroom users - use public endpoint if not authenticated, authenticated endpoint if authenticated
     _fetchShowroomUsers(isAuthenticated: isAuthenticated);
@@ -61,7 +73,7 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
 
   Future<void> _fetchShowroomUsers({required bool isAuthenticated}) async {
     try {
-      print(
+      debugPrint(
           '🚀 Starting to fetch showroom users (authenticated: $isAuthenticated)...');
       setState(() {
         _isLoading = true;
@@ -73,15 +85,16 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
           ? await _showroomRepo.fetchShowroomUsers()
           : await _showroomRepo.fetchPublicShowroomUsers();
 
-      print('✅ Successfully fetched ${users.length} showroom users');
+      debugPrint('✅ Successfully fetched ${users.length} showroom users');
 
+      if (!mounted) return;
       setState(() {
         _showroomUsers = users;
         _isLoading = false;
       });
     } catch (e) {
-      print('❌ Error in _fetchShowroomUsers: $e');
-      print('❌ Error type: ${e.runtimeType}');
+      debugPrint('❌ Error in _fetchShowroomUsers: $e');
+      debugPrint('❌ Error type: ${e.runtimeType}');
 
       // Extract user-friendly error message
       String errorMessage =
@@ -89,7 +102,7 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
 
       if (e is Exception) {
         final exceptionMessage = e.toString();
-        print('❌ Exception message: $exceptionMessage');
+        debugPrint('❌ Exception message: $exceptionMessage');
 
         // Extract the actual error message from Exception: "message"
         // Remove "Exception: " prefix if present
@@ -112,6 +125,7 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
         errorMessage = "An unexpected error occurred. Please try again later.";
       }
 
+      if (!mounted) return;
       setState(() {
         _error = errorMessage;
         _isLoading = false;
@@ -367,14 +381,14 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppColors.primaryColor.withOpacity(0.1),
-                  image: user.profilePic != null
+                  image: _isValidImageUrl(user.profilePic)
                       ? DecorationImage(
                           image: NetworkImage(user.profilePic!),
                           fit: BoxFit.cover,
                         )
                       : null,
                 ),
-                child: user.profilePic == null
+                child: !_isValidImageUrl(user.profilePic)
                     ? Icon(
                         Icons.business,
                         size: GetResponsiveSize.getResponsiveSize(

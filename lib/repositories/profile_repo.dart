@@ -4,6 +4,7 @@ import 'package:ado_dad_user/common/api_service.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/models/profile_model.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mime/mime.dart';
 
 class ProfileRepo {
@@ -244,6 +245,25 @@ class ProfileRepo {
     }
   }
 
+  /// Pulls a human-readable message out of an API error body so the user sees
+  /// what the server actually complained about (e.g. "password too weak",
+  /// "current password required") instead of a generic failure.
+  static String? _serverMessage(dynamic data) {
+    if (data == null) return null;
+    if (data is String) {
+      final t = data.trim();
+      return t.isEmpty ? null : t;
+    }
+    if (data is Map) {
+      final value = data['message'] ?? data['error'] ?? data['detail'];
+      if (value is String && value.trim().isNotEmpty) return value.trim();
+      if (value is List && value.isNotEmpty) {
+        return value.map((e) => e.toString()).join(', ');
+      }
+    }
+    return null;
+  }
+
   Future<void> changePassword(String newPassword) async {
     try {
       final userId = await SharedPrefs().getUserId();
@@ -256,23 +276,32 @@ class ProfileRepo {
       final response = await _dio.put(
         "/users/$userId",
         data: body,
-        options: Options(headers: {
-          'Content-Type': 'application/json',
-        }),
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          // Read the body ourselves for any status so the real server message
+          // reaches the UI instead of a generic Dio error.
+          validateStatus: (status) => status != null && status < 500,
+        ),
       );
 
-      print("✅ Password change response: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
+      final status = response.statusCode ?? 0;
+      debugPrint("Password change response: $status");
+      debugPrint("Password change body: ${response.data}");
 
-      if (response.statusCode != 200) {
-        throw Exception("Failed to change password.");
+      // Accept any 2xx — the API may answer 200, 201 or 204 (No Content).
+      if (status < 200 || status >= 300) {
+        throw Exception(_serverMessage(response.data) ??
+            "Failed to change password (HTTP $status).");
       }
     } on DioException catch (e) {
-      print("❌ DioException in changePassword: ${e.response?.data}");
-      throw Exception(DioErrorHandler.handleError(e));
+      debugPrint("DioException in changePassword: ${e.response?.data}");
+      throw Exception(_serverMessage(e.response?.data) ??
+          DioErrorHandler.handleError(e));
     } catch (e) {
-      print("❌ General error in changePassword: $e");
-      throw Exception("Error changing password: $e");
+      debugPrint("General error in changePassword: $e");
+      rethrow;
     }
   }
 

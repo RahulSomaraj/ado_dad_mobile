@@ -1,6 +1,7 @@
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/repositories/showroom_repo.dart';
 import 'package:bloc/bloc.dart';
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'showroom_event.dart';
@@ -46,7 +47,7 @@ class ShowroomBloc extends Bloc<ShowroomEvent, ShowroomState> {
     if (currentState is AdsLoaded && currentState.hasMore) {
       try {
         _currentPage += 1;
-        print(
+        debugPrint(
             "📥 Fetching showroom ads page $_currentPage for user $_currentUserId");
         final moreAds = await repository.fetchShowroomUserAds(
           userId: _currentUserId!,
@@ -59,8 +60,11 @@ class ShowroomBloc extends Bloc<ShowroomEvent, ShowroomState> {
             hasMore: moreAds.length >= 20,
             userId: _currentUserId!));
       } catch (e) {
-        print("❌ Error fetching next page: $e");
-        emit(ShowroomState.error("Failed to load more ads: $e"));
+        // Keep the pages already loaded instead of replacing the list with an
+        // error state, and roll the page back so a retry re-requests it.
+        if (_currentPage > 1) _currentPage -= 1;
+        debugPrint("❌ Error fetching next page: $e");
+        emit(currentState);
       } finally {
         _isFetching = false;
       }

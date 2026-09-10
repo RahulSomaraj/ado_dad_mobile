@@ -17,6 +17,7 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   Timer? _navigationTimer;
   Timer? _fallbackTimer;
+  StreamSubscription? _sub;
   bool _canNavigate = false;
   bool _hasNavigated = false;
 
@@ -47,6 +48,7 @@ class _SplashScreenState extends State<SplashScreen>
   void dispose() {
     _navigationTimer?.cancel();
     _fallbackTimer?.cancel();
+    _sub?.cancel();
     super.dispose();
   }
 
@@ -58,7 +60,8 @@ class _SplashScreenState extends State<SplashScreen>
     }
 
     // Listen to future login state changes
-    context.read<LoginBloc>().stream.listen((loginState) {
+    _sub?.cancel();
+    _sub = context.read<LoginBloc>().stream.listen((loginState) {
       if (mounted && _canNavigate) {
         _navigateBasedOnState(loginState);
       }

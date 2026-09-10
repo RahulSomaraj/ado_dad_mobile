@@ -99,7 +99,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
   Future<void> _loadManufacturers() async {
     // For commercial_vehicle category,
     // fetch manufacturers with vehicleCategory 'passenger_car'
-    // TODO(backend): commercial manufacturer category
+    // TODO(backend): commercial vehicles should use their own manufacturer category
     try {
       final manufacturers = await AddRepository().fetchManufacturers(
         vehicleCategory: 'passenger_car',
@@ -263,7 +263,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
               (!kIsWeb && Platform.isIOS)
                   ? Icons.arrow_back_ios
                   : Icons.arrow_back,
-              color: Colors.black,
+              color: AppColors.blackColor,
               size: GetResponsiveSize.getResponsiveSize(
                 context,
                 mobile: 24,
@@ -553,6 +553,7 @@ class _AddCommercialVehicleFormState extends State<AddCommercialVehicleForm> {
                             errorMsg: 'Please select a manufacturer',
                             getDisplayText: (item) => item.displayName,
                             onSearch: (query) async {
+                              // TODO(backend): commercial vehicles should use their own manufacturer category
                               return await AddRepository().fetchManufacturers(
                                 search: query,
                                 vehicleCategory: 'passenger_car',

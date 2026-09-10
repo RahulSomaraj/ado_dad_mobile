@@ -39,7 +39,7 @@ class _StartupConnectivityGateState extends State<StartupConnectivityGate> {
 
     try {
       final iface = await Connectivity().checkConnectivity();
-      final hasInterface = iface != ConnectivityResult.none;
+      final hasInterface = iface.any((r) => r != ConnectivityResult.none);
 
       bool hasInternet = false;
       if (hasInterface) {

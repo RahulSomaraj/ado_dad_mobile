@@ -33,17 +33,6 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Refresh data when returning to this page
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SellerProfileBloc>().add(
-            SellerProfileEvent.fetchUserAds(widget.seller.id),
-          );
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 

@@ -34,3 +34,33 @@ Home: ad detail sold/delete pop(true) + bloc keeps loaded state on error; My Ads
 ## Verify on device
 - Long background (token expiry) → resume: no splash/login loop.
 - smart_auth 3.x API names compile (otp_autofill_service.dart).
+
+---
+
+# Round 2 — 2026-09-09 (on top of commit 2cd4df2)
+24 more files changed. Total fixed across both rounds: 51. Pending: 3. Needs backend: 2. Verify on device: 3.
+
+## Change password — why it was failing
+Three client bugs, all fixed:
+1. **Blank page.** profile_page.dart's builder renders content only for Loaded/Saving/Error(+cached). `ChangingPassword`, `PasswordChanged`, `DeletingData`, `DataDeleted` all fell through to `SizedBox.shrink()` at line ~2832 — so tapping OK blanked the whole profile page.
+2. **Silent failure.** The error snackbar is gated on `_isUpdatingProfile`, which is set only by the profile-save path, never by a password change. Every failure was swallowed. New `_isChangingPassword` flag; failures now show the server's own message for 5 s and reload the profile.
+3. **Success got stuck.** After `PasswordChanged` the bloc never returned to `Loaded` and `context.go('/profile')` was a no-op (already there). Now refetches the profile.
+Repo (profile_repo.dart): accepts any 2xx (a 201/204 previously reported failure), `validateStatus < 500` + `_serverMessage()` so NestJS `message` arrays / `error` / `detail` reach the UI.
+
+STILL POSSIBLY BACKEND: the app sends `PUT /users/:id` with only `{"password": "..."}` and no current password. If the API requires `currentPassword`, or excludes `password` from the update DTO (common — then it 200s and changes nothing), that is the remaining cause. Run it once now: the snackbar prints the server's message. If it needs the old password → add the field to ChangePasswordDialog; if it needs a dedicated route → switch the repo call.
+ALSO CHECK: if the API rotates the JWT on password change, every later request 401s → auto-logout.
+
+## Also fixed in round 2
+- advertisement_bloc: `_ListMode` enum so page 2+ keeps category/filters/search instead of falling into the location branch; isFurnished/hasParking passed on next page; `_requestSeq` guard so stale responses can't overwrite newer ones; next-page failure rolls the counter back and keeps the list (same in showroom_bloc, seller_profile_bloc).
+- search_page: 350 ms debounce + mounted guards; clearing the query refetches all listings instead of restoring a stale snapshot.
+- category_list_page: removed 15 prints + the hard-coded debug ad id; Premium auto-paging moved out of build() into a listener with a guard; Retry reuses the refresh handler with current filters.
+- favorite_bloc: no global loading on toggle, optimistic local add/remove, `_inFlight` set blocks double-tap; ad_detail_action_buttons is now stateful with optimistic heart + revert on failure; wishlist keeps the list visible while toggling.
+- my_ads_page: auto-loads more pages when a status filter yields an empty view; misleading total replaced with "N+".
+- seller_profile_page / showroom_user_ads_page: removed didChangeDependencies refetch (fired on every keyboard/rotation).
+- showroom_users_page: mounted guards, guarded NetworkImage.
+- 76 print → debugPrint; 16 hard-coded colours → AppColors (dark mode); splash stream subscription cancelled; connectivity list check fixed; TwoWheelerAdModel.variantId now optional.
+
+## Still pending
+1. Chat state refactor to a single data state (rooms+messages+status) — removes the remaining flicker. Deliberately not done: high risk without a compiler.
+2. Shared phone_or_email_field widget (login plan step 3).
+3. Post-ad phase 2 (category sheet, price+location step, Posted screen, drafts, edit forms on PhotoStep).

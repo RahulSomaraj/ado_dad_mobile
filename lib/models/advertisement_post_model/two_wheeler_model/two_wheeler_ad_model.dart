@@ -7,7 +7,7 @@ class TwoWheelerAdModel {
   final String vehicleType;
   final String manufacturerId;
   final String modelId;
-  final String variantId;
+  final String? variantId;
   final int year;
   final int mileage;
   final String transmissionTypeId;
@@ -28,7 +28,7 @@ class TwoWheelerAdModel {
     required this.vehicleType,
     required this.manufacturerId,
     required this.modelId,
-    required this.variantId,
+    this.variantId,
     required this.year,
     required this.mileage,
     required this.transmissionTypeId,
@@ -51,7 +51,7 @@ class TwoWheelerAdModel {
       'vehicleType': vehicleType,
       'manufacturerId': manufacturerId,
       'modelId': modelId,
-      'variantId': variantId,
+      if (variantId != null) 'variantId': variantId,
       'year': year,
       'mileage': mileage,
       'transmissionTypeId': transmissionTypeId,

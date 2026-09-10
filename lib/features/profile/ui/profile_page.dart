@@ -45,6 +45,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _currentProfilePicUrl; // from API or after upload
   bool _isSaving = false;
   bool _isUpdatingProfile = false; // Track if we're updating profile
+  bool _isChangingPassword = false; // Track if a password change is in flight
   UserProfile? _lastLoadedProfile; // Store last loaded profile to show on error
 
   // Change password dialog controllers
@@ -161,10 +162,10 @@ class _ProfilePageState extends State<ProfilePage> {
       } else if (_lastLoadedProfile != null) {
         // If state is Error but we have last loaded profile, use it
         originalProfile = _lastLoadedProfile!;
-        print("⚠️ Using last loaded profile due to error state");
+        debugPrint("⚠️ Using last loaded profile due to error state");
       } else {
         // No profile data available, try to fetch it
-        print("⚠️ No profile data available, fetching...");
+        debugPrint("⚠️ No profile data available, fetching...");
         context.read<ProfileBloc>().add(const ProfileEvent.fetchProfile());
         throw 'Profile not loaded. Please wait a moment and try again.';
       }
@@ -206,10 +207,10 @@ class _ProfilePageState extends State<ProfilePage> {
         try {
           final repo = context.read<ProfileBloc>().repository;
           profilePicUrl = await repo.uploadImageToS3(_pickedImageBytes!);
-          print("📸 Uploaded new profile pic: $profilePicUrl");
+          debugPrint("📸 Uploaded new profile pic: $profilePicUrl");
           _currentProfilePicUrl = profilePicUrl;
         } catch (uploadError) {
-          print("❌ Profile picture upload failed: $uploadError");
+          debugPrint("❌ Profile picture upload failed: $uploadError");
           throw 'Failed to upload profile picture. Please try again.';
         }
       }
@@ -243,13 +244,13 @@ class _ProfilePageState extends State<ProfilePage> {
             profilePicChanged ? profilePicUrl : originalProfile.profilePic,
       );
 
-      print("🔄 Changes detected:");
-      print("  - Name: ${nameChanged ? 'CHANGED' : 'unchanged'}");
-      print("  - Email: ${emailChanged ? 'CHANGED' : 'unchanged'}");
-      print("  - Phone: ${phoneChanged ? 'CHANGED' : 'unchanged'}");
-      print(
+      debugPrint("🔄 Changes detected:");
+      debugPrint("  - Name: ${nameChanged ? 'CHANGED' : 'unchanged'}");
+      debugPrint("  - Email: ${emailChanged ? 'CHANGED' : 'unchanged'}");
+      debugPrint("  - Phone: ${phoneChanged ? 'CHANGED' : 'unchanged'}");
+      debugPrint(
           "  - Country Code: ${countryCodeChanged ? 'CHANGED' : 'unchanged'}");
-      print("  - Profile Pic: ${profilePicChanged ? 'CHANGED' : 'unchanged'}");
+      debugPrint("  - Profile Pic: ${profilePicChanged ? 'CHANGED' : 'unchanged'}");
 
       // Dispatch update event
       context
@@ -263,7 +264,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
       // Success message will be shown in BlocConsumer listener after successful update
     } catch (e) {
-      print("❌ Profile save error: $e");
+      debugPrint("❌ Profile save error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -310,10 +311,11 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _changePassword() async {
     if (_changePasswordFormKey.currentState!.validate()) {
       try {
+        // Close the dialog first so the result snackbar is visible.
+        Navigator.pop(context);
         context.read<ProfileBloc>().add(
               ProfileEvent.changePassword(_newPasswordController.text.trim()),
             );
-        Navigator.pop(context); // Close the dialog
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -375,6 +377,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     _isUpdatingProfile = true;
                   }
 
+                  // Track when a password change starts, so its failure is
+                  // reported instead of being swallowed by the profile-update
+                  // guard below.
+                  if (state is profile_bloc.ChangingPassword) {
+                    _isChangingPassword = true;
+                  }
+
                   if (state is profile_bloc.Error) {
                     // Check if error is related to token expiration (silent logout)
                     final isTokenExpirationError = state.message
@@ -387,7 +396,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                     // Don't show error UI for token expiration - logout is already in progress
                     if (isTokenExpirationError) {
-                      print(
+                      debugPrint(
                           '🔇 Suppressing token expiration error in ProfilePage - logout in progress');
                       _isUpdatingProfile = false;
                       return; // Skip showing snackbar
@@ -411,6 +420,27 @@ class _ProfilePageState extends State<ProfilePage> {
                           backgroundColor: Colors.red.shade300.withOpacity(0.9),
                         ),
                       );
+                    } else if (_isChangingPassword) {
+                      // Password change failed: show the real server message
+                      // and put the page back into a loaded state.
+                      _isChangingPassword = false;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            _cleanErrorMessage(state.message),
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: Colors.red.shade300.withOpacity(0.9),
+                          duration: const Duration(seconds: 5),
+                        ),
+                      );
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          context
+                              .read<ProfileBloc>()
+                              .add(const ProfileEvent.fetchProfile());
+                        }
+                      });
                     } else {
                       // Only show error message if it's a profile update error (not initial load error)
                       if (_isUpdatingProfile) {
@@ -433,6 +463,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   }
 
                   if (state is profile_bloc.PasswordChanged) {
+                    _isChangingPassword = false;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: const Text(
@@ -442,8 +473,15 @@ class _ProfilePageState extends State<ProfilePage> {
                         backgroundColor: AppColors.primaryColor,
                       ),
                     );
-                    // Navigate back to profile page
-                    context.go('/profile');
+                    // Already on the profile page: reload it so the bloc
+                    // leaves the PasswordChanged state (which renders nothing).
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        context
+                            .read<ProfileBloc>()
+                            .add(const ProfileEvent.fetchProfile());
+                      }
+                    });
                   }
 
                   if (state is profile_bloc.DataDeleted) {
@@ -480,13 +518,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     phoneController.text = state.profile.phoneNumber;
                     _countryCode = state.profile.countryCode ?? "+1";
 
-                    print(
+                    debugPrint(
                         "🔍 Original profile pic from API: ${state.profile.profilePic}");
 
                     // Keep the original profile pic value as is
                     _currentProfilePicUrl = state.profile.profilePic;
 
-                    print(
+                    debugPrint(
                         "🔍 Processed profile pic URL: $_currentProfilePicUrl");
                     _seededOnce = true;
                   }
@@ -556,8 +594,20 @@ class _ProfilePageState extends State<ProfilePage> {
                   }
 
                   // Show profile content when loaded, while saving, or on error (if we have last loaded profile)
+                  // Transient states (password change, data delete) must
+                  // keep rendering the last loaded profile — otherwise the
+                  // builder falls through to SizedBox.shrink() and the whole
+                  // page goes blank.
+                  final isTransientWithProfile =
+                      (state is profile_bloc.ChangingPassword ||
+                              state is profile_bloc.PasswordChanged ||
+                              state is profile_bloc.DeletingData ||
+                              state is profile_bloc.DataDeleted) &&
+                          _lastLoadedProfile != null;
+
                   if (state is Loaded ||
                       state is Saving ||
+                      isTransientWithProfile ||
                       (state is profile_bloc.Error &&
                           _lastLoadedProfile != null)) {
                     // if (state is Loaded) {

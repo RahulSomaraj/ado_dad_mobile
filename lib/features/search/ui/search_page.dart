@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
@@ -32,6 +33,10 @@ class _SearchPageState extends State<SearchPage> {
   bool _showSuggestions = false;
   late GooglePlacesService _placesService;
   late ScrollController _scrollController;
+
+  /// Debounces the search dispatch so a fast typist does not fire one request
+  /// per keystroke (and race their responses against each other).
+  Timer? _debounce;
 
   // --- Filters (applied client-side over the loaded results) ---
   String? _filterCategory; // null = all
@@ -423,10 +428,11 @@ class _SearchPageState extends State<SearchPage> {
       _isLocationSearchMode = !_isLocationSearchMode;
       // Clear search when switching modes
       _searchController.clear();
-      _filterAds('');
       _showSuggestions = false;
       _addressSuggestions.clear();
     });
+    // Resets the bloc back to the all-ads feed (own setState inside).
+    _filterAds('');
   }
 
   void _generateAddressSuggestions(String query) async {
@@ -455,6 +461,8 @@ class _SearchPageState extends State<SearchPage> {
         language: 'en',
       );
 
+      if (!mounted) return;
+
       if (predictions.isNotEmpty) {
         // Extract descriptions from predictions
         final suggestions = predictions
@@ -462,10 +470,10 @@ class _SearchPageState extends State<SearchPage> {
             .take(10) // Limit to 10 suggestions
             .toList();
 
-        print(
+        debugPrint(
             '🔍 Location suggestions for "$query": ${suggestions.length} found');
         for (int i = 0; i < suggestions.length; i++) {
-          print('  ${i + 1}. ${suggestions[i]}');
+          debugPrint('  ${i + 1}. ${suggestions[i]}');
         }
 
         setState(() {
@@ -474,17 +482,19 @@ class _SearchPageState extends State<SearchPage> {
         });
       } else {
         // If no Google Places results, fall back to existing ad locations
-        print('🔍 No Google Places results for "$query", using fallback');
+        debugPrint('🔍 No Google Places results for "$query", using fallback');
         _fallbackToExistingLocations(query);
       }
     } catch (e) {
-      print('Google Places API error: $e');
+      debugPrint('Google Places API error: $e');
+      if (!mounted) return;
       // Fall back to existing ad locations if API fails
       _fallbackToExistingLocations(query);
     }
   }
 
   void _fallbackToExistingLocations(String query) {
+    if (!mounted) return;
     // Get unique locations from all ads as fallback
     final uniqueLocations = allAds
         .map((ad) => ad.location)
@@ -519,15 +529,36 @@ class _SearchPageState extends State<SearchPage> {
     });
   }
 
+  /// Called on every keystroke: updates the field-dependent UI immediately but
+  /// only hits the API once the user pauses typing.
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    if (value.trim().isEmpty) {
+      _filterAds('');
+      return;
+    }
+    setState(() {
+      _isSearching = true;
+    });
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      if (!mounted) return;
+      _filterAds(value);
+    });
+  }
+
   // Function to filter ads based on the search term
   void _filterAds(String query) {
     if (query.isEmpty) {
+      _debounce?.cancel();
       setState(() {
-        filteredAds = allAds;
         _isSearching = false;
         _showSuggestions = false;
         _addressSuggestions.clear();
       });
+      // Reset the bloc back to the all-ads feed. Restoring a local snapshot
+      // would leave the bloc holding search results, so the next scroll would
+      // append all-ads pages onto them.
+      context.read<AdvertisementBloc>().add(const FetchAllListingsEvent());
       return;
     }
 
@@ -573,14 +604,16 @@ class _SearchPageState extends State<SearchPage> {
           selectedPrediction.placeId,
         );
 
+        if (!mounted) return;
+
         if (placeDetails?.geometry?.location != null) {
           final location = placeDetails!.geometry!.location;
 
           // Print location data to console
-          print('📍 Selected Location: $address');
-          print('🌍 Latitude: ${location.lat}');
-          print('🌍 Longitude: ${location.lng}');
-          print('📍 Formatted Address: ${placeDetails.formattedAddress}');
+          debugPrint('📍 Selected Location: $address');
+          debugPrint('🌍 Latitude: ${location.lat}');
+          debugPrint('🌍 Longitude: ${location.lng}');
+          debugPrint('📍 Formatted Address: ${placeDetails.formattedAddress}');
 
           // Call the location-based API
           context.read<AdvertisementBloc>().add(
@@ -597,12 +630,14 @@ class _SearchPageState extends State<SearchPage> {
         }
       }
     } catch (e) {
-      print('Error getting coordinates for location: $e');
+      debugPrint('Error getting coordinates for location: $e');
     }
 
+    if (!mounted) return;
+
     // Fallback to text-based filtering if coordinates are not available
-    print('📍 Fallback Location Search: $address');
-    print('⚠️ Coordinates not available, using text-based filtering');
+    debugPrint('📍 Fallback Location Search: $address');
+    debugPrint('⚠️ Coordinates not available, using text-based filtering');
 
     final filteredList = allAds.where((ad) {
       return ad.location.toLowerCase().contains(address.toLowerCase());
@@ -616,6 +651,7 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
@@ -762,8 +798,9 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                 ),
                 decoration: InputDecoration(
-                  fillColor:
-                      _isLocationSearchMode ? Colors.blue[50] : Colors.grey[50],
+                  fillColor: _isLocationSearchMode
+                      ? Colors.blue[50]
+                      : AppColors.whiteColor,
                   hintText: _isLocationSearchMode
                       ? "Search by location..."
                       : "Search ads...",
@@ -886,7 +923,7 @@ class _SearchPageState extends State<SearchPage> {
                       : null,
                 ),
                 onChanged: (value) {
-                  _filterAds(value);
+                  _onSearchChanged(value);
                   setState(() {});
                 },
                 onSubmitted: (value) {
@@ -1069,7 +1106,7 @@ class _SearchPageState extends State<SearchPage> {
                           desktop: 40),
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.whiteColor,
                       borderRadius: BorderRadius.circular(
                         GetResponsiveSize.getResponsiveBorderRadius(context,
                             mobile: 8,
@@ -1487,7 +1524,7 @@ class _SearchPageState extends State<SearchPage> {
                                   largeTablet: 18,
                                   desktop: 20,
                                 ),
-                                color: Colors.black,
+                                color: AppColors.blackColor,
                               ),
                               SizedBox(
                                 width: GetResponsiveSize.getResponsiveSize(

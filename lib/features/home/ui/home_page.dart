@@ -117,7 +117,7 @@ class _HomePageState extends State<HomePage> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 300) {
-      print(
+      debugPrint(
           "🧭 Scroll Position: ${_scrollController.position.pixels} / ${_scrollController.position.maxScrollExtent}");
 
       // Trigger next page load when nearing bottom
@@ -193,7 +193,7 @@ class _HomePageState extends State<HomePage> {
           return;
         }
       } catch (e) {
-        print("Google Places reverse geocoding failed: $e");
+        debugPrint("Google Places reverse geocoding failed: $e");
       }
 
       // Fallback to standard geocoding
@@ -229,7 +229,7 @@ class _HomePageState extends State<HomePage> {
       });
       await _applyLocationBasedRecommendations(newAddress);
     } catch (e) {
-      print("Location error: $e");
+      debugPrint("Location error: $e");
       if (!mounted) return;
       setState(() {
         _userLocation = "Location not available";
@@ -290,7 +290,7 @@ class _HomePageState extends State<HomePage> {
           setState(() {
             _isLocationRecommendationsMode = true;
           });
-          print("🔍 Searching by location: ${point.lat}, ${point.lng}");
+          debugPrint("🔍 Searching by location: ${point.lat}, ${point.lng}");
           context.read<AdvertisementBloc>().add(
                 AdvertisementEvent.searchByLocation(
                   latitude: point.lat,
@@ -301,7 +301,7 @@ class _HomePageState extends State<HomePage> {
         }
       }
     } catch (e) {
-      print('Error applying location recommendations: $e');
+      debugPrint('Error applying location recommendations: $e');
     }
 
     if (!mounted) return;
@@ -329,7 +329,7 @@ class _HomePageState extends State<HomePage> {
 
       return null;
     } catch (e) {
-      print("Error getting detailed address: $e");
+      debugPrint("Error getting detailed address: $e");
       return null;
     }
   }
@@ -650,7 +650,7 @@ class _HomePageState extends State<HomePage> {
                   }
                 },
                 color: AppColors.primaryColor,
-                backgroundColor: Colors.white,
+                backgroundColor: AppColors.whiteColor,
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   physics: const BouncingScrollPhysics(),
@@ -959,7 +959,7 @@ class _HomePageState extends State<HomePage> {
     return GestureDetector(
       onTap: () {
         _launchURL(link);
-        print('$link clickkedddd..........');
+        debugPrint('$link clickkedddd..........');
       },
       child: Padding(
         // padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -988,7 +988,7 @@ class _HomePageState extends State<HomePage> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      print("❌ Could not launch $url");
+      debugPrint("❌ Could not launch $url");
     }
   }
 
@@ -1252,7 +1252,7 @@ class _HomePageState extends State<HomePage> {
             },
             // iOS-specific refresh indicator configurations
             color: AppColors.primaryColor,
-            backgroundColor: Colors.white,
+            backgroundColor: AppColors.whiteColor,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final cols = _columnsForWidth(constraints.maxWidth);
