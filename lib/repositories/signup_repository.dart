@@ -45,7 +45,7 @@ class SignupRepository {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (_) {
+    } catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -75,7 +75,7 @@ class SignupRepository {
       } else {
         throw Exception("Network error: ${e.message}");
       }
-    } catch (_) {
+    } catch (e) {
       throw Exception("Unexpected error: $e");
     }
   }

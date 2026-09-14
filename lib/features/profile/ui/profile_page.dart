@@ -134,7 +134,7 @@ class _ProfilePageState extends State<ProfilePage> {
           setState(() => _pickedImageBytes = bytes);
         }
       }
-    } catch (_) {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text(ErrorMessageUtil.getUserFriendlyMessage(
@@ -250,7 +250,7 @@ class _ProfilePageState extends State<ProfilePage> {
       });
 
       // Success message will be shown in BlocConsumer listener after successful update
-    } catch (_) {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -301,7 +301,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ProfileEvent.changePassword(_newPasswordController.text.trim()),
             );
         Navigator.pop(context); // Close the dialog
-      } catch (_) {
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(ErrorMessageUtil.getUserFriendlyMessage(
@@ -316,7 +316,7 @@ class _ProfilePageState extends State<ProfilePage> {
       context.read<ProfileBloc>().add(
             ProfileEvent.changePassword(_newPasswordController.text.trim()),
           );
-    } catch (_) {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to change password: $e')),
       );
@@ -2017,7 +2017,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                       // user appearing logged in.
                                       await AuthService().logout(
                                           redirectTo: '/home');
-                                    } catch (_) {
+                                    } catch (e) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         SnackBar(
@@ -2776,7 +2776,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                           .read<profile_bloc.ProfileBloc>()
                                           .add(const profile_bloc
                                               .ProfileEvent.deleteMyData());
-                                    } catch (_) {
+                                    } catch (e) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         SnackBar(

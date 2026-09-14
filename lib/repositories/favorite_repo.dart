@@ -24,7 +24,7 @@ class FavoriteRepository {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (_) {
+    } catch (e) {
       throw Exception('Failed to add to favorites: $e');
     }
   }
@@ -46,7 +46,7 @@ class FavoriteRepository {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (_) {
+    } catch (e) {
       throw Exception('Failed to remove from favorites: $e');
     }
   }
@@ -86,7 +86,7 @@ class FavoriteRepository {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (_) {
+    } catch (e) {
       throw Exception('Failed to fetch favorite ads: $e');
     }
   }

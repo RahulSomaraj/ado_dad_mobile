@@ -2619,7 +2619,7 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
           _isLoading = false;
         });
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() {
           _hasError = true;

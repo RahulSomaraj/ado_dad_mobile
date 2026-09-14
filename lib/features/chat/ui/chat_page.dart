@@ -1194,7 +1194,7 @@ class _ChatPageState extends State<ChatPage> {
         if (!mounted) return;
         setState(() => _voiceRecordDurationSeconds += 1);
       });
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Could not start recording: $e')),
@@ -1311,7 +1311,7 @@ class _ChatPageState extends State<ChatPage> {
         _stagedImagesBytes.addAll(toAddBytes);
         _stagedImagesMimeTypes.addAll(toAddMimes);
       });
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to select image: $e')),
@@ -1418,7 +1418,7 @@ class _ChatPageState extends State<ChatPage> {
       if (mounted) {
         context.push('/add-detail-page', extra: ad);
       }
-    } catch (_) {
+    } catch (e) {
       // Close loading indicator if still open
       if (mounted) {
         Navigator.of(context).pop();

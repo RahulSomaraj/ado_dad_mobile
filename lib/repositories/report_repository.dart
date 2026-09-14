@@ -46,7 +46,7 @@ class ReportRepository {
       } else {
         throw Exception('Network error: ${e.message}');
       }
-    } catch (_) {
+    } catch (e) {
       throw Exception('Failed to report ad: $e');
     }
   }

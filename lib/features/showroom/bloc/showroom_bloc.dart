@@ -32,7 +32,7 @@ class ShowroomBloc extends Bloc<ShowroomEvent, ShowroomState> {
       );
       emit(ShowroomState.adsLoaded(
           ads: ads, hasMore: ads.length >= 20, userId: event.userId));
-    } catch (_) {
+    } catch (e) {
       emit(ShowroomState.error("Failed to fetch showroom user ads: $e"));
     }
   }
@@ -56,7 +56,7 @@ class ShowroomBloc extends Bloc<ShowroomEvent, ShowroomState> {
             ads: updatedAds,
             hasMore: moreAds.length >= 20,
             userId: _currentUserId!));
-      } catch (_) {
+      } catch (e) {
         emit(ShowroomState.error("Failed to load more ads: $e"));
       } finally {
         _isFetching = false;

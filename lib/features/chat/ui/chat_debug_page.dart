@@ -83,7 +83,7 @@ class _ChatDebugPageState extends State<ChatDebugPage> {
 
       await _chatRepository.connect();
       _addLog('🔌 Connection request sent, waiting for response...');
-    } catch (_) {
+    } catch (e) {
       _addLog('💥 Connection error: $e');
     }
   }

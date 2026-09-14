@@ -43,7 +43,7 @@ class OfferService {
           // Pass the ScaffoldMessenger reference through the chain
           await _checkRoomExists(
               context, adId, otherUserId, amount, pageScaffoldMessenger);
-        } catch (_) {
+        } catch (e) {
           // Close loading dialog (guarded — never pops a page route)
           _closeLoadingDialog(context);
 
@@ -115,7 +115,7 @@ class OfferService {
       } else {
         _showErrorDialog(context, 'Failed to create chat room');
       }
-    } catch (_) {
+    } catch (e) {
       // Close loading dialog if still visible (guarded — it was normally
       // closed already after the room check, so an unguarded pop here used
       // to remove the underlying page)
@@ -143,7 +143,7 @@ class OfferService {
       await _sendMessageToRoom(
           context, roomId, adId, otherUserId, offerAmount, isNewRoom,
           scaffoldMessenger: scaffoldMessenger);
-    } catch (_) {
+    } catch (e) {
 
       // Show error dialog with delay to ensure context is stable
       await Future.delayed(const Duration(milliseconds: 500));
@@ -288,7 +288,7 @@ class OfferService {
         } catch (_) {
         }
       });
-    } catch (_) {
+    } catch (e) {
 
       // Show error dialog with delay to ensure context is stable
       await Future.delayed(const Duration(milliseconds: 500));

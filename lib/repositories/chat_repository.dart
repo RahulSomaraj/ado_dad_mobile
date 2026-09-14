@@ -152,7 +152,7 @@ class ChatRepository {
         _errorController.add('Failed to connect to chat server');
         return false;
       }
-    } catch (_) {
+    } catch (e) {
       _errorController.add('Connection error: $e');
       return false;
     }
@@ -185,7 +185,7 @@ class ChatRepository {
       } else {
         throw Exception('API returned success: false');
       }
-    } catch (_) {
+    } catch (e) {
       if (!_errorController.isClosed) {
         _errorController.add('Failed to load chat rooms: $e');
       }
@@ -211,7 +211,7 @@ class ChatRepository {
       } else {
         throw Exception('Failed to join room');
       }
-    } catch (_) {
+    } catch (e) {
       if (!_errorController.isClosed) {
         _errorController.add('Failed to join room: $e');
       }
@@ -237,7 +237,7 @@ class ChatRepository {
       } else {
         throw Exception('API returned success: false');
       }
-    } catch (_) {
+    } catch (e) {
       if (!_errorController.isClosed) {
         _errorController.add('Failed to load messages: $e');
       }
@@ -249,7 +249,7 @@ class ChatRepository {
   void sendMessage(String content, {String type = 'text'}) {
     try {
       _socketService.sendMessage(content, type: type);
-    } catch (_) {
+    } catch (e) {
       if (!_errorController.isClosed) {
         _errorController.add('Failed to send message: $e');
       }
@@ -274,7 +274,7 @@ class ChatRepository {
           await _socketService.joinRoomAndWait(roomId);
           _socketService.sendMessage(content,
               type: type, attachments: attachments);
-        } catch (_) {
+        } catch (socketErr) {
           if (!_errorController.isClosed) {
             _errorController.add('Failed to send message: $socketErr');
           }
@@ -570,7 +570,7 @@ class ChatRepository {
       // Ensure subscription is canceled
       subscription.cancel();
       return result;
-    } catch (_) {
+    } catch (e) {
       _errorController.add('Failed to create chat room: $e');
       return null;
     }
@@ -603,7 +603,7 @@ class ChatRepository {
   Future<void> ping() async {
     try {
       await _socketService.ping();
-    } catch (_) {
+    } catch (e) {
       if (!_errorController.isClosed) {
         _errorController.add('Ping failed: $e');
       }

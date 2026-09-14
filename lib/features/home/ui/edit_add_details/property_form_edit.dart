@@ -184,7 +184,7 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
           });
         } else {
         }
-      } catch (_) {
+      } catch (e) {
         // Optionally show error to user
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

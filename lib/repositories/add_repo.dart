@@ -115,7 +115,7 @@ class AddRepository {
               : ads;
 
       return PaginatedAdsResponse(data: filteredAds, hasNext: hasNext);
-    } catch (_) {
+    } catch (e) {
       throw Exception('Failed to fetch ads: $e');
     }
   }
@@ -476,7 +476,7 @@ class AddRepository {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (_) {
+    } catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -518,7 +518,7 @@ class AddRepository {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (_) {
+    } catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -576,7 +576,7 @@ class AddRepository {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (_) {
+    } catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -597,7 +597,7 @@ class AddRepository {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (_) {
+    } catch (e) {
       throw Exception('Failed to post ad: $e');
     }
   }
@@ -616,7 +616,7 @@ class AddRepository {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (_) {
+    } catch (e) {
       throw Exception('Failed to delete ad: $e');
     }
   }
@@ -684,7 +684,7 @@ class AddRepository {
       return AddModel.fromJson(obj);
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (_) {
+    } catch (e) {
       throw Exception('Failed to fetch ad detail: $e');
     }
   }
@@ -802,7 +802,7 @@ class AddRepository {
       } else {
         throw Exception("Failed to fetch ads for user");
       }
-    } catch (_) {
+    } catch (e) {
       throw Exception("Error fetching ads by user ID: $e");
     }
   }

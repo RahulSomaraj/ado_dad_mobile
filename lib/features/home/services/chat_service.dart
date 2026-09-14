@@ -26,7 +26,7 @@ class ChatService {
         adTitle: adTitle,
         adPosterName: adPosterName,
       );
-    } catch (_) {
+    } catch (e) {
       // Close loading dialog (guarded)
       _closeLoadingDialog(context);
 
@@ -112,7 +112,7 @@ class ChatService {
       } else {
         _showErrorDialog(context, 'Failed to create chat room');
       }
-    } catch (_) {
+    } catch (e) {
       // Close loading dialog if still visible (guarded — normally already
       // closed after the room check; an unguarded pop removed the page)
       _closeLoadingDialog(context);
@@ -153,7 +153,7 @@ class ChatService {
             .join('&');
         context.push('/chat/$roomId?$queryString');
       }
-    } catch (_) {
+    } catch (e) {
 
       // Show error dialog with delay to ensure context is stable
       await Future.delayed(const Duration(milliseconds: 500));

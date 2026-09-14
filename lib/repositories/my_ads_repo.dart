@@ -86,7 +86,7 @@ class MyAdsRepo {
       return PaginatedMyAdsResponse(data: enrichedAds, hasNext: hasNext);
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (_) {
+    } catch (e) {
       throw Exception('Failed to fetch my ads: $e');
     }
   }

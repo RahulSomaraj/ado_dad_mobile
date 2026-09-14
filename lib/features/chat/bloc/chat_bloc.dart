@@ -51,7 +51,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
       // Load rooms
       await _chatRepository.getUserChatRooms();
-    } catch (_) {
+    } catch (e) {
       emit(ChatErrorState('Initialization failed: $e'));
     }
   }
@@ -122,7 +122,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       emit(ChatLoading());
       _ensureSubscriptions();
       await _chatRepository.getUserChatRooms();
-    } catch (_) {
+    } catch (e) {
       emit(ChatErrorState('Failed to load chat rooms: $e'));
     }
   }
@@ -149,7 +149,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       await _chatRepository.joinChatRoom(event.roomId);
 
       emit(ChatRoomJoined(event.roomId, 'Successfully joined room'));
-    } catch (_) {
+    } catch (e) {
       emit(ChatErrorState('Failed to join room: $e'));
     }
   }
@@ -171,7 +171,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       final messages = await _chatRepository.getRoomMessages(event.roomId);
 
       emit(MessagesLoaded(event.roomId, messages));
-    } catch (_) {
+    } catch (e) {
       emit(ChatErrorState('Failed to load messages: $e'));
     }
   }
@@ -213,7 +213,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       } else {
         _chatRepository.sendMessage(event.content, type: event.type);
       }
-    } catch (_) {
+    } catch (e) {
       emit(ChatErrorState('Failed to send message: $e'));
     }
   }
@@ -244,7 +244,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       } else {
         emit(ChatErrorState('Failed to create chat room'));
       }
-    } catch (_) {
+    } catch (e) {
       emit(ChatErrorState('Failed to create chat room: $e'));
     }
   }
@@ -268,7 +268,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       await _chatRepository.sendOfferMessage(event.adId, event.amount);
 
       emit(ChatRoomJoined('', 'Offer sent successfully'));
-    } catch (_) {
+    } catch (e) {
       emit(ChatErrorState('Failed to send offer: $e'));
     }
   }

@@ -82,7 +82,7 @@ class ProfileRepo {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (_) {
+    } catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -212,7 +212,7 @@ class ProfileRepo {
       }
 
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (_) {
+    } catch (e) {
       throw Exception("Error updating profile: $e");
     }
   }
@@ -239,7 +239,7 @@ class ProfileRepo {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (_) {
+    } catch (e) {
       throw Exception("Error changing password: $e");
     }
   }
@@ -263,7 +263,7 @@ class ProfileRepo {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (_) {
+    } catch (e) {
       throw Exception("Error deleting account: $e");
     }
   }

@@ -119,7 +119,7 @@ class ChatSocketService {
       });
 
       return await completer.future;
-    } catch (_) {
+    } catch (e) {
       _errorController.add('Connection failed: $e');
       return false;
     }
@@ -372,7 +372,7 @@ class ChatSocketService {
 
       // Keep connection alive after sending
       _keepConnectionAlive();
-    } catch (_) {
+    } catch (e) {
       _errorController.add('Failed to send message: $e');
     }
   }

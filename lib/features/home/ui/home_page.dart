@@ -504,7 +504,7 @@ class _HomePageState extends State<HomePage> {
                             controller.text = gpsAddress;
                             isLoadingSuggestions = false;
                           });
-                        } catch (_) {
+                        } catch (e) {
                           setDialogState(() {
                             isLoadingSuggestions = false;
                           });
