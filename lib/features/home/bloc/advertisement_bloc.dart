@@ -99,7 +99,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
       final result = await repository.fetchAllAds(page: _currentPage);
       emit(AdvertisementState.listingsLoaded(
           listings: result.data, hasMore: result.hasNext));
-    } catch (e) {
+    } catch (_) {
       // Emit user-friendly message instead of raw exception
       emit(AdvertisementState.error(
           "Unable to load recommendations. Please try again later."));
@@ -121,7 +121,6 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
           // (a) More pages within the location radius. $geoNear sorts
           // nearest-first, so each page returns progressively farther ads.
           _currentPage += 1;
-          print("📥 Location page $_currentPage @ ${_locationRadiusKm}km");
           final result = await repository.fetchAllAds(
             page: _currentPage,
             latitude: _locationLatitude,
@@ -137,7 +136,6 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
           // (b) Location feed exhausted → start the full all-ads fallback feed.
           _locationFallbackToAll = true;
           _allAdsPage = 1;
-          print("📥 Location exhausted → all-ads fallback page $_allAdsPage");
           final result = await repository.fetchAllAds(page: _allAdsPage);
           emit(ListingsLoaded(
             listings: _mergeDedupe(currentState.listings, result.data),
@@ -146,7 +144,6 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
         } else if (_locationFallbackToAll) {
           // (d) Continue the all-ads fallback feed.
           _allAdsPage += 1;
-          print("📥 All-ads fallback page $_allAdsPage");
           final result = await repository.fetchAllAds(page: _allAdsPage);
           emit(ListingsLoaded(
             listings: _mergeDedupe(currentState.listings, result.data),
@@ -155,7 +152,6 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
         } else {
           // (e) Normal all-ads / filtered pagination (unchanged behaviour).
           _currentPage += 1;
-          print("📥 Fetching page $_currentPage");
           final result = await repository.fetchAllAds(
               page: _currentPage,
               category: _categoryId,
@@ -175,14 +171,12 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
               maxBedrooms: _maxBedrooms,
               minArea: _minArea,
               maxArea: _maxArea);
-          print(
-              "📦 Received ${result.data.length} ads | hasNext: ${result.hasNext}");
           emit(ListingsLoaded(
             listings: [...currentState.listings, ...result.data],
             hasMore: result.hasNext,
           ));
         }
-      } catch (e) {
+      } catch (_) {
         // Emit user-friendly message instead of raw exception
         emit(AdvertisementState.error(
             "Unable to load more recommendations. Please try again later."));
@@ -229,7 +223,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
         listings: result.data,
         hasMore: result.hasNext,
       ));
-    } catch (e) {
+    } catch (_) {
       // Emit user-friendly message instead of raw exception
       emit(AdvertisementState.error(
           "Unable to load recommendations. Please try again later."));
@@ -288,7 +282,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
         listings: result.data,
         hasMore: result.hasNext,
       ));
-    } catch (e) {
+    } catch (_) {
       // Emit user-friendly message instead of raw exception
       emit(AdvertisementState.error(
           "Unable to load recommendations. Please try again later."));
@@ -358,7 +352,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
       // to the full all-ads feed once nearby results are exhausted.
       emit(AdvertisementState.listingsLoaded(
           listings: result.data, hasMore: true));
-    } catch (e) {
+    } catch (_) {
       // Emit user-friendly message instead of raw exception
       emit(AdvertisementState.error(
           "Unable to load recommendations. Please try again later."));
@@ -377,8 +371,6 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _locationLongitude = null;
 
     try {
-      print(
-          '🔍 Search API: /v2/ads/list page=$_searchPage limit=20 search="$query"');
       final result = await repository.fetchAllAds(
         page: _searchPage,
         limit: 20,
@@ -386,7 +378,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
       );
       emit(AdvertisementState.listingsLoaded(
           listings: result.data, hasMore: result.hasNext));
-    } catch (e) {
+    } catch (_) {
       emit(AdvertisementState.error(
           "Unable to load recommendations. Please try again later."));
     }
@@ -402,8 +394,6 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
       _isSearchFetching = true;
       try {
         _searchPage += 1;
-        print(
-            '🔍 Search API: /v2/ads/list page=$_searchPage limit=20 search="${_searchQuery!}"');
         final result = await repository.fetchAllAds(
           page: _searchPage,
           limit: 20,
@@ -411,7 +401,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
         );
         final updatedList = [...currentState.listings, ...result.data];
         emit(ListingsLoaded(listings: updatedList, hasMore: result.hasNext));
-      } catch (e) {
+      } catch (_) {
         emit(AdvertisementState.error(
             "Unable to load more recommendations. Please try again later."));
       } finally {
@@ -452,7 +442,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
       );
       emit(AdvertisementState.listingsLoaded(
           listings: result.data, hasMore: result.hasNext));
-    } catch (e) {
+    } catch (_) {
       // Emit user-friendly message instead of raw exception
       emit(AdvertisementState.error(
           "Unable to load recommendations. Please try again later."));

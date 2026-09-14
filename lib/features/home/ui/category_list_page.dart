@@ -111,11 +111,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
             }
           }
         }
-        print(
-            '✅ Cached ${_manufacturerPremiumCache.length} manufacturers with isPremium data');
       }
-    } catch (e) {
-      print('⚠️ Error fetching manufacturer isPremium: $e');
+    } catch (_) {
     }
   }
 
@@ -415,68 +412,43 @@ class _CategoryListPageState extends State<CategoryListPage> {
                 // (categoryId is null), so server-side filters may not work correctly
                 if (isPremiumCategory) {
                   // Debug: Show total items from all pages
-                  print(
-                      '📦 Total items loaded from all pages: ${items.length} (hasMore: ${state.hasMore})');
 
                   // Enrich ads with manufacturer isPremium data from cache
                   items = items.map((ad) => _enrichAdWithPremium(ad)).toList();
 
                   // Debug: Check what's in the manufacturer objects
-                  print(
-                      '🔍 Premium Category Filter - Total items before filter: ${items.length}');
 
                   // Check for specific ad ID
                   final specificAdId = '690325a2fb5f59e577b0208c';
                   final specificAd =
                       items.where((ad) => ad.id == specificAdId).firstOrNull;
                   if (specificAd != null) {
-                    print('🎯 SPECIFIC AD FOUND - ID: ${specificAd.id}');
-                    print('🎯 Manufacturer ID: ${specificAd.manufacturer?.id}');
-                    print(
-                        '🎯 Manufacturer isPremium: ${specificAd.manufacturer?.isPremium}');
-                    print(
-                        '🎯 Manufacturer name: ${specificAd.manufacturer?.name}');
-                    print(
-                        '🎯 Manufacturer object: ${specificAd.manufacturer?.toJson()}');
                   } else {
-                    print('⚠️ SPECIFIC AD NOT FOUND in items list');
                   }
 
                   // Count how many have isPremium == true
                   final premiumCount = items
                       .where((ad) => ad.manufacturer?.isPremium == true)
                       .length;
-                  print(
-                      '📊 Ads with isPremium == true: $premiumCount out of ${items.length}');
 
                   // First filter by isPremium
                   items = items.where((ad) {
                     final isPremium = ad.manufacturer?.isPremium == true;
                     if (ad.id == specificAdId) {
-                      print(
-                          '🎯 FILTERING - Ad ID: ${ad.id}, isPremium result: $isPremium');
                     }
                     return isPremium;
                   }).toList();
 
-                  print(
-                      '✅ Premium Category Filter - Total items after filter: ${items.length}');
-
                   // Check if specific ad is in filtered list
                   final isInFilteredList =
                       items.any((ad) => ad.id == specificAdId);
-                  print('🎯 SPECIFIC AD IN FILTERED LIST: $isInFilteredList');
 
                   // Debug: Print all filtered ad IDs
-                  print(
-                      '📋 Filtered ad IDs: ${items.map((ad) => ad.id).toList()}');
 
                   // For premium category, we need to load ALL pages to get all premium items
                   // Since filtering is client-side, we need all data first
                   // Auto-load more pages if we have more data available
                   if (state.hasMore) {
-                    print(
-                        '🔄 Auto-loading more pages for premium category (hasMore: true)...');
                     // Use Future.microtask to avoid setState during build
                     Future.microtask(() {
                       if (mounted) {
@@ -486,7 +458,6 @@ class _CategoryListPageState extends State<CategoryListPage> {
                       }
                     });
                   } else {
-                    print('✅ All pages loaded (hasMore: false)');
                   }
 
                   // Then apply all other filters from _filters map

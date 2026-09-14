@@ -12,63 +12,43 @@ class ShowroomRepo {
     int limit = 10,
   }) async {
     try {
-      print(
-          '🔍 Fetching showroom users with type: SR (authenticated) - page: $page, limit: $limit');
       final response = await _dio.get('/users', queryParameters: {
         'type': 'SR',
         'page': page,
         'limit': limit,
       });
 
-      print('📡 API Response Status: ${response.statusCode}');
-      print('📡 API Response Data: ${response.data}');
-
       if (response.statusCode == 200) {
         final responseData = response.data;
-        print('📊 Response data type: ${responseData.runtimeType}');
-        print('📊 Response data: $responseData');
 
         List<dynamic> data;
 
         // Handle different response structures
         if (responseData is List) {
           data = responseData;
-          print('📊 Response is a List with ${data.length} items');
         } else if (responseData is Map<String, dynamic>) {
           // Check if data is wrapped in a 'data' field
           if (responseData.containsKey('data') &&
               responseData['data'] is List) {
             data = responseData['data'] as List<dynamic>;
-            print(
-                '📊 Response is a Map with data field containing ${data.length} items');
           } else if (responseData.containsKey('users') &&
               responseData['users'] is List) {
             data = responseData['users'] as List<dynamic>;
-            print(
-                '📊 Response is a Map with users field containing ${data.length} items');
           } else {
-            print('❌ Unexpected response structure: $responseData');
             throw Exception(
                 "Unexpected response structure: expected List or Map with 'data'/'users' field");
           }
         } else {
-          print('❌ Unexpected response type: ${responseData.runtimeType}');
           throw Exception(
               "Unexpected response type: ${responseData.runtimeType}");
         }
 
-        print('📊 Processing ${data.length} showroom users');
-
         final List<ShowroomUser> users = [];
         for (int i = 0; i < data.length; i++) {
           try {
-            print('🔄 Parsing user $i: ${data[i]}');
             final user = ShowroomUser.fromJson(data[i]);
             users.add(user);
-            print('✅ Successfully parsed user: ${user.name}');
-          } catch (parseError) {
-            print('❌ Error parsing user $i: $parseError');
-            print('❌ User data: ${data[i]}');
+          } catch (_) {
           }
         }
 
@@ -78,13 +58,9 @@ class ShowroomRepo {
           final hasNext = responseData['hasNext'] as bool?;
           final currentPage = responseData['page'] as int? ?? page;
 
-          print(
-              '📄 Pagination info - total: $total, hasNext: $hasNext, currentPage: $currentPage');
-
           // If there are more pages, fetch them
           if (hasNext == true ||
               (total != null && (currentPage * limit) < total)) {
-            print('🔄 Fetching additional pages...');
             // Fetch remaining pages
             int nextPage = currentPage + 1;
             while (true) {
@@ -123,8 +99,7 @@ class ShowroomRepo {
                       if (user.type == 'SR') {
                         users.add(user);
                       }
-                    } catch (e) {
-                      print('❌ Error parsing user in next page: $e');
+                    } catch (_) {
                     }
                   }
 
@@ -148,12 +123,9 @@ class ShowroomRepo {
                 } else {
                   break;
                 }
-              } catch (e) {
-                print('⚠️ Error fetching page $nextPage: $e');
+              } catch (_) {
                 // If we have some users already, return them instead of failing completely
                 if (users.isNotEmpty) {
-                  print(
-                      '⚠️ Returning ${users.length} users fetched so far despite pagination error');
                   break;
                 }
                 // If no users yet, let the error propagate
@@ -163,22 +135,13 @@ class ShowroomRepo {
           }
         }
 
-        print('✅ Total showroom users fetched: ${users.length}');
         return users;
       } else {
-        print('❌ API Error - Status: ${response.statusCode}');
-        print('❌ API Response: ${response.data}');
         throw Exception(
             "Failed to load showroom users - Status: ${response.statusCode}");
       }
     } catch (e) {
-      print('❌ Error fetching showroom users: $e');
       if (e is DioException) {
-        print('❌ DioException details:');
-        print('❌ - Type: ${e.type}');
-        print('❌ - Message: ${e.message}');
-        print('❌ - Response: ${e.response?.data}');
-        print('❌ - Status Code: ${e.response?.statusCode}');
 
         // Handle network connection errors first
         if (e.type == DioExceptionType.connectionTimeout) {
@@ -203,7 +166,6 @@ class ShowroomRepo {
 
         // Handle 401 Unauthorized - throw error so UI can show login prompt
         if (e.response?.statusCode == 401) {
-          print('ℹ️ 401 Unauthorized - authentication required');
           throw Exception("Please login to view showroom users.");
         }
 
@@ -215,7 +177,6 @@ class ShowroomRepo {
                 "You don't have permission to view showroom users.");
           } else if (statusCode == 404) {
             // 404 means no showroom users found - return empty list
-            print('ℹ️ 404 Not Found - no showroom users available');
             return [];
           } else if (statusCode == 400) {
             throw Exception(
@@ -250,7 +211,6 @@ class ShowroomRepo {
     int limit = 20,
   }) async {
     try {
-      print('🔍 Fetching ads for showroom user: $userId');
 
       final response = await _dio.get(
         '/ads/user/$userId',
@@ -260,31 +220,18 @@ class ShowroomRepo {
         },
       );
 
-      print('📡 Showroom User Ads API Response Status: ${response.statusCode}');
-      print('📡 Showroom User Ads API Response Data: ${response.data}');
-
       if (response.statusCode == 200) {
         final responseData = response.data;
         final List<dynamic> rawData = responseData['data'] ?? responseData;
 
-        print('📊 Processing ${rawData.length} ads for showroom user');
-
         final ads = rawData.map((json) => AddModel.fromJson(json)).toList();
         return ads;
       } else {
-        print('❌ API Error - Status: ${response.statusCode}');
-        print('❌ API Response: ${response.data}');
         throw Exception(
             "Failed to load showroom user ads - Status: ${response.statusCode}");
       }
     } catch (e) {
-      print('❌ Error fetching showroom user ads: $e');
       if (e is DioException) {
-        print('❌ DioException details:');
-        print('❌ - Type: ${e.type}');
-        print('❌ - Message: ${e.message}');
-        print('❌ - Response: ${e.response?.data}');
-        print('❌ - Status Code: ${e.response?.statusCode}');
       }
       throw Exception("Error fetching showroom user ads: $e");
     }
@@ -296,74 +243,49 @@ class ShowroomRepo {
     int limit = 10,
   }) async {
     try {
-      print(
-          '🔍 Fetching public showroom users (unauthenticated) with type: SR - page: $page, limit: $limit');
       final response = await _dio.get('/users/public', queryParameters: {
         'type': 'SR',
         'page': page,
         'limit': limit,
       });
 
-      print('📡 API Response Status: ${response.statusCode}');
-      print('📡 API Response Data: ${response.data}');
-
       if (response.statusCode == 200) {
         final responseData = response.data;
-        print('📊 Response data type: ${responseData.runtimeType}');
-        print('📊 Response data: $responseData');
 
         List<dynamic> data;
 
         // Handle different response structures
         if (responseData is List) {
           data = responseData;
-          print('📊 Response is a List with ${data.length} items');
         } else if (responseData is Map<String, dynamic>) {
           // Check if data is wrapped in a 'data' field
           if (responseData.containsKey('data') &&
               responseData['data'] is List) {
             data = responseData['data'] as List<dynamic>;
-            print(
-                '📊 Response is a Map with data field containing ${data.length} items');
           } else if (responseData.containsKey('users') &&
               responseData['users'] is List) {
             data = responseData['users'] as List<dynamic>;
-            print(
-                '📊 Response is a Map with users field containing ${data.length} items');
           } else {
-            print('❌ Unexpected response structure: $responseData');
             throw Exception(
                 "Unexpected response structure: expected List or Map with 'data'/'users' field");
           }
         } else {
-          print('❌ Unexpected response type: ${responseData.runtimeType}');
           throw Exception(
               "Unexpected response type: ${responseData.runtimeType}");
         }
 
-        print('📊 Processing ${data.length} public showroom users');
-
         final List<ShowroomUser> users = [];
         for (int i = 0; i < data.length; i++) {
           try {
-            print('🔄 Parsing user $i: ${data[i]}');
             final user = ShowroomUser.fromJson(data[i]);
             // Filter to only include SR type users
             if (user.type == 'SR') {
               users.add(user);
-              print('✅ Successfully parsed and added SR user: ${user.name}');
             } else {
-              print(
-                  '⏭️ Skipping user ${user.name} - type is ${user.type}, not SR');
             }
-          } catch (parseError) {
-            print('❌ Error parsing user $i: $parseError');
-            print('❌ User data: ${data[i]}');
+          } catch (_) {
           }
         }
-
-        print(
-            '✅ Filtered to ${users.length} SR type users from ${data.length} total users');
 
         // Check if there are more pages to fetch (for public endpoint)
         if (responseData is Map<String, dynamic>) {
@@ -371,13 +293,9 @@ class ShowroomRepo {
           final hasNext = responseData['hasNext'] as bool?;
           final currentPage = responseData['page'] as int? ?? page;
 
-          print(
-              '📄 Pagination info - total: $total, hasNext: $hasNext, currentPage: $currentPage');
-
           // If there are more pages, fetch them
           if (hasNext == true ||
               (total != null && (currentPage * limit) < total)) {
-            print('🔄 Fetching additional pages for public endpoint...');
             int nextPage = currentPage + 1;
             while (true) {
               try {
@@ -416,8 +334,7 @@ class ShowroomRepo {
                       if (user.type == 'SR') {
                         users.add(user);
                       }
-                    } catch (e) {
-                      print('❌ Error parsing user in next page: $e');
+                    } catch (_) {
                     }
                   }
 
@@ -441,12 +358,9 @@ class ShowroomRepo {
                 } else {
                   break;
                 }
-              } catch (e) {
-                print('⚠️ Error fetching page $nextPage: $e');
+              } catch (_) {
                 // If we have some users already, return them instead of failing completely
                 if (users.isNotEmpty) {
-                  print(
-                      '⚠️ Returning ${users.length} users fetched so far despite pagination error');
                   break;
                 }
                 // If no users yet, let the error propagate
@@ -456,22 +370,13 @@ class ShowroomRepo {
           }
         }
 
-        print('✅ Total public showroom users fetched: ${users.length}');
         return users;
       } else {
-        print('❌ API Error - Status: ${response.statusCode}');
-        print('❌ API Response: ${response.data}');
         throw Exception(
             "Failed to load public showroom users - Status: ${response.statusCode}");
       }
     } catch (e) {
-      print('❌ Error fetching public showroom users: $e');
       if (e is DioException) {
-        print('❌ DioException details:');
-        print('❌ - Type: ${e.type}');
-        print('❌ - Message: ${e.message}');
-        print('❌ - Response: ${e.response?.data}');
-        print('❌ - Status Code: ${e.response?.statusCode}');
 
         // Handle network connection errors first
         if (e.type == DioExceptionType.connectionTimeout) {
@@ -502,7 +407,6 @@ class ShowroomRepo {
                 "You don't have permission to view showroom users.");
           } else if (statusCode == 404) {
             // 404 means no showroom users found - return empty list
-            print('ℹ️ 404 Not Found - no showroom users available');
             return [];
           } else if (statusCode == 400) {
             throw Exception(

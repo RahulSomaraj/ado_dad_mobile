@@ -34,7 +34,6 @@ class _VersionCheckWrapperState extends State<VersionCheckWrapper> {
         void showIfReady() {
           final navigatorContext = AppRoutes.rootNavigatorKey.currentContext;
           if (navigatorContext != null) {
-            print('📌 Version check: showing update dialog (${result.requirement.name})');
             showUpdateAppDialog(navigatorContext, result: result);
           }
         }
@@ -46,12 +45,9 @@ class _VersionCheckWrapperState extends State<VersionCheckWrapper> {
           });
         }
       } else {
-        print('📌 Version check: no prompt (up to date or no config)');
       }
-    } catch (e, st) {
+    } catch (_, __) {
       _checked = true;
-      print('📌 Version check failed: $e');
-      debugPrint('$st');
       // On failure (e.g. no network, backend error), allow app to run
     }
   }

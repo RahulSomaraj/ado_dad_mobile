@@ -62,7 +62,6 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
   late final MediaUploadBloc _mediaBloc =
       MediaUploadBloc(repository: AddRepository());
 
-
   @override
   void dispose() {
     _mediaBloc.close();
@@ -88,8 +87,7 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
       setState(() {
         _manufacturers = manufacturers;
       });
-    } catch (e) {
-      debugPrint('Failed to load manufacturers: $e');
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to load manufacturers')),
@@ -108,9 +106,8 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
             .where((t) => t.appliesTo(_vehicleCategory))
             .toList();
       });
-    } catch (e) {
+    } catch (_) {
       // Optional: surface the error
-      debugPrint('Failed to load transmission types: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to load transmission types')),
@@ -128,9 +125,8 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
         _fuelTypes =
             fuelTypes.where((f) => f.appliesTo(_vehicleCategory)).toList();
       });
-    } catch (e) {
+    } catch (_) {
       // Optional: surface the error
-      debugPrint('Failed to load fuel types: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to load fuel types')),
@@ -447,8 +443,7 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
                                           manufacturer.id);
                                   if (!mounted) return;
                                   setState(() => _models = models);
-                                } catch (e) {
-                                  debugPrint('Failed to load models: $e');
+                                } catch (_) {
                                   if (!mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
@@ -497,8 +492,7 @@ class _AddPrivateVehicleFormState extends State<AddPrivateVehicleForm> {
                                       .fetchVariantsByModel(model.id);
                                   if (!mounted) return;
                                   setState(() => _variants = variants);
-                                } catch (e) {
-                                  debugPrint('Failed to load variants: $e');
+                                } catch (_) {
                                   if (!mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(

@@ -24,7 +24,6 @@ import 'package:go_router/go_router.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
-
 /// Returns the first element matching [test], or null when there is none.
 T? _firstWhereOrNull<T>(Iterable<T> items, bool Function(T) test) {
   for (final item in items) {
@@ -138,8 +137,7 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
     try {
       _manufacturers =
           await repo.fetchManufacturers(vehicleCategory: _vehicleCategory);
-    } catch (e) {
-      debugPrint('Failed to load manufacturers: $e');
+    } catch (_) {
     }
     if (!mounted) return;
     setState(() {});
@@ -155,8 +153,7 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
     if (manufacturer != null) {
       try {
         _models = await repo.fetchModelsByManufacturer(manufacturer.id);
-      } catch (e) {
-        debugPrint('Failed to load models: $e');
+      } catch (_) {
       }
       if (!mounted) return;
       setState(() {});
@@ -179,8 +176,7 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
               _transmissionTypes, (t) => t.id == widget.ad.transmissionId) ??
           _firstWhereOrNull(_transmissionTypes,
               (t) => t.displayName.toLowerCase() == name);
-    } catch (e) {
-      debugPrint('Failed to load transmission types: $e');
+    } catch (_) {
     }
     if (!mounted) return;
 
@@ -196,8 +192,7 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
               _firstWhereOrNull(
                   _fuelTypes, (f) => f.displayName.toLowerCase() == name) ??
               _firstOrNull(_fuelTypes);
-    } catch (e) {
-      debugPrint('Failed to load fuel types: $e');
+    } catch (_) {
     }
 
     if (mounted) setState(() {});
@@ -252,10 +247,8 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
   Future<void> _uploadVideo() async {
     if (_newVideoFile != null) {
       try {
-        print('📹 Starting video upload...');
         final url = await AddRepository().uploadVideoToS3(_newVideoFile!);
         if (url != null) {
-          print('✅ Video uploaded successfully: $url');
           if (mounted) {
             setState(() {
               _uploadedVideoUrl = url;
@@ -264,10 +257,8 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
             });
           }
         } else {
-          print('❌ Video upload returned null URL');
         }
-      } catch (e) {
-        print('❌ Error uploading video: $e');
+      } catch (_) {
         // Optionally show error to user
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -387,8 +378,6 @@ class _TwoWheelerFormEditState extends State<TwoWheelerFormEdit> {
     if (titleValue != null) {
       payload['title'] = titleValue;
     }
-
-    debugPrint('UPDATE PAYLOAD => $payload'); // CHANGED: sanity check once
 
     context.read<AdEditBloc>().add(
           AdEditEvent.submit(

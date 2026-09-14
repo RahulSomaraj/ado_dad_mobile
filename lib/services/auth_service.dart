@@ -127,7 +127,6 @@ class AuthService {
       }
 
       // For other error status codes (500, etc.), don't logout, just return null
-      print('⚠️ Token refresh failed with status ${response.statusCode}');
       final result = null;
       _isRefreshing = false;
       _refreshCompleter?.complete(result);
@@ -135,7 +134,6 @@ class AuthService {
       return result;
     } catch (e) {
       // Handle network errors or other exceptions
-      print('❌ Error refreshing token: $e');
       final result = null;
       _isRefreshing = false;
 
@@ -144,8 +142,6 @@ class AuthService {
       if (e is DioException) {
         final statusCode = e.response?.statusCode;
         if (statusCode == 401 || statusCode == 403) {
-          print(
-              '⚠️ Refresh token expired (DioException), triggering automatic logout...');
           // Set logout flag before calling handleTokenExpiration to suppress errors
           _isLoggingOut = true;
           handleTokenExpiration();
@@ -162,7 +158,6 @@ class AuthService {
   Future<void> handleTokenExpiration() async {
     try {
       // Flag is already set before calling this method
-      print('🚪 Automatic logout triggered due to token expiration');
 
       // Reset initial refresh flag
       resetInitialRefreshFlag();
@@ -177,8 +172,7 @@ class AuthService {
       // navigation stack, so no need to pop pages first (the old
       // `while (canPop()) pop()` loop could pop the last page and throw).
       AppRoutes.router.go('/login');
-    } catch (e) {
-      print('❌ Error during automatic logout: $e');
+    } catch (_) {
     } finally {
       // Reset flag after a delay to allow navigation to complete
       Future.delayed(const Duration(seconds: 2), () {

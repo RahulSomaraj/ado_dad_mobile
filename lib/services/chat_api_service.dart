@@ -51,7 +51,6 @@ class ChatApiService {
         response = await request(newAuthHeader);
       } else {
         // Refresh token expired, AuthService will handle automatic logout
-        print('⚠️ Chat API - Token refresh failed, user will be logged out');
         throw Exception('Session expired. Please login again.');
       }
     }
@@ -85,8 +84,7 @@ class ChatApiService {
             : 'Unknown error';
         throw Exception('Failed to fetch chat rooms: $errorMessage');
       }
-    } catch (e) {
-      print('❌ Error fetching chat rooms: $e');
+    } catch (_) {
       rethrow;
     }
   }
@@ -117,8 +115,7 @@ class ChatApiService {
             : 'Unknown error';
         throw Exception('Failed to fetch messages: $errorMessage');
       }
-    } catch (e) {
-      print('❌ Error fetching messages: $e');
+    } catch (_) {
       rethrow;
     }
   }
@@ -157,8 +154,7 @@ class ChatApiService {
             : 'Unknown error';
         throw Exception('Failed to check room: $errorMessage');
       }
-    } catch (e) {
-      print('❌ Error checking room: $e');
+    } catch (_) {
       rethrow;
     }
   }
@@ -214,8 +210,7 @@ class ChatApiService {
         }
         throw Exception('Failed to send message: $errorMessage');
       }
-    } catch (e) {
-      print('❌ Error sending message via API: $e');
+    } catch (_) {
       rethrow;
     }
   }

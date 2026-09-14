@@ -32,7 +32,7 @@ class ShowroomBloc extends Bloc<ShowroomEvent, ShowroomState> {
       );
       emit(ShowroomState.adsLoaded(
           ads: ads, hasMore: ads.length >= 20, userId: event.userId));
-    } catch (e) {
+    } catch (_) {
       emit(ShowroomState.error("Failed to fetch showroom user ads: $e"));
     }
   }
@@ -46,8 +46,6 @@ class ShowroomBloc extends Bloc<ShowroomEvent, ShowroomState> {
     if (currentState is AdsLoaded && currentState.hasMore) {
       try {
         _currentPage += 1;
-        print(
-            "📥 Fetching showroom ads page $_currentPage for user $_currentUserId");
         final moreAds = await repository.fetchShowroomUserAds(
           userId: _currentUserId!,
           page: _currentPage,
@@ -58,8 +56,7 @@ class ShowroomBloc extends Bloc<ShowroomEvent, ShowroomState> {
             ads: updatedAds,
             hasMore: moreAds.length >= 20,
             userId: _currentUserId!));
-      } catch (e) {
-        print("❌ Error fetching next page: $e");
+      } catch (_) {
         emit(ShowroomState.error("Failed to load more ads: $e"));
       } finally {
         _isFetching = false;

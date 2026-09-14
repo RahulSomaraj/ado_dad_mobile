@@ -56,8 +56,7 @@ class GooglePlacesService {
       } else {
         throw Exception('HTTP error: ${response.statusCode}');
       }
-    } catch (e) {
-      print('Error getting place predictions: $e');
+    } catch (_) {
       return [];
     }
   }
@@ -81,8 +80,7 @@ class GooglePlacesService {
         }
       }
       return null;
-    } catch (e) {
-      print('Error getting place details: $e');
+    } catch (_) {
       return null;
     }
   }
@@ -115,8 +113,7 @@ class GooglePlacesService {
         }
       }
       return [];
-    } catch (e) {
-      print('Error getting nearby places: $e');
+    } catch (_) {
       return [];
     }
   }
@@ -277,8 +274,6 @@ class GooglePlacesService {
             }
 
             if (addressParts.isNotEmpty) {
-              print(
-                  '📍 Extracted location: ${addressParts.join(", ")} (specificity_score: $bestScore, location_type: $bestLocationType)');
               return addressParts.join(', ');
             }
           }
@@ -288,8 +283,7 @@ class GooglePlacesService {
         }
       }
       return null;
-    } catch (e) {
-      print('Error in reverse geocoding: $e');
+    } catch (_) {
       return null;
     }
   }

@@ -102,8 +102,6 @@ class MyAd {
           imagesRaw.where((e) => e != null).map((e) => e.toString()).toList();
     } else if (imagesRaw != null) {
       // If images is not a List, log warning and use empty list
-      print(
-          '⚠️ Warning: images field is not a List, got ${imagesRaw.runtimeType}');
     }
 
     final userJson = _asMap(json['user']);
@@ -136,8 +134,6 @@ class MyAd {
           .toList();
     } else if (commercialVehicleDetailsRaw != null) {
       // If commercialVehicleDetails is not a List, log warning
-      print(
-          '⚠️ Warning: commercialVehicleDetails field is not a List, got ${commercialVehicleDetailsRaw.runtimeType}');
     }
 
     // Parse manufacturer and model information (using same classes as AddModel)
@@ -411,6 +407,5 @@ List<String> _parseStringList(dynamic v) {
     return v.where((e) => e != null).map((e) => e.toString()).toList();
   }
   // If not a List, log warning and return empty list
-  print('⚠️ Warning: Expected List but got ${v.runtimeType}');
   return const [];
 }

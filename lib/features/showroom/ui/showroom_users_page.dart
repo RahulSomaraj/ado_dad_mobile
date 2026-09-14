@@ -61,8 +61,6 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
 
   Future<void> _fetchShowroomUsers({required bool isAuthenticated}) async {
     try {
-      print(
-          '🚀 Starting to fetch showroom users (authenticated: $isAuthenticated)...');
       setState(() {
         _isLoading = true;
         _error = null;
@@ -73,15 +71,11 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
           ? await _showroomRepo.fetchShowroomUsers()
           : await _showroomRepo.fetchPublicShowroomUsers();
 
-      print('✅ Successfully fetched ${users.length} showroom users');
-
       setState(() {
         _showroomUsers = users;
         _isLoading = false;
       });
     } catch (e) {
-      print('❌ Error in _fetchShowroomUsers: $e');
-      print('❌ Error type: ${e.runtimeType}');
 
       // Extract user-friendly error message
       String errorMessage =
@@ -89,7 +83,6 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
 
       if (e is Exception) {
         final exceptionMessage = e.toString();
-        print('❌ Exception message: $exceptionMessage');
 
         // Extract the actual error message from Exception: "message"
         // Remove "Exception: " prefix if present

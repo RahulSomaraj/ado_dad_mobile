@@ -41,7 +41,6 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
     // Store ChatBloc reference
     _chatBloc = context.read<ChatBloc>();
     // Initialize chat when page loads - use addPostFrameCallback to ensure context is ready
-    print('🚀 Chat rooms page initialized');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && !_hasInitialized) {
         _hasInitialized = true;
@@ -49,7 +48,6 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
         // This fixes the issue where the bloc might be stuck in Loading or Error state
         // from a previous session when the app is reopened
         final currentState = _chatBloc.state;
-        print('📊 Current chat state: ${currentState.runtimeType}');
 
         if (currentState is ChatErrorState ||
             currentState is ChatInitial ||
@@ -57,22 +55,17 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
           // If in error, initial, or loading state (might be stuck from previous session),
           // do a full initialization to ensure WebSocket connection is established
           // This is especially important after app restart
-          print(
-              '🔄 Full initialization needed (state: ${currentState.runtimeType})');
           _chatBloc.add(InitializeChat());
         } else if (currentState is MessagesLoaded ||
             currentState is ChatRoomJoined ||
             currentState is ChatRoomCreated ||
             currentState is NewMessageReceivedState) {
           // When returning from chat page, these states indicate we need to reload rooms
-          print('🔄 Returning from chat page, reloading chat rooms');
           _chatBloc.add(LoadChatRooms());
         } else if (currentState is! ChatRoomsSuccess) {
           // For any other state, reload rooms
-          print('🔄 Loading chat rooms');
           _chatBloc.add(LoadChatRooms());
         } else {
-          print('✅ Chat rooms already loaded');
         }
       }
     });
@@ -92,10 +85,8 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
             currentState is ChatRoomJoined ||
             currentState is ChatRoomCreated ||
             currentState is NewMessageReceivedState) {
-          print('🔄 Page visible again, reloading chat rooms');
           _chatBloc.add(LoadChatRooms());
         } else if (currentState is ChatErrorState) {
-          print('🔄 Error state detected, attempting to reload');
           _chatBloc.add(LoadChatRooms());
         }
       }
@@ -111,7 +102,6 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
       return;
     }
     _lastSilentReload = now;
-    print('🔄 Silent chat rooms reload');
     _chatBloc.add(LoadChatRooms());
   }
 
@@ -147,15 +137,11 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
                 // background so the preview/unread badge catches up.
                 _silentReloadThrottled();
               } else if (state is ChatRoomJoined) {
-                print('✅ Room joined successfully: ${state.roomId}');
 
                 // Load messages for the joined room
                 context.read<ChatBloc>().add(LoadRoomMessages(state.roomId));
               } else if (state is MessagesLoaded) {
-                print(
-                    '✅ Messages loaded: ${state.messages.length} messages for room ${state.roomId}');
               } else if (state is ChatErrorState) {
-                print('❌ Error: ${state.error}');
               }
             },
             child: BlocBuilder<ChatBloc, ChatState>(
@@ -347,7 +333,6 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
     return RefreshIndicator(
       color: AppColors.primaryColor,
       onRefresh: () async {
-        print('🔄 Manual refresh triggered');
         context.read<ChatBloc>().add(LoadChatRooms());
       },
       child: ListView.separated(
@@ -637,7 +622,6 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
         .toString()
         .trim();
     if (roomId.isEmpty) {
-      print('❌ Cannot open chat: missing room id in $room');
       _showOpenError('This conversation can’t be opened right now.');
       return;
     }
@@ -661,11 +645,6 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
     }
     final adId = room['adId'] as String?;
     final adTitle = room['adTitle'] as String?;
-
-    print('🖱️ Navigating to chat page for room: $roomId');
-    print('👤 Other user: $otherUserName');
-    print('🏷️ Ad ID: $adId');
-    print('📝 Ad Title: $adTitle');
 
     // Build query parameters
     final queryParams = <String, String>{
@@ -702,8 +681,7 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
 
     try {
       context.push('/chat/${Uri.encodeComponent(roomId)}?$queryString');
-    } catch (e) {
-      print('❌ Failed to open chat room $roomId: $e');
+    } catch (_) {
       _showOpenError('Could not open this conversation. Please try again.');
     }
   }
@@ -735,7 +713,6 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
   }
 
   void _handleBackNavigation() {
-    print('🔙 Navigating back from chat rooms');
     // Pop to wherever we came from; fall back to home when this page is the
     // root of the stack (e.g. opened via context.go or a deep link).
     if (context.canPop()) {

@@ -115,8 +115,7 @@ Future<void> _initFcm() async {
       _handleNotificationTap(
           message); // async: opens notifications or home with login popup
     });
-  } catch (e, st) {
-    debugPrint('FCM init failed (non-fatal): $e\n$st');
+  } catch (_, __) {
   }
 }
 

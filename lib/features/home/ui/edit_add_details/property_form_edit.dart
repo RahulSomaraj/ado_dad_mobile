@@ -105,10 +105,6 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
         text: widget.ad.floor != null ? widget.ad.floor.toString() : '');
 
     // Debug: Verify values are correctly assigned
-    debugPrint('PropertyFormEdit - Description: ${widget.ad.description}');
-    debugPrint('PropertyFormEdit - AreaSqft: ${widget.ad.areaSqft}');
-    debugPrint('PropertyFormEdit - AreaCtrl text: ${_areaCtrl.text}');
-    debugPrint('PropertyFormEdit - DescCtrl text: ${_descCtrl.text}');
 
     _isFurnished = widget.ad.isFurnished ?? false;
     _hasParking = widget.ad.hasParking ?? false;
@@ -125,9 +121,6 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
     }
 
     // Debug: Verify amenities are correctly loaded
-    debugPrint(
-        'PropertyFormEdit - Amenities from backend: ${widget.ad.amenities}');
-    debugPrint('PropertyFormEdit - Selected amenities: $_selectedAmenities');
     _imageUrls = List<String>.from(widget.ad.images);
     _existingVideoUrl = widget.ad.link?.isNotEmpty == true
         ? widget.ad.link
@@ -183,19 +176,15 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
   Future<void> _uploadVideo() async {
     if (_newVideoFile != null) {
       try {
-        print('📹 Starting video upload...');
         final url = await AddRepository().uploadVideoToS3(_newVideoFile!);
         if (url != null) {
-          print('✅ Video uploaded successfully: $url');
           setState(() {
             _uploadedVideoUrl = url;
             _videoRemoved = false; // Reset removal flag when video is uploaded
           });
         } else {
-          print('❌ Video upload returned null URL');
         }
-      } catch (e) {
-        print('❌ Error uploading video: $e');
+      } catch (_) {
         // Optionally show error to user
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -305,8 +294,6 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
     if (titleValue != null) {
       payload['title'] = titleValue;
     }
-
-    debugPrint('PROPERTY UPDATE PAYLOAD => $payload');
 
     context.read<AdEditBloc>().add(
           AdEditEvent.submit(

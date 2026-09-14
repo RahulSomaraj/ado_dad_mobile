@@ -462,10 +462,7 @@ class _SearchPageState extends State<SearchPage> {
             .take(10) // Limit to 10 suggestions
             .toList();
 
-        print(
-            '🔍 Location suggestions for "$query": ${suggestions.length} found');
         for (int i = 0; i < suggestions.length; i++) {
-          print('  ${i + 1}. ${suggestions[i]}');
         }
 
         setState(() {
@@ -474,11 +471,9 @@ class _SearchPageState extends State<SearchPage> {
         });
       } else {
         // If no Google Places results, fall back to existing ad locations
-        print('🔍 No Google Places results for "$query", using fallback');
         _fallbackToExistingLocations(query);
       }
-    } catch (e) {
-      print('Google Places API error: $e');
+    } catch (_) {
       // Fall back to existing ad locations if API fails
       _fallbackToExistingLocations(query);
     }
@@ -577,10 +572,6 @@ class _SearchPageState extends State<SearchPage> {
           final location = placeDetails!.geometry!.location;
 
           // Print location data to console
-          print('📍 Selected Location: $address');
-          print('🌍 Latitude: ${location.lat}');
-          print('🌍 Longitude: ${location.lng}');
-          print('📍 Formatted Address: ${placeDetails.formattedAddress}');
 
           // Call the location-based API
           context.read<AdvertisementBloc>().add(
@@ -596,13 +587,10 @@ class _SearchPageState extends State<SearchPage> {
           return;
         }
       }
-    } catch (e) {
-      print('Error getting coordinates for location: $e');
+    } catch (_) {
     }
 
     // Fallback to text-based filtering if coordinates are not available
-    print('📍 Fallback Location Search: $address');
-    print('⚠️ Coordinates not available, using text-based filtering');
 
     final filteredList = allAds.where((ad) {
       return ad.location.toLowerCase().contains(address.toLowerCase());

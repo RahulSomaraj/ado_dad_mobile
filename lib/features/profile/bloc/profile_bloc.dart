@@ -21,8 +21,6 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         // Check if this is a silent token expiration error
         // If so, don't emit error state - logout is already in progress
         if (e.toString().contains('SESSION_EXPIRED_SILENT')) {
-          print(
-              '🔇 Suppressing token expiration error in ProfileBloc - logout in progress');
           // Don't emit error state - just keep loading or initial state
           // The navigation to login will happen automatically via AuthService
           return;

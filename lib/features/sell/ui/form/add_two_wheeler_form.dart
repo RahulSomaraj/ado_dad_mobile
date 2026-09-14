@@ -64,7 +64,6 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
   late final MediaUploadBloc _mediaBloc =
       MediaUploadBloc(repository: AddRepository());
 
-
   @override
   void dispose() {
     _mediaBloc.close();
@@ -89,8 +88,7 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
       setState(() {
         _manufacturers = manufacturers;
       });
-    } catch (e) {
-      debugPrint('Failed to load manufacturers: $e');
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to load manufacturers')),
@@ -109,9 +107,8 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
             .where((t) => t.appliesTo(_vehicleCategory))
             .toList();
       });
-    } catch (e) {
+    } catch (_) {
       // Optional: surface the error
-      debugPrint('Failed to load transmission types: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to load transmission types')),
@@ -129,9 +126,8 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
         _fuelTypes =
             fuelTypes.where((f) => f.appliesTo(_vehicleCategory)).toList();
       });
-    } catch (e) {
+    } catch (_) {
       // Optional: surface the error
-      debugPrint('Failed to load fuel types: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to load fuel types')),
@@ -451,8 +447,7 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
                                           manufacturer.id);
                                   if (!mounted) return;
                                   setState(() => _models = models);
-                                } catch (e) {
-                                  debugPrint('Failed to load models: $e');
+                                } catch (_) {
                                   if (!mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(

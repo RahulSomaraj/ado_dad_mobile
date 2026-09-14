@@ -13,7 +13,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   StreamSubscription? _messagesSubscription;
 
   ChatBloc() : super(ChatInitial()) {
-    print('🔧 ChatBloc constructor called - registering event handlers');
     on<InitializeChat>(_onInitializeChat);
     on<LoadChatRooms>(_onLoadChatRooms);
     on<JoinChatRoom>(_onJoinChatRoom);
@@ -26,7 +25,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatRoomsLoaded>(_onChatRoomsLoaded);
     on<ChatError>(_onChatError);
     on<DisposeChat>(_onDisposeChat);
-    print('✅ ChatBloc event handlers registered successfully');
   }
 
   Future<void> _onInitializeChat(
@@ -44,19 +42,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       await _chatRepository.initialize();
 
       // Connect to WebSocket
-      print('🔌 Connecting to WebSocket...');
       final connected = await _chatRepository.connect();
       if (!connected) {
-        print('⚠️ WebSocket connection failed, but continuing with HTTP API');
       } else {
-        print('✅ WebSocket connected successfully');
       }
 
       _ensureSubscriptions();
 
       // Load rooms
       await _chatRepository.getUserChatRooms();
-    } catch (e) {
+    } catch (_) {
       emit(ChatErrorState('Initialization failed: $e'));
     }
   }
@@ -80,13 +75,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     // Listen to messages stream for real-time messages
     _messagesSubscription ??=
         _chatRepository.messagesStream.listen((messageList) {
-      print('🔍 ChatBloc received message list: ${messageList.length} items');
-      print('📦 Message list data: $messageList');
 
       // Process each message in the list (each item is a single message object)
       for (final message in messageList) {
-        print('🔍 Processing individual message: $message');
-        print('✅ Dispatching NewMessageReceived event');
         if (!isClosed) add(NewMessageReceived(message));
       }
     });
@@ -131,14 +122,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       emit(ChatLoading());
       _ensureSubscriptions();
       await _chatRepository.getUserChatRooms();
-    } catch (e) {
+    } catch (_) {
       emit(ChatErrorState('Failed to load chat rooms: $e'));
     }
   }
 
   Future<void> _onJoinChatRoom(
       JoinChatRoom event, Emitter<ChatState> emit) async {
-    print('🎯 _onJoinChatRoom method called with roomId: ${event.roomId}');
 
     // Check authentication before joining chat room
     final isAuthenticated = await AuthGuard.isAuthenticated();
@@ -148,11 +138,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
 
     try {
-      print('🚪 Attempting to join room: ${event.roomId}');
 
       // Get and log current user ID
       final currentUserId = await _chatRepository.getCurrentUserId();
-      print('👤 Current user ID: $currentUserId');
 
       emit(ChatLoading());
       _ensureSubscriptions();
@@ -160,17 +148,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       // Use WebSocket to join the room
       await _chatRepository.joinChatRoom(event.roomId);
 
-      print('✅ Successfully joined room: ${event.roomId}');
       emit(ChatRoomJoined(event.roomId, 'Successfully joined room'));
-    } catch (e) {
-      print('❌ Failed to join room: $e');
+    } catch (_) {
       emit(ChatErrorState('Failed to join room: $e'));
     }
   }
 
   Future<void> _onLoadRoomMessages(
       LoadRoomMessages event, Emitter<ChatState> emit) async {
-    print('🎯 _onLoadRoomMessages method called with roomId: ${event.roomId}');
 
     // Check authentication before loading messages
     final isAuthenticated = await AuthGuard.isAuthenticated();
@@ -180,17 +165,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
 
     try {
-      print('📨 Loading messages for room: ${event.roomId}');
       emit(ChatLoading());
 
       // Load messages for the room
       final messages = await _chatRepository.getRoomMessages(event.roomId);
 
-      print(
-          '✅ Successfully loaded ${messages.length} messages for room: ${event.roomId}');
       emit(MessagesLoaded(event.roomId, messages));
-    } catch (e) {
-      print('❌ Failed to load messages: $e');
+    } catch (_) {
       emit(ChatErrorState('Failed to load messages: $e'));
     }
   }
@@ -199,9 +180,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       MarkRoomRead event, Emitter<ChatState> emit) async {
     try {
       await _chatRepository.markRoomRead(event.roomId);
-    } catch (e) {
+    } catch (_) {
       // Non-fatal: badge clearing is best-effort and shouldn't break the chat.
-      print('⚠️ Failed to mark room read: $e');
     }
   }
 
@@ -221,7 +201,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           event.fileBytes != null &&
           event.fileBytes!.isNotEmpty &&
           event.mimeType != null) {
-        print('📤 Sending ${at} message through Bloc (upload + API)');
         final bytes = Uint8List.fromList(event.fileBytes!);
         if (at == 'image') {
           await _chatRepository.sendImageMessage(
@@ -232,10 +211,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         }
         if (!isClosed) add(LoadRoomMessages(event.roomId!));
       } else {
-        print('📤 Sending text message through Bloc: ${event.content}');
         _chatRepository.sendMessage(event.content, type: event.type);
       }
-    } catch (e) {
+    } catch (_) {
       emit(ChatErrorState('Failed to send message: $e'));
     }
   }
@@ -250,7 +228,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
 
     try {
-      print('🏠 Creating new chat room for ad: ${event.adId}');
       emit(ChatLoading());
 
       // Ensure socket connected
@@ -263,13 +240,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       final roomId = await _chatRepository.createChatRoom(event.adId);
 
       if (roomId != null) {
-        print('✅ Chat room created successfully: $roomId');
         emit(ChatRoomCreated(roomId));
       } else {
         emit(ChatErrorState('Failed to create chat room'));
       }
-    } catch (e) {
-      print('❌ Error creating chat room: $e');
+    } catch (_) {
       emit(ChatErrorState('Failed to create chat room: $e'));
     }
   }
@@ -284,19 +259,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     try {
       emit(ChatLoading());
-      print('💬 Sending offer for ad: ${event.adId}');
 
       // 1️⃣ Ensure socket connection
       final connected = await _chatRepository.connect();
       if (!connected) throw Exception('Unable to connect to chat server');
-      print('✅ Socket connected');
 
       // 2️⃣ Send offer message (handles room creation, joining, and sending)
       await _chatRepository.sendOfferMessage(event.adId, event.amount);
 
       emit(ChatRoomJoined('', 'Offer sent successfully'));
-    } catch (e) {
-      print('❌ SendOffer failed: $e');
+    } catch (_) {
       emit(ChatErrorState('Failed to send offer: $e'));
     }
   }
@@ -311,7 +283,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   void _onNewMessageReceived(
       NewMessageReceived event, Emitter<ChatState> emit) {
-    print('💬 New message received: ${event.message['content']}');
     emit(NewMessageReceivedState(event.message,
         roomId: _roomIdFromMessage(event.message)));
   }

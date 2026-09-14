@@ -15,7 +15,6 @@ class VersionRepository {
       final response = await _dio.get(_versionPath);
 
       if (response.statusCode != 200 || response.data is! Map<String, dynamic>) {
-        print('📌 Version API: unexpected response status=${response.statusCode} or body type');
         return null;
       }
       final apiResponse = AppVersionResponse.fromJson(
@@ -23,14 +22,11 @@ class VersionRepository {
       );
       final data = apiResponse.data;
       if (data != null) {
-        print('📌 Version API: ok → ios=${data.iosVersion} android=${data.androidVersion}');
       } else {
-        print('📌 Version API: response.data was null');
       }
       return data;
     } on DioException catch (e) {
       if (e.response?.statusCode != null) {
-        print('📌 Version API failed: ${e.response?.statusCode} ${e.response?.data}');
         return null;
       }
       rethrow;

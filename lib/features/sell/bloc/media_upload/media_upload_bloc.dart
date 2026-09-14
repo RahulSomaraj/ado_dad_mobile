@@ -187,8 +187,7 @@ class MediaUploadBloc extends Bloc<MediaUploadEvent, MediaUploadState> {
       url = item.isVideo
           ? await repository.uploadVideoToS3(item.bytes!)
           : await repository.uploadImageToS3(item.bytes!);
-    } catch (err) {
-      debugPrint('Media upload failed for ${item.localId}: $err');
+    } catch (_) {
       url = null;
     }
     _active--;

@@ -45,17 +45,14 @@ class SignupRepository {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (e) {
-      print('❌ Unexpected error in uploadImageToS3: $e');
+    } catch (_) {
       throw Exception('Unexpected error: $e');
     }
   }
 
   Future<String> signup(SignupModel userData) async {
     try {
-      print('Hiii');
       final payload = userData.toJson();
-      print("📤 Signup payload: $payload");
       final response = await _dio.post(
         "/users",
         data: payload,
@@ -66,24 +63,19 @@ class SignupRepository {
         //     ),
       );
 
-      print(response.statusCode);
-      print('response:.......${response.data}');
       if (response.statusCode == 201) {
         return response.data['message'] ?? "Signed Up successfully";
       } else {
         throw Exception("Failed to signup: ${response.statusMessage}");
       }
     } on DioException catch (e) {
-      print("errrererererererere");
-      print(e);
-      print("errrererererererere");
 
       if (e.response != null) {
         throw Exception(e.response!.data['message'] ?? "API error occurred");
       } else {
         throw Exception("Network error: ${e.message}");
       }
-    } catch (e) {
+    } catch (_) {
       throw Exception("Unexpected error: $e");
     }
   }

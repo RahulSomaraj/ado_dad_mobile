@@ -1,0 +1,4672 @@
+--- a/lib/common/api_service.dart
++++ b/lib/common/api_service.dart
+@@ -69,9 +69,6 @@
+           return handler.next(response);
+         },
+         onError: (DioException e, handler) async {
+-          print(
+-            '❌ ${e.response?.statusCode ?? 'ERR'} ${e.requestOptions.method} ${e.requestOptions.uri} — ${e.message}',
+-          );
+           if (e.response?.statusCode == 401) {
+             // Token expired or invalid - try to refresh it
+             final authService = AuthService();
+@@ -126,8 +123,6 @@
+                 final retryResponse = await _dio.fetch(e.requestOptions);
+                 return handler.resolve(retryResponse);
+               } catch (retryError) {
+-                print(
+-                    '❌ Request retry failed after token refresh: $retryError');
+                 return handler.reject(retryError is DioException
+                     ? retryError
+                     : DioException(
+@@ -139,8 +134,6 @@
+             } else {
+               // Refresh failed - refresh token expired or invalid
+               // AuthService will handle logout automatically
+-              print(
+-                  '⚠️ Token refresh failed - refresh token expired or invalid');
+ 
+               // If logout is in progress, suppress the error to avoid showing it in UI
+               if (authService.isLoggingOut) {
+@@ -249,9 +242,8 @@
+           }
+         }
+       }
+-    } catch (e) {
++    } catch (_) {
+       // Silent catch if the body is not parseable
+-      print("⚠️ Error parsing response data: $e");
+     }
+ 
+     // Fall back to status-based messages
+--- a/lib/common/google_places_service.dart
++++ b/lib/common/google_places_service.dart
+@@ -56,8 +56,7 @@
+       } else {
+         throw Exception('HTTP error: ${response.statusCode}');
+       }
+-    } catch (e) {
+-      print('Error getting place predictions: $e');
++    } catch (_) {
+       return [];
+     }
+   }
+@@ -81,8 +80,7 @@
+         }
+       }
+       return null;
+-    } catch (e) {
+-      print('Error getting place details: $e');
++    } catch (_) {
+       return null;
+     }
+   }
+@@ -115,8 +113,7 @@
+         }
+       }
+       return [];
+-    } catch (e) {
+-      print('Error getting nearby places: $e');
++    } catch (_) {
+       return [];
+     }
+   }
+@@ -277,8 +274,6 @@
+             }
+ 
+             if (addressParts.isNotEmpty) {
+-              print(
+-                  '📍 Extracted location: ${addressParts.join(", ")} (specificity_score: $bestScore, location_type: $bestLocationType)');
+               return addressParts.join(', ');
+             }
+           }
+@@ -288,8 +283,7 @@
+         }
+       }
+       return null;
+-    } catch (e) {
+-      print('Error in reverse geocoding: $e');
++    } catch (_) {
+       return null;
+     }
+   }
+--- a/lib/common/version_check_service.dart
++++ b/lib/common/version_check_service.dart
+@@ -70,7 +70,6 @@
+ 
+     final config = await _repo.getVersionConfig();
+     if (config == null) {
+-      print('📌 Version check: no config (API failed or null data) → no update prompt');
+       final defaultUrl = Platform.isIOS
+           ? VersionRepository.defaultIosStoreUrl
+           : VersionRepository.defaultAndroidStoreUrl;
+@@ -91,7 +90,6 @@
+             : VersionRepository.defaultAndroidStoreUrl);
+ 
+     final cmp = _compareVersions(current, latest);
+-    print('📌 Version check: current=$current latest=$latest compare=$cmp (platform: ${Platform.isIOS ? "ios" : "android"})');
+ 
+     // Current is below this platform's latest → show update
+     if (cmp < 0) {
+--- a/lib/common/version_check_wrapper.dart
++++ b/lib/common/version_check_wrapper.dart
+@@ -34,7 +34,6 @@
+         void showIfReady() {
+           final navigatorContext = AppRoutes.rootNavigatorKey.currentContext;
+           if (navigatorContext != null) {
+-            print('📌 Version check: showing update dialog (${result.requirement.name})');
+             showUpdateAppDialog(navigatorContext, result: result);
+           }
+         }
+@@ -46,12 +45,9 @@
+           });
+         }
+       } else {
+-        print('📌 Version check: no prompt (up to date or no config)');
+       }
+-    } catch (e, st) {
++    } catch (_, __) {
+       _checked = true;
+-      print('📌 Version check failed: $e');
+-      debugPrint('$st');
+       // On failure (e.g. no network, backend error), allow app to run
+     }
+   }
+--- a/lib/config/app_config.dart
++++ b/lib/config/app_config.dart
+@@ -37,10 +37,8 @@
+   static Future<void> load() async {
+     try {
+       await dotenv.load();
+-      print('📡 API base URL: $baseUrl');
+-    } catch (e) {
++    } catch (_) {
+       // Handle error if .env file is not found
+-      print('Warning: Could not load .env file: $e');
+     }
+   }
+ 
+--- a/lib/features/chat/bloc/chat_bloc.dart
++++ b/lib/features/chat/bloc/chat_bloc.dart
+@@ -13,7 +13,6 @@
+   StreamSubscription? _messagesSubscription;
+ 
+   ChatBloc() : super(ChatInitial()) {
+-    print('🔧 ChatBloc constructor called - registering event handlers');
+     on<InitializeChat>(_onInitializeChat);
+     on<LoadChatRooms>(_onLoadChatRooms);
+     on<JoinChatRoom>(_onJoinChatRoom);
+@@ -26,7 +25,6 @@
+     on<ChatRoomsLoaded>(_onChatRoomsLoaded);
+     on<ChatError>(_onChatError);
+     on<DisposeChat>(_onDisposeChat);
+-    print('✅ ChatBloc event handlers registered successfully');
+   }
+ 
+   Future<void> _onInitializeChat(
+@@ -44,19 +42,16 @@
+       await _chatRepository.initialize();
+ 
+       // Connect to WebSocket
+-      print('🔌 Connecting to WebSocket...');
+       final connected = await _chatRepository.connect();
+       if (!connected) {
+-        print('⚠️ WebSocket connection failed, but continuing with HTTP API');
+       } else {
+-        print('✅ WebSocket connected successfully');
+       }
+ 
+       _ensureSubscriptions();
+ 
+       // Load rooms
+       await _chatRepository.getUserChatRooms();
+-    } catch (e) {
++    } catch (_) {
+       emit(ChatErrorState('Initialization failed: $e'));
+     }
+   }
+@@ -80,13 +75,9 @@
+     // Listen to messages stream for real-time messages
+     _messagesSubscription ??=
+         _chatRepository.messagesStream.listen((messageList) {
+-      print('🔍 ChatBloc received message list: ${messageList.length} items');
+-      print('📦 Message list data: $messageList');
+ 
+       // Process each message in the list (each item is a single message object)
+       for (final message in messageList) {
+-        print('🔍 Processing individual message: $message');
+-        print('✅ Dispatching NewMessageReceived event');
+         if (!isClosed) add(NewMessageReceived(message));
+       }
+     });
+@@ -131,14 +122,13 @@
+       emit(ChatLoading());
+       _ensureSubscriptions();
+       await _chatRepository.getUserChatRooms();
+-    } catch (e) {
++    } catch (_) {
+       emit(ChatErrorState('Failed to load chat rooms: $e'));
+     }
+   }
+ 
+   Future<void> _onJoinChatRoom(
+       JoinChatRoom event, Emitter<ChatState> emit) async {
+-    print('🎯 _onJoinChatRoom method called with roomId: ${event.roomId}');
+ 
+     // Check authentication before joining chat room
+     final isAuthenticated = await AuthGuard.isAuthenticated();
+@@ -148,11 +138,9 @@
+     }
+ 
+     try {
+-      print('🚪 Attempting to join room: ${event.roomId}');
+ 
+       // Get and log current user ID
+       final currentUserId = await _chatRepository.getCurrentUserId();
+-      print('👤 Current user ID: $currentUserId');
+ 
+       emit(ChatLoading());
+       _ensureSubscriptions();
+@@ -160,17 +148,14 @@
+       // Use WebSocket to join the room
+       await _chatRepository.joinChatRoom(event.roomId);
+ 
+-      print('✅ Successfully joined room: ${event.roomId}');
+       emit(ChatRoomJoined(event.roomId, 'Successfully joined room'));
+-    } catch (e) {
+-      print('❌ Failed to join room: $e');
++    } catch (_) {
+       emit(ChatErrorState('Failed to join room: $e'));
+     }
+   }
+ 
+   Future<void> _onLoadRoomMessages(
+       LoadRoomMessages event, Emitter<ChatState> emit) async {
+-    print('🎯 _onLoadRoomMessages method called with roomId: ${event.roomId}');
+ 
+     // Check authentication before loading messages
+     final isAuthenticated = await AuthGuard.isAuthenticated();
+@@ -180,17 +165,13 @@
+     }
+ 
+     try {
+-      print('📨 Loading messages for room: ${event.roomId}');
+       emit(ChatLoading());
+ 
+       // Load messages for the room
+       final messages = await _chatRepository.getRoomMessages(event.roomId);
+ 
+-      print(
+-          '✅ Successfully loaded ${messages.length} messages for room: ${event.roomId}');
+       emit(MessagesLoaded(event.roomId, messages));
+-    } catch (e) {
+-      print('❌ Failed to load messages: $e');
++    } catch (_) {
+       emit(ChatErrorState('Failed to load messages: $e'));
+     }
+   }
+@@ -199,9 +180,8 @@
+       MarkRoomRead event, Emitter<ChatState> emit) async {
+     try {
+       await _chatRepository.markRoomRead(event.roomId);
+-    } catch (e) {
++    } catch (_) {
+       // Non-fatal: badge clearing is best-effort and shouldn't break the chat.
+-      print('⚠️ Failed to mark room read: $e');
+     }
+   }
+ 
+@@ -221,7 +201,6 @@
+           event.fileBytes != null &&
+           event.fileBytes!.isNotEmpty &&
+           event.mimeType != null) {
+-        print('📤 Sending ${at} message through Bloc (upload + API)');
+         final bytes = Uint8List.fromList(event.fileBytes!);
+         if (at == 'image') {
+           await _chatRepository.sendImageMessage(
+@@ -232,10 +211,9 @@
+         }
+         if (!isClosed) add(LoadRoomMessages(event.roomId!));
+       } else {
+-        print('📤 Sending text message through Bloc: ${event.content}');
+         _chatRepository.sendMessage(event.content, type: event.type);
+       }
+-    } catch (e) {
++    } catch (_) {
+       emit(ChatErrorState('Failed to send message: $e'));
+     }
+   }
+@@ -250,7 +228,6 @@
+     }
+ 
+     try {
+-      print('🏠 Creating new chat room for ad: ${event.adId}');
+       emit(ChatLoading());
+ 
+       // Ensure socket connected
+@@ -263,13 +240,11 @@
+       final roomId = await _chatRepository.createChatRoom(event.adId);
+ 
+       if (roomId != null) {
+-        print('✅ Chat room created successfully: $roomId');
+         emit(ChatRoomCreated(roomId));
+       } else {
+         emit(ChatErrorState('Failed to create chat room'));
+       }
+-    } catch (e) {
+-      print('❌ Error creating chat room: $e');
++    } catch (_) {
+       emit(ChatErrorState('Failed to create chat room: $e'));
+     }
+   }
+@@ -284,19 +259,16 @@
+ 
+     try {
+       emit(ChatLoading());
+-      print('💬 Sending offer for ad: ${event.adId}');
+ 
+       // 1️⃣ Ensure socket connection
+       final connected = await _chatRepository.connect();
+       if (!connected) throw Exception('Unable to connect to chat server');
+-      print('✅ Socket connected');
+ 
+       // 2️⃣ Send offer message (handles room creation, joining, and sending)
+       await _chatRepository.sendOfferMessage(event.adId, event.amount);
+ 
+       emit(ChatRoomJoined('', 'Offer sent successfully'));
+-    } catch (e) {
+-      print('❌ SendOffer failed: $e');
++    } catch (_) {
+       emit(ChatErrorState('Failed to send offer: $e'));
+     }
+   }
+@@ -311,7 +283,6 @@
+ 
+   void _onNewMessageReceived(
+       NewMessageReceived event, Emitter<ChatState> emit) {
+-    print('💬 New message received: ${event.message['content']}');
+     emit(NewMessageReceivedState(event.message,
+         roomId: _roomIdFromMessage(event.message)));
+   }
+--- a/lib/features/chat/ui/chat_debug_page.dart
++++ b/lib/features/chat/ui/chat_debug_page.dart
+@@ -28,7 +28,6 @@
+     setState(() {
+       _logs.add('${DateTime.now().toString().substring(11, 19)} $message');
+     });
+-    print(message);
+   }
+ 
+   Future<void> _checkConfiguration() async {
+@@ -84,7 +83,7 @@
+ 
+       await _chatRepository.connect();
+       _addLog('🔌 Connection request sent, waiting for response...');
+-    } catch (e) {
++    } catch (_) {
+       _addLog('💥 Connection error: $e');
+     }
+   }
+--- a/lib/features/chat/ui/chat_page.dart
++++ b/lib/features/chat/ui/chat_page.dart
+@@ -82,11 +82,6 @@
+   @override
+   void initState() {
+     super.initState();
+-    print('🚀 Chat page initialized for room: ${widget.roomId}');
+-    print('👤 Other user: ${widget.otherUserName}');
+-    print('🖼️ Profile pic: ${widget.otherUserProfilePic}');
+-    print('📞 Phone: ${widget.otherUserPhone}');
+-    print('📝 Ad title: ${widget.adTitle}');
+ 
+     // Get current user ID
+     _getCurrentUserId();
+@@ -103,13 +98,11 @@
+     // Join the room (socket) and load messages (HTTP) when page loads.
+     // Messages are loaded exactly once here; the ChatRoomJoined listener no
+     // longer dispatches a second LoadRoomMessages (it double-fetched).
+-    print('🚪 Dispatching JoinChatRoom event...');
+     context.read<ChatBloc>().add(JoinChatRoom(widget.roomId));
+ 
+     // Opening the room means the user has seen it — clear its unread badge.
+     context.read<ChatBloc>().add(MarkRoomRead(widget.roomId));
+ 
+-    print('📨 Dispatching LoadRoomMessages event...');
+     context.read<ChatBloc>().add(LoadRoomMessages(widget.roomId));
+ 
+     _stagedVoiceStateSub = _stagedVoicePlayer.playerStateStream.listen((state) {
+@@ -123,9 +116,7 @@
+     try {
+       final chatRepository = ChatRepository();
+       _currentUserId = await chatRepository.getCurrentUserId();
+-      print('👤 Current user ID in chat page: $_currentUserId');
+-    } catch (e) {
+-      print('❌ Error getting current user ID: $e');
++    } catch (_) {
+     }
+   }
+ 
+@@ -134,9 +125,8 @@
+     try {
+       final ad = await AddRepository().fetchAdDetail(widget.adId!);
+       if (mounted) setState(() => _adPrice = ad.price);
+-    } catch (e) {
++    } catch (_) {
+       // Non-fatal: the card simply falls back to showing the title only.
+-      print('⚠️ Could not load ad price for pinned card: $e');
+     }
+   }
+ 
+@@ -157,7 +147,6 @@
+ 
+   @override
+   Widget build(BuildContext context) {
+-    print('🏗️ Building chat page for room: ${widget.roomId}');
+     return PopScope(
+       canPop: false,
+       onPopInvokedWithResult: (didPop, _) {
+@@ -275,7 +264,6 @@
+           if (!mounted) return; // Check if widget is still mounted
+ 
+           if (state is ChatRoomJoined) {
+-            print('✅ Room joined successfully: ${state.roomId}');
+           } else if (state is MessagesLoaded) {
+             if (mounted) {
+               setState(() {
+@@ -283,7 +271,6 @@
+                 _messages = List.from(state.messages.reversed);
+               });
+             }
+-            print('✅ Messages loaded: ${state.messages.length} messages');
+ 
+             // Scroll to bottom after messages are loaded
+             if (mounted) {
+@@ -300,11 +287,8 @@
+           } else if (state is NewMessageReceivedState) {
+             // Ignore messages that belong to a different room.
+             if (state.roomId != null && state.roomId != widget.roomId) {
+-              print(
+-                  '↩️ Ignoring message for room ${state.roomId} (viewing ${widget.roomId})');
+               return;
+             }
+-            print('💬 New message received: ${state.message['content']}');
+             // Check if message already exists to prevent duplicates
+             final messageId = state.message['id'] ?? state.message['_id'];
+             final existingMessage =
+@@ -329,10 +313,8 @@
+                 });
+               }
+             } else {
+-              print('⚠️ Duplicate message detected, skipping: $messageId');
+             }
+           } else if (state is ChatErrorState) {
+-            print('❌ Chat error: ${state.error}');
+           }
+         },
+         child: BlocBuilder<ChatBloc, ChatState>(
+@@ -1212,7 +1194,7 @@
+         if (!mounted) return;
+         setState(() => _voiceRecordDurationSeconds += 1);
+       });
+-    } catch (e) {
++    } catch (_) {
+       if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text('Could not start recording: $e')),
+@@ -1329,7 +1311,7 @@
+         _stagedImagesBytes.addAll(toAddBytes);
+         _stagedImagesMimeTypes.addAll(toAddMimes);
+       });
+-    } catch (e) {
++    } catch (_) {
+       if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text('Failed to select image: $e')),
+@@ -1371,7 +1353,6 @@
+     final text = _messageController.text.trim();
+     if (text.isEmpty) return;
+ 
+-    print('📤 Sending message: $text');
+     _messageController.clear();
+ 
+     // Dispatch event to Bloc
+@@ -1385,7 +1366,6 @@
+   }
+ 
+   void _handleBackNavigation() {
+-    print('🔙 Navigating back from chat page');
+     // Pop to wherever we came from (rooms list, ad detail, ...); fall back
+     // to the rooms list when this page is the root (deep link / context.go).
+     if (context.canPop()) {
+@@ -1438,7 +1418,7 @@
+       if (mounted) {
+         context.push('/add-detail-page', extra: ad);
+       }
+-    } catch (e) {
++    } catch (_) {
+       // Close loading indicator if still open
+       if (mounted) {
+         Navigator.of(context).pop();
+@@ -1456,13 +1436,11 @@
+           ),
+         );
+       }
+-      print('❌ Error fetching ad details: $e');
+     }
+   }
+ 
+   @override
+   void dispose() {
+-    print('🧹 Disposing chat page for room: ${widget.roomId}');
+     _voiceRecordTimer?.cancel();
+     _voiceRecorder.dispose();
+     _stagedVoiceStateSub?.cancel();
+@@ -1608,7 +1586,7 @@
+         });
+         widget.onPlayingUrlChanged(widget.url);
+       }
+-    } catch (e) {
++    } catch (_) {
+       _handlePlaybackError();
+     }
+   }
+--- a/lib/features/chat/ui/chat_rooms_page.dart
++++ b/lib/features/chat/ui/chat_rooms_page.dart
+@@ -41,7 +41,6 @@
+     // Store ChatBloc reference
+     _chatBloc = context.read<ChatBloc>();
+     // Initialize chat when page loads - use addPostFrameCallback to ensure context is ready
+-    print('🚀 Chat rooms page initialized');
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+       if (mounted && !_hasInitialized) {
+         _hasInitialized = true;
+@@ -49,7 +48,6 @@
+         // This fixes the issue where the bloc might be stuck in Loading or Error state
+         // from a previous session when the app is reopened
+         final currentState = _chatBloc.state;
+-        print('📊 Current chat state: ${currentState.runtimeType}');
+ 
+         if (currentState is ChatErrorState ||
+             currentState is ChatInitial ||
+@@ -57,22 +55,17 @@
+           // If in error, initial, or loading state (might be stuck from previous session),
+           // do a full initialization to ensure WebSocket connection is established
+           // This is especially important after app restart
+-          print(
+-              '🔄 Full initialization needed (state: ${currentState.runtimeType})');
+           _chatBloc.add(InitializeChat());
+         } else if (currentState is MessagesLoaded ||
+             currentState is ChatRoomJoined ||
+             currentState is ChatRoomCreated ||
+             currentState is NewMessageReceivedState) {
+           // When returning from chat page, these states indicate we need to reload rooms
+-          print('🔄 Returning from chat page, reloading chat rooms');
+           _chatBloc.add(LoadChatRooms());
+         } else if (currentState is! ChatRoomsSuccess) {
+           // For any other state, reload rooms
+-          print('🔄 Loading chat rooms');
+           _chatBloc.add(LoadChatRooms());
+         } else {
+-          print('✅ Chat rooms already loaded');
+         }
+       }
+     });
+@@ -92,10 +85,8 @@
+             currentState is ChatRoomJoined ||
+             currentState is ChatRoomCreated ||
+             currentState is NewMessageReceivedState) {
+-          print('🔄 Page visible again, reloading chat rooms');
+           _chatBloc.add(LoadChatRooms());
+         } else if (currentState is ChatErrorState) {
+-          print('🔄 Error state detected, attempting to reload');
+           _chatBloc.add(LoadChatRooms());
+         }
+       }
+@@ -111,7 +102,6 @@
+       return;
+     }
+     _lastSilentReload = now;
+-    print('🔄 Silent chat rooms reload');
+     _chatBloc.add(LoadChatRooms());
+   }
+ 
+@@ -147,15 +137,11 @@
+                 // background so the preview/unread badge catches up.
+                 _silentReloadThrottled();
+               } else if (state is ChatRoomJoined) {
+-                print('✅ Room joined successfully: ${state.roomId}');
+ 
+                 // Load messages for the joined room
+                 context.read<ChatBloc>().add(LoadRoomMessages(state.roomId));
+               } else if (state is MessagesLoaded) {
+-                print(
+-                    '✅ Messages loaded: ${state.messages.length} messages for room ${state.roomId}');
+               } else if (state is ChatErrorState) {
+-                print('❌ Error: ${state.error}');
+               }
+             },
+             child: BlocBuilder<ChatBloc, ChatState>(
+@@ -347,7 +333,6 @@
+     return RefreshIndicator(
+       color: AppColors.primaryColor,
+       onRefresh: () async {
+-        print('🔄 Manual refresh triggered');
+         context.read<ChatBloc>().add(LoadChatRooms());
+       },
+       child: ListView.separated(
+@@ -637,7 +622,6 @@
+         .toString()
+         .trim();
+     if (roomId.isEmpty) {
+-      print('❌ Cannot open chat: missing room id in $room');
+       _showOpenError('This conversation can’t be opened right now.');
+       return;
+     }
+@@ -662,11 +646,6 @@
+     final adId = room['adId'] as String?;
+     final adTitle = room['adTitle'] as String?;
+ 
+-    print('🖱️ Navigating to chat page for room: $roomId');
+-    print('👤 Other user: $otherUserName');
+-    print('🏷️ Ad ID: $adId');
+-    print('📝 Ad Title: $adTitle');
+-
+     // Build query parameters
+     final queryParams = <String, String>{
+       'name': otherUserName,
+@@ -702,8 +681,7 @@
+ 
+     try {
+       context.push('/chat/${Uri.encodeComponent(roomId)}?$queryString');
+-    } catch (e) {
+-      print('❌ Failed to open chat room $roomId: $e');
++    } catch (_) {
+       _showOpenError('Could not open this conversation. Please try again.');
+     }
+   }
+@@ -735,7 +713,6 @@
+   }
+ 
+   void _handleBackNavigation() {
+-    print('🔙 Navigating back from chat rooms');
+     // Pop to wherever we came from; fall back to home when this page is the
+     // root of the stack (e.g. opened via context.go or a deep link).
+     if (context.canPop()) {
+--- a/lib/features/home/ad_edit/bloc/ad_edit_bloc.dart
++++ b/lib/features/home/ad_edit/bloc/ad_edit_bloc.dart
+@@ -41,7 +41,6 @@
+             // print('   Location: ${updated.location}');
+             // print('   Video Link: ${updated.link}');
+             // print('   Images: ${updated.images.length} images');
+-            print('   Full Ad JSON: ${updated.toJson()}');
+ 
+             emit(AdEditState.success(updated));
+           } catch (e) {
+--- a/lib/features/home/bloc/advertisement_bloc.dart
++++ b/lib/features/home/bloc/advertisement_bloc.dart
+@@ -99,7 +99,7 @@
+       final result = await repository.fetchAllAds(page: _currentPage);
+       emit(AdvertisementState.listingsLoaded(
+           listings: result.data, hasMore: result.hasNext));
+-    } catch (e) {
++    } catch (_) {
+       // Emit user-friendly message instead of raw exception
+       emit(AdvertisementState.error(
+           "Unable to load recommendations. Please try again later."));
+@@ -121,7 +121,6 @@
+           // (a) More pages within the location radius. $geoNear sorts
+           // nearest-first, so each page returns progressively farther ads.
+           _currentPage += 1;
+-          print("📥 Location page $_currentPage @ ${_locationRadiusKm}km");
+           final result = await repository.fetchAllAds(
+             page: _currentPage,
+             latitude: _locationLatitude,
+@@ -137,7 +136,6 @@
+           // (b) Location feed exhausted → start the full all-ads fallback feed.
+           _locationFallbackToAll = true;
+           _allAdsPage = 1;
+-          print("📥 Location exhausted → all-ads fallback page $_allAdsPage");
+           final result = await repository.fetchAllAds(page: _allAdsPage);
+           emit(ListingsLoaded(
+             listings: _mergeDedupe(currentState.listings, result.data),
+@@ -146,7 +144,6 @@
+         } else if (_locationFallbackToAll) {
+           // (d) Continue the all-ads fallback feed.
+           _allAdsPage += 1;
+-          print("📥 All-ads fallback page $_allAdsPage");
+           final result = await repository.fetchAllAds(page: _allAdsPage);
+           emit(ListingsLoaded(
+             listings: _mergeDedupe(currentState.listings, result.data),
+@@ -155,7 +152,6 @@
+         } else {
+           // (e) Normal all-ads / filtered pagination (unchanged behaviour).
+           _currentPage += 1;
+-          print("📥 Fetching page $_currentPage");
+           final result = await repository.fetchAllAds(
+               page: _currentPage,
+               category: _categoryId,
+@@ -175,14 +171,12 @@
+               maxBedrooms: _maxBedrooms,
+               minArea: _minArea,
+               maxArea: _maxArea);
+-          print(
+-              "📦 Received ${result.data.length} ads | hasNext: ${result.hasNext}");
+           emit(ListingsLoaded(
+             listings: [...currentState.listings, ...result.data],
+             hasMore: result.hasNext,
+           ));
+         }
+-      } catch (e) {
++      } catch (_) {
+         // Emit user-friendly message instead of raw exception
+         emit(AdvertisementState.error(
+             "Unable to load more recommendations. Please try again later."));
+@@ -229,7 +223,7 @@
+         listings: result.data,
+         hasMore: result.hasNext,
+       ));
+-    } catch (e) {
++    } catch (_) {
+       // Emit user-friendly message instead of raw exception
+       emit(AdvertisementState.error(
+           "Unable to load recommendations. Please try again later."));
+@@ -288,7 +282,7 @@
+         listings: result.data,
+         hasMore: result.hasNext,
+       ));
+-    } catch (e) {
++    } catch (_) {
+       // Emit user-friendly message instead of raw exception
+       emit(AdvertisementState.error(
+           "Unable to load recommendations. Please try again later."));
+@@ -358,7 +352,7 @@
+       // to the full all-ads feed once nearby results are exhausted.
+       emit(AdvertisementState.listingsLoaded(
+           listings: result.data, hasMore: true));
+-    } catch (e) {
++    } catch (_) {
+       // Emit user-friendly message instead of raw exception
+       emit(AdvertisementState.error(
+           "Unable to load recommendations. Please try again later."));
+@@ -377,8 +371,6 @@
+     _locationLongitude = null;
+ 
+     try {
+-      print(
+-          '🔍 Search API: /v2/ads/list page=$_searchPage limit=20 search="$query"');
+       final result = await repository.fetchAllAds(
+         page: _searchPage,
+         limit: 20,
+@@ -386,7 +378,7 @@
+       );
+       emit(AdvertisementState.listingsLoaded(
+           listings: result.data, hasMore: result.hasNext));
+-    } catch (e) {
++    } catch (_) {
+       emit(AdvertisementState.error(
+           "Unable to load recommendations. Please try again later."));
+     }
+@@ -402,8 +394,6 @@
+       _isSearchFetching = true;
+       try {
+         _searchPage += 1;
+-        print(
+-            '🔍 Search API: /v2/ads/list page=$_searchPage limit=20 search="${_searchQuery!}"');
+         final result = await repository.fetchAllAds(
+           page: _searchPage,
+           limit: 20,
+@@ -411,7 +401,7 @@
+         );
+         final updatedList = [...currentState.listings, ...result.data];
+         emit(ListingsLoaded(listings: updatedList, hasMore: result.hasNext));
+-      } catch (e) {
++      } catch (_) {
+         emit(AdvertisementState.error(
+             "Unable to load more recommendations. Please try again later."));
+       } finally {
+@@ -452,7 +442,7 @@
+       );
+       emit(AdvertisementState.listingsLoaded(
+           listings: result.data, hasMore: result.hasNext));
+-    } catch (e) {
++    } catch (_) {
+       // Emit user-friendly message instead of raw exception
+       emit(AdvertisementState.error(
+           "Unable to load recommendations. Please try again later."));
+--- a/lib/features/home/report_ad_bloc/report_ad_bloc.dart
++++ b/lib/features/home/report_ad_bloc/report_ad_bloc.dart
+@@ -17,12 +17,6 @@
+       await event.when(
+         reportAd: (reportedUserId, reason, description, relatedAd,
+             evidenceUrls) async {
+-          print('🚀 ReportAdBloc: Starting report process');
+-          print('🚀 ReportAdBloc: reportedUserId: $reportedUserId');
+-          print('🚀 ReportAdBloc: reason: $reason');
+-          print('🚀 ReportAdBloc: description: $description');
+-          print('🚀 ReportAdBloc: relatedAd: $relatedAd');
+-          print('🚀 ReportAdBloc: evidenceUrls: $evidenceUrls');
+ 
+           emit(const ReportAdState.reporting());
+           try {
+@@ -34,14 +28,9 @@
+               evidenceUrls: evidenceUrls,
+             );
+ 
+-            print('🚀 ReportAdBloc: Calling reportRepository.reportAd()');
+             final createdReport = await reportRepository.reportAd(reportData);
+-            print(
+-                '🚀 ReportAdBloc: Report created successfully: ${createdReport.id}');
+             emit(ReportAdState.reported(createdReport));
+           } catch (e) {
+-            print('🚀 ReportAdBloc: Error occurred: $e');
+-            print('🚀 ReportAdBloc: Error type: ${e.runtimeType}');
+             emit(ReportAdState.error(e.toString()));
+           }
+         },
+--- a/lib/features/home/services/chat_service.dart
++++ b/lib/features/home/services/chat_service.dart
+@@ -13,13 +13,6 @@
+     required String adPosterName,
+     required String otherUserId,
+   }) async {
+-    print('💬 Starting direct chat flow...');
+-    print('📋 Chat details:');
+-    print('   Ad ID: $adId');
+-    print('   Ad Title: $adTitle');
+-    print('   Ad Poster: $adPosterName');
+-    print('   Other User ID: $otherUserId');
+-    print('   Flow started at: ${DateTime.now().toIso8601String()}');
+ 
+     // Show loading indicator
+     _showLoadingDialog(context, 'Checking chat room...');
+@@ -33,8 +26,7 @@
+         adTitle: adTitle,
+         adPosterName: adPosterName,
+       );
+-    } catch (e) {
+-      print('💥 Error in chat flow: $e');
++    } catch (_) {
+       // Close loading dialog (guarded)
+       _closeLoadingDialog(context);
+ 
+@@ -48,20 +40,10 @@
+       BuildContext context, String adId, String otherUserId,
+       {required String adTitle, required String adPosterName}) async {
+     try {
+-      print('🔍 Starting room existence check...');
+-      print('📋 Room check details:');
+-      print('   Ad ID: $adId');
+-      print('   Other User ID: $otherUserId');
+-      print('   Check timestamp: ${DateTime.now().toIso8601String()}');
+ 
+       // Import the chat API service
+       final chatApiService = ChatApiService();
+-      print('🌐 Calling API: /chats/rooms/check/$adId/$otherUserId');
+       final result = await chatApiService.checkRoomExists(adId, otherUserId);
+-
+-      print('📡 API response received:');
+-      print('   Success: ${result['success']}');
+-      print('   Data: ${result['data']}');
+ 
+       // Close loading dialog (guarded)
+       _closeLoadingDialog(context);
+@@ -70,12 +52,6 @@
+         final roomId = result['data']?['roomId'];
+         final initiatorId = result['data']?['initiatorId'];
+         final adIdFromResult = result['data']?['adId'];
+-
+-        print('✅ Room exists with details:');
+-        print('   Room ID: $roomId');
+-        print('   Initiator ID: $initiatorId');
+-        print('   Ad ID: $adIdFromResult');
+-        print('   Status: Existing room found');
+ 
+         // Join the existing room
+         await _joinRoom(
+@@ -88,8 +64,6 @@
+           isNewRoom: false,
+         );
+       } else {
+-        print('❌ No room exists for this ad and user combination');
+-        print('🔄 Proceeding to create new room...');
+         // Create a new room since none exists
+         await _createRoomAndJoin(
+           context,
+@@ -99,13 +73,7 @@
+           adPosterName: adPosterName,
+         );
+       }
+-    } catch (e) {
+-      print('💥 Error checking room existence: $e');
+-      print('📋 Error details:');
+-      print('   Error type: ${e.runtimeType}');
+-      print('   Error message: $e');
+-      print('   Ad ID: $adId');
+-      print('   Other User ID: $otherUserId');
++    } catch (_) {
+       rethrow;
+     }
+   }
+@@ -115,39 +83,21 @@
+       BuildContext context, String adId, String otherUserId,
+       {required String adTitle, required String adPosterName}) async {
+     try {
+-      print('🏠 Starting room creation process...');
+-      print('📋 Room creation details:');
+-      print('   Ad ID: $adId');
+-      print('   Other User ID: $otherUserId');
+-      print('   Timestamp: ${DateTime.now().toIso8601String()}');
+ 
+       // Get chat repository
+       final chatRepository = ChatRepository();
+-      print('🔗 Chat repository initialized');
+ 
+       // Connect to chat service
+-      print('🔌 Attempting to connect to chat service...');
+       final connected = await chatRepository.connect();
+       if (!connected) {
+-        print('❌ Failed to connect to chat service');
+         _showErrorDialog(context, 'Failed to connect to chat service');
+         return;
+       }
+-      print('✅ Successfully connected to chat service');
+ 
+       // Create room for the ad
+-      print('🏗️ Creating chat room for ad: $adId');
+       final roomId = await chatRepository.createChatRoom(adId);
+ 
+       if (roomId != null) {
+-        print('🎉 Room created successfully!');
+-        print('📊 Newly created room details:');
+-        print('   Room ID: $roomId');
+-        print('   Ad ID: $adId');
+-        print('   Other User ID: $otherUserId');
+-        print('   Created At: ${DateTime.now().toIso8601String()}');
+-        print('   Status: Active');
+-        print('   Participants: Current user + Other user ($otherUserId)');
+ 
+         // Join the newly created room
+         await _joinRoom(
+@@ -160,20 +110,12 @@
+           isNewRoom: true,
+         );
+       } else {
+-        print('❌ Room creation failed - no room ID returned');
+         _showErrorDialog(context, 'Failed to create chat room');
+       }
+-    } catch (e) {
++    } catch (_) {
+       // Close loading dialog if still visible (guarded — normally already
+       // closed after the room check; an unguarded pop removed the page)
+       _closeLoadingDialog(context);
+-      print('💥 Error creating room: $e');
+-      print('📋 Error details:');
+-      print('   Error type: ${e.runtimeType}');
+-      print('   Error message: $e');
+-      print('   Ad ID: $adId');
+-      print('   Other User ID: $otherUserId');
+-      print('   Timestamp: ${DateTime.now().toIso8601String()}');
+       _showErrorDialog(context, 'Failed to create room: $e');
+     }
+   }
+@@ -189,13 +131,6 @@
+     required String adPosterName,
+   }) async {
+     try {
+-      print('🚪 Attempting to join room: $roomId');
+-      print('📋 Join details:');
+-      print('   Room ID: $roomId');
+-      print('   Ad ID: $adId');
+-      print('   Other User ID: $otherUserId');
+-      print('   Room Type: ${isNewRoom ? "Newly Created" : "Existing"}');
+-      print('   Join attempt at: ${DateTime.now().toIso8601String()}');
+ 
+       // Get chat repository
+       final chatRepository = ChatRepository();
+@@ -204,8 +139,6 @@
+       await chatRepository.joinChatRoom(roomId);
+ 
+       // Single proper log for room join result
+-      print(
+-          '✅ ROOM JOIN SUCCESS - Room ID: $roomId | Status: Joined | Type: ${isNewRoom ? "New" : "Existing"} | Timestamp: ${DateTime.now().toIso8601String()}');
+ 
+       // Navigate to chat page with all necessary parameters
+       if (context.mounted) {
+@@ -219,13 +152,8 @@
+             .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+             .join('&');
+         context.push('/chat/$roomId?$queryString');
+-        print('✅ Navigated to chat page for room: $roomId');
+-        print('👤 Other user name: $adPosterName');
+-        print('📝 Ad title: $adTitle');
+-      }
+-    } catch (e) {
+-      print(
+-          '❌ ROOM JOIN FAILED - Room ID: $roomId | Error: $e | Timestamp: ${DateTime.now().toIso8601String()}');
++      }
++    } catch (_) {
+ 
+       // Show error dialog with delay to ensure context is stable
+       await Future.delayed(const Duration(milliseconds: 500));
+@@ -233,14 +161,8 @@
+       // Check if context is still mounted
+       if (context.mounted) {
+         _showErrorDialog(context, 'Failed to join room: $e');
+-        print('❌ Error popup displayed for room: $roomId');
+-      } else {
+-        print(
+-            '❌ Context not mounted, cannot show error popup for room: $roomId');
++      } else {
+         // Fallback: Print error to console
+-        print(
+-            '🚨 FALLBACK: Room join failed but error popup could not be shown');
+-        print('🚨 Room ID: $roomId | Error: $e');
+       }
+     }
+   }
+@@ -276,7 +198,6 @@
+ 
+   /// Show error dialog
+   static void _showErrorDialog(BuildContext context, String message) {
+-    print('🎯 Attempting to show error dialog: $message');
+ 
+     // Ensure we're on the main thread
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+@@ -294,9 +215,7 @@
+             ],
+           ),
+         );
+-        print('✅ Error dialog shown successfully');
+-      } else {
+-        print('❌ Context not mounted when trying to show error dialog');
++      } else {
+       }
+     });
+   }
+--- a/lib/features/home/services/offer_service.dart
++++ b/lib/features/home/services/offer_service.dart
+@@ -15,20 +15,12 @@
+     required String otherUserId,
+     int? adPrice,
+   }) async {
+-    print('💰 Starting offer flow...');
+-    print('📋 Offer details:');
+-    print('   Ad ID: $adId');
+-    print('   Ad Title: $adTitle');
+-    print('   Ad Poster: $adPosterName');
+-    print('   Other User ID: $otherUserId');
+-    print('   Flow started at: ${DateTime.now().toIso8601String()}');
+ 
+     // Store ScaffoldMessenger from the page context (more stable than dialog context)
+     ScaffoldMessengerState? pageScaffoldMessenger;
+     try {
+       pageScaffoldMessenger = ScaffoldMessenger.maybeOf(context);
+-    } catch (e) {
+-      print('⚠️ Could not get ScaffoldMessenger from page context: $e');
++    } catch (_) {
+     }
+ 
+     // Show the offer popup
+@@ -39,8 +31,6 @@
+       adPosterName: adPosterName,
+       adPrice: adPrice,
+       onOfferSubmitted: (amount) async {
+-        print('💵 Offer submitted with amount: ₹${amount.toStringAsFixed(0)}');
+-        print('🔄 Starting room check and creation flow...');
+ 
+         // Close the popup
+         Navigator.of(context).pop();
+@@ -53,8 +43,7 @@
+           // Pass the ScaffoldMessenger reference through the chain
+           await _checkRoomExists(
+               context, adId, otherUserId, amount, pageScaffoldMessenger);
+-        } catch (e) {
+-          print('💥 Error in offer flow: $e');
++        } catch (_) {
+           // Close loading dialog (guarded — never pops a page route)
+           _closeLoadingDialog(context);
+ 
+@@ -73,20 +62,10 @@
+       double offerAmount,
+       ScaffoldMessengerState? scaffoldMessenger) async {
+     try {
+-      print('🔍 Starting room existence check...');
+-      print('📋 Room check details:');
+-      print('   Ad ID: $adId');
+-      print('   Other User ID: $otherUserId');
+-      print('   Check timestamp: ${DateTime.now().toIso8601String()}');
+ 
+       // Import the chat API service
+       final chatApiService = ChatApiService();
+-      print('🌐 Calling API: /chats/rooms/check/$adId/$otherUserId');
+       final result = await chatApiService.checkRoomExists(adId, otherUserId);
+-
+-      print('📡 API response received:');
+-      print('   Success: ${result['success']}');
+-      print('   Data: ${result['data']}');
+ 
+       // Close loading dialog (guarded)
+       _closeLoadingDialog(context);
+@@ -96,29 +75,15 @@
+         final initiatorId = result['data']?['initiatorId'];
+         final adIdFromResult = result['data']?['adId'];
+ 
+-        print('✅ Room exists with details:');
+-        print('   Room ID: $roomId');
+-        print('   Initiator ID: $initiatorId');
+-        print('   Ad ID: $adIdFromResult');
+-        print('   Status: Existing room found');
+-
+         // Join the existing room
+         await _joinRoom(context, roomId, adId, otherUserId, offerAmount,
+             isNewRoom: false, scaffoldMessenger: scaffoldMessenger);
+       } else {
+-        print('❌ No room exists for this ad and user combination');
+-        print('🔄 Proceeding to create new room...');
+         // Create a new room since none exists
+         await _createRoomAndJoin(context, adId, otherUserId, offerAmount,
+             scaffoldMessenger: scaffoldMessenger);
+       }
+-    } catch (e) {
+-      print('💥 Error checking room existence: $e');
+-      print('📋 Error details:');
+-      print('   Error type: ${e.runtimeType}');
+-      print('   Error message: $e');
+-      print('   Ad ID: $adId');
+-      print('   Other User ID: $otherUserId');
++    } catch (_) {
+       rethrow;
+     }
+   }
+@@ -128,59 +93,33 @@
+       BuildContext context, String adId, String otherUserId, double offerAmount,
+       {ScaffoldMessengerState? scaffoldMessenger}) async {
+     try {
+-      print('🏠 Starting room creation process...');
+-      print('📋 Room creation details:');
+-      print('   Ad ID: $adId');
+-      print('   Other User ID: $otherUserId');
+-      print('   Timestamp: ${DateTime.now().toIso8601String()}');
+ 
+       // Get chat repository
+       final chatRepository = ChatRepository();
+-      print('🔗 Chat repository initialized');
+ 
+       // Connect to chat service
+-      print('🔌 Attempting to connect to chat service...');
+       final connected = await chatRepository.connect();
+       if (!connected) {
+-        print('❌ Failed to connect to chat service');
+         _showErrorDialog(context, 'Failed to connect to chat service');
+         return;
+       }
+-      print('✅ Successfully connected to chat service');
+ 
+       // Create room for the ad
+-      print('🏗️ Creating chat room for ad: $adId');
+       final roomId = await chatRepository.createChatRoom(adId);
+ 
+       if (roomId != null) {
+-        print('🎉 Room created successfully!');
+-        print('📊 Newly created room details:');
+-        print('   Room ID: $roomId');
+-        print('   Ad ID: $adId');
+-        print('   Other User ID: $otherUserId');
+-        print('   Created At: ${DateTime.now().toIso8601String()}');
+-        print('   Status: Active');
+-        print('   Participants: Current user + Other user ($otherUserId)');
+ 
+         // Join the newly created room (no loading dialog shown)
+         await _joinRoom(context, roomId, adId, otherUserId, offerAmount,
+             isNewRoom: true, scaffoldMessenger: scaffoldMessenger);
+       } else {
+-        print('❌ Room creation failed - no room ID returned');
+         _showErrorDialog(context, 'Failed to create chat room');
+       }
+-    } catch (e) {
++    } catch (_) {
+       // Close loading dialog if still visible (guarded — it was normally
+       // closed already after the room check, so an unguarded pop here used
+       // to remove the underlying page)
+       _closeLoadingDialog(context);
+-      print('💥 Error creating room: $e');
+-      print('📋 Error details:');
+-      print('   Error type: ${e.runtimeType}');
+-      print('   Error message: $e');
+-      print('   Ad ID: $adId');
+-      print('   Other User ID: $otherUserId');
+-      print('   Timestamp: ${DateTime.now().toIso8601String()}');
+       _showErrorDialog(context, 'Failed to create room: $e');
+     }
+   }
+@@ -191,13 +130,6 @@
+       {required bool isNewRoom,
+       ScaffoldMessengerState? scaffoldMessenger}) async {
+     try {
+-      print('🚪 Attempting to join room: $roomId');
+-      print('📋 Join details:');
+-      print('   Room ID: $roomId');
+-      print('   Ad ID: $adId');
+-      print('   Other User ID: $otherUserId');
+-      print('   Room Type: ${isNewRoom ? "Newly Created" : "Existing"}');
+-      print('   Join attempt at: ${DateTime.now().toIso8601String()}');
+ 
+       // Get chat repository
+       final chatRepository = ChatRepository();
+@@ -206,16 +138,12 @@
+       await chatRepository.joinChatRoom(roomId);
+ 
+       // Single proper log for room join result
+-      print(
+-          '✅ ROOM JOIN SUCCESS - Room ID: $roomId | Status: Joined | Type: ${isNewRoom ? "New" : "Existing"} | Timestamp: ${DateTime.now().toIso8601String()}');
+ 
+       // Send message to the room after successful join
+       await _sendMessageToRoom(
+           context, roomId, adId, otherUserId, offerAmount, isNewRoom,
+           scaffoldMessenger: scaffoldMessenger);
+-    } catch (e) {
+-      print(
+-          '❌ ROOM JOIN FAILED - Room ID: $roomId | Error: $e | Timestamp: ${DateTime.now().toIso8601String()}');
++    } catch (_) {
+ 
+       // Show error dialog with delay to ensure context is stable
+       await Future.delayed(const Duration(milliseconds: 500));
+@@ -223,14 +151,8 @@
+       // Check if context is still mounted
+       if (context.mounted) {
+         _showErrorDialog(context, 'Failed to join room: $e');
+-        print('❌ Error popup displayed for room: $roomId');
+       } else {
+-        print(
+-            '❌ Context not mounted, cannot show error popup for room: $roomId');
+         // Fallback: Print error to console
+-        print(
+-            '🚨 FALLBACK: Room join failed but error popup could not be shown');
+-        print('🚨 Room ID: $roomId | Error: $e');
+       }
+     }
+   }
+@@ -251,20 +173,11 @@
+         if (scaffoldMessenger == null) {
+           scaffoldMessenger = ScaffoldMessenger.maybeOf(context);
+         }
+-      } catch (e) {
+-        print('⚠️ Could not get ScaffoldMessenger: $e');
++      } catch (_) {
+       }
+     }
+ 
+     try {
+-      print('📤 Sending message to room: $roomId');
+-      print('📋 Message details:');
+-      print('   Room ID: $roomId');
+-      print('   Ad ID: $adId');
+-      print('   Other User ID: $otherUserId');
+-      print('   Offer Amount: ₹${offerAmount.toStringAsFixed(0)}');
+-      print('   Room Type: ${isNewRoom ? "Newly Created" : "Existing"}');
+-      print('   Message attempt at: ${DateTime.now().toIso8601String()}');
+ 
+       // Get chat repository
+       final chatRepository = ChatRepository();
+@@ -273,8 +186,6 @@
+       final messageContent =
+           'Hello! I\'m interested in your ad and would like to make an offer of ₹${offerAmount.toStringAsFixed(0)}.';
+ 
+-      print('💬 Message content: $messageContent');
+-
+       // Send the message
+       chatRepository.sendMessage(messageContent, type: 'text');
+ 
+@@ -282,11 +193,8 @@
+       await Future.delayed(const Duration(milliseconds: 1000));
+ 
+       // Single proper log for message send result
+-      print(
+-          '✅ MESSAGE SENT SUCCESS - Room ID: $roomId | Status: Sent | Type: ${isNewRoom ? "New" : "Existing"} | Timestamp: ${DateTime.now().toIso8601String()}');
+ 
+       // Show success snackbar using postFrameCallback to ensure context is stable
+-      print('🎉 Showing message success snackbar for room: $roomId');
+ 
+       // Show snackbar using the stored ScaffoldMessenger reference
+       // Use addPostFrameCallback to ensure we're on the main thread
+@@ -324,7 +232,6 @@
+                 duration: const Duration(seconds: 3),
+               ),
+             );
+-            print('✅ Message success snackbar displayed for room: $roomId');
+           } else {
+             // Fallback: Try to get ScaffoldMessenger from root navigator
+             try {
+@@ -373,30 +280,15 @@
+                     duration: const Duration(seconds: 3),
+                   ),
+                 );
+-                print(
+-                    '✅ Message success snackbar displayed via fallback for room: $roomId');
+               } else {
+-                print('❌ ScaffoldMessenger not available for room: $roomId');
+-                print(
+-                    '🚨 FALLBACK: Message sent successfully but snackbar could not be shown');
+               }
+-            } catch (e) {
+-              print('❌ Error in fallback snackbar: $e');
+-              print(
+-                  '🚨 FALLBACK: Message sent successfully but snackbar could not be shown');
++            } catch (_) {
+             }
+           }
+-        } catch (e) {
+-          print('❌ Error showing snackbar: $e');
+-          print(
+-              '🚨 FALLBACK: Message sent successfully but snackbar could not be shown');
+-          print(
+-              '🚨 Room ID: $roomId | Status: Message Sent | Type: ${isNewRoom ? "New" : "Existing"}');
++        } catch (_) {
+         }
+       });
+-    } catch (e) {
+-      print(
+-          '❌ MESSAGE SEND FAILED - Room ID: $roomId | Error: $e | Timestamp: ${DateTime.now().toIso8601String()}');
++    } catch (_) {
+ 
+       // Show error dialog with delay to ensure context is stable
+       await Future.delayed(const Duration(milliseconds: 500));
+@@ -404,14 +296,8 @@
+       // Check if context is still mounted
+       if (context.mounted) {
+         _showMessageErrorDialog(context, 'Failed to send message: $e');
+-        print('❌ Message error popup displayed for room: $roomId');
+       } else {
+-        print(
+-            '❌ Context not mounted, cannot show message error popup for room: $roomId');
+         // Fallback: Print error to console
+-        print(
+-            '🚨 FALLBACK: Message send failed but error popup could not be shown');
+-        print('🚨 Room ID: $roomId | Error: $e');
+       }
+     }
+   }
+@@ -419,7 +305,6 @@
+   /// Show room joined dialog
+   static void _showRoomJoinedDialog(
+       BuildContext context, String roomId, String adId, bool isNewRoom) {
+-    print('🎯 Attempting to show room joined dialog for room: $roomId');
+ 
+     // Ensure we're on the main thread
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+@@ -533,17 +418,13 @@
+             ],
+           ),
+         );
+-        print('✅ Room joined dialog shown successfully for room: $roomId');
+       } else {
+-        print(
+-            '❌ Context not mounted when trying to show room joined dialog for room: $roomId');
+       }
+     });
+   }
+ 
+   /// Show message error dialog
+   static void _showMessageErrorDialog(BuildContext context, String message) {
+-    print('🎯 Attempting to show message error dialog: $message');
+ 
+     // Ensure we're on the main thread
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+@@ -654,9 +535,7 @@
+             ],
+           ),
+         );
+-        print('✅ Message error dialog shown successfully');
+       } else {
+-        print('❌ Context not mounted when trying to show message error dialog');
+       }
+     });
+   }
+@@ -724,7 +603,6 @@
+ 
+   /// Show error dialog
+   static void _showErrorDialog(BuildContext context, String message) {
+-    print('🎯 Attempting to show error dialog: $message');
+ 
+     // Ensure we're on the main thread
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+@@ -742,9 +620,7 @@
+             ],
+           ),
+         );
+-        print('✅ Error dialog shown successfully');
+       } else {
+-        print('❌ Context not mounted when trying to show error dialog');
+       }
+     });
+   }
+--- a/lib/features/home/ui/add_detail_page.dart
++++ b/lib/features/home/ui/add_detail_page.dart
+@@ -896,12 +896,10 @@
+   }
+ 
+   Widget _buildVideoItem(String videoUrl) {
+-    print('🎥 Building video item with URL: $videoUrl');
+     // Store callback for video completion
+     _onVideoCompleteCallbacks[videoUrl] = _onVideoComplete;
+     return GestureDetector(
+       onTap: () {
+-        print('🎥 Video tapped, opening full screen...');
+         _openVideoFullScreen(context, videoUrl);
+       },
+       behavior: HitTestBehavior.opaque,
+@@ -964,7 +962,6 @@
+               Positioned.fill(
+                 child: GestureDetector(
+                   onTap: () {
+-                    print('🎥 Video overlay tapped, opening full screen...');
+                     _openVideoFullScreen(context, videoUrl);
+                   },
+                   behavior: HitTestBehavior.opaque,
+@@ -975,8 +972,6 @@
+                         color: Colors.transparent,
+                         child: InkWell(
+                           onTap: () {
+-                            print(
+-                                '🎥 Play button tapped, opening full screen...');
+                             _openVideoFullScreen(context, videoUrl);
+                           },
+                           borderRadius: BorderRadius.circular(50),
+@@ -2425,14 +2420,11 @@
+   @override
+   void initState() {
+     super.initState();
+-    print(
+-        '🎥 _VideoPlayerWidget initState called with URL: ${widget.videoUrl}');
+     _initializeVideo();
+   }
+ 
+   Future<void> _initializeVideo() async {
+     try {
+-      print('🎥 Initializing video: ${widget.videoUrl}');
+ 
+       // Validate URL
+       if (widget.videoUrl.isEmpty) {
+@@ -2450,19 +2442,13 @@
+         throw Exception('Invalid video URL format: $cleanUrl');
+       }
+ 
+-      print('🎥 Creating VideoPlayerController with URI: $uri');
+-
+       // Skip URL accessibility test as it often fails unnecessarily
+       // and video player can handle network issues better
+-      print(
+-          '🎥 Skipping URL accessibility test - proceeding with video initialization');
+ 
+       _videoPlayerController = VideoPlayerController.networkUrl(uri);
+ 
+       // Add listener to update UI when video state changes
+       _videoPlayerController!.addListener(_videoListener);
+-
+-      print('🎥 Starting video initialization...');
+ 
+       // Add timeout to video initialization
+       await _videoPlayerController!.initialize().timeout(
+@@ -2471,12 +2457,6 @@
+           throw Exception('Video initialization timeout after 15 seconds');
+         },
+       );
+-
+-      print('🎥 Video initialized successfully');
+-      print('🎥 Video duration: ${_videoPlayerController!.value.duration}');
+-      print('🎥 Video size: ${_videoPlayerController!.value.size}');
+-      print(
+-          '🎥 Video aspect ratio: ${_videoPlayerController!.value.aspectRatio}');
+ 
+       // Initialize Chewie controller with proper controls
+       // Disable auto-play in carousel - user will tap to open full screen
+@@ -2513,18 +2493,14 @@
+           _isInitialized = true;
+           _isLoading = false;
+         });
+-        print('🎥 Video state updated to initialized');
+       }
+     } catch (e) {
+-      print('❌ Video initialization error: $e');
+-      print('❌ Error type: ${e.runtimeType}');
+       if (mounted) {
+         setState(() {
+           _hasError = true;
+           _isLoading = false;
+           _errorMessage = _getUserFriendlyErrorMessage(e);
+         });
+-        print('🎥 Video state updated to error');
+       }
+     }
+   }
+@@ -2532,14 +2508,8 @@
+   void _videoListener() {
+     if (mounted && _videoPlayerController != null) {
+       final value = _videoPlayerController!.value;
+-      print(
+-          '🎥 Video state: initialized=${value.isInitialized}, error=${value.errorDescription}');
+-      print(
+-          '🎥 Video duration: ${value.duration}, position: ${value.position}');
+-      print('🎥 Video size: ${value.size}, aspectRatio: ${value.aspectRatio}');
+ 
+       if (value.hasError && value.errorDescription != null) {
+-        print('❌ Video player error: ${value.errorDescription}');
+         setState(() {
+           _hasError = true;
+           _isLoading = false;
+@@ -2550,8 +2520,6 @@
+         setState(() {
+           _isLoading = false;
+         });
+-        print(
+-            '🎥 Video player initialized successfully - controls should be available');
+       }
+ 
+       // Reset completion flag if video position resets (user seeks back, etc.)
+@@ -2566,7 +2534,6 @@
+               value.duration - const Duration(milliseconds: 100) &&
+           !_hasCalledCompletion) {
+         // Video has reached the end (with 100ms tolerance)
+-        print('🎥 Video completed - calling completion callback');
+         _hasCalledCompletion = true;
+         widget.onVideoComplete?.call();
+       }
+@@ -2597,7 +2564,6 @@
+ 
+   Future<void> _testWithSampleVideo() async {
+     try {
+-      print('🎥 Testing with sample video...');
+ 
+       // Use a known working sample video URL
+       const testVideoUrl =
+@@ -2613,18 +2579,12 @@
+       // Add listener to update UI when video state changes
+       _videoPlayerController!.addListener(_videoListener);
+ 
+-      print('🎥 Starting test video initialization...');
+       await _videoPlayerController!.initialize().timeout(
+         const Duration(seconds: 15),
+         onTimeout: () {
+           throw Exception('Test video initialization timeout after 15 seconds');
+         },
+       );
+-
+-      print('🎥 Test video initialized successfully');
+-      print(
+-          '🎥 Test video duration: ${_videoPlayerController!.value.duration}');
+-      print('🎥 Test video size: ${_videoPlayerController!.value.size}');
+ 
+       // Initialize Chewie controller for test video
+       _chewieController = ChewieController(
+@@ -2658,10 +2618,8 @@
+           _isInitialized = true;
+           _isLoading = false;
+         });
+-        print('🎥 Test video state updated to initialized');
+       }
+-    } catch (e) {
+-      print('❌ Test video initialization error: $e');
++    } catch (_) {
+       if (mounted) {
+         setState(() {
+           _hasError = true;
+@@ -2922,7 +2880,6 @@
+ 
+   Future<void> _initializeVideo() async {
+     try {
+-      print('🎥 Initializing full-screen video: ${widget.videoUrl}');
+ 
+       if (widget.videoUrl.isEmpty) {
+         throw Exception('Video URL is empty');
+@@ -2981,7 +2938,6 @@
+         });
+       }
+     } catch (e) {
+-      print('❌ Full-screen video initialization error: $e');
+       if (mounted) {
+         setState(() {
+           _hasError = true;
+--- a/lib/features/home/ui/category_list_page.dart
++++ b/lib/features/home/ui/category_list_page.dart
+@@ -111,11 +111,8 @@
+             }
+           }
+         }
+-        print(
+-            '✅ Cached ${_manufacturerPremiumCache.length} manufacturers with isPremium data');
+       }
+-    } catch (e) {
+-      print('⚠️ Error fetching manufacturer isPremium: $e');
++    } catch (_) {
+     }
+   }
+ 
+@@ -415,68 +412,43 @@
+                 // (categoryId is null), so server-side filters may not work correctly
+                 if (isPremiumCategory) {
+                   // Debug: Show total items from all pages
+-                  print(
+-                      '📦 Total items loaded from all pages: ${items.length} (hasMore: ${state.hasMore})');
+ 
+                   // Enrich ads with manufacturer isPremium data from cache
+                   items = items.map((ad) => _enrichAdWithPremium(ad)).toList();
+ 
+                   // Debug: Check what's in the manufacturer objects
+-                  print(
+-                      '🔍 Premium Category Filter - Total items before filter: ${items.length}');
+ 
+                   // Check for specific ad ID
+                   final specificAdId = '690325a2fb5f59e577b0208c';
+                   final specificAd =
+                       items.where((ad) => ad.id == specificAdId).firstOrNull;
+                   if (specificAd != null) {
+-                    print('🎯 SPECIFIC AD FOUND - ID: ${specificAd.id}');
+-                    print('🎯 Manufacturer ID: ${specificAd.manufacturer?.id}');
+-                    print(
+-                        '🎯 Manufacturer isPremium: ${specificAd.manufacturer?.isPremium}');
+-                    print(
+-                        '🎯 Manufacturer name: ${specificAd.manufacturer?.name}');
+-                    print(
+-                        '🎯 Manufacturer object: ${specificAd.manufacturer?.toJson()}');
+                   } else {
+-                    print('⚠️ SPECIFIC AD NOT FOUND in items list');
+                   }
+ 
+                   // Count how many have isPremium == true
+                   final premiumCount = items
+                       .where((ad) => ad.manufacturer?.isPremium == true)
+                       .length;
+-                  print(
+-                      '📊 Ads with isPremium == true: $premiumCount out of ${items.length}');
+ 
+                   // First filter by isPremium
+                   items = items.where((ad) {
+                     final isPremium = ad.manufacturer?.isPremium == true;
+                     if (ad.id == specificAdId) {
+-                      print(
+-                          '🎯 FILTERING - Ad ID: ${ad.id}, isPremium result: $isPremium');
+                     }
+                     return isPremium;
+                   }).toList();
+ 
+-                  print(
+-                      '✅ Premium Category Filter - Total items after filter: ${items.length}');
+-
+                   // Check if specific ad is in filtered list
+                   final isInFilteredList =
+                       items.any((ad) => ad.id == specificAdId);
+-                  print('🎯 SPECIFIC AD IN FILTERED LIST: $isInFilteredList');
+ 
+                   // Debug: Print all filtered ad IDs
+-                  print(
+-                      '📋 Filtered ad IDs: ${items.map((ad) => ad.id).toList()}');
+ 
+                   // For premium category, we need to load ALL pages to get all premium items
+                   // Since filtering is client-side, we need all data first
+                   // Auto-load more pages if we have more data available
+                   if (state.hasMore) {
+-                    print(
+-                        '🔄 Auto-loading more pages for premium category (hasMore: true)...');
+                     // Use Future.microtask to avoid setState during build
+                     Future.microtask(() {
+                       if (mounted) {
+@@ -486,7 +458,6 @@
+                       }
+                     });
+                   } else {
+-                    print('✅ All pages loaded (hasMore: false)');
+                   }
+ 
+                   // Then apply all other filters from _filters map
+--- a/lib/features/home/ui/edit_add_details/commercial_vehicle_form_edit.dart
++++ b/lib/features/home/ui/edit_add_details/commercial_vehicle_form_edit.dart
+@@ -29,7 +29,6 @@
+ import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
+ import 'package:image_picker/image_picker.dart';
+ 
+-
+ /// Returns the first element matching [test], or null when there is none.
+ T? _firstWhereOrNull<T>(Iterable<T> items, bool Function(T) test) {
+   for (final item in items) {
+@@ -186,8 +185,7 @@
+     try {
+       _manufacturers =
+           await repo.fetchManufacturers(vehicleCategory: 'passenger_car');
+-    } catch (e) {
+-      debugPrint('Failed to load manufacturers: $e');
++    } catch (_) {
+     }
+     if (!mounted) return;
+     setState(() {});
+@@ -206,8 +204,7 @@
+     if (manufacturer != null) {
+       try {
+         _models = await repo.fetchModelsByManufacturer(manufacturer.id);
+-      } catch (e) {
+-        debugPrint('Failed to load models: $e');
++      } catch (_) {
+       }
+       if (!mounted) return;
+       setState(() {});
+@@ -222,8 +219,7 @@
+     if (model != null) {
+       try {
+         _variants = await repo.fetchVariantsByModel(model.id);
+-      } catch (e) {
+-        debugPrint('Failed to load variants: $e');
++      } catch (_) {
+       }
+       if (!mounted) return;
+       setState(() {});
+@@ -257,8 +253,7 @@
+           _firstWhereOrNull(_transmissionTypes,
+               (t) => t.displayName.toLowerCase() == name) ??
+           _firstOrNull(_transmissionTypes);
+-    } catch (e) {
+-      debugPrint('Failed to load transmission types: $e');
++    } catch (_) {
+     }
+     if (!mounted) return;
+ 
+@@ -274,8 +269,7 @@
+               _firstWhereOrNull(
+                   _fuelTypes, (f) => f.displayName.toLowerCase() == name) ??
+               _firstOrNull(_fuelTypes);
+-    } catch (e) {
+-      debugPrint('Failed to load fuel types: $e');
++    } catch (_) {
+     }
+ 
+     if (mounted) setState(() {});
+@@ -333,19 +327,15 @@
+   Future<void> _uploadVideo() async {
+     if (_newVideoFile != null) {
+       try {
+-        print('📹 Starting video upload...');
+         final url = await AddRepository().uploadVideoToS3(_newVideoFile!);
+         if (url != null) {
+-          print('✅ Video uploaded successfully: $url');
+           setState(() {
+             _uploadedVideoUrl = url;
+             _videoRemoved = false; // Reset removal flag when video is uploaded
+           });
+         } else {
+-          print('❌ Video upload returned null URL');
+         }
+-      } catch (e) {
+-        print('❌ Error uploading video: $e');
++      } catch (_) {
+         // Optionally show error to user
+         if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+--- a/lib/features/home/ui/edit_add_details/private_vehicle_form_edit.dart
++++ b/lib/features/home/ui/edit_add_details/private_vehicle_form_edit.dart
+@@ -28,7 +28,6 @@
+ import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
+ import 'package:image_picker/image_picker.dart';
+ 
+-
+ /// Returns the first element matching [test], or null when there is none.
+ T? _firstWhereOrNull<T>(Iterable<T> items, bool Function(T) test) {
+   for (final item in items) {
+@@ -175,8 +174,7 @@
+     try {
+       _manufacturers =
+           await repo.fetchManufacturers(vehicleCategory: 'passenger_car');
+-    } catch (e) {
+-      debugPrint('Failed to load manufacturers: $e');
++    } catch (_) {
+     }
+     if (!mounted) return;
+ 
+@@ -190,8 +188,7 @@
+     if (manufacturer != null) {
+       try {
+         _models = await repo.fetchModelsByManufacturer(manufacturer.id);
+-      } catch (e) {
+-        debugPrint('Failed to load models: $e');
++      } catch (_) {
+       }
+       if (!mounted) return;
+     }
+@@ -205,8 +202,7 @@
+     if (model != null) {
+       try {
+         _variants = await repo.fetchVariantsByModel(model.id);
+-      } catch (e) {
+-        debugPrint('Failed to load variants: $e');
++      } catch (_) {
+       }
+       if (!mounted) return;
+     }
+@@ -240,8 +236,7 @@
+               _firstWhereOrNull(_transmissionTypes,
+                   (t) => _transLabel(t).toLowerCase() == name) ??
+               _firstOrNull(_transmissionTypes);
+-    } catch (e) {
+-      debugPrint('Failed to load transmission types: $e');
++    } catch (_) {
+     }
+     if (!mounted) return;
+ 
+@@ -256,8 +251,7 @@
+           _firstWhereOrNull(
+               _fuelTypes, (f) => _fuelLabel(f).toLowerCase() == name) ??
+           _firstOrNull(_fuelTypes);
+-    } catch (e) {
+-      debugPrint('Failed to load fuel types: $e');
++    } catch (_) {
+     }
+ 
+     if (mounted) setState(() {});
+@@ -300,10 +294,8 @@
+   Future<void> _uploadVideo() async {
+     if (_newVideoFile != null) {
+       try {
+-        print('📹 Starting video upload...');
+         final url = await AddRepository().uploadVideoToS3(_newVideoFile!);
+         if (url != null) {
+-          print('✅ Video uploaded successfully: $url');
+           if (mounted) {
+             setState(() {
+               _uploadedVideoUrl = url;
+@@ -312,10 +304,8 @@
+             });
+           }
+         } else {
+-          print('❌ Video upload returned null URL');
+         }
+-      } catch (e) {
+-        print('❌ Error uploading video: $e');
++      } catch (_) {
+         // Optionally show error to user
+         if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+@@ -402,8 +392,6 @@
+     if (titleValue != null) {
+       payload['title'] = titleValue;
+     }
+-
+-    debugPrint('UPDATE PAYLOAD (private_vehicle) => $payload');
+ 
+     context.read<AdEditBloc>().add(
+           AdEditEvent.submit(
+--- a/lib/features/home/ui/edit_add_details/property_form_edit.dart
++++ b/lib/features/home/ui/edit_add_details/property_form_edit.dart
+@@ -105,10 +105,6 @@
+         text: widget.ad.floor != null ? widget.ad.floor.toString() : '');
+ 
+     // Debug: Verify values are correctly assigned
+-    debugPrint('PropertyFormEdit - Description: ${widget.ad.description}');
+-    debugPrint('PropertyFormEdit - AreaSqft: ${widget.ad.areaSqft}');
+-    debugPrint('PropertyFormEdit - AreaCtrl text: ${_areaCtrl.text}');
+-    debugPrint('PropertyFormEdit - DescCtrl text: ${_descCtrl.text}');
+ 
+     _isFurnished = widget.ad.isFurnished ?? false;
+     _hasParking = widget.ad.hasParking ?? false;
+@@ -125,9 +121,6 @@
+     }
+ 
+     // Debug: Verify amenities are correctly loaded
+-    debugPrint(
+-        'PropertyFormEdit - Amenities from backend: ${widget.ad.amenities}');
+-    debugPrint('PropertyFormEdit - Selected amenities: $_selectedAmenities');
+     _imageUrls = List<String>.from(widget.ad.images);
+     _existingVideoUrl = widget.ad.link?.isNotEmpty == true
+         ? widget.ad.link
+@@ -183,19 +176,15 @@
+   Future<void> _uploadVideo() async {
+     if (_newVideoFile != null) {
+       try {
+-        print('📹 Starting video upload...');
+         final url = await AddRepository().uploadVideoToS3(_newVideoFile!);
+         if (url != null) {
+-          print('✅ Video uploaded successfully: $url');
+           setState(() {
+             _uploadedVideoUrl = url;
+             _videoRemoved = false; // Reset removal flag when video is uploaded
+           });
+         } else {
+-          print('❌ Video upload returned null URL');
+         }
+-      } catch (e) {
+-        print('❌ Error uploading video: $e');
++      } catch (_) {
+         // Optionally show error to user
+         if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+@@ -305,8 +294,6 @@
+     if (titleValue != null) {
+       payload['title'] = titleValue;
+     }
+-
+-    debugPrint('PROPERTY UPDATE PAYLOAD => $payload');
+ 
+     context.read<AdEditBloc>().add(
+           AdEditEvent.submit(
+--- a/lib/features/home/ui/edit_add_details/two_wheeler_form_edit.dart
++++ b/lib/features/home/ui/edit_add_details/two_wheeler_form_edit.dart
+@@ -24,7 +24,6 @@
+ import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
+ import 'package:image_picker/image_picker.dart';
+ 
+-
+ /// Returns the first element matching [test], or null when there is none.
+ T? _firstWhereOrNull<T>(Iterable<T> items, bool Function(T) test) {
+   for (final item in items) {
+@@ -138,8 +137,7 @@
+     try {
+       _manufacturers =
+           await repo.fetchManufacturers(vehicleCategory: _vehicleCategory);
+-    } catch (e) {
+-      debugPrint('Failed to load manufacturers: $e');
++    } catch (_) {
+     }
+     if (!mounted) return;
+     setState(() {});
+@@ -155,8 +153,7 @@
+     if (manufacturer != null) {
+       try {
+         _models = await repo.fetchModelsByManufacturer(manufacturer.id);
+-      } catch (e) {
+-        debugPrint('Failed to load models: $e');
++      } catch (_) {
+       }
+       if (!mounted) return;
+       setState(() {});
+@@ -179,8 +176,7 @@
+               _transmissionTypes, (t) => t.id == widget.ad.transmissionId) ??
+           _firstWhereOrNull(_transmissionTypes,
+               (t) => t.displayName.toLowerCase() == name);
+-    } catch (e) {
+-      debugPrint('Failed to load transmission types: $e');
++    } catch (_) {
+     }
+     if (!mounted) return;
+ 
+@@ -196,8 +192,7 @@
+               _firstWhereOrNull(
+                   _fuelTypes, (f) => f.displayName.toLowerCase() == name) ??
+               _firstOrNull(_fuelTypes);
+-    } catch (e) {
+-      debugPrint('Failed to load fuel types: $e');
++    } catch (_) {
+     }
+ 
+     if (mounted) setState(() {});
+@@ -252,10 +247,8 @@
+   Future<void> _uploadVideo() async {
+     if (_newVideoFile != null) {
+       try {
+-        print('📹 Starting video upload...');
+         final url = await AddRepository().uploadVideoToS3(_newVideoFile!);
+         if (url != null) {
+-          print('✅ Video uploaded successfully: $url');
+           if (mounted) {
+             setState(() {
+               _uploadedVideoUrl = url;
+@@ -264,10 +257,8 @@
+             });
+           }
+         } else {
+-          print('❌ Video upload returned null URL');
+         }
+-      } catch (e) {
+-        print('❌ Error uploading video: $e');
++      } catch (_) {
+         // Optionally show error to user
+         if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+@@ -387,8 +378,6 @@
+     if (titleValue != null) {
+       payload['title'] = titleValue;
+     }
+-
+-    debugPrint('UPDATE PAYLOAD => $payload'); // CHANGED: sanity check once
+ 
+     context.read<AdEditBloc>().add(
+           AdEditEvent.submit(
+--- a/lib/features/home/ui/home_page.dart
++++ b/lib/features/home/ui/home_page.dart
+@@ -117,8 +117,6 @@
+   void _onScroll() {
+     if (_scrollController.position.pixels >=
+         _scrollController.position.maxScrollExtent - 300) {
+-      print(
+-          "🧭 Scroll Position: ${_scrollController.position.pixels} / ${_scrollController.position.maxScrollExtent}");
+ 
+       // Trigger next page load when nearing bottom
+       context
+@@ -192,8 +190,7 @@
+           await _applyLocationBasedRecommendations(placeDetails);
+           return;
+         }
+-      } catch (e) {
+-        print("Google Places reverse geocoding failed: $e");
++      } catch (_) {
+       }
+ 
+       // Fallback to standard geocoding
+@@ -228,8 +225,7 @@
+         _userLocation = newAddress;
+       });
+       await _applyLocationBasedRecommendations(newAddress);
+-    } catch (e) {
+-      print("Location error: $e");
++    } catch (_) {
+       if (!mounted) return;
+       setState(() {
+         _userLocation = "Location not available";
+@@ -290,7 +286,6 @@
+           setState(() {
+             _isLocationRecommendationsMode = true;
+           });
+-          print("🔍 Searching by location: ${point.lat}, ${point.lng}");
+           context.read<AdvertisementBloc>().add(
+                 AdvertisementEvent.searchByLocation(
+                   latitude: point.lat,
+@@ -300,8 +295,7 @@
+           return;
+         }
+       }
+-    } catch (e) {
+-      print('Error applying location recommendations: $e');
++    } catch (_) {
+     }
+ 
+     if (!mounted) return;
+@@ -328,8 +322,7 @@
+       }
+ 
+       return null;
+-    } catch (e) {
+-      print("Error getting detailed address: $e");
++    } catch (_) {
+       return null;
+     }
+   }
+@@ -414,7 +407,7 @@
+                                   .toList();
+                               isLoadingSuggestions = false;
+                             });
+-                          } catch (e) {
++                          } catch (_) {
+                             setDialogState(() {
+                               suggestions = [];
+                               isLoadingSuggestions = false;
+@@ -511,7 +504,7 @@
+                             controller.text = gpsAddress;
+                             isLoadingSuggestions = false;
+                           });
+-                        } catch (e) {
++                        } catch (_) {
+                           setDialogState(() {
+                             isLoadingSuggestions = false;
+                           });
+@@ -959,7 +952,6 @@
+     return GestureDetector(
+       onTap: () {
+         _launchURL(link);
+-        print('$link clickkedddd..........');
+       },
+       child: Padding(
+         // padding: const EdgeInsets.symmetric(horizontal: 12),
+@@ -988,7 +980,6 @@
+     if (await canLaunchUrl(uri)) {
+       await launchUrl(uri, mode: LaunchMode.externalApplication);
+     } else {
+-      print("❌ Could not launch $url");
+     }
+   }
+ 
+@@ -1551,4 +1542,3 @@
+     }
+   }
+ }
+-
+--- a/lib/features/login/bloc/login_bloc.dart
++++ b/lib/features/login/bloc/login_bloc.dart
+@@ -27,9 +27,7 @@
+       final response =
+           await authRepository.login(event.username, event.password);
+       emit(LoginState.success(username: response.name));
+-      print('response:.............:${event.username}');
+-    } catch (e) {
+-      print('❌ Error in Bloc: ${e.toString()}'); // 👀 Debugging
++    } catch (_) {
+       // Emit clean error message without "Exception:" prefix
+       emit(const LoginState.failure('Invalid Username or Password'));
+     }
+@@ -38,7 +36,6 @@
+   Future<void> _onLogout(Logout event, Emitter<LoginState> emit) async {
+     // Disconnect socket connection
+     await ChatSocketService().disconnect();
+-    print('🔌 Socket disconnected on logout');
+ 
+     await clearUserData();
+     emit(const LoginState.initial());
+--- a/lib/features/profile/bloc/profile_bloc.dart
++++ b/lib/features/profile/bloc/profile_bloc.dart
+@@ -21,8 +21,6 @@
+         // Check if this is a silent token expiration error
+         // If so, don't emit error state - logout is already in progress
+         if (e.toString().contains('SESSION_EXPIRED_SILENT')) {
+-          print(
+-              '🔇 Suppressing token expiration error in ProfileBloc - logout in progress');
+           // Don't emit error state - just keep loading or initial state
+           // The navigation to login will happen automatically via AuthService
+           return;
+--- a/lib/features/profile/ui/profile_page.dart
++++ b/lib/features/profile/ui/profile_page.dart
+@@ -134,7 +134,7 @@
+           setState(() => _pickedImageBytes = bytes);
+         }
+       }
+-    } catch (e) {
++    } catch (_) {
+       ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(
+             content: Text(ErrorMessageUtil.getUserFriendlyMessage(
+@@ -161,10 +161,8 @@
+       } else if (_lastLoadedProfile != null) {
+         // If state is Error but we have last loaded profile, use it
+         originalProfile = _lastLoadedProfile!;
+-        print("⚠️ Using last loaded profile due to error state");
+       } else {
+         // No profile data available, try to fetch it
+-        print("⚠️ No profile data available, fetching...");
+         context.read<ProfileBloc>().add(const ProfileEvent.fetchProfile());
+         throw 'Profile not loaded. Please wait a moment and try again.';
+       }
+@@ -206,10 +204,8 @@
+         try {
+           final repo = context.read<ProfileBloc>().repository;
+           profilePicUrl = await repo.uploadImageToS3(_pickedImageBytes!);
+-          print("📸 Uploaded new profile pic: $profilePicUrl");
+           _currentProfilePicUrl = profilePicUrl;
+-        } catch (uploadError) {
+-          print("❌ Profile picture upload failed: $uploadError");
++        } catch (_) {
+           throw 'Failed to upload profile picture. Please try again.';
+         }
+       }
+@@ -243,14 +239,6 @@
+             profilePicChanged ? profilePicUrl : originalProfile.profilePic,
+       );
+ 
+-      print("🔄 Changes detected:");
+-      print("  - Name: ${nameChanged ? 'CHANGED' : 'unchanged'}");
+-      print("  - Email: ${emailChanged ? 'CHANGED' : 'unchanged'}");
+-      print("  - Phone: ${phoneChanged ? 'CHANGED' : 'unchanged'}");
+-      print(
+-          "  - Country Code: ${countryCodeChanged ? 'CHANGED' : 'unchanged'}");
+-      print("  - Profile Pic: ${profilePicChanged ? 'CHANGED' : 'unchanged'}");
+-
+       // Dispatch update event
+       context
+           .read<ProfileBloc>()
+@@ -262,8 +250,7 @@
+       });
+ 
+       // Success message will be shown in BlocConsumer listener after successful update
+-    } catch (e) {
+-      print("❌ Profile save error: $e");
++    } catch (_) {
+       ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(
+           content: Text(
+@@ -314,7 +301,7 @@
+               ProfileEvent.changePassword(_newPasswordController.text.trim()),
+             );
+         Navigator.pop(context); // Close the dialog
+-      } catch (e) {
++      } catch (_) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(
+               content: Text(ErrorMessageUtil.getUserFriendlyMessage(
+@@ -329,7 +316,7 @@
+       context.read<ProfileBloc>().add(
+             ProfileEvent.changePassword(_newPasswordController.text.trim()),
+           );
+-    } catch (e) {
++    } catch (_) {
+       ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(content: Text('Failed to change password: $e')),
+       );
+@@ -387,8 +374,6 @@
+ 
+                     // Don't show error UI for token expiration - logout is already in progress
+                     if (isTokenExpirationError) {
+-                      print(
+-                          '🔇 Suppressing token expiration error in ProfilePage - logout in progress');
+                       _isUpdatingProfile = false;
+                       return; // Skip showing snackbar
+                     }
+@@ -480,14 +465,9 @@
+                     phoneController.text = state.profile.phoneNumber;
+                     _countryCode = state.profile.countryCode ?? "+1";
+ 
+-                    print(
+-                        "🔍 Original profile pic from API: ${state.profile.profilePic}");
+-
+                     // Keep the original profile pic value as is
+                     _currentProfilePicUrl = state.profile.profilePic;
+ 
+-                    print(
+-                        "🔍 Processed profile pic URL: $_currentProfilePicUrl");
+                     _seededOnce = true;
+                   }
+ 
+@@ -2037,7 +2017,7 @@
+                                       // user appearing logged in.
+                                       await AuthService().logout(
+                                           redirectTo: '/home');
+-                                    } catch (e) {
++                                    } catch (_) {
+                                       ScaffoldMessenger.of(context)
+                                           .showSnackBar(
+                                         SnackBar(
+@@ -2796,7 +2776,7 @@
+                                           .read<profile_bloc.ProfileBloc>()
+                                           .add(const profile_bloc
+                                               .ProfileEvent.deleteMyData());
+-                                    } catch (e) {
++                                    } catch (_) {
+                                       ScaffoldMessenger.of(context)
+                                           .showSnackBar(
+                                         SnackBar(
+--- a/lib/features/search/ui/search_page.dart
++++ b/lib/features/search/ui/search_page.dart
+@@ -462,10 +462,7 @@
+             .take(10) // Limit to 10 suggestions
+             .toList();
+ 
+-        print(
+-            '🔍 Location suggestions for "$query": ${suggestions.length} found');
+         for (int i = 0; i < suggestions.length; i++) {
+-          print('  ${i + 1}. ${suggestions[i]}');
+         }
+ 
+         setState(() {
+@@ -474,11 +471,9 @@
+         });
+       } else {
+         // If no Google Places results, fall back to existing ad locations
+-        print('🔍 No Google Places results for "$query", using fallback');
+         _fallbackToExistingLocations(query);
+       }
+-    } catch (e) {
+-      print('Google Places API error: $e');
++    } catch (_) {
+       // Fall back to existing ad locations if API fails
+       _fallbackToExistingLocations(query);
+     }
+@@ -577,10 +572,6 @@
+           final location = placeDetails!.geometry!.location;
+ 
+           // Print location data to console
+-          print('📍 Selected Location: $address');
+-          print('🌍 Latitude: ${location.lat}');
+-          print('🌍 Longitude: ${location.lng}');
+-          print('📍 Formatted Address: ${placeDetails.formattedAddress}');
+ 
+           // Call the location-based API
+           context.read<AdvertisementBloc>().add(
+@@ -596,13 +587,10 @@
+           return;
+         }
+       }
+-    } catch (e) {
+-      print('Error getting coordinates for location: $e');
++    } catch (_) {
+     }
+ 
+     // Fallback to text-based filtering if coordinates are not available
+-    print('📍 Fallback Location Search: $address');
+-    print('⚠️ Coordinates not available, using text-based filtering');
+ 
+     final filteredList = allAds.where((ad) {
+       return ad.location.toLowerCase().contains(address.toLowerCase());
+--- a/lib/features/sell/bloc/media_upload/media_upload_bloc.dart
++++ b/lib/features/sell/bloc/media_upload/media_upload_bloc.dart
+@@ -187,8 +187,7 @@
+       url = item.isVideo
+           ? await repository.uploadVideoToS3(item.bytes!)
+           : await repository.uploadImageToS3(item.bytes!);
+-    } catch (err) {
+-      debugPrint('Media upload failed for ${item.localId}: $err');
++    } catch (_) {
+       url = null;
+     }
+     _active--;
+--- a/lib/features/sell/ui/form/add_commercial_vehicle_form.dart
++++ b/lib/features/sell/ui/form/add_commercial_vehicle_form.dart
+@@ -108,8 +108,7 @@
+       setState(() {
+         _manufacturers = manufacturers;
+       });
+-    } catch (e) {
+-      debugPrint('Failed to load manufacturers: $e');
++    } catch (_) {
+       if (!mounted) return;
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text('Failed to load manufacturers')),
+@@ -128,9 +127,8 @@
+             .where((t) => t.appliesTo(_vehicleCategory))
+             .toList();
+       });
+-    } catch (e) {
++    } catch (_) {
+       // Optional: surface the error
+-      debugPrint('Failed to load transmission types: $e');
+       if (!mounted) return;
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text('Failed to load transmission types')),
+@@ -148,9 +146,8 @@
+         _fuelTypes =
+             fuelTypes.where((f) => f.appliesTo(_vehicleCategory)).toList();
+       });
+-    } catch (e) {
++    } catch (_) {
+       // Optional: surface the error
+-      debugPrint('Failed to load fuel types: $e');
+       if (!mounted) return;
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text('Failed to load fuel types')),
+@@ -574,8 +571,7 @@
+                                           manufacturer.id);
+                                   if (!mounted) return;
+                                   setState(() => _models = models);
+-                                } catch (e) {
+-                                  debugPrint('Failed to load models: $e');
++                                } catch (_) {
+                                   if (!mounted) return;
+                                   ScaffoldMessenger.of(context).showSnackBar(
+                                     const SnackBar(
+@@ -624,8 +620,7 @@
+                                       .fetchVariantsByModel(model.id);
+                                   if (!mounted) return;
+                                   setState(() => _variants = variants);
+-                                } catch (e) {
+-                                  debugPrint('Failed to load variants: $e');
++                                } catch (_) {
+                                   if (!mounted) return;
+                                   ScaffoldMessenger.of(context).showSnackBar(
+                                     const SnackBar(
+--- a/lib/features/sell/ui/form/add_private_vehicle_form.dart
++++ b/lib/features/sell/ui/form/add_private_vehicle_form.dart
+@@ -62,7 +62,6 @@
+   late final MediaUploadBloc _mediaBloc =
+       MediaUploadBloc(repository: AddRepository());
+ 
+-
+   @override
+   void dispose() {
+     _mediaBloc.close();
+@@ -88,8 +87,7 @@
+       setState(() {
+         _manufacturers = manufacturers;
+       });
+-    } catch (e) {
+-      debugPrint('Failed to load manufacturers: $e');
++    } catch (_) {
+       if (!mounted) return;
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text('Failed to load manufacturers')),
+@@ -108,9 +106,8 @@
+             .where((t) => t.appliesTo(_vehicleCategory))
+             .toList();
+       });
+-    } catch (e) {
++    } catch (_) {
+       // Optional: surface the error
+-      debugPrint('Failed to load transmission types: $e');
+       if (!mounted) return;
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text('Failed to load transmission types')),
+@@ -128,9 +125,8 @@
+         _fuelTypes =
+             fuelTypes.where((f) => f.appliesTo(_vehicleCategory)).toList();
+       });
+-    } catch (e) {
++    } catch (_) {
+       // Optional: surface the error
+-      debugPrint('Failed to load fuel types: $e');
+       if (!mounted) return;
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text('Failed to load fuel types')),
+@@ -447,8 +443,7 @@
+                                           manufacturer.id);
+                                   if (!mounted) return;
+                                   setState(() => _models = models);
+-                                } catch (e) {
+-                                  debugPrint('Failed to load models: $e');
++                                } catch (_) {
+                                   if (!mounted) return;
+                                   ScaffoldMessenger.of(context).showSnackBar(
+                                     const SnackBar(
+@@ -497,8 +492,7 @@
+                                       .fetchVariantsByModel(model.id);
+                                   if (!mounted) return;
+                                   setState(() => _variants = variants);
+-                                } catch (e) {
+-                                  debugPrint('Failed to load variants: $e');
++                                } catch (_) {
+                                   if (!mounted) return;
+                                   ScaffoldMessenger.of(context).showSnackBar(
+                                     const SnackBar(
+--- a/lib/features/sell/ui/form/add_two_wheeler_form.dart
++++ b/lib/features/sell/ui/form/add_two_wheeler_form.dart
+@@ -64,7 +64,6 @@
+   late final MediaUploadBloc _mediaBloc =
+       MediaUploadBloc(repository: AddRepository());
+ 
+-
+   @override
+   void dispose() {
+     _mediaBloc.close();
+@@ -89,8 +88,7 @@
+       setState(() {
+         _manufacturers = manufacturers;
+       });
+-    } catch (e) {
+-      debugPrint('Failed to load manufacturers: $e');
++    } catch (_) {
+       if (!mounted) return;
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text('Failed to load manufacturers')),
+@@ -109,9 +107,8 @@
+             .where((t) => t.appliesTo(_vehicleCategory))
+             .toList();
+       });
+-    } catch (e) {
++    } catch (_) {
+       // Optional: surface the error
+-      debugPrint('Failed to load transmission types: $e');
+       if (!mounted) return;
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text('Failed to load transmission types')),
+@@ -129,9 +126,8 @@
+         _fuelTypes =
+             fuelTypes.where((f) => f.appliesTo(_vehicleCategory)).toList();
+       });
+-    } catch (e) {
++    } catch (_) {
+       // Optional: surface the error
+-      debugPrint('Failed to load fuel types: $e');
+       if (!mounted) return;
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text('Failed to load fuel types')),
+@@ -451,8 +447,7 @@
+                                           manufacturer.id);
+                                   if (!mounted) return;
+                                   setState(() => _models = models);
+-                                } catch (e) {
+-                                  debugPrint('Failed to load models: $e');
++                                } catch (_) {
+                                   if (!mounted) return;
+                                   ScaffoldMessenger.of(context).showSnackBar(
+                                     const SnackBar(
+--- a/lib/features/showroom/bloc/showroom_bloc.dart
++++ b/lib/features/showroom/bloc/showroom_bloc.dart
+@@ -32,7 +32,7 @@
+       );
+       emit(ShowroomState.adsLoaded(
+           ads: ads, hasMore: ads.length >= 20, userId: event.userId));
+-    } catch (e) {
++    } catch (_) {
+       emit(ShowroomState.error("Failed to fetch showroom user ads: $e"));
+     }
+   }
+@@ -46,8 +46,6 @@
+     if (currentState is AdsLoaded && currentState.hasMore) {
+       try {
+         _currentPage += 1;
+-        print(
+-            "📥 Fetching showroom ads page $_currentPage for user $_currentUserId");
+         final moreAds = await repository.fetchShowroomUserAds(
+           userId: _currentUserId!,
+           page: _currentPage,
+@@ -58,8 +56,7 @@
+             ads: updatedAds,
+             hasMore: moreAds.length >= 20,
+             userId: _currentUserId!));
+-      } catch (e) {
+-        print("❌ Error fetching next page: $e");
++      } catch (_) {
+         emit(ShowroomState.error("Failed to load more ads: $e"));
+       } finally {
+         _isFetching = false;
+--- a/lib/features/showroom/ui/showroom_users_page.dart
++++ b/lib/features/showroom/ui/showroom_users_page.dart
+@@ -61,8 +61,6 @@
+ 
+   Future<void> _fetchShowroomUsers({required bool isAuthenticated}) async {
+     try {
+-      print(
+-          '🚀 Starting to fetch showroom users (authenticated: $isAuthenticated)...');
+       setState(() {
+         _isLoading = true;
+         _error = null;
+@@ -72,16 +70,12 @@
+       final users = isAuthenticated
+           ? await _showroomRepo.fetchShowroomUsers()
+           : await _showroomRepo.fetchPublicShowroomUsers();
+-
+-      print('✅ Successfully fetched ${users.length} showroom users');
+ 
+       setState(() {
+         _showroomUsers = users;
+         _isLoading = false;
+       });
+     } catch (e) {
+-      print('❌ Error in _fetchShowroomUsers: $e');
+-      print('❌ Error type: ${e.runtimeType}');
+ 
+       // Extract user-friendly error message
+       String errorMessage =
+@@ -89,7 +83,6 @@
+ 
+       if (e is Exception) {
+         final exceptionMessage = e.toString();
+-        print('❌ Exception message: $exceptionMessage');
+ 
+         // Extract the actual error message from Exception: "message"
+         // Remove "Exception: " prefix if present
+--- a/lib/features/signup/bloc/signup_bloc.dart
++++ b/lib/features/signup/bloc/signup_bloc.dart
+@@ -31,8 +31,6 @@
+       }
+ 
+       final responseMessage = await signupRepository.signup(model);
+-      print('Success!!!!!');
+-      print('responseMessage:.......$responseMessage');
+       emit(SignupState.signupSuccess(responseMessage));
+     } catch (e) {
+       // Extract message from exception, removing "Exception: " prefix if present
+--- a/lib/features/signup/ui/signup_page.dart
++++ b/lib/features/signup/ui/signup_page.dart
+@@ -108,8 +108,6 @@
+           countryCode: _countryCode,
+           password: _password,
+           type: 'NU');
+-
+-      print('data:..........$signupData');
+ 
+       context.read<SignupBloc>().add(SignupEvent.signup(
+             data: signupData,
+--- a/lib/main.dart
++++ b/lib/main.dart
+@@ -115,8 +115,7 @@
+       _handleNotificationTap(
+           message); // async: opens notifications or home with login popup
+     });
+-  } catch (e, st) {
+-    debugPrint('FCM init failed (non-fatal): $e\n$st');
++  } catch (_, __) {
+   }
+ }
+ 
+--- a/lib/models/my_ads_model.dart
++++ b/lib/models/my_ads_model.dart
+@@ -102,8 +102,6 @@
+           imagesRaw.where((e) => e != null).map((e) => e.toString()).toList();
+     } else if (imagesRaw != null) {
+       // If images is not a List, log warning and use empty list
+-      print(
+-          '⚠️ Warning: images field is not a List, got ${imagesRaw.runtimeType}');
+     }
+ 
+     final userJson = _asMap(json['user']);
+@@ -136,8 +134,6 @@
+           .toList();
+     } else if (commercialVehicleDetailsRaw != null) {
+       // If commercialVehicleDetails is not a List, log warning
+-      print(
+-          '⚠️ Warning: commercialVehicleDetails field is not a List, got ${commercialVehicleDetailsRaw.runtimeType}');
+     }
+ 
+     // Parse manufacturer and model information (using same classes as AddModel)
+@@ -411,6 +407,5 @@
+     return v.where((e) => e != null).map((e) => e.toString()).toList();
+   }
+   // If not a List, log warning and return empty list
+-  print('⚠️ Warning: Expected List but got ${v.runtimeType}');
+   return const [];
+ }
+--- a/lib/models/showroom_user_model.dart
++++ b/lib/models/showroom_user_model.dart
+@@ -21,7 +21,6 @@
+ 
+   factory ShowroomUser.fromJson(Map<String, dynamic> json) {
+     try {
+-      print('🔍 Parsing ShowroomUser from JSON: $json');
+ 
+       final id = json['_id']?.toString() ?? '';
+       final name = json['name'] ?? '';
+@@ -31,14 +30,6 @@
+       final type = json['type'] ?? '';
+       final createdAt = json['createdAt'];
+       final updatedAt = json['updatedAt'];
+-
+-      print('🔍 Parsed values:');
+-      print('🔍 - id: $id');
+-      print('🔍 - name: $name');
+-      print('🔍 - email: $email');
+-      print('🔍 - phoneNumber: $phoneNumber');
+-      print('🔍 - profilePic: $profilePic');
+-      print('🔍 - type: $type');
+ 
+       return ShowroomUser(
+         id: id,
+@@ -50,9 +41,7 @@
+         createdAt: createdAt,
+         updatedAt: updatedAt,
+       );
+-    } catch (e) {
+-      print('❌ Error parsing ShowroomUser from JSON: $e');
+-      print('❌ JSON data: $json');
++    } catch (_) {
+       rethrow;
+     }
+   }
+--- a/lib/repositories/add_repo.dart
++++ b/lib/repositories/add_repo.dart
+@@ -92,7 +92,6 @@
+         // queryParameters: qp,
+         data: body,
+       );
+-      print("📡 Full API response qp:............... ${response.data}");
+       final List<dynamic> rawData = response.data['data'];
+       final total = response.data['total'] ?? 0;
+       final currentCount = (page * limit);
+@@ -101,9 +100,6 @@
+       final ads = rawData
+           .map((e) => AddModel.fromJson(e as Map<String, dynamic>))
+           .toList();
+-      print("📡 Full rawdata response:............... $rawData");
+-
+-      print("📡 API returned hasNext: $hasNext, ads: ${ads.length}");
+ 
+       // Safety: backend may not apply commercialVehicleTypes filter consistently
+       // since the field lives under commercialVehicleDetails in the v2 list response.
+@@ -119,7 +115,7 @@
+               : ads;
+ 
+       return PaginatedAdsResponse(data: filteredAds, hasNext: hasNext);
+-    } catch (e) {
++    } catch (_) {
+       throw Exception('Failed to fetch ads: $e');
+     }
+   }
+@@ -480,8 +476,7 @@
+       }
+     } on DioException catch (e) {
+       throw Exception(DioErrorHandler.handleError(e));
+-    } catch (e) {
+-      print('❌ Unexpected error in uploadImageToS3: $e');
++    } catch (_) {
+       throw Exception('Unexpected error: $e');
+     }
+   }
+@@ -523,8 +518,7 @@
+       }
+     } on DioException catch (e) {
+       throw Exception(DioErrorHandler.handleError(e));
+-    } catch (e) {
+-      print('❌ Unexpected error in uploadFileToS3: $e');
++    } catch (_) {
+       throw Exception('Unexpected error: $e');
+     }
+   }
+@@ -547,10 +541,6 @@
+ 
+       final signedUrl = signedUrlResponse.data['url'];
+       if (signedUrl == null) throw Exception('No signed URL received');
+-
+-      print('📹 Got presigned URL, starting S3 upload...');
+-      print('📹 File size: ${fileBytes.length} bytes');
+-      print('📹 MIME type: $mimeType');
+ 
+       // Step 2: Upload to S3 with timeout
+       final uploadDio = Dio();
+@@ -573,25 +563,20 @@
+         onSendProgress: (sent, total) {
+           if (total > 0) {
+             final progress = (sent / total * 100).toStringAsFixed(1);
+-            print('📹 Upload progress: $progress% ($sent/$total bytes)');
+           }
+         },
+       );
+-
+-      print('📹 S3 upload response status: ${uploadResponse.statusCode}');
+ 
+       if (uploadResponse.statusCode == 200 ||
+           uploadResponse.statusCode == 204) {
+         final videoUrl = signedUrl.split('?').first;
+-        print('✅ Video upload successful, URL: $videoUrl');
+         return videoUrl;
+       } else {
+         throw Exception('Upload failed: ${uploadResponse.statusCode}');
+       }
+     } on DioException catch (e) {
+       throw Exception(DioErrorHandler.handleError(e));
+-    } catch (e) {
+-      print('❌ Unexpected error in uploadVideoToS3: $e');
++    } catch (_) {
+       throw Exception('Unexpected error: $e');
+     }
+   }
+@@ -605,20 +590,14 @@
+         "category": category,
+         "data": data,
+       };
+-      print('Payload:.................. $payload');
+       final response = await _dio.post('/ads', data: payload);
+-      print('New Item Id : ............................${response.data['id']}');
+       if (response.statusCode == 200 || response.statusCode == 201) {
+-        print('✅ Ad posted successfully');
+       } else {
+-        print('⚠️ Failed to post ad, status: ${response.statusCode}');
+         throw Exception('Failed to post ad');
+       }
+     } on DioException catch (e) {
+-      print('❌ Dio error : $e');
+       throw Exception(DioErrorHandler.handleError(e));
+-    } catch (e) {
+-      print('❌ Unexpected error: $e');
++    } catch (_) {
+       throw Exception('Failed to post ad: $e');
+     }
+   }
+@@ -632,16 +611,12 @@
+       if (response.statusCode == 200 ||
+           response.statusCode == 204 ||
+           response.statusCode == 202) {
+-        print('✅ Ad deleted successfully: $adId');
+       } else {
+-        print('⚠️ Failed to delete ad, status: ${response.statusCode}');
+         throw Exception('Failed to delete ad');
+       }
+     } on DioException catch (e) {
+-      print('❌ Dio error while deleting ad $adId: $e');
+       throw Exception(DioErrorHandler.handleError(e));
+-    } catch (e) {
+-      print('❌ Unexpected error while deleting ad $adId: $e');
++    } catch (_) {
+       throw Exception('Failed to delete ad: $e');
+     }
+   }
+@@ -696,7 +671,6 @@
+   Future<AddModel> fetchAdDetail(String adId) async {
+     try {
+       final response = await _dio.get('/v2/ads/$adId');
+-      print("Ad detail API raw response: ${response.data}");
+       final raw = response.data;
+ 
+       // Accept either {data: {...}} or plain {...}
+@@ -706,22 +680,11 @@
+               : (raw as Map<String, dynamic>);
+ 
+       // Print the parsed ad detail JSON data
+-      print('📦 Ad Detail Page - Item Data JSON Response:');
+-      print('   Ad ID: ${obj['id']}');
+-      print('   Title: ${obj['title']}');
+-      print('   Category: ${obj['category']}');
+-      print('   Price: ${obj['price']}');
+-      print('   Location: ${obj['location']}');
+-      print('   Video Link: ${obj['link']}');
+-      print('   Images Count: ${(obj['images'] as List?)?.length ?? 0}');
+-      print('   Full JSON Response: $obj');
+ 
+       return AddModel.fromJson(obj);
+     } on DioException catch (e) {
+-      print('❌ Dio error : $e');
+       throw Exception(DioErrorHandler.handleError(e));
+-    } catch (e) {
+-      print('Error:>>>>>>>>>>>>>>>>>>>>>>>$e');
++    } catch (_) {
+       throw Exception('Failed to fetch ad detail: $e');
+     }
+   }
+@@ -739,18 +702,12 @@
+       );
+       if (resp.statusCode != 200) throw Exception('Update failed');
+     } on DioException catch (e) {
+-      print('Dio Error: $e');
+       throw Exception(DioErrorHandler.handleError(e));
+     }
+   }
+ 
+   Future<AddModel> markAdAsSold(String adId) async {
+     try {
+-      print('🔍 Marking ad as sold - Ad ID: $adId');
+-      print('🔍 Base URL: ${_dio.options.baseUrl}');
+-      print('🔍 Full URL will be: ${_dio.options.baseUrl}ads/$adId/sold');
+-      print('🔍 Trying v2 endpoint: ${_dio.options.baseUrl}v2/ads/$adId/sold');
+-      print('🔍 Request data: {"soldOut": true}');
+ 
+       final resp = await _dio.put(
+         '/ads/$adId/sold',
+@@ -764,8 +721,6 @@
+         ),
+       );
+ 
+-      print('✅ Mark as sold response: ${resp.statusCode} - ${resp.data}');
+-
+       // Accept various success status codes (200, 201, 204, etc.)
+       if (resp.statusCode! < 200 || resp.statusCode! >= 300) {
+         throw Exception(
+@@ -781,14 +736,9 @@
+ 
+       return AddModel.fromJson(obj);
+     } on DioException catch (e) {
+-      print('❌ Dio error in markAdAsSold (v1): $e');
+-      print('❌ Response data: ${e.response?.data}');
+-      print('❌ Response status: ${e.response?.statusCode}');
+-      print('❌ Request URL: ${e.requestOptions.uri}');
+ 
+       // If v1 fails with 404, try v2 endpoint
+       if (e.response?.statusCode == 404) {
+-        print('🔄 Trying v2 endpoint...');
+         try {
+           final resp2 = await _dio.put(
+             '/v2/ads/$adId/sold',
+@@ -801,8 +751,6 @@
+               },
+             ),
+           );
+-          print(
+-              '✅ Mark as sold response (v2): ${resp2.statusCode} - ${resp2.data}');
+ 
+           if (resp2.statusCode! < 200 || resp2.statusCode! >= 300) {
+             throw Exception(
+@@ -818,10 +766,7 @@
+ 
+           return AddModel.fromJson(obj2);
+         } catch (e2) {
+-          print('❌ Dio error in markAdAsSold (v2): $e2');
+           if (e2 is DioException) {
+-            print('❌ Response data: ${e2.response?.data}');
+-            print('❌ Response status: ${e2.response?.statusCode}');
+           }
+         }
+       }
+@@ -857,8 +802,7 @@
+       } else {
+         throw Exception("Failed to fetch ads for user");
+       }
+-    } catch (e) {
+-      print('Error fetching ads by user ID: $e');
++    } catch (_) {
+       throw Exception("Error fetching ads by user ID: $e");
+     }
+   }
+--- a/lib/repositories/chat_repository.dart
++++ b/lib/repositories/chat_repository.dart
+@@ -26,8 +26,7 @@
+       final sharedPrefs = SharedPrefs();
+       final userId = await sharedPrefs.getUserId();
+       return userId;
+-    } catch (e) {
+-      print('❌ Error getting current user ID: $e');
++    } catch (_) {
+       return null;
+     }
+   }
+@@ -139,8 +138,7 @@
+     if (changed) _roomsController.add(List.from(_rooms));
+     try {
+       await _socketService.markRoomRead(roomId);
+-    } catch (e) {
+-      print('⚠️ markRoomRead failed: $e');
++    } catch (_) {
+     }
+   }
+ 
+@@ -149,13 +147,12 @@
+     try {
+       final success = await _socketService.connect();
+       if (success) {
+-        print('✅ Chat repository connected');
+         return true;
+       } else {
+         _errorController.add('Failed to connect to chat server');
+         return false;
+       }
+-    } catch (e) {
++    } catch (_) {
+       _errorController.add('Connection error: $e');
+       return false;
+     }
+@@ -164,13 +161,11 @@
+   /// Disconnect from chat server
+   Future<void> disconnect() async {
+     await _socketService.disconnect();
+-    print('🔌 Disconnected from WebSocket');
+   }
+ 
+   /// Get user's chat rooms from HTTP API
+   Future<void> getUserChatRooms() async {
+     try {
+-      print('📋 Fetching chat rooms from API...');
+       final response = await _apiService.getUserChatRooms();
+ 
+       if (response['success'] == true) {
+@@ -185,15 +180,12 @@
+         // Check if controller is still open before adding events
+         if (!_roomsController.isClosed) {
+           _roomsController.add(List.from(_rooms));
+-          print('✅ Loaded ${rooms.length} chat rooms from API');
+         } else {
+-          print('⚠️ Rooms controller is closed, cannot add events');
+         }
+       } else {
+         throw Exception('API returned success: false');
+       }
+-    } catch (e) {
+-      print('❌ Error fetching chat rooms: $e');
++    } catch (_) {
+       if (!_errorController.isClosed) {
+         _errorController.add('Failed to load chat rooms: $e');
+       }
+@@ -203,30 +195,23 @@
+   /// Join a chat room and wait for success callback
+   Future<void> joinChatRoom(String roomId) async {
+     try {
+-      print('🚪 Joining chat room: $roomId');
+-      print('🔍 Socket connection status: ${_socketService.isConnected}');
+ 
+       // Check if socket is connected, if not, try to connect first
+       if (!_socketService.isConnected) {
+-        print('🔌 Socket not connected, attempting to connect...');
+         final connected = await _socketService.connect();
+         if (!connected) {
+           throw Exception('Failed to connect to server');
+         }
+-        print('✅ Socket connected successfully');
+-      } else {
+-        print('✅ Socket already connected');
++      } else {
+       }
+ 
+       // Use the new joinRoomAndWait method that waits for callback
+       final success = await _socketService.joinRoomAndWait(roomId);
+       if (success) {
+-        print('✅ Successfully joined room: $roomId');
+       } else {
+         throw Exception('Failed to join room');
+       }
+-    } catch (e) {
+-      print('❌ Error joining room: $e');
++    } catch (_) {
+       if (!_errorController.isClosed) {
+         _errorController.add('Failed to join room: $e');
+       }
+@@ -237,7 +222,6 @@
+   /// Get messages for a specific room
+   Future<List<Map<String, dynamic>>> getRoomMessages(String roomId) async {
+     try {
+-      print('📨 Fetching messages for room: $roomId');
+ 
+       // Use HTTP API to get messages
+       final response = await _apiService.getRoomMessages(roomId);
+@@ -249,13 +233,11 @@
+                 .toList() ??
+             [];
+ 
+-        print('✅ Loaded ${messages.length} messages from API');
+         return messages;
+       } else {
+         throw Exception('API returned success: false');
+       }
+-    } catch (e) {
+-      print('❌ Error fetching messages: $e');
++    } catch (_) {
+       if (!_errorController.isClosed) {
+         _errorController.add('Failed to load messages: $e');
+       }
+@@ -266,10 +248,8 @@
+   /// Send message via WebSocket only (like HTML file)
+   void sendMessage(String content, {String type = 'text'}) {
+     try {
+-      print('📤 Sending message via WebSocket only');
+       _socketService.sendMessage(content, type: type);
+-    } catch (e) {
+-      print('❌ Error sending message: $e');
++    } catch (_) {
+       if (!_errorController.isClosed) {
+         _errorController.add('Failed to send message: $e');
+       }
+@@ -282,32 +262,25 @@
+       List<Map<String, dynamic>> attachments,
+       {String content = ''}) async {
+     try {
+-      print('📤 Sending message with attachments via API: type=$type');
+       await _apiService.sendMessage(roomId, content,
+           type: type, attachments: attachments);
+-      print('✅ Message with attachments sent successfully');
+     } catch (e) {
+       final errStr = e.toString();
+       final isPostNotAvailable = errStr.contains('Cannot POST') ||
+           errStr.contains('404') ||
+           errStr.contains('Not Found');
+       if (isPostNotAvailable) {
+-        print(
+-            '⚠️ POST messages API not available, falling back to WebSocket for type=$type');
+         try {
+           await _socketService.joinRoomAndWait(roomId);
+           _socketService.sendMessage(content,
+               type: type, attachments: attachments);
+-          print('✅ Message with attachments sent via WebSocket');
+-        } catch (socketErr) {
+-          print('❌ WebSocket fallback failed: $socketErr');
++        } catch (_) {
+           if (!_errorController.isClosed) {
+             _errorController.add('Failed to send message: $socketErr');
+           }
+           rethrow;
+         }
+       } else {
+-        print('❌ Error sending message with attachments: $e');
+         if (!_errorController.isClosed) {
+           _errorController.add('Failed to send message: $e');
+         }
+@@ -354,20 +327,15 @@
+     try {
+       // For backward compatibility, we'll use the old API without otherUserId
+       // This might need to be updated based on backend requirements
+-      print(
+-          "⚠️ Using legacy room check - consider updating to use otherUserId");
+       final check = await _apiService.checkRoomExists(
+           adId, ''); // Empty otherUserId for legacy
+       if (check['data']?['exists'] == true) {
+-        print("🟢 Room exists");
+         return check['data']['roomId'];
+       } else {
+-        print("🟢 Room created");
+         return await createChatRoom(adId) ??
+             (throw Exception('Failed to create room'));
+       }
+-    } catch (e) {
+-      print("⚠️ Room check failed, fallback to create: $e");
++    } catch (_) {
+       return await createChatRoom(adId) ??
+           (throw Exception('Failed to create room'));
+     }
+@@ -378,15 +346,12 @@
+     try {
+       final check = await _apiService.checkRoomExists(adId, otherUserId);
+       if (check['data']?['exists'] == true) {
+-        print("🟢 Room exists");
+         return check['data']['roomId'];
+       } else {
+-        print("🟢 Room created");
+         return await createChatRoom(adId) ??
+             (throw Exception('Failed to create room'));
+       }
+-    } catch (e) {
+-      print("⚠️ Room check failed, fallback to create: $e");
++    } catch (_) {
+       return await createChatRoom(adId) ??
+           (throw Exception('Failed to create room'));
+     }
+@@ -398,52 +363,40 @@
+ 
+     try {
+       // 1️⃣ Check if room exists (using legacy approach for backward compatibility)
+-      print(
+-          "⚠️ Using legacy room check - consider updating to use otherUserId");
+       final result = await _apiService.checkRoomExists(
+           adId, ''); // Empty otherUserId for legacy
+       final exists = result['data']?['exists'] ?? false;
+       roomId = result['data']?['roomId'];
+ 
+       if (exists && roomId != null) {
+-        print("🟢 Room exists for ad: $adId ($roomId)");
+-      } else {
+-        print("❌ No room exists, creating new...");
++      } else {
+         roomId = await createChatRoom(adId);
+       }
+ 
+       // 2️⃣ Try joining room and wait for success
+       final joined = await _socketService.joinRoomAndWait(roomId!);
+-      print("✅ Joined room: $joined");
+ 
+       // 3️⃣ Send message only after successful join
+       final msg =
+           'I would like to make an offer of ₹${amount.toStringAsFixed(0)}';
+       _socketService.sendMessage(msg, type: 'offer');
+-      print('✅ Offer message sent successfully in room: $roomId');
+     } catch (e) {
+       if (e.toString().contains('not a participant')) {
+-        print("⚠️ Not a participant, creating your own room...");
+         roomId = await createChatRoom(adId);
+         final joined = await _socketService.joinRoomAndWait(roomId!);
+-        print("✅ Joined new room: $joined");
+ 
+         // Send message after successful join
+         final msg =
+             'I would like to make an offer of ₹${amount.toStringAsFixed(0)}';
+         _socketService.sendMessage(msg, type: 'offer');
+-        print('✅ Offer message sent successfully in room: $roomId');
+-      } else {
+-        print("⚠️ Room join failed, creating fallback room...");
++      } else {
+         roomId = await createChatRoom(adId);
+         final joined = await _socketService.joinRoomAndWait(roomId!);
+-        print("✅ Joined fallback room: $joined");
+ 
+         // Send message after successful join
+         final msg =
+             'I would like to make an offer of ₹${amount.toStringAsFixed(0)}';
+         _socketService.sendMessage(msg, type: 'offer');
+-        print('✅ Offer message sent successfully in room: $roomId');
+       }
+     }
+   }
+@@ -460,44 +413,34 @@
+       roomId = result['data']?['roomId'];
+ 
+       if (exists && roomId != null) {
+-        print("🟢 Room exists for ad: $adId and user: $otherUserId ($roomId)");
+-      } else {
+-        print("❌ No room exists, creating new...");
++      } else {
+         roomId = await createChatRoom(adId);
+       }
+ 
+       // 2️⃣ Try joining room and wait for success
+       final joined = await _socketService.joinRoomAndWait(roomId!);
+-      print("✅ Joined room: $joined");
+ 
+       // 3️⃣ Send message only after successful join
+       final msg =
+           'I would like to make an offer of ₹${amount.toStringAsFixed(0)}';
+       _socketService.sendMessage(msg, type: 'offer');
+-      print('✅ Offer message sent successfully in room: $roomId');
+     } catch (e) {
+       if (e.toString().contains('not a participant')) {
+-        print("⚠️ Not a participant, creating your own room...");
+         roomId = await createChatRoom(adId);
+         final joined = await _socketService.joinRoomAndWait(roomId!);
+-        print("✅ Joined new room: $joined");
+ 
+         // Send message after successful join
+         final msg =
+             'I would like to make an offer of ₹${amount.toStringAsFixed(0)}';
+         _socketService.sendMessage(msg, type: 'offer');
+-        print('✅ Offer message sent successfully in room: $roomId');
+-      } else {
+-        print("⚠️ Room join failed, creating fallback room...");
++      } else {
+         roomId = await createChatRoom(adId);
+         final joined = await _socketService.joinRoomAndWait(roomId!);
+-        print("✅ Joined fallback room: $joined");
+ 
+         // Send message after successful join
+         final msg =
+             'I would like to make an offer of ₹${amount.toStringAsFixed(0)}';
+         _socketService.sendMessage(msg, type: 'offer');
+-        print('✅ Offer message sent successfully in room: $roomId');
+       }
+     }
+   }
+@@ -505,9 +448,6 @@
+   /// Check if a room exists for an ad using API
+   Future<Map<String, dynamic>?> checkRoomExistsForAd(String adId) async {
+     try {
+-      print('🔍 Checking if room exists for ad: $adId');
+-      print(
+-          "⚠️ Using legacy room check - consider updating to use otherUserId");
+       final response = await _apiService.checkRoomExists(
+           adId, ''); // Empty otherUserId for legacy
+ 
+@@ -517,14 +457,11 @@
+       final roomId = data?['roomId'] as String?;
+ 
+       if (response['success'] == true && exists == true) {
+-        print('✅ Room exists: $roomId');
+         return {'exists': true, 'roomId': roomId, 'data': response};
+       } else {
+-        print('❌ No room exists for this ad');
+         return {'exists': false, 'roomId': null, 'data': response};
+       }
+-    } catch (e) {
+-      print('❌ Error checking room existence: $e');
++    } catch (_) {
+       return null;
+     }
+   }
+@@ -533,8 +470,6 @@
+   Future<Map<String, dynamic>?> checkRoomExistsForAdAndUser(
+       String adId, String otherUserId) async {
+     try {
+-      print(
+-          '🔍 Checking if room exists for ad: $adId and other user: $otherUserId');
+       final response = await _apiService.checkRoomExists(adId, otherUserId);
+ 
+       // The API response structure is: {success: true, data: {exists: true, roomId: "..."}}
+@@ -543,14 +478,11 @@
+       final roomId = data?['roomId'] as String?;
+ 
+       if (response['success'] == true && exists == true) {
+-        print('✅ Room exists: $roomId');
+         return {'exists': true, 'roomId': roomId, 'data': response};
+       } else {
+-        print('❌ No room exists for this ad and user combination');
+         return {'exists': false, 'roomId': null, 'data': response};
+       }
+-    } catch (e) {
+-      print('❌ Error checking room existence: $e');
++    } catch (_) {
+       return null;
+     }
+   }
+@@ -558,7 +490,6 @@
+   /// Find existing room by ad ID (legacy method - kept for compatibility)
+   Future<String?> findRoomByAdId(String adId) async {
+     try {
+-      print('🔍 Checking existing rooms for adId: $adId');
+ 
+       // Ensure socket connected
+       if (!_socketService.isConnected) await _socketService.connect();
+@@ -571,15 +502,12 @@
+       for (final room in rooms) {
+         final roomAdId = room['ad']?['id'] ?? room['adId'];
+         if (roomAdId == adId) {
+-          print('✅ Found matching room: ${room['id']}');
+           return room['id'];
+         }
+       }
+ 
+-      print('⚠️ No room found for this ad');
+-      return null;
+-    } catch (e) {
+-      print('❌ Error checking rooms: $e');
++      return null;
++    } catch (_) {
+       return null;
+     }
+   }
+@@ -587,7 +515,6 @@
+   /// Check if a chat room exists for an ad
+   Future<String?> getExistingRoomForAd(String adId) async {
+     try {
+-      print('🔍 Checking for existing room for ad: $adId');
+ 
+       // Get all chat rooms
+       final response = await _apiService.getUserChatRooms();
+@@ -597,15 +524,12 @@
+       for (final room in rooms) {
+         final roomData = room as Map<String, dynamic>;
+         if (roomData['adId'] == adId) {
+-          print('✅ Found existing room: ${roomData['_id']}');
+           return roomData['_id'] as String?;
+         }
+       }
+ 
+-      print('❌ No existing room found for ad: $adId');
+-      return null;
+-    } catch (e) {
+-      print('❌ Error checking existing room: $e');
++      return null;
++    } catch (_) {
+       return null;
+     }
+   }
+@@ -613,11 +537,9 @@
+   /// Create a new chat room for an ad
+   Future<String?> createChatRoom(String adId) async {
+     try {
+-      print('🏠 Creating chat room for adId: $adId');
+ 
+       // Ensure socket connected
+       if (!_socketService.isConnected) {
+-        print('🔌 Socket not connected, connecting...');
+         final connected = await _socketService.connect();
+         if (!connected) throw Exception('Failed to connect socket');
+       }
+@@ -629,7 +551,6 @@
+       subscription = _socketService.roomStream.listen((event) {
+         if (event['type'] == 'roomCreated') {
+           final roomId = event['data']?['data']?['roomId'];
+-          print('✅ Room created with ID: $roomId');
+           subscription?.cancel(); // Cancel subscription after first event
+           completer.complete(roomId);
+         }
+@@ -641,7 +562,6 @@
+       final result = await completer.future.timeout(
+         const Duration(seconds: 5),
+         onTimeout: () {
+-          print('⏰ Room creation timed out');
+           subscription?.cancel(); // Cancel subscription on timeout
+           return null;
+         },
+@@ -650,8 +570,7 @@
+       // Ensure subscription is canceled
+       subscription.cancel();
+       return result;
+-    } catch (e) {
+-      print('❌ Error creating chat room: $e');
++    } catch (_) {
+       _errorController.add('Failed to create chat room: $e');
+       return null;
+     }
+@@ -684,7 +603,7 @@
+   Future<void> ping() async {
+     try {
+       await _socketService.ping();
+-    } catch (e) {
++    } catch (_) {
+       if (!_errorController.isClosed) {
+         _errorController.add('Ping failed: $e');
+       }
+--- a/lib/repositories/favorite_repo.dart
++++ b/lib/repositories/favorite_repo.dart
+@@ -24,7 +24,7 @@
+       }
+     } on DioException catch (e) {
+       throw Exception(DioErrorHandler.handleError(e));
+-    } catch (e) {
++    } catch (_) {
+       throw Exception('Failed to add to favorites: $e');
+     }
+   }
+@@ -45,9 +45,8 @@
+         throw Exception('Failed to remove from favorites');
+       }
+     } on DioException catch (e) {
+-      print('Error on Adding Favorite: >>>>>>>>>>>>>>>>>>>>>>>$e');
+       throw Exception(DioErrorHandler.handleError(e));
+-    } catch (e) {
++    } catch (_) {
+       throw Exception('Failed to remove from favorites: $e');
+     }
+   }
+@@ -87,7 +86,7 @@
+       }
+     } on DioException catch (e) {
+       throw Exception(DioErrorHandler.handleError(e));
+-    } catch (e) {
++    } catch (_) {
+       throw Exception('Failed to fetch favorite ads: $e');
+     }
+   }
+@@ -96,7 +95,6 @@
+   Future<List<FavoriteAd>> _enrichFavoriteAds(
+       List<FavoriteAd> favorites) async {
+     try {
+-      print('Starting enrichment for ${favorites.length} favorites');
+       // Fetch all manufacturers
+       final manufacturersResponse =
+           await _dio.get('/vehicle-inventory/manufacturers');
+@@ -133,11 +131,7 @@
+               manufacturerMap[favorite.vehicleDetails!.manufacturerId];
+           if (manufacturer != null) {
+             manufacturerName = manufacturer.displayName;
+-            print(
+-                'Found manufacturer: $manufacturerName for ID: ${favorite.vehicleDetails!.manufacturerId}');
+           } else {
+-            print(
+-                'Manufacturer not found for ID: ${favorite.vehicleDetails!.manufacturerId}');
+           }
+         }
+ 
+@@ -165,13 +159,9 @@
+ 
+             if (model != null) {
+               modelName = model.displayName;
+-              print(
+-                  'Found model: $modelName for ID: ${favorite.vehicleDetails!.modelId}');
+             } else {
+-              print(
+-                  'Model not found for ID: ${favorite.vehicleDetails!.modelId}');
+             }
+-          } catch (e) {
++          } catch (_) {
+             // Error fetching model - continue with empty name
+           }
+         }
+@@ -232,9 +222,8 @@
+       }
+ 
+       return enrichedFavorites;
+-    } catch (e) {
++    } catch (_) {
+       // Return original favorites if enrichment fails
+-      print('Error enriching favorite ads: $e');
+       return favorites;
+     }
+   }
+--- a/lib/repositories/my_ads_repo.dart
++++ b/lib/repositories/my_ads_repo.dart
+@@ -20,8 +20,6 @@
+         throw Exception('User not authenticated. Please login again.');
+       }
+ 
+-      print('🔐 Fetching My Ads with token: ${token.substring(0, 20)}...');
+-
+       final requestBody = <String, dynamic>{
+         'page': page,
+         'limit': limit,
+@@ -29,61 +27,43 @@
+         'sortOrder': sortOrder,
+       };
+ 
+-      print('📤 My Ads Request: POST /ads/my-ads with body: $requestBody');
+-
+       final response = await _dio.post(
+         '/ads/my-ads',
+         data: requestBody,
+         options: Options(responseType: ResponseType.json),
+       );
+ 
+-      print('📥 My Ads Response Status: ${response.statusCode}');
+-      print('📥 My Ads Response Data: ${response.data}');
+-      print('📥 My Ads Response Data Type: ${response.data.runtimeType}');
+-
+       dynamic raw = response.data;
+ 
+       List<dynamic> list;
+       try {
+         if (raw is List) {
+           list = raw;
+-          print('✅ Response is a List with ${list.length} items');
+         } else if (raw is Map) {
+           // Handle both Map<String, dynamic> and Map<dynamic, dynamic>
+           final Map map = raw;
+           final dataField = map['data'];
+ 
+-          print(
+-              '📋 Response is a Map. Data field type: ${dataField?.runtimeType}');
+-
+           if (dataField is List) {
+             list = dataField;
+-            print('✅ Data field is a List with ${list.length} items');
+           } else if (dataField is Map) {
+             // Handle case where data is a single object wrapped in a map
+             // Convert single object to list
+             list = [dataField];
+-            print('⚠️ Data field is a Map (single object), converting to List');
+           } else if (dataField == null) {
+             // If data field is null, return empty list
+             list = [];
+-            print('⚠️ Data field is null, returning empty list');
+           } else {
+             // Unexpected type
+-            print(
+-                '❌ Unexpected data field type: ${dataField.runtimeType}, value: $dataField');
+             throw StateError(
+                 'Unexpected data field type: ${dataField.runtimeType}. '
+                 'Expected List or Map. Got: $dataField');
+           }
+         } else {
+-          print('❌ Unexpected response type: ${raw.runtimeType}');
+           throw StateError('Unexpected response type: ${raw.runtimeType}. '
+               'Expected List or Map. Response: $raw');
+         }
+-      } catch (e) {
+-        print('❌ Error parsing response: $e');
+-        print('❌ Raw response: $raw');
++      } catch (_) {
+         rethrow;
+       }
+ 
+@@ -95,9 +75,7 @@
+       final ads = list.whereType<Map<String, dynamic>>().map((obj) {
+         try {
+           return MyAd.fromJson(obj);
+-        } catch (e) {
+-          print('⚠️ Error parsing ad: $e');
+-          print('⚠️ Ad data: $obj');
++        } catch (_) {
+           rethrow;
+         }
+       }).toList();
+@@ -108,7 +86,7 @@
+       return PaginatedMyAdsResponse(data: enrichedAds, hasNext: hasNext);
+     } on DioException catch (e) {
+       throw Exception(DioErrorHandler.handleError(e));
+-    } catch (e) {
++    } catch (_) {
+       throw Exception('Failed to fetch my ads: $e');
+     }
+   }
+@@ -139,8 +117,6 @@
+                 manufacturersData['data'] is List) {
+               manufacturers = manufacturersData['data'] as List;
+             } else {
+-              print(
+-                  '⚠️ Unexpected manufacturers response structure: ${manufacturersData.runtimeType}');
+               manufacturers = [];
+             }
+ 
+@@ -156,8 +132,7 @@
+               }
+             }
+           }
+-        } catch (e) {
+-          print('Error fetching manufacturers: $e');
++        } catch (_) {
+         }
+       }
+ 
+@@ -193,8 +168,6 @@
+             } else if (modelsData is Map && modelsData['data'] is List) {
+               models = modelsData['data'] as List;
+             } else {
+-              print(
+-                  '⚠️ Unexpected models response structure: ${modelsData.runtimeType}');
+               models = [];
+             }
+ 
+@@ -210,9 +183,7 @@
+               }
+             }
+           }
+-        } catch (e) {
+-          print(
+-              'Error fetching models for manufacturer ${request['manufacturerId']}: $e');
++        } catch (_) {
+         }
+       }
+ 
+@@ -249,8 +220,7 @@
+           model: model,
+         );
+       }).toList();
+-    } catch (e) {
+-      print('Error enriching MyAds: $e');
++    } catch (_) {
+       return ads; // Return original ads if enrichment fails
+     }
+   }
+--- a/lib/repositories/profile_repo.dart
++++ b/lib/repositories/profile_repo.dart
+@@ -12,14 +12,12 @@
+     try {
+       // Retrieve user ID from SharedPreferences
+       final userId = await SharedPrefs().getUserId();
+-      print("🔎 Retrieved User ID from SharedPrefs: $userId");
+ 
+       if (userId == null) {
+         throw Exception("User ID not found in storage");
+       }
+ 
+       final response = await _dio.get("/users/$userId");
+-      print('response......................:$response');
+ 
+       if (response.statusCode == 200) {
+         return UserProfile.fromJson(response.data);
+@@ -32,12 +30,10 @@
+       if (errorMessage
+           .contains('Token expired - automatic logout in progress')) {
+         // Don't throw error - logout is already in progress, just return silently
+-        print('🔇 Suppressing token expiration error - logout in progress');
+         // Wait a bit for navigation to complete, then throw a silent exception
+         // that won't be shown in UI
+         throw Exception('SESSION_EXPIRED_SILENT');
+       }
+-      print('errrrrrrooooooorrrrrrrrrrr:$e');
+       throw Exception("Error fetching profile: $e");
+     } catch (e) {
+       // Check if this is the silent expiration error
+@@ -45,7 +41,6 @@
+         // Re-throw as silent error - will be caught in bloc
+         rethrow;
+       }
+-      print('errrrrrrooooooorrrrrrrrrrr:$e');
+       throw Exception("Error fetching profile: $e");
+     }
+   }
+@@ -87,8 +82,7 @@
+       }
+     } on DioException catch (e) {
+       throw Exception(DioErrorHandler.handleError(e));
+-    } catch (e) {
+-      print('❌ Unexpected error in uploadImageToS3: $e');
++    } catch (_) {
+       throw Exception('Unexpected error: $e');
+     }
+   }
+@@ -140,20 +134,14 @@
+ 
+       if (updatedProfile.name != originalProfile.name) {
+         body['name'] = updatedProfile.name;
+-        print(
+-            "📝 Name changed: ${originalProfile.name} → ${updatedProfile.name}");
+       }
+ 
+       if (updatedProfile.email != originalProfile.email) {
+         body['email'] = updatedProfile.email;
+-        print(
+-            "📝 Email changed: ${originalProfile.email} → ${updatedProfile.email}");
+       }
+ 
+       if (updatedProfile.phoneNumber != originalProfile.phoneNumber) {
+         body['phoneNumber'] = updatedProfile.phoneNumber;
+-        print(
+-            "📝 Phone changed: ${originalProfile.phoneNumber} → ${updatedProfile.phoneNumber}");
+       }
+ 
+       // Check if countryCode changed (handle null values)
+@@ -161,35 +149,25 @@
+       final updatedCountryCode = updatedProfile.countryCode ?? "+1";
+       if (updatedCountryCode != originalCountryCode) {
+         body['countryCode'] = updatedProfile.countryCode;
+-        print(
+-            "📝 Country Code changed: $originalCountryCode → $updatedCountryCode");
+       }
+ 
+       if (updatedProfile.profilePic != originalProfile.profilePic) {
+         body['profilePic'] = updatedProfile.profilePic;
+-        print(
+-            "📝 ProfilePic changed: ${originalProfile.profilePic} → ${updatedProfile.profilePic}");
+       }
+ 
+       // If no fields changed, don't send request
+       if (body.isEmpty) {
+-        print("ℹ️ No changes detected, skipping update");
+         return;
+       }
+-
+-      print("🟢 Sending PUT request to: /users/$userId");
+-      print("📝 Request Body (only changed fields): ${body}");
+ 
+       // Validate profile picture URL if provided
+       if (body.containsKey('profilePic') && body['profilePic'] != null) {
+         final profilePicUrl = body['profilePic'] as String;
+-        print("📸 Profile picture URL: $profilePicUrl");
+ 
+         // Check if it's a valid URL (starts with http/https) or default value
+         if (profilePicUrl.isNotEmpty &&
+             profilePicUrl != 'default-profile-pic-url' &&
+             !profilePicUrl.startsWith('http')) {
+-          print("⚠️ Invalid profile picture URL format: $profilePicUrl");
+           // Don't throw error, let backend handle it, but log the issue
+         }
+       }
+@@ -202,14 +180,10 @@
+         }),
+       );
+ 
+-      print("✅ Profile update response: ${response.statusCode}");
+-      print("📄 Response data: ${response.data}");
+-
+       if (response.statusCode != 200) {
+         throw Exception("Failed to update profile.");
+       }
+     } on DioException catch (e) {
+-      print("❌ DioException in updateUserProfile: ${e.response?.data}");
+ 
+       // Provide more specific error messages for profile update failures
+       if (e.response?.statusCode == 400) {
+@@ -238,8 +212,7 @@
+       }
+ 
+       throw Exception(DioErrorHandler.handleError(e));
+-    } catch (e) {
+-      print("❌ General error in updateUserProfile: $e");
++    } catch (_) {
+       throw Exception("Error updating profile: $e");
+     }
+   }
+@@ -261,17 +234,12 @@
+         }),
+       );
+ 
+-      print("✅ Password change response: ${response.statusCode}");
+-      print("📄 Response data: ${response.data}");
+-
+       if (response.statusCode != 200) {
+         throw Exception("Failed to change password.");
+       }
+     } on DioException catch (e) {
+-      print("❌ DioException in changePassword: ${e.response?.data}");
+-      throw Exception(DioErrorHandler.handleError(e));
+-    } catch (e) {
+-      print("❌ General error in changePassword: $e");
++      throw Exception(DioErrorHandler.handleError(e));
++    } catch (_) {
+       throw Exception("Error changing password: $e");
+     }
+   }
+@@ -295,7 +263,7 @@
+       }
+     } on DioException catch (e) {
+       throw Exception(DioErrorHandler.handleError(e));
+-    } catch (e) {
++    } catch (_) {
+       throw Exception("Error deleting account: $e");
+     }
+   }
+@@ -323,29 +291,22 @@
+           response.statusCode == 201 ||
+           response.statusCode == 204) {
+         // Success - data deleted
+-        print('✅ Delete my data successful: ${response.statusCode}');
+         return;
+       } else {
+-        print('❌ Delete my data failed with status: ${response.statusCode}');
+         throw Exception("Failed to delete my data.");
+       }
+     } on DioException catch (e) {
+-      print('❌ DioException in deleteMyData: ${e.message}');
+-      print('❌ Response status: ${e.response?.statusCode}');
+ 
+       // Check if DioException occurred but status code indicates success
+       if (e.response != null) {
+         final statusCode = e.response!.statusCode;
+         if (statusCode == 200 || statusCode == 201 || statusCode == 204) {
+           // Operation was successful despite DioException
+-          print(
+-              '✅ Delete my data successful (despite DioException): $statusCode');
+           return;
+         }
+       }
+       throw Exception(DioErrorHandler.handleError(e));
+     } catch (e) {
+-      print('❌ Exception in deleteMyData: $e');
+       // Re-throw if it's already an Exception with a message
+       if (e is Exception) {
+         rethrow;
+--- a/lib/repositories/report_repository.dart
++++ b/lib/repositories/report_repository.dart
+@@ -7,17 +7,13 @@
+ 
+   Future<ReportAdModel> reportAd(ReportAdModel reportData) async {
+     try {
+-      print('📤 Reporting ad with data: ${reportData.toJson()}');
+ 
+       final response = await _dio.post(
+         '/user-reports',
+         data: reportData.toJson(),
+       );
+ 
+-      print('📥 Report response: ${response.data}');
+-
+       if (response.statusCode == 200 || response.statusCode == 201) {
+-        print('✅ Ad reported successfully');
+ 
+         // Parse the response to get the created report with all details
+         final responseData = response.data;
+@@ -28,18 +24,11 @@
+           return reportData;
+         }
+       } else {
+-        print('⚠️ Failed to report ad, status: ${response.statusCode}');
+         throw Exception('Failed to report ad');
+       }
+     } on DioException catch (e) {
+-      print('❌ Dio error in reportAd: $e');
+-      print('❌ Dio error type: ${e.type}');
+-      print('❌ Dio error message: ${e.message}');
+ 
+       if (e.response != null) {
+-        print('❌ Response status code: ${e.response!.statusCode}');
+-        print('❌ Response data: ${e.response!.data}');
+-        print('❌ Response headers: ${e.response!.headers}');
+ 
+         // Try to extract error message from different possible fields
+         String errorMessage = 'Failed to report ad';
+@@ -53,15 +42,11 @@
+           errorMessage = e.response!.data as String;
+         }
+ 
+-        print('❌ Extracted error message: $errorMessage');
+         throw Exception(errorMessage);
+       } else {
+-        print('❌ No response data available');
+         throw Exception('Network error: ${e.message}');
+       }
+-    } catch (e) {
+-      print('❌ Unexpected error in reportAd: $e');
+-      print('❌ Error type: ${e.runtimeType}');
++    } catch (_) {
+       throw Exception('Failed to report ad: $e');
+     }
+   }
+--- a/lib/repositories/showroom_repo.dart
++++ b/lib/repositories/showroom_repo.dart
+@@ -12,63 +12,43 @@
+     int limit = 10,
+   }) async {
+     try {
+-      print(
+-          '🔍 Fetching showroom users with type: SR (authenticated) - page: $page, limit: $limit');
+       final response = await _dio.get('/users', queryParameters: {
+         'type': 'SR',
+         'page': page,
+         'limit': limit,
+       });
+ 
+-      print('📡 API Response Status: ${response.statusCode}');
+-      print('📡 API Response Data: ${response.data}');
+-
+       if (response.statusCode == 200) {
+         final responseData = response.data;
+-        print('📊 Response data type: ${responseData.runtimeType}');
+-        print('📊 Response data: $responseData');
+ 
+         List<dynamic> data;
+ 
+         // Handle different response structures
+         if (responseData is List) {
+           data = responseData;
+-          print('📊 Response is a List with ${data.length} items');
+         } else if (responseData is Map<String, dynamic>) {
+           // Check if data is wrapped in a 'data' field
+           if (responseData.containsKey('data') &&
+               responseData['data'] is List) {
+             data = responseData['data'] as List<dynamic>;
+-            print(
+-                '📊 Response is a Map with data field containing ${data.length} items');
+           } else if (responseData.containsKey('users') &&
+               responseData['users'] is List) {
+             data = responseData['users'] as List<dynamic>;
+-            print(
+-                '📊 Response is a Map with users field containing ${data.length} items');
+           } else {
+-            print('❌ Unexpected response structure: $responseData');
+             throw Exception(
+                 "Unexpected response structure: expected List or Map with 'data'/'users' field");
+           }
+         } else {
+-          print('❌ Unexpected response type: ${responseData.runtimeType}');
+           throw Exception(
+               "Unexpected response type: ${responseData.runtimeType}");
+         }
+-
+-        print('📊 Processing ${data.length} showroom users');
+ 
+         final List<ShowroomUser> users = [];
+         for (int i = 0; i < data.length; i++) {
+           try {
+-            print('🔄 Parsing user $i: ${data[i]}');
+             final user = ShowroomUser.fromJson(data[i]);
+             users.add(user);
+-            print('✅ Successfully parsed user: ${user.name}');
+-          } catch (parseError) {
+-            print('❌ Error parsing user $i: $parseError');
+-            print('❌ User data: ${data[i]}');
++          } catch (_) {
+           }
+         }
+ 
+@@ -78,13 +58,9 @@
+           final hasNext = responseData['hasNext'] as bool?;
+           final currentPage = responseData['page'] as int? ?? page;
+ 
+-          print(
+-              '📄 Pagination info - total: $total, hasNext: $hasNext, currentPage: $currentPage');
+-
+           // If there are more pages, fetch them
+           if (hasNext == true ||
+               (total != null && (currentPage * limit) < total)) {
+-            print('🔄 Fetching additional pages...');
+             // Fetch remaining pages
+             int nextPage = currentPage + 1;
+             while (true) {
+@@ -123,8 +99,7 @@
+                       if (user.type == 'SR') {
+                         users.add(user);
+                       }
+-                    } catch (e) {
+-                      print('❌ Error parsing user in next page: $e');
++                    } catch (_) {
+                     }
+                   }
+ 
+@@ -148,12 +123,9 @@
+                 } else {
+                   break;
+                 }
+-              } catch (e) {
+-                print('⚠️ Error fetching page $nextPage: $e');
++              } catch (_) {
+                 // If we have some users already, return them instead of failing completely
+                 if (users.isNotEmpty) {
+-                  print(
+-                      '⚠️ Returning ${users.length} users fetched so far despite pagination error');
+                   break;
+                 }
+                 // If no users yet, let the error propagate
+@@ -163,22 +135,13 @@
+           }
+         }
+ 
+-        print('✅ Total showroom users fetched: ${users.length}');
+         return users;
+       } else {
+-        print('❌ API Error - Status: ${response.statusCode}');
+-        print('❌ API Response: ${response.data}');
+         throw Exception(
+             "Failed to load showroom users - Status: ${response.statusCode}");
+       }
+     } catch (e) {
+-      print('❌ Error fetching showroom users: $e');
+       if (e is DioException) {
+-        print('❌ DioException details:');
+-        print('❌ - Type: ${e.type}');
+-        print('❌ - Message: ${e.message}');
+-        print('❌ - Response: ${e.response?.data}');
+-        print('❌ - Status Code: ${e.response?.statusCode}');
+ 
+         // Handle network connection errors first
+         if (e.type == DioExceptionType.connectionTimeout) {
+@@ -203,7 +166,6 @@
+ 
+         // Handle 401 Unauthorized - throw error so UI can show login prompt
+         if (e.response?.statusCode == 401) {
+-          print('ℹ️ 401 Unauthorized - authentication required');
+           throw Exception("Please login to view showroom users.");
+         }
+ 
+@@ -215,7 +177,6 @@
+                 "You don't have permission to view showroom users.");
+           } else if (statusCode == 404) {
+             // 404 means no showroom users found - return empty list
+-            print('ℹ️ 404 Not Found - no showroom users available');
+             return [];
+           } else if (statusCode == 400) {
+             throw Exception(
+@@ -250,7 +211,6 @@
+     int limit = 20,
+   }) async {
+     try {
+-      print('🔍 Fetching ads for showroom user: $userId');
+ 
+       final response = await _dio.get(
+         '/ads/user/$userId',
+@@ -260,31 +220,18 @@
+         },
+       );
+ 
+-      print('📡 Showroom User Ads API Response Status: ${response.statusCode}');
+-      print('📡 Showroom User Ads API Response Data: ${response.data}');
+-
+       if (response.statusCode == 200) {
+         final responseData = response.data;
+         final List<dynamic> rawData = responseData['data'] ?? responseData;
+ 
+-        print('📊 Processing ${rawData.length} ads for showroom user');
+-
+         final ads = rawData.map((json) => AddModel.fromJson(json)).toList();
+         return ads;
+       } else {
+-        print('❌ API Error - Status: ${response.statusCode}');
+-        print('❌ API Response: ${response.data}');
+         throw Exception(
+             "Failed to load showroom user ads - Status: ${response.statusCode}");
+       }
+     } catch (e) {
+-      print('❌ Error fetching showroom user ads: $e');
+       if (e is DioException) {
+-        print('❌ DioException details:');
+-        print('❌ - Type: ${e.type}');
+-        print('❌ - Message: ${e.message}');
+-        print('❌ - Response: ${e.response?.data}');
+-        print('❌ - Status Code: ${e.response?.statusCode}');
+       }
+       throw Exception("Error fetching showroom user ads: $e");
+     }
+@@ -296,74 +243,49 @@
+     int limit = 10,
+   }) async {
+     try {
+-      print(
+-          '🔍 Fetching public showroom users (unauthenticated) with type: SR - page: $page, limit: $limit');
+       final response = await _dio.get('/users/public', queryParameters: {
+         'type': 'SR',
+         'page': page,
+         'limit': limit,
+       });
+ 
+-      print('📡 API Response Status: ${response.statusCode}');
+-      print('📡 API Response Data: ${response.data}');
+-
+       if (response.statusCode == 200) {
+         final responseData = response.data;
+-        print('📊 Response data type: ${responseData.runtimeType}');
+-        print('📊 Response data: $responseData');
+ 
+         List<dynamic> data;
+ 
+         // Handle different response structures
+         if (responseData is List) {
+           data = responseData;
+-          print('📊 Response is a List with ${data.length} items');
+         } else if (responseData is Map<String, dynamic>) {
+           // Check if data is wrapped in a 'data' field
+           if (responseData.containsKey('data') &&
+               responseData['data'] is List) {
+             data = responseData['data'] as List<dynamic>;
+-            print(
+-                '📊 Response is a Map with data field containing ${data.length} items');
+           } else if (responseData.containsKey('users') &&
+               responseData['users'] is List) {
+             data = responseData['users'] as List<dynamic>;
+-            print(
+-                '📊 Response is a Map with users field containing ${data.length} items');
+           } else {
+-            print('❌ Unexpected response structure: $responseData');
+             throw Exception(
+                 "Unexpected response structure: expected List or Map with 'data'/'users' field");
+           }
+         } else {
+-          print('❌ Unexpected response type: ${responseData.runtimeType}');
+           throw Exception(
+               "Unexpected response type: ${responseData.runtimeType}");
+         }
+-
+-        print('📊 Processing ${data.length} public showroom users');
+ 
+         final List<ShowroomUser> users = [];
+         for (int i = 0; i < data.length; i++) {
+           try {
+-            print('🔄 Parsing user $i: ${data[i]}');
+             final user = ShowroomUser.fromJson(data[i]);
+             // Filter to only include SR type users
+             if (user.type == 'SR') {
+               users.add(user);
+-              print('✅ Successfully parsed and added SR user: ${user.name}');
+             } else {
+-              print(
+-                  '⏭️ Skipping user ${user.name} - type is ${user.type}, not SR');
+             }
+-          } catch (parseError) {
+-            print('❌ Error parsing user $i: $parseError');
+-            print('❌ User data: ${data[i]}');
+-          }
+-        }
+-
+-        print(
+-            '✅ Filtered to ${users.length} SR type users from ${data.length} total users');
++          } catch (_) {
++          }
++        }
+ 
+         // Check if there are more pages to fetch (for public endpoint)
+         if (responseData is Map<String, dynamic>) {
+@@ -371,13 +293,9 @@
+           final hasNext = responseData['hasNext'] as bool?;
+           final currentPage = responseData['page'] as int? ?? page;
+ 
+-          print(
+-              '📄 Pagination info - total: $total, hasNext: $hasNext, currentPage: $currentPage');
+-
+           // If there are more pages, fetch them
+           if (hasNext == true ||
+               (total != null && (currentPage * limit) < total)) {
+-            print('🔄 Fetching additional pages for public endpoint...');
+             int nextPage = currentPage + 1;
+             while (true) {
+               try {
+@@ -416,8 +334,7 @@
+                       if (user.type == 'SR') {
+                         users.add(user);
+                       }
+-                    } catch (e) {
+-                      print('❌ Error parsing user in next page: $e');
++                    } catch (_) {
+                     }
+                   }
+ 
+@@ -441,12 +358,9 @@
+                 } else {
+                   break;
+                 }
+-              } catch (e) {
+-                print('⚠️ Error fetching page $nextPage: $e');
++              } catch (_) {
+                 // If we have some users already, return them instead of failing completely
+                 if (users.isNotEmpty) {
+-                  print(
+-                      '⚠️ Returning ${users.length} users fetched so far despite pagination error');
+                   break;
+                 }
+                 // If no users yet, let the error propagate
+@@ -456,22 +370,13 @@
+           }
+         }
+ 
+-        print('✅ Total public showroom users fetched: ${users.length}');
+         return users;
+       } else {
+-        print('❌ API Error - Status: ${response.statusCode}');
+-        print('❌ API Response: ${response.data}');
+         throw Exception(
+             "Failed to load public showroom users - Status: ${response.statusCode}");
+       }
+     } catch (e) {
+-      print('❌ Error fetching public showroom users: $e');
+       if (e is DioException) {
+-        print('❌ DioException details:');
+-        print('❌ - Type: ${e.type}');
+-        print('❌ - Message: ${e.message}');
+-        print('❌ - Response: ${e.response?.data}');
+-        print('❌ - Status Code: ${e.response?.statusCode}');
+ 
+         // Handle network connection errors first
+         if (e.type == DioExceptionType.connectionTimeout) {
+@@ -502,7 +407,6 @@
+                 "You don't have permission to view showroom users.");
+           } else if (statusCode == 404) {
+             // 404 means no showroom users found - return empty list
+-            print('ℹ️ 404 Not Found - no showroom users available');
+             return [];
+           } else if (statusCode == 400) {
+             throw Exception(
+--- a/lib/repositories/signup_repository.dart
++++ b/lib/repositories/signup_repository.dart
+@@ -45,17 +45,14 @@
+       }
+     } on DioException catch (e) {
+       throw Exception(DioErrorHandler.handleError(e));
+-    } catch (e) {
+-      print('❌ Unexpected error in uploadImageToS3: $e');
++    } catch (_) {
+       throw Exception('Unexpected error: $e');
+     }
+   }
+ 
+   Future<String> signup(SignupModel userData) async {
+     try {
+-      print('Hiii');
+       final payload = userData.toJson();
+-      print("📤 Signup payload: $payload");
+       final response = await _dio.post(
+         "/users",
+         data: payload,
+@@ -66,24 +63,19 @@
+         //     ),
+       );
+ 
+-      print(response.statusCode);
+-      print('response:.......${response.data}');
+       if (response.statusCode == 201) {
+         return response.data['message'] ?? "Signed Up successfully";
+       } else {
+         throw Exception("Failed to signup: ${response.statusMessage}");
+       }
+     } on DioException catch (e) {
+-      print("errrererererererere");
+-      print(e);
+-      print("errrererererererere");
+ 
+       if (e.response != null) {
+         throw Exception(e.response!.data['message'] ?? "API error occurred");
+       } else {
+         throw Exception("Network error: ${e.message}");
+       }
+-    } catch (e) {
++    } catch (_) {
+       throw Exception("Unexpected error: $e");
+     }
+   }
+--- a/lib/repositories/version_repo.dart
++++ b/lib/repositories/version_repo.dart
+@@ -15,7 +15,6 @@
+       final response = await _dio.get(_versionPath);
+ 
+       if (response.statusCode != 200 || response.data is! Map<String, dynamic>) {
+-        print('📌 Version API: unexpected response status=${response.statusCode} or body type');
+         return null;
+       }
+       final apiResponse = AppVersionResponse.fromJson(
+@@ -23,14 +22,11 @@
+       );
+       final data = apiResponse.data;
+       if (data != null) {
+-        print('📌 Version API: ok → ios=${data.iosVersion} android=${data.androidVersion}');
+       } else {
+-        print('📌 Version API: response.data was null');
+       }
+       return data;
+     } on DioException catch (e) {
+       if (e.response?.statusCode != null) {
+-        print('📌 Version API failed: ${e.response?.statusCode} ${e.response?.data}');
+         return null;
+       }
+       rethrow;
+--- a/lib/services/auth_service.dart
++++ b/lib/services/auth_service.dart
+@@ -127,7 +127,6 @@
+       }
+ 
+       // For other error status codes (500, etc.), don't logout, just return null
+-      print('⚠️ Token refresh failed with status ${response.statusCode}');
+       final result = null;
+       _isRefreshing = false;
+       _refreshCompleter?.complete(result);
+@@ -135,7 +134,6 @@
+       return result;
+     } catch (e) {
+       // Handle network errors or other exceptions
+-      print('❌ Error refreshing token: $e');
+       final result = null;
+       _isRefreshing = false;
+ 
+@@ -144,8 +142,6 @@
+       if (e is DioException) {
+         final statusCode = e.response?.statusCode;
+         if (statusCode == 401 || statusCode == 403) {
+-          print(
+-              '⚠️ Refresh token expired (DioException), triggering automatic logout...');
+           // Set logout flag before calling handleTokenExpiration to suppress errors
+           _isLoggingOut = true;
+           handleTokenExpiration();
+@@ -162,7 +158,6 @@
+   Future<void> handleTokenExpiration() async {
+     try {
+       // Flag is already set before calling this method
+-      print('🚪 Automatic logout triggered due to token expiration');
+ 
+       // Reset initial refresh flag
+       resetInitialRefreshFlag();
+@@ -177,8 +172,7 @@
+       // navigation stack, so no need to pop pages first (the old
+       // `while (canPop()) pop()` loop could pop the last page and throw).
+       AppRoutes.router.go('/login');
+-    } catch (e) {
+-      print('❌ Error during automatic logout: $e');
++    } catch (_) {
+     } finally {
+       // Reset flag after a delay to allow navigation to complete
+       Future.delayed(const Duration(seconds: 2), () {
+--- a/lib/services/chat_api_service.dart
++++ b/lib/services/chat_api_service.dart
+@@ -51,7 +51,6 @@
+         response = await request(newAuthHeader);
+       } else {
+         // Refresh token expired, AuthService will handle automatic logout
+-        print('⚠️ Chat API - Token refresh failed, user will be logged out');
+         throw Exception('Session expired. Please login again.');
+       }
+     }
+@@ -85,8 +84,7 @@
+             : 'Unknown error';
+         throw Exception('Failed to fetch chat rooms: $errorMessage');
+       }
+-    } catch (e) {
+-      print('❌ Error fetching chat rooms: $e');
++    } catch (_) {
+       rethrow;
+     }
+   }
+@@ -117,8 +115,7 @@
+             : 'Unknown error';
+         throw Exception('Failed to fetch messages: $errorMessage');
+       }
+-    } catch (e) {
+-      print('❌ Error fetching messages: $e');
++    } catch (_) {
+       rethrow;
+     }
+   }
+@@ -157,8 +154,7 @@
+             : 'Unknown error';
+         throw Exception('Failed to check room: $errorMessage');
+       }
+-    } catch (e) {
+-      print('❌ Error checking room: $e');
++    } catch (_) {
+       rethrow;
+     }
+   }
+@@ -214,8 +210,7 @@
+         }
+         throw Exception('Failed to send message: $errorMessage');
+       }
+-    } catch (e) {
+-      print('❌ Error sending message via API: $e');
++    } catch (_) {
+       rethrow;
+     }
+   }
+--- a/lib/services/chat_socket_service.dart
++++ b/lib/services/chat_socket_service.dart
+@@ -50,7 +50,6 @@
+       // forceNew connection whose duplicate listeners double-deliver messages
+       // (QA audit 2026-07-10).
+       if (_isConnected && _socket?.connected == true) {
+-        print('✅ Socket already connected — reusing existing connection');
+         return true;
+       }
+       // Tear down any stale socket before creating a fresh one.
+@@ -63,10 +62,8 @@
+ 
+       // Get stored token
+       final token = await getToken();
+-      print('🔑 Retrieved token: ${token != null ? 'Present' : 'Missing'}');
+ 
+       if (token == null || token.isEmpty) {
+-        print('❌ No authentication token found');
+         _errorController
+             .add('No authentication token found. Please login first.');
+         return false;
+@@ -80,14 +77,8 @@
+       final socketUrl =
+           '$baseUrl/chat'; // Add /chat namespace to match HTML file
+ 
+-      print('🔌 Connecting to WebSocket...');
+-      print('🌐 Server URL: $socketUrl');
+-      print('🔑 Token: ${cleanToken.substring(0, 20)}...');
+-      print('⏰ Timeout: 10000ms');
+-
+       // Validate URL
+       if (baseUrl.isEmpty) {
+-        print('❌ Base URL is empty');
+         _errorController.add(
+             'Server URL not configured. Please check your environment settings.');
+         return false;
+@@ -106,14 +97,12 @@
+       _setupEventListeners();
+ 
+       // Wait for connection with timeout using Completer
+-      print('⏳ Waiting for connection...');
+       final completer = Completer<bool>();
+ 
+       // Set up a one-time listener for connection
+       late StreamSubscription connectionSub;
+       connectionSub = _connectionController.stream.listen((connected) {
+         if (connected && !completer.isCompleted) {
+-          print('✅ Socket connected successfully');
+           connectionSub.cancel();
+           completer.complete(true);
+         }
+@@ -122,7 +111,6 @@
+       // Set timeout
+       Timer(const Duration(seconds: 5), () {
+         if (!completer.isCompleted) {
+-          print('❌ Socket connection timeout');
+           connectionSub.cancel();
+           _errorController.add(
+               'Connection timeout. Please check your internet connection and server status.');
+@@ -131,8 +119,7 @@
+       });
+ 
+       return await completer.future;
+-    } catch (e) {
+-      print('❌ Socket connection error: $e');
++    } catch (_) {
+       _errorController.add('Connection failed: $e');
+       return false;
+     }
+@@ -144,8 +131,6 @@
+ 
+     // Connection events
+     _socket!.onConnect((_) {
+-      print('✅ WebSocket connected successfully!');
+-      print('🔗 Socket ID: ${_socket!.id}');
+       _isConnected = true;
+       _connectionController.add(true);
+       _addConnectionStatus(true);
+@@ -154,7 +139,6 @@
+       // (re)connect, re-join the active room so live messages resume.
+       final roomToRejoin = _currentRoomId;
+       if (roomToRejoin != null) {
+-        print('🔁 Re-joining room after (re)connect: $roomToRejoin');
+         _socket!.emit('joinChatRoom', {'roomId': roomToRejoin});
+       }
+ 
+@@ -163,24 +147,18 @@
+     });
+ 
+     _socket!.onDisconnect((reason) {
+-      print('❌ WebSocket disconnected!');
+-      print('📝 Reason: $reason');
+-      print('🔍 Disconnect timestamp: ${DateTime.now().toIso8601String()}');
+       _isConnected = false;
+       _connectionController.add(false);
+       _addConnectionStatus(false);
+     });
+ 
+     _socket!.onConnectError((error) {
+-      print('❌ WebSocket connection error!');
+-      print('💥 Error details: $error');
+       _isConnected = false;
+       _connectionController.add(false);
+       _addConnectionStatus(false);
+     });
+ 
+     _socket!.on('connect_timeout', (data) {
+-      print('⏰ WebSocket connect timeout: $data');
+       _isConnected = false;
+       _connectionController.add(false);
+       _addConnectionStatus(false);
+@@ -188,39 +166,29 @@
+ 
+     // Chat room events
+     _socket!.on('connected', (data) {
+-      print('🔗 Connected event: $data');
+     });
+ 
+     _socket!.on('chatRoomCreated', (data) {
+-      print('🏠 Chat room created: ${data['data']?['roomId']}');
+       // Set the current room ID when room is created
+       final roomId = data['data']?['roomId'] as String?;
+       if (roomId != null) {
+         _currentRoomId = roomId;
+-        print('✅ Set current room ID from chatRoomCreated event: $roomId');
+         // Automatically join the newly created room
+-        print('🚪 Auto-joining newly created room: $roomId');
+         _socket!.emit('joinChatRoom', {'roomId': roomId});
+       }
+       _roomController.add({'type': 'roomCreated', 'data': data});
+     });
+ 
+     _socket!.on('userJoinedRoom', (data) {
+-      print('👤 User joined room: ${data['roomId']}');
+       _roomController.add({'type': 'userJoined', 'data': data});
+     });
+ 
+     _socket!.on('userLeftRoom', (data) {
+-      print('👋 User left room: ${data['roomId']}');
+       _roomController.add({'type': 'userLeft', 'data': data});
+     });
+ 
+     // Message events - server broadcasts individual messages
+     _socket!.on('message', (message) {
+-      print('💬 Message received: ${message['content']}');
+-      print('📨 Full message data: $message');
+-      print('🏠 Room ID: ${message['roomId']}');
+-      print('👤 Sender ID: ${message['senderId']}');
+ 
+       // Add the individual message as a list to the stream
+       _messagesController.add([message as Map<String, dynamic>]);
+@@ -228,12 +196,6 @@
+ 
+     // Alternative message event (as mentioned in HTML file) - Only for logging
+     _socket!.on('newMessage', (message) {
+-      print('💬 New message received (alternative): ${message['content']}');
+-      print('📨 Full new message data: $message');
+-      print('🏠 Room ID: ${message['roomId']}');
+-      print('👤 Sender ID: ${message['senderId']}');
+-      print(
+-          '⚠️ Using newMessage event as backup - message already processed by main listener');
+ 
+       // Don't add to stream to prevent duplicates
+       // The main 'message' event should handle all messages
+@@ -241,16 +203,11 @@
+ 
+     // Add debugging for all socket events
+     _socket!.onAny((event, data) {
+-      print('🔍 Socket event received: $event');
+-      print('📦 Event data: $data');
+     });
+ 
+     _socket!.on('sendMessageResponse', (response) {
+-      print('📨 SendMessageResponse received: $response');
+-      if (response['success'] == true) {
+-        print('✅ Message sent successfully');
+-      } else {
+-        print('❌ Message failed: ${response['error']}');
++      if (response['success'] == true) {
++      } else {
+         _errorController.add('Message failed: ${response['error']}');
+       }
+     });
+@@ -259,17 +216,14 @@
+     _socket!.on('getUserChatRoomsResponse', (response) {
+       if (response['success'] == true) {
+         final rooms = response['chatRooms'] ?? [];
+-        print('📋 Loaded ${rooms.length} chat rooms');
+         _roomController.add({'type': 'roomsList', 'data': response});
+       } else {
+-        print('❌ Failed to load rooms: ${response['error']}');
+         _errorController.add('Failed to load rooms: ${response['error']}');
+       }
+     });
+ 
+     // Join room response
+     _socket!.on('joinChatRoomResponse', (response) {
+-      print('🚪 Join room response: $response');
+       if (response['success'] == true) {
+         _currentRoomId = response['roomId'];
+         _roomController.add({'type': 'roomJoined', 'data': response});
+@@ -280,16 +234,13 @@
+ 
+     // Messages response
+     _socket!.on('getRoomMessagesResponse', (response) {
+-      print('📨 Messages response: ${response['success']}');
+       if (response['success'] == true) {
+         final messages = (response['data'] as List<dynamic>?)
+                 ?.map((message) => message as Map<String, dynamic>)
+                 .toList() ??
+             [];
+-        print('✅ Loaded ${messages.length} messages');
+         _messagesController.add(messages);
+       } else {
+-        print('❌ Failed to load messages: ${response['error']}');
+         _errorController.add('Failed to load messages: ${response['error']}');
+       }
+     });
+@@ -302,15 +253,12 @@
+       return;
+     }
+ 
+-    print('🏠 Creating chat room for ad: $adId');
+     _socket!.emitWithAck('createChatRoom', {'adId': adId}, ack: (response) {
+-      print('📩 CreateChatRoom Ack received: $response');
+       if (response['success'] == true) {
+         // Set the current room ID to the newly created room
+         final roomId = response['data']?['roomId'] as String?;
+         if (roomId != null) {
+           _currentRoomId = roomId;
+-          print('✅ Set current room ID to: $roomId');
+         }
+         _roomController.add({'type': 'roomCreated', 'data': response});
+       } else {
+@@ -346,15 +294,12 @@
+       throw Exception('Not connected to server');
+     }
+ 
+-    print('🚪 Joining room: $roomId');
+-
+     final completer = Completer<bool>();
+ 
+     _socket!.emit('joinChatRoom', {'roomId': roomId});
+ 
+     // Also listen for server push (redundant safety)
+     _socket!.once('joinChatRoomResponse', (data) {
+-      print("🚪 Join room response: $data");
+       if (data['success'] == true) {
+         _currentRoomId = data['roomId'];
+         completer.complete(true);
+@@ -380,7 +325,6 @@
+       return;
+     }
+ 
+-    print('💬 Loading messages for room: $roomId');
+     _socket!.emit('getRoomMessages', {'roomId': roomId});
+   }
+ 
+@@ -388,10 +332,8 @@
+   /// unread count is reset. No-op if the socket isn't connected.
+   Future<void> markRoomRead(String roomId) async {
+     if (!_isConnected || _socket == null) {
+-      print('⚠️ markRoomRead skipped — socket not connected');
+-      return;
+-    }
+-    print('👁️ Marking room as read: $roomId');
++      return;
++    }
+     _socket!.emit('markChatRoomRead', {'roomId': roomId});
+   }
+ 
+@@ -400,7 +342,6 @@
+   void sendMessage(String content,
+       {String type = 'text', List<Map<String, dynamic>>? attachments}) async {
+     if (_currentRoomId == null) {
+-      print('❌ No room selected, cannot send message');
+       return;
+     }
+ 
+@@ -408,17 +349,8 @@
+     await _ensureConnection();
+ 
+     if (!_isConnected || _socket == null) {
+-      print(
+-          '❌ Socket not connected after ensuring connection, cannot send message');
+-      return;
+-    }
+-
+-    print('📤 Sending message: $content');
+-    print('🏠 Room ID: $_currentRoomId');
+-    print('📝 Type: $type');
+-    if (attachments != null) print('📎 Attachments: ${attachments.length}');
+-    print('🔍 Socket connected before emit: $_isConnected');
+-    print('🔍 Socket ID before emit: ${_socket!.id}');
++      return;
++    }
+ 
+     try {
+       final payload = <String, dynamic>{
+@@ -438,14 +370,9 @@
+       //   'type': type,
+       // }, ack: (res) => print('✅ Ack: $res'));
+ 
+-      print('✅ Send message event emitted');
+-      print('🔍 Socket connected after emit: $_isConnected');
+-      print('🔍 Socket ID after emit: ${_socket?.id}');
+-
+       // Keep connection alive after sending
+       _keepConnectionAlive();
+-    } catch (e) {
+-      print('❌ Error sending message: $e');
++    } catch (_) {
+       _errorController.add('Failed to send message: $e');
+     }
+   }
+@@ -457,7 +384,6 @@
+     }
+ 
+     final startTime = DateTime.now().millisecondsSinceEpoch;
+-    print('🏓 Testing ping...');
+ 
+     _socket!.emit('ping', {'t0': startTime});
+   }
+@@ -465,19 +391,16 @@
+   /// Ensure connection is stable before operations
+   Future<void> _ensureConnection() async {
+     if (!_isConnected || _socket == null) {
+-      print('🔄 Connection lost, attempting to reconnect...');
+       final roomToRejoin = _currentRoomId;
+       final reconnected = await connect();
+       // Server-side room membership dies with the old socket — rejoin the
+       // active room or subsequent sendMessage calls are silently dropped
+       // (QA audit 2026-07-10).
+       if (reconnected && roomToRejoin != null && _socket != null) {
+-        print('🔁 Rejoining room after reconnect: $roomToRejoin');
+         _socket!.emit('joinChatRoom', {'roomId': roomToRejoin});
+         _currentRoomId = roomToRejoin;
+       }
+     } else {
+-      print('✅ Connection is stable');
+     }
+   }
+ 
+@@ -487,7 +410,6 @@
+     if (_isConnected && _socket != null) {
+       _socket!
+           .emit('ping', {'timestamp': DateTime.now().millisecondsSinceEpoch});
+-      print('🏓 Ping sent to keep connection alive');
+     }
+   }
+ 
+@@ -503,12 +425,10 @@
+       if (_isConnected && _socket != null) {
+         _socket!
+             .emit('ping', {'timestamp': DateTime.now().millisecondsSinceEpoch});
+-        print('🏓 Periodic ping sent to maintain connection');
+       } else {
+         // Do NOT call connect() here: it disposes the socket that socket.io
+         // is already trying to reconnect and raises a spurious
+         // "Connection timeout" error. Let the built-in reconnection work.
+-        print('⚠️ Socket disconnected — waiting for socket.io auto-reconnect');
+       }
+     });
+   }
+@@ -534,7 +454,6 @@
+       _connectionController.add(false);
+     }
+     _addConnectionStatus(false);
+-    print('🔌 Disconnected from WebSocket');
+   }
+ 
+   /// Clean up resources
+--- a/lib/services/otp_autofill_service.dart
++++ b/lib/services/otp_autofill_service.dart
+@@ -44,8 +44,7 @@
+       final res = await _smartAuth.getSmsWithUserConsentApi();
+       final sms = res.data?.sms ?? '';
+       return extractCode(sms) ?? res.data?.code;
+-    } catch (e) {
+-      debugPrint('OTP autofill failed: $e');
++    } catch (_) {
+       return null;
+     } finally {
+       _listening = false;

@@ -117,8 +117,6 @@ class _HomePageState extends State<HomePage> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 300) {
-      print(
-          "🧭 Scroll Position: ${_scrollController.position.pixels} / ${_scrollController.position.maxScrollExtent}");
 
       // Trigger next page load when nearing bottom
       context
@@ -192,8 +190,7 @@ class _HomePageState extends State<HomePage> {
           await _applyLocationBasedRecommendations(placeDetails);
           return;
         }
-      } catch (e) {
-        print("Google Places reverse geocoding failed: $e");
+      } catch (_) {
       }
 
       // Fallback to standard geocoding
@@ -228,8 +225,7 @@ class _HomePageState extends State<HomePage> {
         _userLocation = newAddress;
       });
       await _applyLocationBasedRecommendations(newAddress);
-    } catch (e) {
-      print("Location error: $e");
+    } catch (_) {
       if (!mounted) return;
       setState(() {
         _userLocation = "Location not available";
@@ -290,7 +286,6 @@ class _HomePageState extends State<HomePage> {
           setState(() {
             _isLocationRecommendationsMode = true;
           });
-          print("🔍 Searching by location: ${point.lat}, ${point.lng}");
           context.read<AdvertisementBloc>().add(
                 AdvertisementEvent.searchByLocation(
                   latitude: point.lat,
@@ -300,8 +295,7 @@ class _HomePageState extends State<HomePage> {
           return;
         }
       }
-    } catch (e) {
-      print('Error applying location recommendations: $e');
+    } catch (_) {
     }
 
     if (!mounted) return;
@@ -328,8 +322,7 @@ class _HomePageState extends State<HomePage> {
       }
 
       return null;
-    } catch (e) {
-      print("Error getting detailed address: $e");
+    } catch (_) {
       return null;
     }
   }
@@ -414,7 +407,7 @@ class _HomePageState extends State<HomePage> {
                                   .toList();
                               isLoadingSuggestions = false;
                             });
-                          } catch (e) {
+                          } catch (_) {
                             setDialogState(() {
                               suggestions = [];
                               isLoadingSuggestions = false;
@@ -511,7 +504,7 @@ class _HomePageState extends State<HomePage> {
                             controller.text = gpsAddress;
                             isLoadingSuggestions = false;
                           });
-                        } catch (e) {
+                        } catch (_) {
                           setDialogState(() {
                             isLoadingSuggestions = false;
                           });
@@ -959,7 +952,6 @@ class _HomePageState extends State<HomePage> {
     return GestureDetector(
       onTap: () {
         _launchURL(link);
-        print('$link clickkedddd..........');
       },
       child: Padding(
         // padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -988,7 +980,6 @@ class _HomePageState extends State<HomePage> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      print("❌ Could not launch $url");
     }
   }
 
@@ -1551,4 +1542,3 @@ class BottomNavBar extends StatelessWidget {
     }
   }
 }
-

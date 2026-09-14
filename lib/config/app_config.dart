@@ -37,10 +37,8 @@ class AppConfig {
   static Future<void> load() async {
     try {
       await dotenv.load();
-      print('📡 API base URL: $baseUrl');
-    } catch (e) {
+    } catch (_) {
       // Handle error if .env file is not found
-      print('Warning: Could not load .env file: $e');
     }
   }
 

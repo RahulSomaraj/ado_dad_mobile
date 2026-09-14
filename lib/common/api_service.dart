@@ -69,9 +69,6 @@ class ApiService {
           return handler.next(response);
         },
         onError: (DioException e, handler) async {
-          print(
-            '❌ ${e.response?.statusCode ?? 'ERR'} ${e.requestOptions.method} ${e.requestOptions.uri} — ${e.message}',
-          );
           if (e.response?.statusCode == 401) {
             // Token expired or invalid - try to refresh it
             final authService = AuthService();
@@ -126,8 +123,6 @@ class ApiService {
                 final retryResponse = await _dio.fetch(e.requestOptions);
                 return handler.resolve(retryResponse);
               } catch (retryError) {
-                print(
-                    '❌ Request retry failed after token refresh: $retryError');
                 return handler.reject(retryError is DioException
                     ? retryError
                     : DioException(
@@ -139,8 +134,6 @@ class ApiService {
             } else {
               // Refresh failed - refresh token expired or invalid
               // AuthService will handle logout automatically
-              print(
-                  '⚠️ Token refresh failed - refresh token expired or invalid');
 
               // If logout is in progress, suppress the error to avoid showing it in UI
               if (authService.isLoggingOut) {
@@ -249,9 +242,8 @@ class DioErrorHandler {
           }
         }
       }
-    } catch (e) {
+    } catch (_) {
       // Silent catch if the body is not parseable
-      print("⚠️ Error parsing response data: $e");
     }
 
     // Fall back to status-based messages

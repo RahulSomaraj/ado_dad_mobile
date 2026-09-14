@@ -12,14 +12,12 @@ class ProfileRepo {
     try {
       // Retrieve user ID from SharedPreferences
       final userId = await SharedPrefs().getUserId();
-      print("🔎 Retrieved User ID from SharedPrefs: $userId");
 
       if (userId == null) {
         throw Exception("User ID not found in storage");
       }
 
       final response = await _dio.get("/users/$userId");
-      print('response......................:$response');
 
       if (response.statusCode == 200) {
         return UserProfile.fromJson(response.data);
@@ -32,12 +30,10 @@ class ProfileRepo {
       if (errorMessage
           .contains('Token expired - automatic logout in progress')) {
         // Don't throw error - logout is already in progress, just return silently
-        print('🔇 Suppressing token expiration error - logout in progress');
         // Wait a bit for navigation to complete, then throw a silent exception
         // that won't be shown in UI
         throw Exception('SESSION_EXPIRED_SILENT');
       }
-      print('errrrrrrooooooorrrrrrrrrrr:$e');
       throw Exception("Error fetching profile: $e");
     } catch (e) {
       // Check if this is the silent expiration error
@@ -45,7 +41,6 @@ class ProfileRepo {
         // Re-throw as silent error - will be caught in bloc
         rethrow;
       }
-      print('errrrrrrooooooorrrrrrrrrrr:$e');
       throw Exception("Error fetching profile: $e");
     }
   }
@@ -87,8 +82,7 @@ class ProfileRepo {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (e) {
-      print('❌ Unexpected error in uploadImageToS3: $e');
+    } catch (_) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -140,20 +134,14 @@ class ProfileRepo {
 
       if (updatedProfile.name != originalProfile.name) {
         body['name'] = updatedProfile.name;
-        print(
-            "📝 Name changed: ${originalProfile.name} → ${updatedProfile.name}");
       }
 
       if (updatedProfile.email != originalProfile.email) {
         body['email'] = updatedProfile.email;
-        print(
-            "📝 Email changed: ${originalProfile.email} → ${updatedProfile.email}");
       }
 
       if (updatedProfile.phoneNumber != originalProfile.phoneNumber) {
         body['phoneNumber'] = updatedProfile.phoneNumber;
-        print(
-            "📝 Phone changed: ${originalProfile.phoneNumber} → ${updatedProfile.phoneNumber}");
       }
 
       // Check if countryCode changed (handle null values)
@@ -161,35 +149,25 @@ class ProfileRepo {
       final updatedCountryCode = updatedProfile.countryCode ?? "+1";
       if (updatedCountryCode != originalCountryCode) {
         body['countryCode'] = updatedProfile.countryCode;
-        print(
-            "📝 Country Code changed: $originalCountryCode → $updatedCountryCode");
       }
 
       if (updatedProfile.profilePic != originalProfile.profilePic) {
         body['profilePic'] = updatedProfile.profilePic;
-        print(
-            "📝 ProfilePic changed: ${originalProfile.profilePic} → ${updatedProfile.profilePic}");
       }
 
       // If no fields changed, don't send request
       if (body.isEmpty) {
-        print("ℹ️ No changes detected, skipping update");
         return;
       }
-
-      print("🟢 Sending PUT request to: /users/$userId");
-      print("📝 Request Body (only changed fields): ${body}");
 
       // Validate profile picture URL if provided
       if (body.containsKey('profilePic') && body['profilePic'] != null) {
         final profilePicUrl = body['profilePic'] as String;
-        print("📸 Profile picture URL: $profilePicUrl");
 
         // Check if it's a valid URL (starts with http/https) or default value
         if (profilePicUrl.isNotEmpty &&
             profilePicUrl != 'default-profile-pic-url' &&
             !profilePicUrl.startsWith('http')) {
-          print("⚠️ Invalid profile picture URL format: $profilePicUrl");
           // Don't throw error, let backend handle it, but log the issue
         }
       }
@@ -202,14 +180,10 @@ class ProfileRepo {
         }),
       );
 
-      print("✅ Profile update response: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
-
       if (response.statusCode != 200) {
         throw Exception("Failed to update profile.");
       }
     } on DioException catch (e) {
-      print("❌ DioException in updateUserProfile: ${e.response?.data}");
 
       // Provide more specific error messages for profile update failures
       if (e.response?.statusCode == 400) {
@@ -238,8 +212,7 @@ class ProfileRepo {
       }
 
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (e) {
-      print("❌ General error in updateUserProfile: $e");
+    } catch (_) {
       throw Exception("Error updating profile: $e");
     }
   }
@@ -261,17 +234,12 @@ class ProfileRepo {
         }),
       );
 
-      print("✅ Password change response: ${response.statusCode}");
-      print("📄 Response data: ${response.data}");
-
       if (response.statusCode != 200) {
         throw Exception("Failed to change password.");
       }
     } on DioException catch (e) {
-      print("❌ DioException in changePassword: ${e.response?.data}");
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (e) {
-      print("❌ General error in changePassword: $e");
+    } catch (_) {
       throw Exception("Error changing password: $e");
     }
   }
@@ -295,7 +263,7 @@ class ProfileRepo {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (e) {
+    } catch (_) {
       throw Exception("Error deleting account: $e");
     }
   }
@@ -323,29 +291,22 @@ class ProfileRepo {
           response.statusCode == 201 ||
           response.statusCode == 204) {
         // Success - data deleted
-        print('✅ Delete my data successful: ${response.statusCode}');
         return;
       } else {
-        print('❌ Delete my data failed with status: ${response.statusCode}');
         throw Exception("Failed to delete my data.");
       }
     } on DioException catch (e) {
-      print('❌ DioException in deleteMyData: ${e.message}');
-      print('❌ Response status: ${e.response?.statusCode}');
 
       // Check if DioException occurred but status code indicates success
       if (e.response != null) {
         final statusCode = e.response!.statusCode;
         if (statusCode == 200 || statusCode == 201 || statusCode == 204) {
           // Operation was successful despite DioException
-          print(
-              '✅ Delete my data successful (despite DioException): $statusCode');
           return;
         }
       }
       throw Exception(DioErrorHandler.handleError(e));
     } catch (e) {
-      print('❌ Exception in deleteMyData: $e');
       // Re-throw if it's already an Exception with a message
       if (e is Exception) {
         rethrow;

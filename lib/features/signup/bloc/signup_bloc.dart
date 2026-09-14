@@ -31,8 +31,6 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
       }
 
       final responseMessage = await signupRepository.signup(model);
-      print('Success!!!!!');
-      print('responseMessage:.......$responseMessage');
       emit(SignupState.signupSuccess(responseMessage));
     } catch (e) {
       // Extract message from exception, removing "Exception: " prefix if present

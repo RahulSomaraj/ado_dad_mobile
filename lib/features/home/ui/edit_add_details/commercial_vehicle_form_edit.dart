@@ -29,7 +29,6 @@ import 'package:go_router/go_router.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
-
 /// Returns the first element matching [test], or null when there is none.
 T? _firstWhereOrNull<T>(Iterable<T> items, bool Function(T) test) {
   for (final item in items) {
@@ -186,8 +185,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
     try {
       _manufacturers =
           await repo.fetchManufacturers(vehicleCategory: 'passenger_car');
-    } catch (e) {
-      debugPrint('Failed to load manufacturers: $e');
+    } catch (_) {
     }
     if (!mounted) return;
     setState(() {});
@@ -206,8 +204,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
     if (manufacturer != null) {
       try {
         _models = await repo.fetchModelsByManufacturer(manufacturer.id);
-      } catch (e) {
-        debugPrint('Failed to load models: $e');
+      } catch (_) {
       }
       if (!mounted) return;
       setState(() {});
@@ -222,8 +219,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
     if (model != null) {
       try {
         _variants = await repo.fetchVariantsByModel(model.id);
-      } catch (e) {
-        debugPrint('Failed to load variants: $e');
+      } catch (_) {
       }
       if (!mounted) return;
       setState(() {});
@@ -257,8 +253,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
           _firstWhereOrNull(_transmissionTypes,
               (t) => t.displayName.toLowerCase() == name) ??
           _firstOrNull(_transmissionTypes);
-    } catch (e) {
-      debugPrint('Failed to load transmission types: $e');
+    } catch (_) {
     }
     if (!mounted) return;
 
@@ -274,8 +269,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
               _firstWhereOrNull(
                   _fuelTypes, (f) => f.displayName.toLowerCase() == name) ??
               _firstOrNull(_fuelTypes);
-    } catch (e) {
-      debugPrint('Failed to load fuel types: $e');
+    } catch (_) {
     }
 
     if (mounted) setState(() {});
@@ -333,19 +327,15 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
   Future<void> _uploadVideo() async {
     if (_newVideoFile != null) {
       try {
-        print('📹 Starting video upload...');
         final url = await AddRepository().uploadVideoToS3(_newVideoFile!);
         if (url != null) {
-          print('✅ Video uploaded successfully: $url');
           setState(() {
             _uploadedVideoUrl = url;
             _videoRemoved = false; // Reset removal flag when video is uploaded
           });
         } else {
-          print('❌ Video upload returned null URL');
         }
-      } catch (e) {
-        print('❌ Error uploading video: $e');
+      } catch (_) {
         // Optionally show error to user
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

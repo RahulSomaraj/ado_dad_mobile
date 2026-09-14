@@ -82,11 +82,6 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-    print('🚀 Chat page initialized for room: ${widget.roomId}');
-    print('👤 Other user: ${widget.otherUserName}');
-    print('🖼️ Profile pic: ${widget.otherUserProfilePic}');
-    print('📞 Phone: ${widget.otherUserPhone}');
-    print('📝 Ad title: ${widget.adTitle}');
 
     // Get current user ID
     _getCurrentUserId();
@@ -103,13 +98,11 @@ class _ChatPageState extends State<ChatPage> {
     // Join the room (socket) and load messages (HTTP) when page loads.
     // Messages are loaded exactly once here; the ChatRoomJoined listener no
     // longer dispatches a second LoadRoomMessages (it double-fetched).
-    print('🚪 Dispatching JoinChatRoom event...');
     context.read<ChatBloc>().add(JoinChatRoom(widget.roomId));
 
     // Opening the room means the user has seen it — clear its unread badge.
     context.read<ChatBloc>().add(MarkRoomRead(widget.roomId));
 
-    print('📨 Dispatching LoadRoomMessages event...');
     context.read<ChatBloc>().add(LoadRoomMessages(widget.roomId));
 
     _stagedVoiceStateSub = _stagedVoicePlayer.playerStateStream.listen((state) {
@@ -123,9 +116,7 @@ class _ChatPageState extends State<ChatPage> {
     try {
       final chatRepository = ChatRepository();
       _currentUserId = await chatRepository.getCurrentUserId();
-      print('👤 Current user ID in chat page: $_currentUserId');
-    } catch (e) {
-      print('❌ Error getting current user ID: $e');
+    } catch (_) {
     }
   }
 
@@ -134,9 +125,8 @@ class _ChatPageState extends State<ChatPage> {
     try {
       final ad = await AddRepository().fetchAdDetail(widget.adId!);
       if (mounted) setState(() => _adPrice = ad.price);
-    } catch (e) {
+    } catch (_) {
       // Non-fatal: the card simply falls back to showing the title only.
-      print('⚠️ Could not load ad price for pinned card: $e');
     }
   }
 
@@ -157,7 +147,6 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    print('🏗️ Building chat page for room: ${widget.roomId}');
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -275,7 +264,6 @@ class _ChatPageState extends State<ChatPage> {
           if (!mounted) return; // Check if widget is still mounted
 
           if (state is ChatRoomJoined) {
-            print('✅ Room joined successfully: ${state.roomId}');
           } else if (state is MessagesLoaded) {
             if (mounted) {
               setState(() {
@@ -283,7 +271,6 @@ class _ChatPageState extends State<ChatPage> {
                 _messages = List.from(state.messages.reversed);
               });
             }
-            print('✅ Messages loaded: ${state.messages.length} messages');
 
             // Scroll to bottom after messages are loaded
             if (mounted) {
@@ -300,11 +287,8 @@ class _ChatPageState extends State<ChatPage> {
           } else if (state is NewMessageReceivedState) {
             // Ignore messages that belong to a different room.
             if (state.roomId != null && state.roomId != widget.roomId) {
-              print(
-                  '↩️ Ignoring message for room ${state.roomId} (viewing ${widget.roomId})');
               return;
             }
-            print('💬 New message received: ${state.message['content']}');
             // Check if message already exists to prevent duplicates
             final messageId = state.message['id'] ?? state.message['_id'];
             final existingMessage =
@@ -329,10 +313,8 @@ class _ChatPageState extends State<ChatPage> {
                 });
               }
             } else {
-              print('⚠️ Duplicate message detected, skipping: $messageId');
             }
           } else if (state is ChatErrorState) {
-            print('❌ Chat error: ${state.error}');
           }
         },
         child: BlocBuilder<ChatBloc, ChatState>(
@@ -1212,7 +1194,7 @@ class _ChatPageState extends State<ChatPage> {
         if (!mounted) return;
         setState(() => _voiceRecordDurationSeconds += 1);
       });
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Could not start recording: $e')),
@@ -1329,7 +1311,7 @@ class _ChatPageState extends State<ChatPage> {
         _stagedImagesBytes.addAll(toAddBytes);
         _stagedImagesMimeTypes.addAll(toAddMimes);
       });
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to select image: $e')),
@@ -1371,7 +1353,6 @@ class _ChatPageState extends State<ChatPage> {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
-    print('📤 Sending message: $text');
     _messageController.clear();
 
     // Dispatch event to Bloc
@@ -1385,7 +1366,6 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _handleBackNavigation() {
-    print('🔙 Navigating back from chat page');
     // Pop to wherever we came from (rooms list, ad detail, ...); fall back
     // to the rooms list when this page is the root (deep link / context.go).
     if (context.canPop()) {
@@ -1438,7 +1418,7 @@ class _ChatPageState extends State<ChatPage> {
       if (mounted) {
         context.push('/add-detail-page', extra: ad);
       }
-    } catch (e) {
+    } catch (_) {
       // Close loading indicator if still open
       if (mounted) {
         Navigator.of(context).pop();
@@ -1456,13 +1436,11 @@ class _ChatPageState extends State<ChatPage> {
           ),
         );
       }
-      print('❌ Error fetching ad details: $e');
     }
   }
 
   @override
   void dispose() {
-    print('🧹 Disposing chat page for room: ${widget.roomId}');
     _voiceRecordTimer?.cancel();
     _voiceRecorder.dispose();
     _stagedVoiceStateSub?.cancel();
@@ -1608,7 +1586,7 @@ class _AudioMessagePlayerState extends State<_AudioMessagePlayer> {
         });
         widget.onPlayingUrlChanged(widget.url);
       }
-    } catch (e) {
+    } catch (_) {
       _handlePlaybackError();
     }
   }

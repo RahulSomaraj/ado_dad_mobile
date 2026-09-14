@@ -92,7 +92,6 @@ class AddRepository {
         // queryParameters: qp,
         data: body,
       );
-      print("📡 Full API response qp:............... ${response.data}");
       final List<dynamic> rawData = response.data['data'];
       final total = response.data['total'] ?? 0;
       final currentCount = (page * limit);
@@ -101,9 +100,6 @@ class AddRepository {
       final ads = rawData
           .map((e) => AddModel.fromJson(e as Map<String, dynamic>))
           .toList();
-      print("📡 Full rawdata response:............... $rawData");
-
-      print("📡 API returned hasNext: $hasNext, ads: ${ads.length}");
 
       // Safety: backend may not apply commercialVehicleTypes filter consistently
       // since the field lives under commercialVehicleDetails in the v2 list response.
@@ -119,7 +115,7 @@ class AddRepository {
               : ads;
 
       return PaginatedAdsResponse(data: filteredAds, hasNext: hasNext);
-    } catch (e) {
+    } catch (_) {
       throw Exception('Failed to fetch ads: $e');
     }
   }
@@ -480,8 +476,7 @@ class AddRepository {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (e) {
-      print('❌ Unexpected error in uploadImageToS3: $e');
+    } catch (_) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -523,8 +518,7 @@ class AddRepository {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (e) {
-      print('❌ Unexpected error in uploadFileToS3: $e');
+    } catch (_) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -548,10 +542,6 @@ class AddRepository {
       final signedUrl = signedUrlResponse.data['url'];
       if (signedUrl == null) throw Exception('No signed URL received');
 
-      print('📹 Got presigned URL, starting S3 upload...');
-      print('📹 File size: ${fileBytes.length} bytes');
-      print('📹 MIME type: $mimeType');
-
       // Step 2: Upload to S3 with timeout
       final uploadDio = Dio();
       uploadDio.options.connectTimeout = const Duration(minutes: 5);
@@ -573,25 +563,20 @@ class AddRepository {
         onSendProgress: (sent, total) {
           if (total > 0) {
             final progress = (sent / total * 100).toStringAsFixed(1);
-            print('📹 Upload progress: $progress% ($sent/$total bytes)');
           }
         },
       );
 
-      print('📹 S3 upload response status: ${uploadResponse.statusCode}');
-
       if (uploadResponse.statusCode == 200 ||
           uploadResponse.statusCode == 204) {
         final videoUrl = signedUrl.split('?').first;
-        print('✅ Video upload successful, URL: $videoUrl');
         return videoUrl;
       } else {
         throw Exception('Upload failed: ${uploadResponse.statusCode}');
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (e) {
-      print('❌ Unexpected error in uploadVideoToS3: $e');
+    } catch (_) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -605,20 +590,14 @@ class AddRepository {
         "category": category,
         "data": data,
       };
-      print('Payload:.................. $payload');
       final response = await _dio.post('/ads', data: payload);
-      print('New Item Id : ............................${response.data['id']}');
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print('✅ Ad posted successfully');
       } else {
-        print('⚠️ Failed to post ad, status: ${response.statusCode}');
         throw Exception('Failed to post ad');
       }
     } on DioException catch (e) {
-      print('❌ Dio error : $e');
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (e) {
-      print('❌ Unexpected error: $e');
+    } catch (_) {
       throw Exception('Failed to post ad: $e');
     }
   }
@@ -632,16 +611,12 @@ class AddRepository {
       if (response.statusCode == 200 ||
           response.statusCode == 204 ||
           response.statusCode == 202) {
-        print('✅ Ad deleted successfully: $adId');
       } else {
-        print('⚠️ Failed to delete ad, status: ${response.statusCode}');
         throw Exception('Failed to delete ad');
       }
     } on DioException catch (e) {
-      print('❌ Dio error while deleting ad $adId: $e');
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (e) {
-      print('❌ Unexpected error while deleting ad $adId: $e');
+    } catch (_) {
       throw Exception('Failed to delete ad: $e');
     }
   }
@@ -696,7 +671,6 @@ class AddRepository {
   Future<AddModel> fetchAdDetail(String adId) async {
     try {
       final response = await _dio.get('/v2/ads/$adId');
-      print("Ad detail API raw response: ${response.data}");
       final raw = response.data;
 
       // Accept either {data: {...}} or plain {...}
@@ -706,22 +680,11 @@ class AddRepository {
               : (raw as Map<String, dynamic>);
 
       // Print the parsed ad detail JSON data
-      print('📦 Ad Detail Page - Item Data JSON Response:');
-      print('   Ad ID: ${obj['id']}');
-      print('   Title: ${obj['title']}');
-      print('   Category: ${obj['category']}');
-      print('   Price: ${obj['price']}');
-      print('   Location: ${obj['location']}');
-      print('   Video Link: ${obj['link']}');
-      print('   Images Count: ${(obj['images'] as List?)?.length ?? 0}');
-      print('   Full JSON Response: $obj');
 
       return AddModel.fromJson(obj);
     } on DioException catch (e) {
-      print('❌ Dio error : $e');
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (e) {
-      print('Error:>>>>>>>>>>>>>>>>>>>>>>>$e');
+    } catch (_) {
       throw Exception('Failed to fetch ad detail: $e');
     }
   }
@@ -739,18 +702,12 @@ class AddRepository {
       );
       if (resp.statusCode != 200) throw Exception('Update failed');
     } on DioException catch (e) {
-      print('Dio Error: $e');
       throw Exception(DioErrorHandler.handleError(e));
     }
   }
 
   Future<AddModel> markAdAsSold(String adId) async {
     try {
-      print('🔍 Marking ad as sold - Ad ID: $adId');
-      print('🔍 Base URL: ${_dio.options.baseUrl}');
-      print('🔍 Full URL will be: ${_dio.options.baseUrl}ads/$adId/sold');
-      print('🔍 Trying v2 endpoint: ${_dio.options.baseUrl}v2/ads/$adId/sold');
-      print('🔍 Request data: {"soldOut": true}');
 
       final resp = await _dio.put(
         '/ads/$adId/sold',
@@ -763,8 +720,6 @@ class AddRepository {
           },
         ),
       );
-
-      print('✅ Mark as sold response: ${resp.statusCode} - ${resp.data}');
 
       // Accept various success status codes (200, 201, 204, etc.)
       if (resp.statusCode! < 200 || resp.statusCode! >= 300) {
@@ -781,14 +736,9 @@ class AddRepository {
 
       return AddModel.fromJson(obj);
     } on DioException catch (e) {
-      print('❌ Dio error in markAdAsSold (v1): $e');
-      print('❌ Response data: ${e.response?.data}');
-      print('❌ Response status: ${e.response?.statusCode}');
-      print('❌ Request URL: ${e.requestOptions.uri}');
 
       // If v1 fails with 404, try v2 endpoint
       if (e.response?.statusCode == 404) {
-        print('🔄 Trying v2 endpoint...');
         try {
           final resp2 = await _dio.put(
             '/v2/ads/$adId/sold',
@@ -801,8 +751,6 @@ class AddRepository {
               },
             ),
           );
-          print(
-              '✅ Mark as sold response (v2): ${resp2.statusCode} - ${resp2.data}');
 
           if (resp2.statusCode! < 200 || resp2.statusCode! >= 300) {
             throw Exception(
@@ -818,10 +766,7 @@ class AddRepository {
 
           return AddModel.fromJson(obj2);
         } catch (e2) {
-          print('❌ Dio error in markAdAsSold (v2): $e2');
           if (e2 is DioException) {
-            print('❌ Response data: ${e2.response?.data}');
-            print('❌ Response status: ${e2.response?.statusCode}');
           }
         }
       }
@@ -857,8 +802,7 @@ class AddRepository {
       } else {
         throw Exception("Failed to fetch ads for user");
       }
-    } catch (e) {
-      print('Error fetching ads by user ID: $e');
+    } catch (_) {
       throw Exception("Error fetching ads by user ID: $e");
     }
   }

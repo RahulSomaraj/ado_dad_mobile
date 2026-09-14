@@ -24,7 +24,7 @@ class FavoriteRepository {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (e) {
+    } catch (_) {
       throw Exception('Failed to add to favorites: $e');
     }
   }
@@ -45,9 +45,8 @@ class FavoriteRepository {
         throw Exception('Failed to remove from favorites');
       }
     } on DioException catch (e) {
-      print('Error on Adding Favorite: >>>>>>>>>>>>>>>>>>>>>>>$e');
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (e) {
+    } catch (_) {
       throw Exception('Failed to remove from favorites: $e');
     }
   }
@@ -87,7 +86,7 @@ class FavoriteRepository {
       }
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (e) {
+    } catch (_) {
       throw Exception('Failed to fetch favorite ads: $e');
     }
   }
@@ -96,7 +95,6 @@ class FavoriteRepository {
   Future<List<FavoriteAd>> _enrichFavoriteAds(
       List<FavoriteAd> favorites) async {
     try {
-      print('Starting enrichment for ${favorites.length} favorites');
       // Fetch all manufacturers
       final manufacturersResponse =
           await _dio.get('/vehicle-inventory/manufacturers');
@@ -133,11 +131,7 @@ class FavoriteRepository {
               manufacturerMap[favorite.vehicleDetails!.manufacturerId];
           if (manufacturer != null) {
             manufacturerName = manufacturer.displayName;
-            print(
-                'Found manufacturer: $manufacturerName for ID: ${favorite.vehicleDetails!.manufacturerId}');
           } else {
-            print(
-                'Manufacturer not found for ID: ${favorite.vehicleDetails!.manufacturerId}');
           }
         }
 
@@ -165,13 +159,9 @@ class FavoriteRepository {
 
             if (model != null) {
               modelName = model.displayName;
-              print(
-                  'Found model: $modelName for ID: ${favorite.vehicleDetails!.modelId}');
             } else {
-              print(
-                  'Model not found for ID: ${favorite.vehicleDetails!.modelId}');
             }
-          } catch (e) {
+          } catch (_) {
             // Error fetching model - continue with empty name
           }
         }
@@ -232,9 +222,8 @@ class FavoriteRepository {
       }
 
       return enrichedFavorites;
-    } catch (e) {
+    } catch (_) {
       // Return original favorites if enrichment fails
-      print('Error enriching favorite ads: $e');
       return favorites;
     }
   }

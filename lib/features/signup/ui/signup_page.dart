@@ -109,8 +109,6 @@ class _SignupPageState extends State<SignupPage> {
           password: _password,
           type: 'NU');
 
-      print('data:..........$signupData');
-
       context.read<SignupBloc>().add(SignupEvent.signup(
             data: signupData,
             profileBytes: _avatarBytes,

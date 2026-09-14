@@ -28,7 +28,6 @@ class _ChatDebugPageState extends State<ChatDebugPage> {
     setState(() {
       _logs.add('${DateTime.now().toString().substring(11, 19)} $message');
     });
-    print(message);
   }
 
   Future<void> _checkConfiguration() async {
@@ -84,7 +83,7 @@ class _ChatDebugPageState extends State<ChatDebugPage> {
 
       await _chatRepository.connect();
       _addLog('🔌 Connection request sent, waiting for response...');
-    } catch (e) {
+    } catch (_) {
       _addLog('💥 Connection error: $e');
     }
   }

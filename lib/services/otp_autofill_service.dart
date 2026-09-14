@@ -44,8 +44,7 @@ class OtpAutofillService {
       final res = await _smartAuth.getSmsWithUserConsentApi();
       final sms = res.data?.sms ?? '';
       return extractCode(sms) ?? res.data?.code;
-    } catch (e) {
-      debugPrint('OTP autofill failed: $e');
+    } catch (_) {
       return null;
     } finally {
       _listening = false;

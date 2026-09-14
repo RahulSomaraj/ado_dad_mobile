@@ -21,7 +21,6 @@ class ShowroomUser {
 
   factory ShowroomUser.fromJson(Map<String, dynamic> json) {
     try {
-      print('🔍 Parsing ShowroomUser from JSON: $json');
 
       final id = json['_id']?.toString() ?? '';
       final name = json['name'] ?? '';
@@ -31,14 +30,6 @@ class ShowroomUser {
       final type = json['type'] ?? '';
       final createdAt = json['createdAt'];
       final updatedAt = json['updatedAt'];
-
-      print('🔍 Parsed values:');
-      print('🔍 - id: $id');
-      print('🔍 - name: $name');
-      print('🔍 - email: $email');
-      print('🔍 - phoneNumber: $phoneNumber');
-      print('🔍 - profilePic: $profilePic');
-      print('🔍 - type: $type');
 
       return ShowroomUser(
         id: id,
@@ -50,9 +41,7 @@ class ShowroomUser {
         createdAt: createdAt,
         updatedAt: updatedAt,
       );
-    } catch (e) {
-      print('❌ Error parsing ShowroomUser from JSON: $e');
-      print('❌ JSON data: $json');
+    } catch (_) {
       rethrow;
     }
   }

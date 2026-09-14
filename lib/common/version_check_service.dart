@@ -70,7 +70,6 @@ class VersionCheckService {
 
     final config = await _repo.getVersionConfig();
     if (config == null) {
-      print('📌 Version check: no config (API failed or null data) → no update prompt');
       final defaultUrl = Platform.isIOS
           ? VersionRepository.defaultIosStoreUrl
           : VersionRepository.defaultAndroidStoreUrl;
@@ -91,7 +90,6 @@ class VersionCheckService {
             : VersionRepository.defaultAndroidStoreUrl);
 
     final cmp = _compareVersions(current, latest);
-    print('📌 Version check: current=$current latest=$latest compare=$cmp (platform: ${Platform.isIOS ? "ios" : "android"})');
 
     // Current is below this platform's latest → show update
     if (cmp < 0) {

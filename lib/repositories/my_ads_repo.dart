@@ -20,8 +20,6 @@ class MyAdsRepo {
         throw Exception('User not authenticated. Please login again.');
       }
 
-      print('🔐 Fetching My Ads with token: ${token.substring(0, 20)}...');
-
       final requestBody = <String, dynamic>{
         'page': page,
         'limit': limit,
@@ -29,17 +27,11 @@ class MyAdsRepo {
         'sortOrder': sortOrder,
       };
 
-      print('📤 My Ads Request: POST /ads/my-ads with body: $requestBody');
-
       final response = await _dio.post(
         '/ads/my-ads',
         data: requestBody,
         options: Options(responseType: ResponseType.json),
       );
-
-      print('📥 My Ads Response Status: ${response.statusCode}');
-      print('📥 My Ads Response Data: ${response.data}');
-      print('📥 My Ads Response Data Type: ${response.data.runtimeType}');
 
       dynamic raw = response.data;
 
@@ -47,43 +39,31 @@ class MyAdsRepo {
       try {
         if (raw is List) {
           list = raw;
-          print('✅ Response is a List with ${list.length} items');
         } else if (raw is Map) {
           // Handle both Map<String, dynamic> and Map<dynamic, dynamic>
           final Map map = raw;
           final dataField = map['data'];
 
-          print(
-              '📋 Response is a Map. Data field type: ${dataField?.runtimeType}');
-
           if (dataField is List) {
             list = dataField;
-            print('✅ Data field is a List with ${list.length} items');
           } else if (dataField is Map) {
             // Handle case where data is a single object wrapped in a map
             // Convert single object to list
             list = [dataField];
-            print('⚠️ Data field is a Map (single object), converting to List');
           } else if (dataField == null) {
             // If data field is null, return empty list
             list = [];
-            print('⚠️ Data field is null, returning empty list');
           } else {
             // Unexpected type
-            print(
-                '❌ Unexpected data field type: ${dataField.runtimeType}, value: $dataField');
             throw StateError(
                 'Unexpected data field type: ${dataField.runtimeType}. '
                 'Expected List or Map. Got: $dataField');
           }
         } else {
-          print('❌ Unexpected response type: ${raw.runtimeType}');
           throw StateError('Unexpected response type: ${raw.runtimeType}. '
               'Expected List or Map. Response: $raw');
         }
-      } catch (e) {
-        print('❌ Error parsing response: $e');
-        print('❌ Raw response: $raw');
+      } catch (_) {
         rethrow;
       }
 
@@ -95,9 +75,7 @@ class MyAdsRepo {
       final ads = list.whereType<Map<String, dynamic>>().map((obj) {
         try {
           return MyAd.fromJson(obj);
-        } catch (e) {
-          print('⚠️ Error parsing ad: $e');
-          print('⚠️ Ad data: $obj');
+        } catch (_) {
           rethrow;
         }
       }).toList();
@@ -108,7 +86,7 @@ class MyAdsRepo {
       return PaginatedMyAdsResponse(data: enrichedAds, hasNext: hasNext);
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
-    } catch (e) {
+    } catch (_) {
       throw Exception('Failed to fetch my ads: $e');
     }
   }
@@ -139,8 +117,6 @@ class MyAdsRepo {
                 manufacturersData['data'] is List) {
               manufacturers = manufacturersData['data'] as List;
             } else {
-              print(
-                  '⚠️ Unexpected manufacturers response structure: ${manufacturersData.runtimeType}');
               manufacturers = [];
             }
 
@@ -156,8 +132,7 @@ class MyAdsRepo {
               }
             }
           }
-        } catch (e) {
-          print('Error fetching manufacturers: $e');
+        } catch (_) {
         }
       }
 
@@ -193,8 +168,6 @@ class MyAdsRepo {
             } else if (modelsData is Map && modelsData['data'] is List) {
               models = modelsData['data'] as List;
             } else {
-              print(
-                  '⚠️ Unexpected models response structure: ${modelsData.runtimeType}');
               models = [];
             }
 
@@ -210,9 +183,7 @@ class MyAdsRepo {
               }
             }
           }
-        } catch (e) {
-          print(
-              'Error fetching models for manufacturer ${request['manufacturerId']}: $e');
+        } catch (_) {
         }
       }
 
@@ -249,8 +220,7 @@ class MyAdsRepo {
           model: model,
         );
       }).toList();
-    } catch (e) {
-      print('Error enriching MyAds: $e');
+    } catch (_) {
       return ads; // Return original ads if enrichment fails
     }
   }

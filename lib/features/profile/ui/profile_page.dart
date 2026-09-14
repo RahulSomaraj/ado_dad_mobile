@@ -134,7 +134,7 @@ class _ProfilePageState extends State<ProfilePage> {
           setState(() => _pickedImageBytes = bytes);
         }
       }
-    } catch (e) {
+    } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text(ErrorMessageUtil.getUserFriendlyMessage(
@@ -161,10 +161,8 @@ class _ProfilePageState extends State<ProfilePage> {
       } else if (_lastLoadedProfile != null) {
         // If state is Error but we have last loaded profile, use it
         originalProfile = _lastLoadedProfile!;
-        print("⚠️ Using last loaded profile due to error state");
       } else {
         // No profile data available, try to fetch it
-        print("⚠️ No profile data available, fetching...");
         context.read<ProfileBloc>().add(const ProfileEvent.fetchProfile());
         throw 'Profile not loaded. Please wait a moment and try again.';
       }
@@ -206,10 +204,8 @@ class _ProfilePageState extends State<ProfilePage> {
         try {
           final repo = context.read<ProfileBloc>().repository;
           profilePicUrl = await repo.uploadImageToS3(_pickedImageBytes!);
-          print("📸 Uploaded new profile pic: $profilePicUrl");
           _currentProfilePicUrl = profilePicUrl;
-        } catch (uploadError) {
-          print("❌ Profile picture upload failed: $uploadError");
+        } catch (_) {
           throw 'Failed to upload profile picture. Please try again.';
         }
       }
@@ -243,14 +239,6 @@ class _ProfilePageState extends State<ProfilePage> {
             profilePicChanged ? profilePicUrl : originalProfile.profilePic,
       );
 
-      print("🔄 Changes detected:");
-      print("  - Name: ${nameChanged ? 'CHANGED' : 'unchanged'}");
-      print("  - Email: ${emailChanged ? 'CHANGED' : 'unchanged'}");
-      print("  - Phone: ${phoneChanged ? 'CHANGED' : 'unchanged'}");
-      print(
-          "  - Country Code: ${countryCodeChanged ? 'CHANGED' : 'unchanged'}");
-      print("  - Profile Pic: ${profilePicChanged ? 'CHANGED' : 'unchanged'}");
-
       // Dispatch update event
       context
           .read<ProfileBloc>()
@@ -262,8 +250,7 @@ class _ProfilePageState extends State<ProfilePage> {
       });
 
       // Success message will be shown in BlocConsumer listener after successful update
-    } catch (e) {
-      print("❌ Profile save error: $e");
+    } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -314,7 +301,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ProfileEvent.changePassword(_newPasswordController.text.trim()),
             );
         Navigator.pop(context); // Close the dialog
-      } catch (e) {
+      } catch (_) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(ErrorMessageUtil.getUserFriendlyMessage(
@@ -329,7 +316,7 @@ class _ProfilePageState extends State<ProfilePage> {
       context.read<ProfileBloc>().add(
             ProfileEvent.changePassword(_newPasswordController.text.trim()),
           );
-    } catch (e) {
+    } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to change password: $e')),
       );
@@ -387,8 +374,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
                     // Don't show error UI for token expiration - logout is already in progress
                     if (isTokenExpirationError) {
-                      print(
-                          '🔇 Suppressing token expiration error in ProfilePage - logout in progress');
                       _isUpdatingProfile = false;
                       return; // Skip showing snackbar
                     }
@@ -480,14 +465,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     phoneController.text = state.profile.phoneNumber;
                     _countryCode = state.profile.countryCode ?? "+1";
 
-                    print(
-                        "🔍 Original profile pic from API: ${state.profile.profilePic}");
-
                     // Keep the original profile pic value as is
                     _currentProfilePicUrl = state.profile.profilePic;
 
-                    print(
-                        "🔍 Processed profile pic URL: $_currentProfilePicUrl");
                     _seededOnce = true;
                   }
 
@@ -2037,7 +2017,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                       // user appearing logged in.
                                       await AuthService().logout(
                                           redirectTo: '/home');
-                                    } catch (e) {
+                                    } catch (_) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         SnackBar(
@@ -2796,7 +2776,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                           .read<profile_bloc.ProfileBloc>()
                                           .add(const profile_bloc
                                               .ProfileEvent.deleteMyData());
-                                    } catch (e) {
+                                    } catch (_) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         SnackBar(

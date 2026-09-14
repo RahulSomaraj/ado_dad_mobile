@@ -896,12 +896,10 @@ Download Adodad app to contact the seller and view more details!
   }
 
   Widget _buildVideoItem(String videoUrl) {
-    print('🎥 Building video item with URL: $videoUrl');
     // Store callback for video completion
     _onVideoCompleteCallbacks[videoUrl] = _onVideoComplete;
     return GestureDetector(
       onTap: () {
-        print('🎥 Video tapped, opening full screen...');
         _openVideoFullScreen(context, videoUrl);
       },
       behavior: HitTestBehavior.opaque,
@@ -964,7 +962,6 @@ Download Adodad app to contact the seller and view more details!
               Positioned.fill(
                 child: GestureDetector(
                   onTap: () {
-                    print('🎥 Video overlay tapped, opening full screen...');
                     _openVideoFullScreen(context, videoUrl);
                   },
                   behavior: HitTestBehavior.opaque,
@@ -975,8 +972,6 @@ Download Adodad app to contact the seller and view more details!
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () {
-                            print(
-                                '🎥 Play button tapped, opening full screen...');
                             _openVideoFullScreen(context, videoUrl);
                           },
                           borderRadius: BorderRadius.circular(50),
@@ -2425,14 +2420,11 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
   @override
   void initState() {
     super.initState();
-    print(
-        '🎥 _VideoPlayerWidget initState called with URL: ${widget.videoUrl}');
     _initializeVideo();
   }
 
   Future<void> _initializeVideo() async {
     try {
-      print('🎥 Initializing video: ${widget.videoUrl}');
 
       // Validate URL
       if (widget.videoUrl.isEmpty) {
@@ -2450,19 +2442,13 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
         throw Exception('Invalid video URL format: $cleanUrl');
       }
 
-      print('🎥 Creating VideoPlayerController with URI: $uri');
-
       // Skip URL accessibility test as it often fails unnecessarily
       // and video player can handle network issues better
-      print(
-          '🎥 Skipping URL accessibility test - proceeding with video initialization');
 
       _videoPlayerController = VideoPlayerController.networkUrl(uri);
 
       // Add listener to update UI when video state changes
       _videoPlayerController!.addListener(_videoListener);
-
-      print('🎥 Starting video initialization...');
 
       // Add timeout to video initialization
       await _videoPlayerController!.initialize().timeout(
@@ -2471,12 +2457,6 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
           throw Exception('Video initialization timeout after 15 seconds');
         },
       );
-
-      print('🎥 Video initialized successfully');
-      print('🎥 Video duration: ${_videoPlayerController!.value.duration}');
-      print('🎥 Video size: ${_videoPlayerController!.value.size}');
-      print(
-          '🎥 Video aspect ratio: ${_videoPlayerController!.value.aspectRatio}');
 
       // Initialize Chewie controller with proper controls
       // Disable auto-play in carousel - user will tap to open full screen
@@ -2513,18 +2493,14 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
           _isInitialized = true;
           _isLoading = false;
         });
-        print('🎥 Video state updated to initialized');
       }
     } catch (e) {
-      print('❌ Video initialization error: $e');
-      print('❌ Error type: ${e.runtimeType}');
       if (mounted) {
         setState(() {
           _hasError = true;
           _isLoading = false;
           _errorMessage = _getUserFriendlyErrorMessage(e);
         });
-        print('🎥 Video state updated to error');
       }
     }
   }
@@ -2532,14 +2508,8 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
   void _videoListener() {
     if (mounted && _videoPlayerController != null) {
       final value = _videoPlayerController!.value;
-      print(
-          '🎥 Video state: initialized=${value.isInitialized}, error=${value.errorDescription}');
-      print(
-          '🎥 Video duration: ${value.duration}, position: ${value.position}');
-      print('🎥 Video size: ${value.size}, aspectRatio: ${value.aspectRatio}');
 
       if (value.hasError && value.errorDescription != null) {
-        print('❌ Video player error: ${value.errorDescription}');
         setState(() {
           _hasError = true;
           _isLoading = false;
@@ -2550,8 +2520,6 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
         setState(() {
           _isLoading = false;
         });
-        print(
-            '🎥 Video player initialized successfully - controls should be available');
       }
 
       // Reset completion flag if video position resets (user seeks back, etc.)
@@ -2566,7 +2534,6 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
               value.duration - const Duration(milliseconds: 100) &&
           !_hasCalledCompletion) {
         // Video has reached the end (with 100ms tolerance)
-        print('🎥 Video completed - calling completion callback');
         _hasCalledCompletion = true;
         widget.onVideoComplete?.call();
       }
@@ -2597,7 +2564,6 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
 
   Future<void> _testWithSampleVideo() async {
     try {
-      print('🎥 Testing with sample video...');
 
       // Use a known working sample video URL
       const testVideoUrl =
@@ -2613,18 +2579,12 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
       // Add listener to update UI when video state changes
       _videoPlayerController!.addListener(_videoListener);
 
-      print('🎥 Starting test video initialization...');
       await _videoPlayerController!.initialize().timeout(
         const Duration(seconds: 15),
         onTimeout: () {
           throw Exception('Test video initialization timeout after 15 seconds');
         },
       );
-
-      print('🎥 Test video initialized successfully');
-      print(
-          '🎥 Test video duration: ${_videoPlayerController!.value.duration}');
-      print('🎥 Test video size: ${_videoPlayerController!.value.size}');
 
       // Initialize Chewie controller for test video
       _chewieController = ChewieController(
@@ -2658,10 +2618,8 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
           _isInitialized = true;
           _isLoading = false;
         });
-        print('🎥 Test video state updated to initialized');
       }
-    } catch (e) {
-      print('❌ Test video initialization error: $e');
+    } catch (_) {
       if (mounted) {
         setState(() {
           _hasError = true;
@@ -2922,7 +2880,6 @@ class _VideoFullScreenViewerState extends State<_VideoFullScreenViewer> {
 
   Future<void> _initializeVideo() async {
     try {
-      print('🎥 Initializing full-screen video: ${widget.videoUrl}');
 
       if (widget.videoUrl.isEmpty) {
         throw Exception('Video URL is empty');
@@ -2981,7 +2938,6 @@ class _VideoFullScreenViewerState extends State<_VideoFullScreenViewer> {
         });
       }
     } catch (e) {
-      print('❌ Full-screen video initialization error: $e');
       if (mounted) {
         setState(() {
           _hasError = true;

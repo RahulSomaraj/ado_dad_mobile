@@ -41,7 +41,6 @@ class AdEditBloc extends Bloc<AdEditEvent, AdEditState> {
             // print('   Location: ${updated.location}');
             // print('   Video Link: ${updated.link}');
             // print('   Images: ${updated.images.length} images');
-            print('   Full Ad JSON: ${updated.toJson()}');
 
             emit(AdEditState.success(updated));
           } catch (e) {

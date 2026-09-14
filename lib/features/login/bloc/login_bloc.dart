@@ -27,9 +27,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       final response =
           await authRepository.login(event.username, event.password);
       emit(LoginState.success(username: response.name));
-      print('response:.............:${event.username}');
-    } catch (e) {
-      print('❌ Error in Bloc: ${e.toString()}'); // 👀 Debugging
+    } catch (_) {
       // Emit clean error message without "Exception:" prefix
       emit(const LoginState.failure('Invalid Username or Password'));
     }
@@ -38,7 +36,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   Future<void> _onLogout(Logout event, Emitter<LoginState> emit) async {
     // Disconnect socket connection
     await ChatSocketService().disconnect();
-    print('🔌 Socket disconnected on logout');
 
     await clearUserData();
     emit(const LoginState.initial());

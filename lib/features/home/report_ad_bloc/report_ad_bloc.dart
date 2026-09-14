@@ -17,12 +17,6 @@ class ReportAdBloc extends Bloc<ReportAdEvent, ReportAdState> {
       await event.when(
         reportAd: (reportedUserId, reason, description, relatedAd,
             evidenceUrls) async {
-          print('🚀 ReportAdBloc: Starting report process');
-          print('🚀 ReportAdBloc: reportedUserId: $reportedUserId');
-          print('🚀 ReportAdBloc: reason: $reason');
-          print('🚀 ReportAdBloc: description: $description');
-          print('🚀 ReportAdBloc: relatedAd: $relatedAd');
-          print('🚀 ReportAdBloc: evidenceUrls: $evidenceUrls');
 
           emit(const ReportAdState.reporting());
           try {
@@ -34,14 +28,9 @@ class ReportAdBloc extends Bloc<ReportAdEvent, ReportAdState> {
               evidenceUrls: evidenceUrls,
             );
 
-            print('🚀 ReportAdBloc: Calling reportRepository.reportAd()');
             final createdReport = await reportRepository.reportAd(reportData);
-            print(
-                '🚀 ReportAdBloc: Report created successfully: ${createdReport.id}');
             emit(ReportAdState.reported(createdReport));
           } catch (e) {
-            print('🚀 ReportAdBloc: Error occurred: $e');
-            print('🚀 ReportAdBloc: Error type: ${e.runtimeType}');
             emit(ReportAdState.error(e.toString()));
           }
         },
