@@ -44,7 +44,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// - If logged in → go to notifications page.
 /// - If not logged in → go to home and show login popup (do not open notifications page).
 Future<void> _handleNotificationTap(RemoteMessage message) async {
-  debugPrint('FCM tap: ${message.notification?.title} | data: ${message.data}');
   final isAuth = await AuthGuard.isAuthenticated();
   if (isAuth) {
     AppRoutes.router.go('/notifications');
@@ -58,7 +57,6 @@ Future<void> _handleNotificationTap(RemoteMessage message) async {
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  debugPrint('FCM background: ${message.messageId}');
 }
 
 /// Initialize Firebase Cloud Messaging: request permission and get FCM token.
@@ -90,19 +88,16 @@ Future<void> _initFcm() async {
     // Get FCM token (null if permission denied)
     final token = await messaging.getToken();
     if (token != null) {
-      debugPrint('FCM token: $token');
       // TODO: send token to your backend (e.g. PATCH /profile with fcmToken)
     }
 
     // Listen for token refresh
     messaging.onTokenRefresh.listen((newToken) {
-      debugPrint('FCM token refreshed: $newToken');
       // TODO: send newToken to your backend
     });
 
     // Foreground: app is open when notification arrives — show in system shade (like Swiggy)
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('FCM foreground: ${message.notification?.title}');
       final title = message.notification?.title ??
           message.data['title'] ??
           'Notification';

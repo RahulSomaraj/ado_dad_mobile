@@ -49,8 +49,6 @@ class ApiService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          print('🌐 API ${options.method} ${options.uri}');
-
           // Get token from SharedPreferences - if it exists, use it
           // Token from login should work directly - only refresh when we get 401 (token expired)
           // After token refresh, new token is saved and will be used for subsequent requests
@@ -59,26 +57,15 @@ class ApiService {
             // API expects "Bearer <token>" format in Authorization header
             final authHeader = _prepareAuthHeader(token);
             options.headers['Authorization'] = authHeader;
-            print('🔑 Using token for request to: ${options.uri}');
-            print('🔑 Token length: ${token.length} chars');
-            print(
-                '🔑 Token first 30 chars: ${token.substring(0, token.length > 30 ? 30 : token.length)}...');
-            print(
-                '🔑 Authorization header format: ${authHeader.substring(0, authHeader.length > 30 ? 30 : authHeader.length)}...');
           } else {
             // No token found - proceed without Authorization header
             // Public endpoints like /v2/ads/list work without authentication
-            print(
-                'ℹ️ No token found for request to: ${options.uri} - proceeding without authentication');
           }
           // If no token, proceed without Authorization header (public endpoints don't need it)
           // This allows unauthenticated users to browse listings
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          print(
-            '✅ ${response.statusCode} ${response.requestOptions.method} ${response.requestOptions.uri}',
-          );
           return handler.next(response);
         },
         onError: (DioException e, handler) async {
@@ -89,23 +76,12 @@ class ApiService {
             // Token expired or invalid - try to refresh it
             final authService = AuthService();
 
-            print('🔄 Received 401 Unauthorized for: ${e.requestOptions.uri}');
-            print('📋 401 Response details:');
-            print('   Status Code: ${e.response?.statusCode}');
-            print('   Response Data: ${e.response?.data}');
-            print('   Request Headers: ${e.requestOptions.headers}');
-            print(
-                '   Authorization header sent: ${e.requestOptions.headers['Authorization']?.toString().substring(0, 30) ?? 'NOT SET'}...');
-
             // Check if token exists before attempting refresh
             final currentToken = await getToken();
             if (currentToken == null || currentToken.isEmpty) {
               // No token exists - this is an unauthenticated request
               // If endpoint requires auth, reject the error (user needs to login)
               // If endpoint is public, this shouldn't happen, but handle gracefully
-              print('ℹ️ No token found in storage - unauthenticated request');
-              print(
-                  'ℹ️ If this endpoint requires authentication, user needs to login');
               return handler.reject(e);
             }
 
@@ -116,8 +92,6 @@ class ApiService {
                 e.requestOptions.headers['Authorization']?.toString();
             final storedAuthHeader = _prepareAuthHeader(currentToken);
             if (sentAuthHeader != null && sentAuthHeader != storedAuthHeader) {
-              print(
-                  '🔁 Token already refreshed by another request — retrying with stored token');
               e.requestOptions.headers['Authorization'] = storedAuthHeader;
               try {
                 final retryResponse = await _dio.fetch(e.requestOptions);
@@ -133,16 +107,11 @@ class ApiService {
               }
             }
 
-            print('🔄 Token exists, attempting to refresh...');
-
             // Try to refresh the token
             final newToken = await authService.refreshAccessToken();
 
             if (newToken != null && newToken.isNotEmpty) {
               // Token refreshed successfully, retry the original request
-              print(
-                  '✅ Token refreshed successfully, retrying original request...');
-
               // Mark initial refresh as done if this is the first refresh after login
               if (!authService.hasDoneInitialRefresh) {
                 authService.markInitialRefreshDone();
@@ -153,26 +122,8 @@ class ApiService {
               e.requestOptions.headers['Authorization'] =
                   _prepareAuthHeader(newToken);
 
-              // Verify the new token is being used for retry
-              print('🔄 Retrying request with new token...');
-              print('🔑 New token length: ${newToken.length} chars');
-              print(
-                  '🔑 New token first 30 chars: ${newToken.substring(0, newToken.length > 30 ? 30 : newToken.length)}...');
-
-              // Verify the token in storage matches what we're using
-              final storedToken = await getToken();
-              if (storedToken != null && storedToken == newToken) {
-                print(
-                    '✅ Confirmed: Stored token matches new token - will be used for all subsequent API calls');
-              } else {
-                print('⚠️ WARNING: Stored token does not match new token!');
-              }
-
               try {
                 final retryResponse = await _dio.fetch(e.requestOptions);
-                print('✅ Request retry successful after token refresh');
-                print(
-                    '✅ New token is now active and will be used for all future API calls');
                 return handler.resolve(retryResponse);
               } catch (retryError) {
                 print(
@@ -190,7 +141,6 @@ class ApiService {
               // AuthService will handle logout automatically
               print(
                   '⚠️ Token refresh failed - refresh token expired or invalid');
-              print('⚠️ User will be logged out automatically');
 
               // If logout is in progress, suppress the error to avoid showing it in UI
               if (authService.isLoggingOut) {
@@ -282,7 +232,6 @@ class DioErrorHandler {
 
   static String _handleBadResponse(Response? response) {
     if (response == null) return "❌ No response from server.";
-    print('response:........................${response.data}');
     try {
       if (response.data is Map<String, dynamic>) {
         final data = response.data as Map<String, dynamic>;

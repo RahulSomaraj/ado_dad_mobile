@@ -4,5 +4,5 @@
     <!-- This file is auto-generated from .env file during build -->
     <!-- DO NOT edit manually - your changes will be overwritten -->
     <!-- The API key is read from GOOGLE_PLACES_API_KEY in your .env file -->
-    <string name="google_maps_key">AIzaSyBxRuEsTW5Bp6JoXui6zLJFHbfd3jn5LCo</string>
+    <string name="google_maps_key">AIzaSyBn_S2uHfsabzh6jWvd9ckEyH88qnfdHQ0</string>
 </resources>

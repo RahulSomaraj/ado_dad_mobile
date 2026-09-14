@@ -37,7 +37,6 @@ class OtpRepository {
           'otp': otp,
         },
       );
-      print(response.data);
       if (response.statusCode == 200 || response.statusCode == 201) {
         final loginResponse = LoginResponse.fromJson(response.data);
         await saveLoginResponse(loginResponse);

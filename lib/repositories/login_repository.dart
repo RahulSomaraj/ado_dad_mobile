@@ -12,7 +12,6 @@ class AuthRepository {
         'username': username,
         'password': password,
       });
-      print(response.data);
       if (response.statusCode == 201) {
         final loginResponse = LoginResponse.fromJson(response.data);
 

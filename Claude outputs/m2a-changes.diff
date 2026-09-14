@@ -1,0 +1,559 @@
+--- a/lib/services/auth_service.dart
++++ b/lib/services/auth_service.dart
+@@ -44,7 +44,6 @@
+   Future<String?> refreshAccessToken() async {
+     // If already refreshing, wait for the ongoing refresh to complete
+     if (_isRefreshing && _refreshCompleter != null) {
+-      print('⏳ Token refresh already in progress, waiting for completion...');
+       return _refreshCompleter!.future;
+     }
+ 
+@@ -52,12 +51,9 @@
+     _refreshCompleter = Completer<String?>();
+     _isRefreshing = true;
+ 
+-    print('🔄 Starting token refresh...');
+-
+     try {
+       final refreshToken = await getRefreshToken();
+       if (refreshToken == null || refreshToken.isEmpty) {
+-        print('❌ No refresh token found in SharedPreferences');
+         _isRefreshing = false;
+         _refreshCompleter?.complete(null);
+         _refreshCompleter = null;
+@@ -67,15 +63,6 @@
+       // Remove "Bearer " prefix from refresh token if present (refresh token should be sent without prefix)
+       final cleanRefreshToken =
+           refreshToken.replaceFirst(RegExp(r'^Bearer\s+'), '');
+-
+-      print('📋 Refresh Token from SharedPreferences:');
+-      print('═══════════════════════════════════════');
+-      print(refreshToken);
+-      print('═══════════════════════════════════════');
+-      print('🔄 Refresh token from SharedPreferences:');
+-      print('   Length: ${cleanRefreshToken.length} characters');
+-      print(
+-          '   First 50 chars: ${cleanRefreshToken.length > 50 ? cleanRefreshToken.substring(0, 50) + "..." : cleanRefreshToken}');
+ 
+       final baseUrl = AppConfig.baseUrl;
+       final dio = Dio(BaseOptions(
+@@ -92,19 +79,10 @@
+         },
+       ));
+ 
+-      print('🔄 Attempting to refresh access token...');
+-      print('📤 Endpoint: $baseUrl/refresh-token');
+-      print('📤 Request body format: {"refreshToken": "<token_value>"}');
+-      print(
+-          '📤 Refresh token value (first 30 chars): ${cleanRefreshToken.substring(0, cleanRefreshToken.length > 30 ? 30 : cleanRefreshToken.length)}...');
+-
+       final response = await dio.post(
+         '/refresh-token',
+         data: {'refreshToken': cleanRefreshToken},
+       );
+-
+-      print('📥 Response status: ${response.statusCode}');
+-      print('📥 Response data: ${response.data}');
+ 
+       // Check response status code (success is 201 for refresh token endpoint)
+       if (response.statusCode == 201 || response.statusCode == 200) {
+@@ -117,15 +95,6 @@
+           // Save the new token to SharedPreferences - ensure it's saved before proceeding
+           await SharedPrefs().setString('token', cleanToken);
+ 
+-          // Immediately verify it was saved (no await needed for getString, but we await to ensure it's written)
+-          final verifyToken = await SharedPrefs().getString('token');
+-          if (verifyToken == cleanToken) {
+-            print('✅ Access token refreshed successfully and saved');
+-            print('✅ Token immediately verified in storage');
+-          } else {
+-            print('⚠️ WARNING: Token saved but verification failed!');
+-          }
+-
+           // If response also includes new refresh token, save it
+           final newRefreshToken = response.data['refreshToken'] as String?;
+           if (newRefreshToken != null && newRefreshToken.isNotEmpty) {
+@@ -133,32 +102,6 @@
+             final cleanNewRefreshToken =
+                 newRefreshToken.replaceFirst(RegExp(r'^Bearer\s+'), '');
+             await SharedPrefs().setString('refreshToken', cleanNewRefreshToken);
+-            print('✅ New refresh token also saved');
+-          }
+-
+-          print('✅ New Bearer Token received:');
+-          print('═══════════════════════════════════════');
+-          print(cleanToken);
+-          print('═══════════════════════════════════════');
+-
+-          // Verify the new token was saved and can be retrieved
+-          final savedToken = await getToken();
+-          final isSaved = savedToken != null && savedToken == cleanToken;
+-          print(
+-              '💾 Token saved in SharedPreferences: ${isSaved ? "✅ YES" : "❌ NO"}');
+-          if (isSaved) {
+-            // savedToken is guaranteed to be non-null here because isSaved checks for null
+-            print('💾 Saved token length: ${savedToken.length} chars');
+-            print(
+-                '💾 Saved token first 30 chars: ${savedToken.substring(0, savedToken.length > 30 ? 30 : savedToken.length)}...');
+-            print('💾 New token will be used for all subsequent API calls');
+-          } else {
+-            print(
+-                '⚠️ WARNING: Token was not saved correctly or cannot be retrieved!');
+-            if (savedToken != null) {
+-              print('⚠️ Retrieved token length: ${savedToken.length} chars');
+-              print('⚠️ Expected token length: ${cleanToken.length} chars');
+-            }
+           }
+ 
+           _isRefreshing = false;
+@@ -169,31 +112,9 @@
+       }
+ 
+       // If we reach here, refresh failed - check if it's due to expired refresh token
+-      print('❌ Token refresh failed');
+-      print('═══════════════════════════════════════');
+-      print('📋 Summary:');
+-      print('   - Refresh token exists in SharedPreferences: ✅ YES');
+-      print(
+-          '   - Server response: ${response.statusCode} ${response.statusCode == 401 ? "Unauthorized" : response.statusCode == 403 ? "Forbidden" : "Error"}');
+ 
+       // Check if refresh token expired (401 Unauthorized or 403 Forbidden)
+       if (response.statusCode == 401 || response.statusCode == 403) {
+-        print('   - Reason: Refresh token has EXPIRED on server');
+-        print('   - Action: User needs to login again to get new tokens');
+-        print('═══════════════════════════════════════');
+-
+-        // Check if refresh token is still in storage after failed attempt
+-        final refreshTokenAfter = await getRefreshToken();
+-        print(
+-            '💾 Refresh token still in SharedPreferences after failure: ${refreshTokenAfter != null && refreshTokenAfter.isNotEmpty ? "✅ YES (still stored locally)" : "❌ NO"}');
+-        print(
+-            '   ℹ️ This is normal - expired tokens remain in storage until logout/clearUserData()');
+-        print(
+-            '   ℹ️ The token exists locally but server rejects it because it has expired');
+-        print('═══════════════════════════════════════');
+-
+-        print(
+-            '⚠️ Refresh token expired or invalid (status: ${response.statusCode}), triggering automatic logout...');
+         final result = null;
+         _isRefreshing = false;
+         _refreshCompleter?.complete(result);
+@@ -248,7 +169,6 @@
+ 
+       // Disconnect socket connection
+       await ChatSocketService().disconnect();
+-      print('🔌 Socket disconnected on token expiration');
+ 
+       // Clear all user data
+       await clearUserData();
+@@ -257,8 +177,6 @@
+       // navigation stack, so no need to pop pages first (the old
+       // `while (canPop()) pop()` loop could pop the last page and throw).
+       AppRoutes.router.go('/login');
+-
+-      print('✅ User automatically logged out and redirected to login');
+     } catch (e) {
+       print('❌ Error during automatic logout: $e');
+     } finally {
+@@ -284,7 +202,6 @@
+ 
+     // Disconnect socket connection
+     await ChatSocketService().disconnect();
+-    print('🔌 Socket disconnected on logout');
+ 
+     await clearUserData();
+ 
+--- a/lib/common/api_service.dart
++++ b/lib/common/api_service.dart
+@@ -49,8 +49,6 @@
+     _dio.interceptors.add(
+       InterceptorsWrapper(
+         onRequest: (options, handler) async {
+-          print('🌐 API ${options.method} ${options.uri}');
+-
+           // Get token from SharedPreferences - if it exists, use it
+           // Token from login should work directly - only refresh when we get 401 (token expired)
+           // After token refresh, new token is saved and will be used for subsequent requests
+@@ -59,26 +57,15 @@
+             // API expects "Bearer <token>" format in Authorization header
+             final authHeader = _prepareAuthHeader(token);
+             options.headers['Authorization'] = authHeader;
+-            print('🔑 Using token for request to: ${options.uri}');
+-            print('🔑 Token length: ${token.length} chars');
+-            print(
+-                '🔑 Token first 30 chars: ${token.substring(0, token.length > 30 ? 30 : token.length)}...');
+-            print(
+-                '🔑 Authorization header format: ${authHeader.substring(0, authHeader.length > 30 ? 30 : authHeader.length)}...');
+           } else {
+             // No token found - proceed without Authorization header
+             // Public endpoints like /v2/ads/list work without authentication
+-            print(
+-                'ℹ️ No token found for request to: ${options.uri} - proceeding without authentication');
+           }
+           // If no token, proceed without Authorization header (public endpoints don't need it)
+           // This allows unauthenticated users to browse listings
+           return handler.next(options);
+         },
+         onResponse: (response, handler) {
+-          print(
+-            '✅ ${response.statusCode} ${response.requestOptions.method} ${response.requestOptions.uri}',
+-          );
+           return handler.next(response);
+         },
+         onError: (DioException e, handler) async {
+@@ -89,23 +76,12 @@
+             // Token expired or invalid - try to refresh it
+             final authService = AuthService();
+ 
+-            print('🔄 Received 401 Unauthorized for: ${e.requestOptions.uri}');
+-            print('📋 401 Response details:');
+-            print('   Status Code: ${e.response?.statusCode}');
+-            print('   Response Data: ${e.response?.data}');
+-            print('   Request Headers: ${e.requestOptions.headers}');
+-            print(
+-                '   Authorization header sent: ${e.requestOptions.headers['Authorization']?.toString().substring(0, 30) ?? 'NOT SET'}...');
+-
+             // Check if token exists before attempting refresh
+             final currentToken = await getToken();
+             if (currentToken == null || currentToken.isEmpty) {
+               // No token exists - this is an unauthenticated request
+               // If endpoint requires auth, reject the error (user needs to login)
+               // If endpoint is public, this shouldn't happen, but handle gracefully
+-              print('ℹ️ No token found in storage - unauthenticated request');
+-              print(
+-                  'ℹ️ If this endpoint requires authentication, user needs to login');
+               return handler.reject(e);
+             }
+ 
+@@ -116,8 +92,6 @@
+                 e.requestOptions.headers['Authorization']?.toString();
+             final storedAuthHeader = _prepareAuthHeader(currentToken);
+             if (sentAuthHeader != null && sentAuthHeader != storedAuthHeader) {
+-              print(
+-                  '🔁 Token already refreshed by another request — retrying with stored token');
+               e.requestOptions.headers['Authorization'] = storedAuthHeader;
+               try {
+                 final retryResponse = await _dio.fetch(e.requestOptions);
+@@ -133,16 +107,11 @@
+               }
+             }
+ 
+-            print('🔄 Token exists, attempting to refresh...');
+-
+             // Try to refresh the token
+             final newToken = await authService.refreshAccessToken();
+ 
+             if (newToken != null && newToken.isNotEmpty) {
+               // Token refreshed successfully, retry the original request
+-              print(
+-                  '✅ Token refreshed successfully, retrying original request...');
+-
+               // Mark initial refresh as done if this is the first refresh after login
+               if (!authService.hasDoneInitialRefresh) {
+                 authService.markInitialRefreshDone();
+@@ -153,26 +122,8 @@
+               e.requestOptions.headers['Authorization'] =
+                   _prepareAuthHeader(newToken);
+ 
+-              // Verify the new token is being used for retry
+-              print('🔄 Retrying request with new token...');
+-              print('🔑 New token length: ${newToken.length} chars');
+-              print(
+-                  '🔑 New token first 30 chars: ${newToken.substring(0, newToken.length > 30 ? 30 : newToken.length)}...');
+-
+-              // Verify the token in storage matches what we're using
+-              final storedToken = await getToken();
+-              if (storedToken != null && storedToken == newToken) {
+-                print(
+-                    '✅ Confirmed: Stored token matches new token - will be used for all subsequent API calls');
+-              } else {
+-                print('⚠️ WARNING: Stored token does not match new token!');
+-              }
+-
+               try {
+                 final retryResponse = await _dio.fetch(e.requestOptions);
+-                print('✅ Request retry successful after token refresh');
+-                print(
+-                    '✅ New token is now active and will be used for all future API calls');
+                 return handler.resolve(retryResponse);
+               } catch (retryError) {
+                 print(
+@@ -190,7 +141,6 @@
+               // AuthService will handle logout automatically
+               print(
+                   '⚠️ Token refresh failed - refresh token expired or invalid');
+-              print('⚠️ User will be logged out automatically');
+ 
+               // If logout is in progress, suppress the error to avoid showing it in UI
+               if (authService.isLoggingOut) {
+@@ -282,7 +232,6 @@
+ 
+   static String _handleBadResponse(Response? response) {
+     if (response == null) return "❌ No response from server.";
+-    print('response:........................${response.data}');
+     try {
+       if (response.data is Map<String, dynamic>) {
+         final data = response.data as Map<String, dynamic>;
+--- a/lib/common/shared_pref.dart
++++ b/lib/common/shared_pref.dart
+@@ -37,22 +37,18 @@
+ 
+   /// 🔹 Save user ID
+   Future<void> saveUserId(String userId) async {
+-    print("Saving User ID: $userId"); // Debug log before saving
+     await setString("user_id", userId);
+-    print("User ID saved successfully.");
+   }
+ 
+   /// 🔹 Retrieve stored user ID
+   Future<String?> getUserId() async {
+     String? userId = getString("user_id");
+-    print("Retrieved User ID from SharedPreferences: $userId"); // Debug log
+     return userId;
+   }
+ 
+   /// 🔹 Save user profile in SharedPreferences
+   Future<void> saveUserProfile(UserProfile profile) async {
+     await _prefs?.setString("user_profile", jsonEncode(profile.toJson()));
+-    print("✅ Profile saved in SharedPreferences: ${profile.toJson()}");
+   }
+ 
+   /// 🔹 Retrieve stored user profile
+@@ -62,7 +58,6 @@
+     if (userProfileString != null) {
+       return UserProfile.fromJson(jsonDecode(userProfileString));
+     }
+-    print("⚠️ No profile found in SharedPreferences.");
+     return null;
+   }
+ 
+@@ -71,13 +66,11 @@
+     final loginTimestampStr = getString('loginTimestamp');
+ 
+     if (loginTimestampStr == null) {
+-      print("⚠️ No login timestamp found.");
+       return true; // No timestamp → consider session expired
+     }
+ 
+     final loginTime = int.tryParse(loginTimestampStr);
+     if (loginTime == null) {
+-      print("⚠️ Invalid login timestamp.");
+       return true;
+     }
+ 
+@@ -85,11 +78,9 @@
+     final sessionDurationMillis = sessionDurationMinutes * 60 * 1000;
+ 
+     if ((now - loginTime) > sessionDurationMillis) {
+-      print("⏰ Login session expired.");
+       return true;
+     }
+ 
+-    print("✅ Login session still valid.");
+     return false;
+   }
+ }
+@@ -117,21 +108,11 @@
+   if (loginResponse.profilePic != null &&
+       loginResponse.profilePic!.isNotEmpty) {
+     await sharedPrefs.setString('profilePicture', loginResponse.profilePic!);
+-    print("Profile picture saved: ${loginResponse.profilePic}");
+   }
+ 
+   // if (loginResponse.id != null) {
+   //   await sharedPrefs.saveUserId(loginResponse.id);
+   // }
+-
+-  print("✅ Login response saved successfully:");
+-  print("   User ID: ${loginResponse.id}");
+-  print("   Name: ${loginResponse.name}");
+-  print(
+-      "   Token saved: ${cleanToken.isNotEmpty ? 'YES (${cleanToken.length} chars)' : 'NO'}");
+-  print(
+-      "   Refresh Token saved: ${cleanRefreshToken.isNotEmpty ? 'YES (${cleanRefreshToken.length} chars)' : 'NO'}");
+-  print("   ProfilePic: ${loginResponse.profilePic ?? 'N/A'}");
+ 
+   // Reset initial refresh flag - token from login should work directly
+   // Only refresh when token expires (401 error)
+--- a/lib/main.dart
++++ b/lib/main.dart
+@@ -44,7 +44,6 @@
+ /// - If logged in → go to notifications page.
+ /// - If not logged in → go to home and show login popup (do not open notifications page).
+ Future<void> _handleNotificationTap(RemoteMessage message) async {
+-  debugPrint('FCM tap: ${message.notification?.title} | data: ${message.data}');
+   final isAuth = await AuthGuard.isAuthenticated();
+   if (isAuth) {
+     AppRoutes.router.go('/notifications');
+@@ -58,7 +57,6 @@
+ @pragma('vm:entry-point')
+ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+   await Firebase.initializeApp();
+-  debugPrint('FCM background: ${message.messageId}');
+ }
+ 
+ /// Initialize Firebase Cloud Messaging: request permission and get FCM token.
+@@ -90,19 +88,16 @@
+     // Get FCM token (null if permission denied)
+     final token = await messaging.getToken();
+     if (token != null) {
+-      debugPrint('FCM token: $token');
+       // TODO: send token to your backend (e.g. PATCH /profile with fcmToken)
+     }
+ 
+     // Listen for token refresh
+     messaging.onTokenRefresh.listen((newToken) {
+-      debugPrint('FCM token refreshed: $newToken');
+       // TODO: send newToken to your backend
+     });
+ 
+     // Foreground: app is open when notification arrives — show in system shade (like Swiggy)
+     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+-      debugPrint('FCM foreground: ${message.notification?.title}');
+       final title = message.notification?.title ??
+           message.data['title'] ??
+           'Notification';
+--- a/lib/repositories/login_repository.dart
++++ b/lib/repositories/login_repository.dart
+@@ -12,7 +12,6 @@
+         'username': username,
+         'password': password,
+       });
+-      print(response.data);
+       if (response.statusCode == 201) {
+         final loginResponse = LoginResponse.fromJson(response.data);
+ 
+--- a/lib/repositories/otp_repo.dart
++++ b/lib/repositories/otp_repo.dart
+@@ -37,7 +37,6 @@
+           'otp': otp,
+         },
+       );
+-      print(response.data);
+       if (response.statusCode == 200 || response.statusCode == 201) {
+         final loginResponse = LoginResponse.fromJson(response.data);
+         await saveLoginResponse(loginResponse);
+--- a/lib/services/chat_api_service.dart
++++ b/lib/services/chat_api_service.dart
+@@ -38,27 +38,17 @@
+ 
+     // Prepare Authorization header with correct format (matching ApiService)
+     final authHeader = _prepareAuthHeader(token);
+-    print('🔑 Chat API - Using token for request');
+-    print(
+-        '🔑 Chat API - Authorization header format: ${authHeader.substring(0, authHeader.length > 30 ? 30 : authHeader.length)}...');
+ 
+     var response = await request(authHeader);
+ 
+     // Handle 401 Unauthorized - try to refresh token using centralized AuthService
+     if (response.statusCode == 401) {
+-      print('🔄 Chat API - Received 401, attempting token refresh...');
+-      print('📋 Chat API - 401 Response details:');
+-      print('   Status Code: ${response.statusCode}');
+-      print('   Response Body: ${response.body}');
+-
+       final authService = AuthService();
+       final newToken = await authService.refreshAccessToken();
+       if (newToken != null && newToken.isNotEmpty) {
+-        print('✅ Chat API - Token refreshed successfully, retrying request...');
+         // Prepare new Authorization header with refreshed token
+         final newAuthHeader = _prepareAuthHeader(newToken);
+         response = await request(newAuthHeader);
+-        print('📡 Chat API - Retry response status: ${response.statusCode}');
+       } else {
+         // Refresh token expired, AuthService will handle automatic logout
+         print('⚠️ Chat API - Token refresh failed, user will be logged out');
+@@ -74,8 +64,6 @@
+     try {
+       final baseUrl = AppConfig.baseUrl;
+       final url = '$baseUrl/chats/rooms';
+-
+-      print('🌐 Fetching chat rooms from: $url');
+ 
+       final response = await _executeRequest((authHeader) async {
+         return await http.get(
+@@ -87,12 +75,8 @@
+         ).timeout(const Duration(seconds: 10));
+       });
+ 
+-      print('📡 Response status: ${response.statusCode}');
+-      print('📄 Response body: ${response.body}');
+-
+       if (response.statusCode == 200) {
+         final data = json.decode(response.body);
+-        print('✅ Chat rooms fetched successfully');
+         return data;
+       } else {
+         final errorData = json.decode(response.body);
+@@ -112,9 +96,6 @@
+     try {
+       final baseUrl = AppConfig.baseUrl;
+       final url = '$baseUrl/chats/rooms/$roomId/messages';
+-
+-      print('🌐 Fetching messages for room: $roomId');
+-      print('🔗 URL: $url');
+ 
+       final response = await _executeRequest((authHeader) async {
+         return await http.get(
+@@ -126,11 +107,8 @@
+         ).timeout(const Duration(seconds: 10));
+       });
+ 
+-      print('📡 Response status: ${response.statusCode}');
+-
+       if (response.statusCode == 200) {
+         final data = json.decode(response.body);
+-        print('✅ Messages fetched successfully');
+         return data;
+       } else {
+         final errorData = json.decode(response.body);
+@@ -151,10 +129,6 @@
+     try {
+       final baseUrl = AppConfig.baseUrl;
+       final url = '$baseUrl/chats/rooms/check/$adId/$otherUserId';
+-
+-      print(
+-          '🌐 Checking if room exists for ad: $adId and other user: $otherUserId');
+-      print('🔗 URL: $url');
+ 
+       final response = await _executeRequest((authHeader) async {
+         return await http.get(
+@@ -166,12 +140,8 @@
+         ).timeout(const Duration(seconds: 10));
+       });
+ 
+-      print('📡 Response status: ${response.statusCode}');
+-      print('📄 Response body: ${response.body}');
+-
+       if (response.statusCode == 200) {
+         final data = json.decode(response.body);
+-        print('✅ Room check completed successfully');
+         return data;
+       } else if (response.statusCode == 404) {
+         // Room doesn't exist - this is a valid response
+@@ -201,12 +171,6 @@
+     try {
+       final baseUrl = AppConfig.baseUrl;
+       final url = '$baseUrl/chats/rooms/$roomId/messages';
+-
+-      print('🌐 Sending message to room: $roomId');
+-      print('🔗 URL: $url');
+-      print('📝 Content: $content');
+-      print('📝 Type: $type');
+-      if (attachments != null) print('📎 Attachments: ${attachments.length}');
+ 
+       // Prepare request body
+       final requestBody = <String, dynamic>{
+@@ -230,12 +194,8 @@
+             .timeout(const Duration(seconds: 15));
+       });
+ 
+-      print('📡 Response status: ${response.statusCode}');
+-      print('📄 Response body: ${response.body}');
+-
+       if (response.statusCode == 200 || response.statusCode == 201) {
+         final data = json.decode(response.body);
+-        print('✅ Message sent successfully via API');
+         return data;
+       } else {
+         // 404 often returns plain text (e.g. "Cannot POST /path") from Express

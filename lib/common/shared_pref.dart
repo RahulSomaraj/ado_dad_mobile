@@ -37,22 +37,18 @@ class SharedPrefs {
 
   /// 🔹 Save user ID
   Future<void> saveUserId(String userId) async {
-    print("Saving User ID: $userId"); // Debug log before saving
     await setString("user_id", userId);
-    print("User ID saved successfully.");
   }
 
   /// 🔹 Retrieve stored user ID
   Future<String?> getUserId() async {
     String? userId = getString("user_id");
-    print("Retrieved User ID from SharedPreferences: $userId"); // Debug log
     return userId;
   }
 
   /// 🔹 Save user profile in SharedPreferences
   Future<void> saveUserProfile(UserProfile profile) async {
     await _prefs?.setString("user_profile", jsonEncode(profile.toJson()));
-    print("✅ Profile saved in SharedPreferences: ${profile.toJson()}");
   }
 
   /// 🔹 Retrieve stored user profile
@@ -62,7 +58,6 @@ class SharedPrefs {
     if (userProfileString != null) {
       return UserProfile.fromJson(jsonDecode(userProfileString));
     }
-    print("⚠️ No profile found in SharedPreferences.");
     return null;
   }
 
@@ -71,13 +66,11 @@ class SharedPrefs {
     final loginTimestampStr = getString('loginTimestamp');
 
     if (loginTimestampStr == null) {
-      print("⚠️ No login timestamp found.");
       return true; // No timestamp → consider session expired
     }
 
     final loginTime = int.tryParse(loginTimestampStr);
     if (loginTime == null) {
-      print("⚠️ Invalid login timestamp.");
       return true;
     }
 
@@ -85,11 +78,9 @@ class SharedPrefs {
     final sessionDurationMillis = sessionDurationMinutes * 60 * 1000;
 
     if ((now - loginTime) > sessionDurationMillis) {
-      print("⏰ Login session expired.");
       return true;
     }
 
-    print("✅ Login session still valid.");
     return false;
   }
 }
@@ -117,21 +108,11 @@ Future<void> saveLoginResponse(LoginResponse loginResponse) async {
   if (loginResponse.profilePic != null &&
       loginResponse.profilePic!.isNotEmpty) {
     await sharedPrefs.setString('profilePicture', loginResponse.profilePic!);
-    print("Profile picture saved: ${loginResponse.profilePic}");
   }
 
   // if (loginResponse.id != null) {
   //   await sharedPrefs.saveUserId(loginResponse.id);
   // }
-
-  print("✅ Login response saved successfully:");
-  print("   User ID: ${loginResponse.id}");
-  print("   Name: ${loginResponse.name}");
-  print(
-      "   Token saved: ${cleanToken.isNotEmpty ? 'YES (${cleanToken.length} chars)' : 'NO'}");
-  print(
-      "   Refresh Token saved: ${cleanRefreshToken.isNotEmpty ? 'YES (${cleanRefreshToken.length} chars)' : 'NO'}");
-  print("   ProfilePic: ${loginResponse.profilePic ?? 'N/A'}");
 
   // Reset initial refresh flag - token from login should work directly
   // Only refresh when token expires (401 error)

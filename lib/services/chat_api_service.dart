@@ -38,27 +38,17 @@ class ChatApiService {
 
     // Prepare Authorization header with correct format (matching ApiService)
     final authHeader = _prepareAuthHeader(token);
-    print('🔑 Chat API - Using token for request');
-    print(
-        '🔑 Chat API - Authorization header format: ${authHeader.substring(0, authHeader.length > 30 ? 30 : authHeader.length)}...');
 
     var response = await request(authHeader);
 
     // Handle 401 Unauthorized - try to refresh token using centralized AuthService
     if (response.statusCode == 401) {
-      print('🔄 Chat API - Received 401, attempting token refresh...');
-      print('📋 Chat API - 401 Response details:');
-      print('   Status Code: ${response.statusCode}');
-      print('   Response Body: ${response.body}');
-
       final authService = AuthService();
       final newToken = await authService.refreshAccessToken();
       if (newToken != null && newToken.isNotEmpty) {
-        print('✅ Chat API - Token refreshed successfully, retrying request...');
         // Prepare new Authorization header with refreshed token
         final newAuthHeader = _prepareAuthHeader(newToken);
         response = await request(newAuthHeader);
-        print('📡 Chat API - Retry response status: ${response.statusCode}');
       } else {
         // Refresh token expired, AuthService will handle automatic logout
         print('⚠️ Chat API - Token refresh failed, user will be logged out');
@@ -75,8 +65,6 @@ class ChatApiService {
       final baseUrl = AppConfig.baseUrl;
       final url = '$baseUrl/chats/rooms';
 
-      print('🌐 Fetching chat rooms from: $url');
-
       final response = await _executeRequest((authHeader) async {
         return await http.get(
           Uri.parse(url),
@@ -87,12 +75,8 @@ class ChatApiService {
         ).timeout(const Duration(seconds: 10));
       });
 
-      print('📡 Response status: ${response.statusCode}');
-      print('📄 Response body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('✅ Chat rooms fetched successfully');
         return data;
       } else {
         final errorData = json.decode(response.body);
@@ -113,9 +97,6 @@ class ChatApiService {
       final baseUrl = AppConfig.baseUrl;
       final url = '$baseUrl/chats/rooms/$roomId/messages';
 
-      print('🌐 Fetching messages for room: $roomId');
-      print('🔗 URL: $url');
-
       final response = await _executeRequest((authHeader) async {
         return await http.get(
           Uri.parse(url),
@@ -126,11 +107,8 @@ class ChatApiService {
         ).timeout(const Duration(seconds: 10));
       });
 
-      print('📡 Response status: ${response.statusCode}');
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('✅ Messages fetched successfully');
         return data;
       } else {
         final errorData = json.decode(response.body);
@@ -152,10 +130,6 @@ class ChatApiService {
       final baseUrl = AppConfig.baseUrl;
       final url = '$baseUrl/chats/rooms/check/$adId/$otherUserId';
 
-      print(
-          '🌐 Checking if room exists for ad: $adId and other user: $otherUserId');
-      print('🔗 URL: $url');
-
       final response = await _executeRequest((authHeader) async {
         return await http.get(
           Uri.parse(url),
@@ -166,12 +140,8 @@ class ChatApiService {
         ).timeout(const Duration(seconds: 10));
       });
 
-      print('📡 Response status: ${response.statusCode}');
-      print('📄 Response body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('✅ Room check completed successfully');
         return data;
       } else if (response.statusCode == 404) {
         // Room doesn't exist - this is a valid response
@@ -202,12 +172,6 @@ class ChatApiService {
       final baseUrl = AppConfig.baseUrl;
       final url = '$baseUrl/chats/rooms/$roomId/messages';
 
-      print('🌐 Sending message to room: $roomId');
-      print('🔗 URL: $url');
-      print('📝 Content: $content');
-      print('📝 Type: $type');
-      if (attachments != null) print('📎 Attachments: ${attachments.length}');
-
       // Prepare request body
       final requestBody = <String, dynamic>{
         'content': content,
@@ -230,12 +194,8 @@ class ChatApiService {
             .timeout(const Duration(seconds: 15));
       });
 
-      print('📡 Response status: ${response.statusCode}');
-      print('📄 Response body: ${response.body}');
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(response.body);
-        print('✅ Message sent successfully via API');
         return data;
       } else {
         // 404 often returns plain text (e.g. "Cannot POST /path") from Express

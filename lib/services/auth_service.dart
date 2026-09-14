@@ -44,7 +44,6 @@ class AuthService {
   Future<String?> refreshAccessToken() async {
     // If already refreshing, wait for the ongoing refresh to complete
     if (_isRefreshing && _refreshCompleter != null) {
-      print('⏳ Token refresh already in progress, waiting for completion...');
       return _refreshCompleter!.future;
     }
 
@@ -52,12 +51,9 @@ class AuthService {
     _refreshCompleter = Completer<String?>();
     _isRefreshing = true;
 
-    print('🔄 Starting token refresh...');
-
     try {
       final refreshToken = await getRefreshToken();
       if (refreshToken == null || refreshToken.isEmpty) {
-        print('❌ No refresh token found in SharedPreferences');
         _isRefreshing = false;
         _refreshCompleter?.complete(null);
         _refreshCompleter = null;
@@ -67,15 +63,6 @@ class AuthService {
       // Remove "Bearer " prefix from refresh token if present (refresh token should be sent without prefix)
       final cleanRefreshToken =
           refreshToken.replaceFirst(RegExp(r'^Bearer\s+'), '');
-
-      print('📋 Refresh Token from SharedPreferences:');
-      print('═══════════════════════════════════════');
-      print(refreshToken);
-      print('═══════════════════════════════════════');
-      print('🔄 Refresh token from SharedPreferences:');
-      print('   Length: ${cleanRefreshToken.length} characters');
-      print(
-          '   First 50 chars: ${cleanRefreshToken.length > 50 ? cleanRefreshToken.substring(0, 50) + "..." : cleanRefreshToken}');
 
       final baseUrl = AppConfig.baseUrl;
       final dio = Dio(BaseOptions(
@@ -92,19 +79,10 @@ class AuthService {
         },
       ));
 
-      print('🔄 Attempting to refresh access token...');
-      print('📤 Endpoint: $baseUrl/refresh-token');
-      print('📤 Request body format: {"refreshToken": "<token_value>"}');
-      print(
-          '📤 Refresh token value (first 30 chars): ${cleanRefreshToken.substring(0, cleanRefreshToken.length > 30 ? 30 : cleanRefreshToken.length)}...');
-
       final response = await dio.post(
         '/refresh-token',
         data: {'refreshToken': cleanRefreshToken},
       );
-
-      print('📥 Response status: ${response.statusCode}');
-      print('📥 Response data: ${response.data}');
 
       // Check response status code (success is 201 for refresh token endpoint)
       if (response.statusCode == 201 || response.statusCode == 200) {
@@ -117,15 +95,6 @@ class AuthService {
           // Save the new token to SharedPreferences - ensure it's saved before proceeding
           await SharedPrefs().setString('token', cleanToken);
 
-          // Immediately verify it was saved (no await needed for getString, but we await to ensure it's written)
-          final verifyToken = await SharedPrefs().getString('token');
-          if (verifyToken == cleanToken) {
-            print('✅ Access token refreshed successfully and saved');
-            print('✅ Token immediately verified in storage');
-          } else {
-            print('⚠️ WARNING: Token saved but verification failed!');
-          }
-
           // If response also includes new refresh token, save it
           final newRefreshToken = response.data['refreshToken'] as String?;
           if (newRefreshToken != null && newRefreshToken.isNotEmpty) {
@@ -133,32 +102,6 @@ class AuthService {
             final cleanNewRefreshToken =
                 newRefreshToken.replaceFirst(RegExp(r'^Bearer\s+'), '');
             await SharedPrefs().setString('refreshToken', cleanNewRefreshToken);
-            print('✅ New refresh token also saved');
-          }
-
-          print('✅ New Bearer Token received:');
-          print('═══════════════════════════════════════');
-          print(cleanToken);
-          print('═══════════════════════════════════════');
-
-          // Verify the new token was saved and can be retrieved
-          final savedToken = await getToken();
-          final isSaved = savedToken != null && savedToken == cleanToken;
-          print(
-              '💾 Token saved in SharedPreferences: ${isSaved ? "✅ YES" : "❌ NO"}');
-          if (isSaved) {
-            // savedToken is guaranteed to be non-null here because isSaved checks for null
-            print('💾 Saved token length: ${savedToken.length} chars');
-            print(
-                '💾 Saved token first 30 chars: ${savedToken.substring(0, savedToken.length > 30 ? 30 : savedToken.length)}...');
-            print('💾 New token will be used for all subsequent API calls');
-          } else {
-            print(
-                '⚠️ WARNING: Token was not saved correctly or cannot be retrieved!');
-            if (savedToken != null) {
-              print('⚠️ Retrieved token length: ${savedToken.length} chars');
-              print('⚠️ Expected token length: ${cleanToken.length} chars');
-            }
           }
 
           _isRefreshing = false;
@@ -169,31 +112,9 @@ class AuthService {
       }
 
       // If we reach here, refresh failed - check if it's due to expired refresh token
-      print('❌ Token refresh failed');
-      print('═══════════════════════════════════════');
-      print('📋 Summary:');
-      print('   - Refresh token exists in SharedPreferences: ✅ YES');
-      print(
-          '   - Server response: ${response.statusCode} ${response.statusCode == 401 ? "Unauthorized" : response.statusCode == 403 ? "Forbidden" : "Error"}');
 
       // Check if refresh token expired (401 Unauthorized or 403 Forbidden)
       if (response.statusCode == 401 || response.statusCode == 403) {
-        print('   - Reason: Refresh token has EXPIRED on server');
-        print('   - Action: User needs to login again to get new tokens');
-        print('═══════════════════════════════════════');
-
-        // Check if refresh token is still in storage after failed attempt
-        final refreshTokenAfter = await getRefreshToken();
-        print(
-            '💾 Refresh token still in SharedPreferences after failure: ${refreshTokenAfter != null && refreshTokenAfter.isNotEmpty ? "✅ YES (still stored locally)" : "❌ NO"}');
-        print(
-            '   ℹ️ This is normal - expired tokens remain in storage until logout/clearUserData()');
-        print(
-            '   ℹ️ The token exists locally but server rejects it because it has expired');
-        print('═══════════════════════════════════════');
-
-        print(
-            '⚠️ Refresh token expired or invalid (status: ${response.statusCode}), triggering automatic logout...');
         final result = null;
         _isRefreshing = false;
         _refreshCompleter?.complete(result);
@@ -248,7 +169,6 @@ class AuthService {
 
       // Disconnect socket connection
       await ChatSocketService().disconnect();
-      print('🔌 Socket disconnected on token expiration');
 
       // Clear all user data
       await clearUserData();
@@ -257,8 +177,6 @@ class AuthService {
       // navigation stack, so no need to pop pages first (the old
       // `while (canPop()) pop()` loop could pop the last page and throw).
       AppRoutes.router.go('/login');
-
-      print('✅ User automatically logged out and redirected to login');
     } catch (e) {
       print('❌ Error during automatic logout: $e');
     } finally {
@@ -284,7 +202,6 @@ class AuthService {
 
     // Disconnect socket connection
     await ChatSocketService().disconnect();
-    print('🔌 Socket disconnected on logout');
 
     await clearUserData();
 
