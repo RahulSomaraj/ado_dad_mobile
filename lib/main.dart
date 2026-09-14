@@ -10,6 +10,7 @@ import 'package:ado_dad_user/common/notification_badge_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:ado_dad_user/common/connectivity_checker.dart';
+import 'package:ado_dad_user/common/secure_token_store.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/config/app_config.dart';
 import 'package:ado_dad_user/features/home/ad_edit/bloc/ad_edit_bloc.dart';
@@ -140,6 +141,11 @@ void main() async {
   );
 
   await SharedPrefs().init();
+
+  // Loads the access/refresh tokens out of the keystore into memory (and
+  // migrates any left in SharedPreferences by an older build). Must run before
+  // the first authenticated request, i.e. before runApp.
+  await SecureTokenStore().init();
 
   // Load the saved light/dark theme preference before building the app.
   await ThemeController.instance.load();

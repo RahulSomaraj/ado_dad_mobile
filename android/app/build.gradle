@@ -75,7 +75,10 @@ android {
         applicationId = "com.adodad.user"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // flutter_secure_storage's EncryptedSharedPreferences backend needs
+        // API 23+; below that it cannot create the master key and every token
+        // read fails. Flutter's default floor is lower, so pin it here.
+        minSdk = Math.max(flutter.minSdkVersion, 23)
         // Target API 36 for plugin compatibility
         targetSdk = 36
         versionCode = flutter.versionCode

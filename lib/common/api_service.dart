@@ -16,8 +16,13 @@ class ApiService {
     _dio = Dio(BaseOptions(
       // baseUrl: 'https://uat.ado-dad.com/',
       baseUrl: '${AppConfig.baseUrl}/',
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 15),
+      // A flaky network used to spin for 30 s before surfacing an error; 10 s
+      // is well past the p99 for these endpoints and fails fast enough that
+      // the retry (or the error state) reaches the user while they're still
+      // looking at the screen.
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      sendTimeout: const Duration(seconds: 15),
     ));
 
     _initializeInterceptors();

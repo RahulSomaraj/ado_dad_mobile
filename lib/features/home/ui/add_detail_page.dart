@@ -1,9 +1,10 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:ado_dad_user/services/location_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:ado_dad_user/common/widgets/app_network_image.dart';
 import 'package:ado_dad_user/common/widgets/skeleton.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/auth_guard.dart';
@@ -50,13 +51,14 @@ class AdDetailPage extends StatefulWidget {
 
 class _AdDetailPageState extends State<AdDetailPage> {
   int _currentIndex = 0;
-  VideoPlayerController? _videoController;
   final CarouselSliderController _carouselController =
       CarouselSliderController();
   Timer? _autoPlayTimer;
   bool _hasVideo = false;
-  final Map<String, VideoPlayerController?> _videoControllers = {};
-  final Map<String, VoidCallback?> _onVideoCompleteCallbacks = {};
+  // Video players own and dispose their own controllers inside
+  // _VideoPlayerWidgetState; the page-level `_videoController` /
+  // `_videoControllers` / `_onVideoCompleteCallbacks` fields were never
+  // assigned a live controller and only grew per video URL.
 
   // Cache the current user id so repeated owner-checks (many FutureBuilders,
   // re-run on every rebuild) don't hit SharedPreferences each time.
@@ -164,11 +166,7 @@ Download Adodad app to contact the seller and view more details!
 
   @override
   void dispose() {
-    _videoController?.dispose();
     _autoPlayTimer?.cancel();
-    for (var controller in _videoControllers.values) {
-      controller?.dispose();
-    }
     super.dispose();
   }
 
@@ -193,14 +191,15 @@ Download Adodad app to contact the seller and view more details!
           _carouselController.nextPage();
         }
       });
-    } else {
-      // For images, auto-advance after 3 seconds
-      _autoPlayTimer = Timer(const Duration(seconds: 3), () {
-        if (mounted) {
-          _carouselController.nextPage();
-        }
-      });
     }
+    // Images no longer auto-advance.
+    //
+    // The 3 s image timer combined with enableInfiniteScroll meant a 10-photo
+    // ad downloaded all 10 full-size S3 originals within 30 s of opening —
+    // whether or not the user ever swiped — competing for bandwidth with the
+    // photo they were actually looking at. Worse, it looped: once the cycle
+    // had evicted the early photos, the second lap re-downloaded the whole
+    // gallery, indefinitely, for as long as the page stayed open.
   }
 
   void _onVideoComplete() {
@@ -643,6 +642,9 @@ Download Adodad app to contact the seller and view more details!
               viewportFraction: 1,
               height: double.infinity,
               autoPlay: false, // Disable autoPlay, we'll handle it manually
+              // Defaults to true. With looping on, the gallery could cycle
+              // back to photo 1 and re-download everything it had evicted.
+              enableInfiniteScroll: false,
               onPageChanged: (i, _) {
                 setState(() => _currentIndex = i);
                 _startAutoPlay(ad); // Restart auto-play for new item
@@ -896,8 +898,6 @@ Download Adodad app to contact the seller and view more details!
   }
 
   Widget _buildVideoItem(String videoUrl) {
-    // Store callback for video completion
-    _onVideoCompleteCallbacks[videoUrl] = _onVideoComplete;
     return GestureDetector(
       onTap: () {
         _openVideoFullScreen(context, videoUrl);
@@ -917,7 +917,7 @@ Download Adodad app to contact the seller and view more details!
                 child: _VideoPlayerWidget(
                   key: ValueKey(videoUrl),
                   videoUrl: videoUrl,
-                  onVideoComplete: _onVideoCompleteCallbacks[videoUrl],
+                  onVideoComplete: _onVideoComplete,
                 ),
               ),
               // Subtle gradient overlay that doesn't interfere with controls
@@ -1726,7 +1726,7 @@ Download Adodad app to contact the seller and view more details!
                 mobile: 24, tablet: 32, largeTablet: 38, desktop: 44),
             backgroundColor: AppColors.scaffoldBackground,
             backgroundImage: ad.user?.profilePic?.trim().isNotEmpty == true
-                ? NetworkImage(ad.user!.profilePic!)
+                ? CachedNetworkImageProvider(ad.user!.profilePic!)
                 : null,
             child: ad.user?.profilePic?.trim().isNotEmpty == true
                 ? null
@@ -2035,7 +2035,16 @@ Download Adodad app to contact the seller and view more details!
   // Place a phone call to the seller using the device dialer.
   Future<void> _handleCall(BuildContext context, AddModel ad) async {
     final rawPhone = ad.user?.phone?.trim() ?? '';
-    if (rawPhone.isEmpty) return;
+    if (rawPhone.isEmpty) {
+      // The page can open on the seeded list row, whose projection may not
+      // carry the seller phone yet — say so instead of dead-tapping.
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Seller contact not available yet')),
+        );
+      }
+      return;
+    }
     final uri = Uri(scheme: 'tel', path: rawPhone);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
@@ -2250,18 +2259,12 @@ class _SimilarAdsSectionState extends State<_SimilarAdsSection> {
   }
 
   Future<void> _load() async {
-    double? lat, lng;
-    try {
-      final permission = await Geolocator.checkPermission();
-      if (permission != LocationPermission.denied &&
-          permission != LocationPermission.deniedForever) {
-        final pos = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.low,
-            timeLimit: const Duration(seconds: 5));
-        lat = pos.latitude;
-        lng = pos.longitude;
-      }
-    } catch (_) {}
+    // Secondary content: take whatever position is already known rather than
+    // starting a third GPS fix behind the user's back. The seed is good enough
+    // for "near you" at this radius.
+    final seed = await LocationService().seedPosition();
+    final double? lat = seed?.latitude;
+    final double? lng = seed?.longitude;
 
     try {
       final res = await _repo.fetchAllAds(
@@ -2820,7 +2823,10 @@ class _ImageGalleryViewerState extends State<_ImageGalleryViewer> {
         scrollPhysics: const BouncingScrollPhysics(),
         builder: (BuildContext context, int index) {
           return PhotoViewGalleryPageOptions(
-            imageProvider: NetworkImage(widget.images[index]),
+            // Cached provider, so opening fullscreen reuses the bytes the
+            // carousel already downloaded instead of re-fetching from S3.
+            // Full-resolution decode here is deliberate — this view zooms.
+            imageProvider: CachedNetworkImageProvider(widget.images[index]),
             initialScale: PhotoViewComputedScale.contained,
             minScale: PhotoViewComputedScale.contained,
             maxScale: PhotoViewComputedScale.covered * 2,

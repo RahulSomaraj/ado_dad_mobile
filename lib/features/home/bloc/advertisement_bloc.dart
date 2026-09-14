@@ -20,6 +20,60 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     on<SearchAdsEvent>(_onSearchAds);
     on<SearchNextPageEvent>(_onSearchNextPage);
     on<FetchByUserIdEvent>(_onFetchByUserId);
+    _live.add(this);
+  }
+
+  /// Every open instance. Home's lives for the process (it is provided in
+  /// `main.dart`); the category and search instances are route-scoped and drop
+  /// out of here when their route is popped.
+  static final Set<AdvertisementBloc> _live = <AdvertisementBloc>{};
+
+  /// Drops the accumulated listings and every remembered filter/cursor in all
+  /// live feeds. Called on logout: the state used to be retained for the whole
+  /// process, so the next user saw the previous one's feed and filters.
+  static void resetAll() {
+    for (final bloc in _live.toList()) {
+      bloc._resetForLogout();
+    }
+    AddRepository.invalidateAdsCache();
+  }
+
+  void _resetForLogout() {
+    if (isClosed) return;
+    _categoryId = null;
+    _minYear = null;
+    _maxYear = null;
+    _manufacturerIds = null;
+    _modelIds = null;
+    _fuelTypeIds = null;
+    _transmissionTypeIds = null;
+    _minPrice = null;
+    _maxPrice = null;
+    _commercialVehicleTypes = null;
+    _propertyTypes = null;
+    _minBedrooms = null;
+    _maxBedrooms = null;
+    _minArea = null;
+    _maxArea = null;
+    _isFurnished = null;
+    _hasParking = null;
+    _currentPage = 1;
+    _allAdsPage = 1;
+    _searchPage = 1;
+    _searchQuery = null;
+    _isFetching = false;
+    _isSearchFetching = false;
+    _locationFallbackToAll = false;
+    _locationQueryHasNext = false;
+    _locationLatitude = null;
+    _locationLongitude = null;
+    emit(const AdvertisementState.initial());
+  }
+
+  @override
+  Future<void> close() {
+    _live.remove(this);
+    return super.close();
   }
 
   int _currentPage = 1;

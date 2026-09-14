@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:ado_dad_user/common/secure_token_store.dart';
 import 'package:ado_dad_user/models/login_response_model.dart';
 import 'package:ado_dad_user/models/profile_model.dart';
 import 'package:ado_dad_user/services/auth_service.dart';
@@ -96,9 +97,11 @@ Future<void> saveLoginResponse(LoginResponse loginResponse) async {
   final cleanRefreshToken =
       loginResponse.refreshToken.replaceFirst(RegExp(r'^Bearer\s+'), '');
 
-  await sharedPrefs.setString('token', cleanToken);
+  // Tokens go to the keystore, never to SharedPreferences.
+  await SecureTokenStore().setToken(cleanToken);
+  await SecureTokenStore().setRefreshToken(cleanRefreshToken);
+
   await sharedPrefs.setString('userName', loginResponse.name);
-  await sharedPrefs.setString('refreshToken', cleanRefreshToken);
   await sharedPrefs.setString('userType', loginResponse.userType);
   await sharedPrefs.setString('email', loginResponse.email);
   await sharedPrefs.setString('user_id', loginResponse.id);
@@ -119,14 +122,14 @@ Future<void> saveLoginResponse(LoginResponse loginResponse) async {
   AuthService().resetInitialRefreshFlag();
 }
 
-/// Retrieve stored token
+/// Retrieve stored token (keystore-backed, served from the in-memory mirror)
 Future<String?> getToken() async {
-  return SharedPrefs().getString('token');
+  return SecureTokenStore().token;
 }
 
 /// Retrieve stored refresh token
 Future<String?> getRefreshToken() async {
-  return SharedPrefs().getString('refreshToken');
+  return SecureTokenStore().refreshToken;
 }
 
 /// Retrieve stored username
@@ -152,6 +155,8 @@ Future<String?> getUserProfilePicture() async {
 /// Clear user-specific stored data
 Future<void> clearUserData() async {
   final sharedPrefs = SharedPrefs();
+  await SecureTokenStore().clear();
+  // Legacy plaintext copies, in case this build is the first after migration.
   await sharedPrefs.remove('token');
   await sharedPrefs.remove('refreshToken');
   await sharedPrefs.remove('userName');

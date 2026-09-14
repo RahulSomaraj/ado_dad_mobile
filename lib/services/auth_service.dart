@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:ado_dad_user/common/app_routes.dart';
+import 'package:ado_dad_user/common/secure_token_store.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/config/app_config.dart';
+import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/services/chat_socket_service.dart';
 import 'package:dio/dio.dart';
 
@@ -92,8 +94,8 @@ class AuthService {
           final cleanToken =
               newAccessToken.replaceFirst(RegExp(r'^Bearer\s+'), '');
 
-          // Save the new token to SharedPreferences - ensure it's saved before proceeding
-          await SharedPrefs().setString('token', cleanToken);
+          // Save the new token to the keystore - ensure it's saved before proceeding
+          await SecureTokenStore().setToken(cleanToken);
 
           // If response also includes new refresh token, save it
           final newRefreshToken = response.data['refreshToken'] as String?;
@@ -101,7 +103,7 @@ class AuthService {
             // Remove "Bearer " prefix from refresh token if present
             final cleanNewRefreshToken =
                 newRefreshToken.replaceFirst(RegExp(r'^Bearer\s+'), '');
-            await SharedPrefs().setString('refreshToken', cleanNewRefreshToken);
+            await SecureTokenStore().setRefreshToken(cleanNewRefreshToken);
           }
 
           _isRefreshing = false;
@@ -168,6 +170,10 @@ class AuthService {
       // Clear all user data
       await clearUserData();
 
+      // Drop the ad feeds and their cached pages — they belong to the session
+      // that just ended.
+      AdvertisementBloc.resetAll();
+
       // Navigate to login page using GoRouter. `.go()` replaces the whole
       // navigation stack, so no need to pop pages first (the old
       // `while (canPop()) pop()` loop could pop the last page and throw).
@@ -198,6 +204,10 @@ class AuthService {
     await ChatSocketService().disconnect();
 
     await clearUserData();
+
+    // Drop the ad feeds and their cached pages — they belong to the session
+    // that just ended.
+    AdvertisementBloc.resetAll();
 
     // go_router's `.go()` replaces the entire navigation stack with the target
     // location's stack, so there's no need to pop pages first. The previous

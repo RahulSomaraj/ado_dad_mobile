@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -13,8 +14,136 @@ import 'package:ado_dad_user/models/seller_stats.dart';
 import 'package:dio/dio.dart';
 import 'package:mime/mime.dart';
 
+/// One cached ads page plus the moment it was stored.
+class _AdsCacheEntry {
+  _AdsCacheEntry(this.value) : storedAt = DateTime.now();
+
+  final PaginatedAdsResponse value;
+  final DateTime storedAt;
+
+  bool get isFresh =>
+      DateTime.now().difference(storedAt) < AdsCache.freshFor;
+  bool get isUsable =>
+      DateTime.now().difference(storedAt) < AdsCache.keepFor;
+}
+
+/// Memory cache + in-flight dedupe for `/v2/ads/list`.
+///
+/// Before this, every navigation was a cold fetch: Home → category → back →
+/// search all hit the network with identical parameters seconds apart, because
+/// the repository was a stateless pass-through to Dio.
+///
+/// Three behaviours, in the order they matter:
+/// * **dedupe** — two screens asking for the same key at the same moment share
+///   one request instead of racing.
+/// * **fresh hit** — inside [freshFor] the cached page is returned outright.
+/// * **stale-while-revalidate** — between [freshFor] and [keepFor] the stale
+///   page is returned *immediately* and a refresh runs behind it, so the next
+///   read of that key is current. The caller is never made to wait for it.
+class AdsCache {
+  AdsCache._();
+  static final AdsCache instance = AdsCache._();
+
+  static const Duration freshFor = Duration(seconds: 90);
+  static const Duration keepFor = Duration(minutes: 5);
+  static const int maxEntries = 48;
+
+  /// Insertion-ordered, so the oldest key is the first one `keys` yields.
+  final Map<String, _AdsCacheEntry> _entries = <String, _AdsCacheEntry>{};
+  final Map<String, Future<PaginatedAdsResponse>> _inFlight =
+      <String, Future<PaginatedAdsResponse>>{};
+
+  /// Coordinates are bucketed to 2 dp (~1.1 km) so that tiny GPS jitter does
+  /// not produce a different key — and therefore a different request — for
+  /// what is the same query.
+  static String buildKey(Map<String, dynamic> body) {
+    final keys = body.keys.toList()..sort();
+    final parts = keys.map((k) {
+      final v = body[k];
+      if ((k == 'latitude' || k == 'longitude') && v is num) {
+        return '$k=${v.toStringAsFixed(2)}';
+      }
+      if (v is List) return '$k=${(v.map((e) => '$e').toList()..sort()).join(',')}';
+      return '$k=$v';
+    });
+    return parts.join('&');
+  }
+
+  PaginatedAdsResponse? peek(String key) {
+    final entry = _entries[key];
+    if (entry == null) return null;
+    if (!entry.isUsable) {
+      _entries.remove(key);
+      return null;
+    }
+    return entry.value;
+  }
+
+  bool isFresh(String key) => _entries[key]?.isFresh ?? false;
+
+  Future<PaginatedAdsResponse>? inFlight(String key) => _inFlight[key];
+
+  Future<PaginatedAdsResponse> track(
+      String key, Future<PaginatedAdsResponse> request) {
+    final tracked = request.then((value) {
+      store(key, value);
+      return value;
+    }).whenComplete(() => _inFlight.remove(key));
+    _inFlight[key] = tracked;
+    return tracked;
+  }
+
+  void store(String key, PaginatedAdsResponse value) {
+    _entries.remove(key); // re-insert so ordering reflects recency
+    _entries[key] = _AdsCacheEntry(value);
+    while (_entries.length > maxEntries) {
+      _entries.remove(_entries.keys.first);
+    }
+  }
+
+  /// Called on logout and whenever the user's own action makes the cached
+  /// pages wrong (posting, deleting or marking an ad sold).
+  void clear() {
+    _entries.clear();
+    _inFlight.clear();
+  }
+}
+
+/// Session cache for `/vehicle-inventory/*` lookups.
+///
+/// Manufacturers, models, fuel types, transmission types and commercial-vehicle
+/// types are effectively immutable, yet the filter sheet refetched all five on
+/// every open because each bloc fires `load()` from its constructor. Holding
+/// the Future (not the value) also dedupes the five parallel calls a single
+/// sheet open makes.
+class _ReferenceCache {
+  static final Map<String, Future<dynamic>> _futures = <String, Future<dynamic>>{};
+
+  static Future<T> get<T>(String key, Future<T> Function() load) {
+    final existing = _futures[key];
+    if (existing != null) return existing as Future<T>;
+
+    final future = load();
+    _futures[key] = future;
+    // A failed lookup must not be cached, or the filter sheet stays broken for
+    // the rest of the session. This listener swallows nothing — the caller's
+    // copy of the future still carries the error — it only evicts the key.
+    future.then<void>((_) {}, onError: (Object _) => _futures.remove(key));
+    return future;
+  }
+
+  static void clear() => _futures.clear();
+}
+
 class AddRepository {
   final Dio _dio = ApiService().dio;
+
+  /// Drops every cached ads page. Call after any write that changes what the
+  /// lists should show.
+  static void invalidateAdsCache() => AdsCache.instance.clear();
+
+  /// Drops cached reference data (filter dropdowns). Rarely needed.
+  static void invalidateReferenceCache() => _ReferenceCache.clear();
 
   Future<PaginatedAdsResponse> fetchAllAds({
     int page = 1,
@@ -42,9 +171,10 @@ class AddRepository {
     double? latitude,
     double? longitude,
     double? maxDistance,
+    /// Set by pull-to-refresh: skip the cache and go to the network.
+    bool forceRefresh = false,
   }) async {
-    try {
-      final body = <String, dynamic>{
+    final body = <String, dynamic>{
         'page': page,
         'limit': limit,
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
@@ -75,27 +205,61 @@ class AddRepository {
         if (latitude != null) 'latitude': latitude,
         if (longitude != null) 'longitude': longitude,
         if (maxDistance != null) 'maxDistance': maxDistance,
-      };
+    };
 
-      // if (manufacturerIds != null && manufacturerIds.isNotEmpty) {
-      //   qp['manufacturerIds'] = manufacturerIds;
-      // }
-      // if (fuelTypeIds != null && fuelTypeIds.isNotEmpty) {
-      //   qp['fuelTypeId'] = fuelTypeIds;
-      // }
-      // if (transmissionTypeIds != null && transmissionTypeIds.isNotEmpty) {
-      //   qp['transmissionTypeId'] = transmissionTypeIds;
-      // }
+    final cache = AdsCache.instance;
+    final key = AdsCache.buildKey(body);
 
+    if (forceRefresh) {
+      return cache.track(
+          key, _fetchAdsFromNetwork(body, commercialVehicleTypes));
+    }
+
+    // Two screens asking for the same page at the same moment share one request.
+    final inFlight = cache.inFlight(key);
+    if (inFlight != null) return inFlight;
+
+    final cached = cache.peek(key);
+    if (cached != null) {
+      if (!cache.isFresh(key)) {
+        // Stale but usable: hand it back now, refresh behind it. The caller
+        // never waits for this, and a failure leaves the stale copy in place.
+        unawaited(
+          cache
+              .track(key, _fetchAdsFromNetwork(body, commercialVehicleTypes))
+              .catchError((_) => cached),
+        );
+      }
+      return cached;
+    }
+
+    return cache.track(key, _fetchAdsFromNetwork(body, commercialVehicleTypes));
+  }
+
+  Future<PaginatedAdsResponse> _fetchAdsFromNetwork(
+    Map<String, dynamic> body,
+    List<String>? commercialVehicleTypes,
+  ) async {
+    final int page = body['page'] as int? ?? 1;
+    final int limit = body['limit'] as int? ?? 20;
+    try {
       final response = await _dio.post(
         '/v2/ads/list',
         // queryParameters: qp,
         data: body,
       );
       final List<dynamic> rawData = response.data['data'];
-      final total = response.data['total'] ?? 0;
-      final currentCount = (page * limit);
-      final hasNext = currentCount < total;
+
+      // Trust the server's hasNext when it sends one. The total-derived
+      // fallback is wrong whenever `total` is absent (the server omits it for
+      // property/vehicle-filtered queries) and it is computed before the
+      // client-side filter below shrinks the page, which made the list keep
+      // reporting "more available" while rendering near-empty pages.
+      final bool hasNext = response.data['hasNext'] is bool
+          ? response.data['hasNext'] as bool
+          : (response.data['total'] is num
+              ? (page * limit) < (response.data['total'] as num)
+              : rawData.length >= limit);
 
       final ads = rawData
           .map((e) => AddModel.fromJson(e as Map<String, dynamic>))
@@ -214,7 +378,21 @@ class AddRepository {
     }
   }
 
+  /// Session-cached: this walks every page of the manufacturer list, so an
+  /// uncached call is several round trips — and the filter sheet asked for it
+  /// on every open.
   Future<List<VehicleManufacturer>> fetchManufacturers({
+    String? search,
+    String? vehicleCategory,
+  }) {
+    return _ReferenceCache.get(
+      'manufacturers|$search|$vehicleCategory',
+      () => _fetchManufacturersFromNetwork(
+          search: search, vehicleCategory: vehicleCategory),
+    );
+  }
+
+  Future<List<VehicleManufacturer>> _fetchManufacturersFromNetwork({
     String? search,
     String? vehicleCategory,
   }) async {
@@ -270,6 +448,14 @@ class AddRepository {
   }
 
   Future<List<VehicleModel>> fetchModelsByManufacturer(String manufacturerId,
+      {String? search}) {
+    return _ReferenceCache.get(
+      'models|$manufacturerId|$search',
+      () => _fetchModelsFromNetwork(manufacturerId, search: search),
+    );
+  }
+
+  Future<List<VehicleModel>> _fetchModelsFromNetwork(String manufacturerId,
       {String? search}) async {
     final List<VehicleModel> allModels = [];
     int page = 1;
@@ -329,6 +515,15 @@ class AddRepository {
 
   Future<List<VehicleTransmissionType>> fetchVehicleTransmissionTypes({
     String? vehicleCategory,
+  }) {
+    return _ReferenceCache.get(
+      'transmissionTypes|$vehicleCategory',
+      () => _fetchTransmissionTypesFromNetwork(vehicleCategory: vehicleCategory),
+    );
+  }
+
+  Future<List<VehicleTransmissionType>> _fetchTransmissionTypesFromNetwork({
+    String? vehicleCategory,
   }) async {
     final queryParameters = <String, dynamic>{};
     // Add category parameter if provided (mirrors fetchManufacturers)
@@ -369,6 +564,15 @@ class AddRepository {
 
   Future<List<VehicleFuelType>> fetchVehicleFuelTypes({
     String? vehicleCategory,
+  }) {
+    return _ReferenceCache.get(
+      'fuelTypes|$vehicleCategory',
+      () => _fetchFuelTypesFromNetwork(vehicleCategory: vehicleCategory),
+    );
+  }
+
+  Future<List<VehicleFuelType>> _fetchFuelTypesFromNetwork({
+    String? vehicleCategory,
   }) async {
     final queryParameters = <String, dynamic>{};
     // Add category parameter if provided (mirrors fetchManufacturers)
@@ -407,7 +611,15 @@ class AddRepository {
         .toList();
   }
 
-  Future<List<CommercialVehicleType>> fetchCommercialVehicleTypes() async {
+  Future<List<CommercialVehicleType>> fetchCommercialVehicleTypes() {
+    return _ReferenceCache.get(
+      'commercialVehicleTypes',
+      _fetchCommercialVehicleTypesFromNetwork,
+    );
+  }
+
+  Future<List<CommercialVehicleType>>
+      _fetchCommercialVehicleTypesFromNetwork() async {
     final resp = await _dio.get(
       '/vehicle-inventory/commercial-vehicle-types',
       options: Options(responseType: ResponseType.json),
@@ -592,6 +804,8 @@ class AddRepository {
       };
       final response = await _dio.post('/ads', data: payload);
       if (response.statusCode == 200 || response.statusCode == 201) {
+        // The cached list pages no longer reflect reality.
+        AdsCache.instance.clear();
       } else {
         throw Exception('Failed to post ad');
       }
@@ -611,6 +825,7 @@ class AddRepository {
       if (response.statusCode == 200 ||
           response.statusCode == 204 ||
           response.statusCode == 202) {
+        AdsCache.instance.clear();
       } else {
         throw Exception('Failed to delete ad');
       }
@@ -701,6 +916,7 @@ class AddRepository {
         },
       );
       if (resp.statusCode != 200) throw Exception('Update failed');
+      AdsCache.instance.clear();
     } on DioException catch (e) {
       throw Exception(DioErrorHandler.handleError(e));
     }
@@ -726,6 +942,7 @@ class AddRepository {
         throw Exception(
             'Failed to mark ad as sold - Status: ${resp.statusCode}');
       }
+      AdsCache.instance.clear();
 
       // Parse and return the updated ad data from the response
       final raw = resp.data;

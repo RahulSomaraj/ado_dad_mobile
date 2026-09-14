@@ -168,7 +168,15 @@ class AppRoutes {
         path: '/search',
         builder: (context, state) {
           final previousRoute = state.uri.queryParameters['from'];
-          return Search(previousRoute: previousRoute);
+          // Route-scoped feed. Search used to drive the app-wide
+          // AdvertisementBloc, so entering it overwrote Home's listings and
+          // leaving it forced Home to refetch. Its own instance is disposed
+          // with the route, and AdsRepository's cache keeps the first query
+          // off the network when Home already asked for the same page.
+          return BlocProvider<AdvertisementBloc>(
+            create: (_) => AdvertisementBloc(repository: AddRepository()),
+            child: Search(previousRoute: previousRoute),
+          );
         },
       ),
       GoRoute(path: '/seller', builder: (context, state) => const Seller()),
@@ -183,9 +191,15 @@ class AppRoutes {
           if (categoryId.isEmpty) {
             return const _RouteErrorScreen.unavailable();
           }
-          return CategoryListPage(
-            categoryId: categoryId,
-            categoryTitle: title,
+          // Route-scoped feed, same reasoning as '/search': the category list
+          // no longer clobbers Home's state, so returning from it does not
+          // need a full refetch.
+          return BlocProvider<AdvertisementBloc>(
+            create: (_) => AdvertisementBloc(repository: AddRepository()),
+            child: CategoryListPage(
+              categoryId: categoryId,
+              categoryTitle: title,
+            ),
           );
         },
       ),
@@ -195,8 +209,11 @@ class AppRoutes {
           final ad = state.extra as AddModel?;
           if (ad == null) return const _RouteErrorScreen.unavailable();
           return BlocProvider(
+            // Seeded with the row the caller already holds, so the page paints
+            // immediately; the fetch below revalidates it in the background.
             create: (_) => AdDetailBloc(
               repository: AddRepository(),
+              seed: ad,
             )..add(AdDetailEvent.fetch(ad.id)),
             child: AdDetailPage(ad: ad),
           );

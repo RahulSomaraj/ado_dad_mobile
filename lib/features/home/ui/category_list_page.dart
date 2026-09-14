@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
@@ -8,7 +9,9 @@ import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/api_service.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
+import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:ado_dad_user/services/filter_state_service.dart';
+import 'package:ado_dad_user/services/location_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
@@ -53,44 +56,77 @@ class _CategoryListPageState extends State<CategoryListPage> {
   void initState() {
     super.initState();
 
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent - 300) {
-        context.read<AdvertisementBloc>().add(
-              const AdvertisementEvent.fetchNextPage(),
-            );
-      }
-    });
+    _scrollController.addListener(_onScroll);
 
     Future.microtask(() => _initLoad());
   }
 
+  /// See `home_page._onScroll`: fires once on entering the trigger zone instead
+  /// of on every scroll notification, so one fling no longer enqueues hundreds
+  /// of bloc events for `_isFetching` to absorb.
+  bool _nearBottomArmed = true;
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final nearBottom = _scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 300;
+
+    if (!nearBottom) {
+      _nearBottomArmed = true;
+      return;
+    }
+    if (!_nearBottomArmed) return;
+    _nearBottomArmed = false;
+
+    context.read<AdvertisementBloc>().add(
+          const AdvertisementEvent.fetchNextPage(),
+        );
+  }
+
   Future<void> _initLoad() async {
-    try {
-      final permission = await Geolocator.checkPermission();
-      if (permission != LocationPermission.denied &&
-          permission != LocationPermission.deniedForever) {
-        final pos = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.low,
-            timeLimit: const Duration(seconds: 5));
-        _lat = pos.latitude;
-        _lng = pos.longitude;
-      }
-    } catch (_) {}
+    final bloc = context.read<AdvertisementBloc>();
+
+    // Seed from LocationService — the fix Home already has, or the persisted
+    // one. Returns in ~0 ms and never wakes the GPS hardware, so the list
+    // request goes out immediately instead of waiting out a 5 s timeout.
+    final Position? seed = await LocationService().seedPosition();
 
     if (!mounted) return;
 
+    _lat = seed?.latitude;
+    _lng = seed?.longitude;
+
     // For Premium Vehicles, pass null to fetch all ads (will filter by isPremium client-side)
-    context.read<AdvertisementBloc>().add(
-          AdvertisementEvent.applyFilters(
-            categoryId: _effectiveCategoryId,
-            latitude: _lat,
-            longitude: _lng,
-          ),
-        );
+    bloc.add(
+      AdvertisementEvent.applyFilters(
+        categoryId: _effectiveCategoryId,
+        latitude: _lat,
+        longitude: _lng,
+      ),
+    );
 
     if (_isPremiumVehiclesCategory) {
-      _fetchManufacturerPremiumData();
+      unawaited(_fetchManufacturerPremiumData());
+    }
+
+    // Upgrade to a real fix in the background; only re-query if it moved enough
+    // to change what is nearby. If Home already has this request in flight we
+    // join it instead of opening a second one.
+    final pos = await LocationService().freshPosition(
+      timeLimit: const Duration(seconds: 5),
+    );
+    if (!mounted || pos == null) return;
+
+    if (LocationService().movedEnough(seed, pos)) {
+      _lat = pos.latitude;
+      _lng = pos.longitude;
+      bloc.add(
+        AdvertisementEvent.applyFilters(
+          categoryId: _effectiveCategoryId,
+          latitude: _lat,
+          longitude: _lng,
+        ),
+      );
     }
   }
 
@@ -703,6 +739,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
         widget.categoryTitle.toLowerCase().contains('premium');
     return RefreshIndicator(
                   onRefresh: () async {
+                    // Pull-to-refresh must reach the network, not the cache.
+                    AddRepository.invalidateAdsCache();
                     if (widget.categoryId == 'property') {
                       // Property filters
                       context.read<AdvertisementBloc>().add(

@@ -14,20 +14,32 @@ class AdDetailBloc extends Bloc<AdDetailEvent, AdDetailState> {
   /// page back on the detail view instead of leaving it on the error screen.
   AddModel? _lastLoaded;
 
+  /// [seed] is the list row the route already had in hand (`state.extra`).
+  /// With it the page opens on real content and the `/v2/ads/:id` call becomes
+  /// a background revalidation instead of a skeleton the user sits through.
   AdDetailBloc({
     required this.repository,
-  }) : super(const AdDetailState.initial()) {
+    AddModel? seed,
+  }) : super(seed == null
+            ? const AdDetailState.initial()
+            : AdDetailState.loaded(seed)) {
+    _lastLoaded = seed;
+
     on<AdDetailEvent>((event, emit) async {
       await event.when(
         fetch: (adId) async {
-          emit(const AdDetailState.loading());
+          // Only show the skeleton when there is nothing to show yet.
+          final hadSeed = _lastLoaded != null;
+          if (!hadSeed) emit(const AdDetailState.loading());
           try {
             final detail = await repository.fetchAdDetail(adId);
             // Names are now parsed directly from nested objects in the model
             _lastLoaded = detail;
             emit(AdDetailState.loaded(detail));
           } catch (e) {
-            emit(AdDetailState.error(e.toString()));
+            // A failed *revalidation* must not replace a page the user is
+            // already reading; only a cold load surfaces the error screen.
+            if (!hadSeed) emit(AdDetailState.error(e.toString()));
           }
         },
         markAsSold: (adId) async {

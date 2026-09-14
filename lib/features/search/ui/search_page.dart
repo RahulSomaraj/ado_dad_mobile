@@ -367,6 +367,10 @@ class _SearchPageState extends State<SearchPage> {
     _isSearching = false;
   }
 
+  /// Fires once on entering the trigger zone rather than on every scroll
+  /// notification — see `home_page._onScroll`.
+  bool _nearBottomArmed = true;
+
   void _onScroll() {
     if (!_scrollController.hasClients) return;
 
@@ -374,18 +378,25 @@ class _SearchPageState extends State<SearchPage> {
     final maxScroll = _scrollController.position.maxScrollExtent;
     final currentScroll = _scrollController.position.pixels;
 
-    if (maxScroll - currentScroll <= threshold) {
-      final bloc = context.read<AdvertisementBloc>();
-      final state = bloc.state;
+    if (maxScroll - currentScroll > threshold) {
+      _nearBottomArmed = true;
+      return;
+    }
+    if (!_nearBottomArmed) return;
 
-      if (state is ListingsLoaded && state.hasMore) {
-        if (_isSearching && !_isLocationSearchMode) {
-          bloc.add(const SearchNextPageEvent());
-        } else if (_isSearching && _isLocationSearchMode) {
-          bloc.add(const FetchNextPageEvent());
-        } else if (!_isSearching) {
-          bloc.add(const FetchNextPageEvent());
-        }
+    final bloc = context.read<AdvertisementBloc>();
+    final state = bloc.state;
+
+    if (state is ListingsLoaded && state.hasMore) {
+      // Only spend the arm on a dispatch, so a page that arrives later can
+      // still be paged from the same scroll position.
+      _nearBottomArmed = false;
+      if (_isSearching && !_isLocationSearchMode) {
+        bloc.add(const SearchNextPageEvent());
+      } else if (_isSearching && _isLocationSearchMode) {
+        bloc.add(const FetchNextPageEvent());
+      } else if (!_isSearching) {
+        bloc.add(const FetchNextPageEvent());
       }
     }
   }

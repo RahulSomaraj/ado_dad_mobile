@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/widgets/ado_dad_logo.dart';
 import 'package:ado_dad_user/common/widgets/app_network_image.dart';
@@ -12,6 +14,8 @@ import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/models/cayegory_model.dart';
+import 'package:ado_dad_user/repositories/add_repo.dart';
+import 'package:ado_dad_user/services/location_service.dart';
 import 'package:ado_dad_user/common/auth_guard.dart';
 import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -40,6 +44,7 @@ class _HomePageState extends State<HomePage> {
   String? _userLocation;
   final ScrollController _scrollController = ScrollController();
   late final GooglePlacesService _placesService;
+  late final AdvertisementBloc _adBloc;
   bool _isLocationRecommendationsMode = false;
 
   @override
@@ -58,71 +63,105 @@ class _HomePageState extends State<HomePage> {
           .addPostFrameCallback((_) => _showLoginPromptIfNeeded());
     }
 
-    Future.microtask(() async {
-      context.read<BannerBloc>().add(const BannerEvent.fetchBanners());
+    // Banners are already dispatched once when BannerBloc is created in main.dart;
+    // re-dispatching here cost a second round trip competing with the first feed.
 
-      // Show cached address immediately while we fetch fresh location
-      final prefs = await SharedPreferences.getInstance();
-      final savedLocation = prefs.getString('user_location');
-      if (savedLocation != null && mounted) {
-        setState(() {
-          _userLocation = savedLocation;
-        });
-      }
+    _adBloc = context.read<AdvertisementBloc>();
+    unawaited(_bootstrapFeed());
+  }
 
-      // Try GPS first with short timeout — so ads load with distance baked in
-      Position? position;
-      try {
-        final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-        if (serviceEnabled) {
-          final permission = await Geolocator.checkPermission();
-          if (permission != LocationPermission.denied &&
-              permission != LocationPermission.deniedForever) {
-            position = await Geolocator.getCurrentPosition(
-              desiredAccuracy: LocationAccuracy.low,
-              timeLimit: const Duration(seconds: 6),
-            );
-          }
-        }
-      } catch (_) {}
+  /// Gets a feed request on the wire immediately, then upgrades it in the
+  /// background once a real GPS fix arrives.
+  ///
+  /// Previously this awaited `getCurrentPosition` (6 s timeout) *before*
+  /// dispatching anything, so a cold or indoor GPS meant up to 6 s of dead time
+  /// with no request in flight. `getLastKnownPosition` reads the fix the
+  /// platform already has cached — it does not wake the GPS hardware and
+  /// returns in ~0 ms — which is more than accurate enough to seed a radius
+  /// query.
+  Future<void> _bootstrapFeed() async {
+    // ---- Phase 1: paint-critical. Nothing slow may be awaited above this. ----
+    // LocationService serves the fix persisted by the last launch, falling back
+    // to the platform's cached one. Either way it returns in ~0 ms and never
+    // wakes the GPS.
+    final Position? seed = await LocationService().seedPosition();
 
-      if (!mounted) return;
+    if (!mounted) return;
 
-      if (position != null) {
-        // GPS available — load ads with location so distance shows on cards
+    if (seed != null) {
+      setState(() => _isLocationRecommendationsMode = true);
+      _adBloc.add(
+        AdvertisementEvent.searchByLocation(
+          latitude: seed.latitude,
+          longitude: seed.longitude,
+        ),
+      );
+    } else {
+      _adBloc.add(const AdvertisementEvent.fetchAllListings());
+    }
+
+    // ---- Phase 2: runs while the feed above is already loading. ----
+    final prefs = await SharedPreferences.getInstance();
+    final savedLocation = prefs.getString('user_location');
+    if (savedLocation != null && mounted) {
+      setState(() {
+        _userLocation = savedLocation;
+      });
+    }
+
+    // One shared GPS request for the whole app — the category list and the
+    // detail page's "similar near you" await this same future rather than
+    // opening their own.
+    final Position? fresh = await LocationService().freshPosition();
+
+    if (!mounted) return;
+
+    if (fresh != null) {
+      // Only re-issue the feed if the fresh fix is meaningfully different from
+      // the cached one we already loaded with.
+      final moved = LocationService().movedEnough(seed, fresh);
+      if (moved) {
         setState(() {
           _isLocationRecommendationsMode = true;
         });
-        context.read<AdvertisementBloc>().add(
-              AdvertisementEvent.searchByLocation(
-                latitude: position.latitude,
-                longitude: position.longitude,
-              ),
-            );
-        // Reverse geocode for address display without blocking the ad load
-        _updateAddressDisplay(position);
-      } else if (savedLocation != null) {
-        // No fresh GPS but have a saved address — geocode it to get coords
-        await _applyLocationBasedRecommendations(savedLocation);
-      } else {
-        // No location at all — load without distance, request permission in background
-        context
-            .read<AdvertisementBloc>()
-            .add(const AdvertisementEvent.fetchAllListings());
-        _getLocationAndAddress();
+        _adBloc.add(
+          AdvertisementEvent.searchByLocation(
+            latitude: fresh.latitude,
+            longitude: fresh.longitude,
+          ),
+        );
       }
-    });
+      // Reverse geocode for the address chip only — never blocks the ad load.
+      unawaited(_updateAddressDisplay(fresh));
+    } else if (seed == null && savedLocation != null) {
+      // No GPS at all and we never seeded — fall back to the saved address.
+      await _applyLocationBasedRecommendations(savedLocation);
+    } else if (seed == null) {
+      // Nothing to go on; the plain feed is already loading. Ask for permission
+      // in the background so the next launch has a cached fix.
+      unawaited(_getLocationAndAddress());
+    }
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 300) {
+  /// True while the viewport is inside the trigger zone, so a fling dispatches
+  /// once on the way in rather than on every frame. Scrolling back out of the
+  /// zone re-arms it.
+  bool _nearBottomArmed = true;
 
-      // Trigger next page load when nearing bottom
-      context
-          .read<AdvertisementBloc>()
-          .add(const AdvertisementEvent.fetchNextPage());
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final nearBottom = _scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 300;
+
+    if (!nearBottom) {
+      _nearBottomArmed = true;
+      return;
     }
+    if (!_nearBottomArmed) return;
+    _nearBottomArmed = false;
+
+    // Trigger next page load when nearing bottom
+    _adBloc.add(const AdvertisementEvent.fetchNextPage());
   }
 
   Future<void> _showLoginPromptIfNeeded() async {
@@ -633,6 +672,9 @@ class _HomePageState extends State<HomePage> {
             Expanded(
               child: RefreshIndicator(
                 onRefresh: () async {
+                  // Pull-to-refresh must reach the network: drop the cached
+                  // pages so the repository can't answer from memory.
+                  AddRepository.invalidateAdsCache();
                   if (_isLocationRecommendationsMode &&
                       (_userLocation?.trim().isNotEmpty ?? false)) {
                     await _applyLocationBasedRecommendations(_userLocation!);
@@ -644,10 +686,17 @@ class _HomePageState extends State<HomePage> {
                 },
                 color: AppColors.primaryColor,
                 backgroundColor: Colors.white,
-                child: SingleChildScrollView(
+                // CustomScrollView (not SingleChildScrollView + shrinkWrap
+                // GridView): shrinkWrap forced the grid to build *every* card
+                // to compute its intrinsic height, so all loaded cards fired
+                // their image download at once. Slivers restore real laziness —
+                // only visible cards (plus cacheExtent) are built.
+                child: CustomScrollView(
                   controller: _scrollController,
                   physics: const BouncingScrollPhysics(),
-                  child: Column(
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // 🔷 PROMO BANNER
@@ -704,17 +753,20 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const SizedBox(height: 10),
-
-                  // 🔷 MAIN GRIDVIEW - now uses regular GridView for proper scrolling
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: buildGridView(),
-                  ),
-                  // Clear the floating bottom nav bar so the last row of ads
-                  // and the load-more indicator are not hidden behind it.
-                  const SizedBox(height: 100),
                     ],
                   ),
+                    ),
+
+                    // 🔷 MAIN AD GRID — a real sliver, so it builds lazily.
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      sliver: buildGridSliver(),
+                    ),
+
+                    // Clear the floating bottom nav bar so the last row of ads
+                    // and the load-more indicator are not hidden behind it.
+                    const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                  ],
                 ),
               ),
             ),
@@ -1092,16 +1144,15 @@ class _HomePageState extends State<HomePage> {
                 // context.push(
                 //     '/category-list-page?categoryId=${category.categoryId}&title=${category.name}');
 
-                final result = await context.push(
+                // No refetch on return. The category list runs on its own
+                // route-scoped bloc now, so Home's listings and scroll position
+                // survive the trip; a write (post / edit / sold / delete)
+                // clears the repository cache, so anything genuinely stale is
+                // refreshed by the next fetch rather than by a blanket reload
+                // of the whole feed on every back press.
+                await context.push(
                   '/category-list-page?categoryId=${category.categoryId}&title=${category.name}',
                 );
-
-                // ✅ If coming back with "true", refresh Home list
-                if (context.mounted && result == true) {
-                  context
-                      .read<AdvertisementBloc>()
-                      .add(const AdvertisementEvent.fetchAllListings());
-                }
               },
               child: Column(
                 children: [
@@ -1215,19 +1266,28 @@ class _HomePageState extends State<HomePage> {
     return imageHeight + textBlockHeight;
   }
 
-  Widget buildGridView() {
+  /// The ad grid as a **sliver**, so only on-screen cards are built.
+  ///
+  /// The previous `GridView.builder(shrinkWrap: true, physics: Never…)` inside
+  /// a `SingleChildScrollView` had to lay out every loaded item to compute its
+  /// height, which meant every `RichAdCard` — 20, then 40, then 60 after a few
+  /// paginations — started its full-resolution image download on the same
+  /// frame. `cacheExtent` was inert in that arrangement too.
+  Widget buildGridSliver() {
     return BlocBuilder<AdvertisementBloc, AdvertisementState>(
       builder: (context, state) {
         if (state is AdvertisementLoading) {
           // Skeleton grid that matches the real card layout for a fast feel.
-          return LayoutBuilder(
+          return SliverLayoutBuilder(
             builder: (context, constraints) {
-              final cols = _columnsForWidth(constraints.maxWidth);
+              final cols = _columnsForWidth(constraints.crossAxisExtent);
               final mainExtent = _cardMainAxisExtent(context, cols);
-              return SkeletonAdGrid(
-                crossAxisCount: cols,
-                mainAxisExtent: mainExtent,
-                itemCount: cols * 3,
+              return SliverToBoxAdapter(
+                child: SkeletonAdGrid(
+                  crossAxisCount: cols,
+                  mainAxisExtent: mainExtent,
+                  itemCount: cols * 3,
+                ),
               );
             },
           );
@@ -1235,77 +1295,75 @@ class _HomePageState extends State<HomePage> {
           final listings = state.listings;
           final hasMore = state.hasMore;
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              context
-                  .read<AdvertisementBloc>()
-                  .add(const AdvertisementEvent.fetchAllListings());
-            },
-            // iOS-specific refresh indicator configurations
-            color: AppColors.primaryColor,
-            backgroundColor: Colors.white,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final cols = _columnsForWidth(constraints.maxWidth);
-                final mainExtent = _cardMainAxisExtent(context, cols);
+          return SliverLayoutBuilder(
+            builder: (context, constraints) {
+              final cols = _columnsForWidth(constraints.crossAxisExtent);
+              final mainExtent = _cardMainAxisExtent(context, cols);
 
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics:
-                      const NeverScrollableScrollPhysics(), // Disable GridView scrolling
-                  padding: EdgeInsets.zero,
-                  // iOS-specific scrolling configurations
-                  cacheExtent: 1000, // Cache more items for smooth scrolling
-                  itemCount: listings.length + (hasMore ? 1 : 0),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: cols,
-                    crossAxisSpacing: 15,
-                    mainAxisSpacing: 15,
-                    mainAxisExtent: mainExtent, // ✅ explicit, responsive height
-                  ),
-                  itemBuilder: (context, index) {
+              return SliverGrid(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: cols,
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 15,
+                  mainAxisExtent: mainExtent, // ✅ explicit, responsive height
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
                     if (index < listings.length) {
                       final ad = listings[index];
-                      return RichAdCard(ad: ad);
+                      return RichAdCard(key: ValueKey('${ad.id}'), ad: ad);
                     }
-                    return hasMore
-                        ? const Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: Center(child: CircularProgressIndicator()),
-                          )
-                        : const SizedBox.shrink();
+                    return const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
                   },
-                );
-              },
-            ),
+                  childCount: listings.length + (hasMore ? 1 : 0),
+                  // Ads are identified by id, so Flutter can reuse element and
+                  // image state across pagination instead of rebuilding rows.
+                  findChildIndexCallback: (key) {
+                    if (key is ValueKey<String>) {
+                      final i = listings
+                          .indexWhere((ad) => '${ad.id}' == key.value);
+                      return i == -1 ? null : i;
+                    }
+                    return null;
+                  },
+                ),
+              );
+            },
           );
         } else if (state is AdvertisementError) {
-          return Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    state.message,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
+          return SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.grey[400],
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    Text(
+                      state.message,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[600],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
             ),
           );
         } else {
-          return const Center(child: Text("No data available"));
+          return const SliverToBoxAdapter(
+            child: Center(child: Text("No data available")),
+          );
         }
       },
     );
