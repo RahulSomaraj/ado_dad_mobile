@@ -35,9 +35,9 @@ import 'package:ado_dad_user/features/sell/ui/seller.dart';
 import 'package:ado_dad_user/features/signup/ui/signup.dart';
 import 'package:ado_dad_user/features/splash/splash.dart';
 import 'package:ado_dad_user/features/splash/splash_screen1.dart';
-import 'package:ado_dad_user/features/chat/ui/chat_rooms_page.dart';
-import 'package:ado_dad_user/features/chat/ui/chat_page.dart';
-import 'package:ado_dad_user/features/chat/ui/chat_debug_page.dart';
+import 'package:ado_dad_user/features/chat/data/chat_models.dart';
+import 'package:ado_dad_user/features/chat/pages/chat_list_page.dart';
+import 'package:ado_dad_user/features/chat/pages/chat_thread_page.dart';
 import 'package:ado_dad_user/features/showroom/ui/showroom_users_page.dart';
 import 'package:ado_dad_user/features/showroom/ui/showroom_user_ads_page.dart';
 import 'package:ado_dad_user/features/showroom/bloc/showroom_bloc.dart';
@@ -135,10 +135,7 @@ class AppRoutes {
             routes: [
               GoRoute(
                 path: '/chat-rooms',
-                builder: (context, state) {
-                  final fromPage = state.uri.queryParameters['from'];
-                  return ChatRoomsPage(fromPage: fromPage);
-                },
+                builder: (context, state) => const ChatListPage(),
               ),
             ],
           ),
@@ -399,30 +396,18 @@ class AppRoutes {
       GoRoute(
           path: '/chat/:roomId',
           builder: (context, state) {
+            // Only the id travels in the URL (F-31). The room from the list /
+            // ad detail comes as `extra` so the header paints instantly; deep
+            // links and push taps load it.
             final roomId = state.pathParameters['roomId'] ?? '';
             if (roomId.isEmpty) return const _RouteErrorScreen.unavailable();
-            final otherUserName = state.uri.queryParameters['name'];
-            final otherUserProfilePic = state.uri.queryParameters['profilePic'];
-            final otherUserPhone = state.uri.queryParameters['phone'];
-            final fromPage = state.uri.queryParameters['from'];
-            final adId = state.uri.queryParameters['adId'];
-            final adTitle = state.uri.queryParameters['adTitle'];
-            final adPrice =
-                int.tryParse(state.uri.queryParameters['price'] ?? '');
-            return ChatPage(
+            final extra = state.extra;
+            return ChatThreadPage(
+              key: ValueKey('chat-$roomId'),
               roomId: roomId,
-              otherUserName: otherUserName,
-              otherUserProfilePic: otherUserProfilePic,
-              otherUserPhone: otherUserPhone,
-              fromPage: fromPage,
-              adId: adId,
-              adTitle: adTitle,
-              adPrice: adPrice,
+              initialRoom: extra is ChatRoom ? extra : null,
             );
           }),
-      GoRoute(
-          path: '/chat-debug',
-          builder: (context, state) => const ChatDebugPage()),
 
       // Showroom routes
       GoRoute(

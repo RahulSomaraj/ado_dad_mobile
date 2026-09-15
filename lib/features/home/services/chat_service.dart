@@ -1,226 +1,79 @@
-import 'dart:async';
+// Ad detail → chat entry (Chat / Make an offer). Uses the new chat stack:
+// one idempotent get-or-create call, then the thread page with the room as
+// `extra` (F-15, F-23). No socket round-trips or room-exists checks.
+
+import 'package:ado_dad_user/features/chat/data/chat_models.dart';
+import 'package:ado_dad_user/features/chat/data/chat_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:ado_dad_user/services/chat_api_service.dart';
-import 'package:ado_dad_user/repositories/chat_repository.dart';
 import 'package:go_router/go_router.dart';
 
 class ChatService {
-  /// Start direct chat flow without offer popup
+  /// Kept for existing callers (ad detail page). [otherUserId] etc. are no
+  /// longer needed — the server resolves the seller from the ad.
   static Future<void> startDirectChat({
     required BuildContext context,
     required String adId,
     required String adTitle,
     required String adPosterName,
     required String otherUserId,
+  }) =>
+      openChatForAd(context, adId: adId);
+
+  /// Get-or-create the room for [adId], optionally queue [initialMessage]
+  /// (optimistic, retried by the outbox), then open the thread.
+  static Future<ChatRoom?> openChatForAd(
+    BuildContext context, {
+    required String adId,
+    String? initialMessage,
   }) async {
-    // Show loading indicator
-    _showLoadingDialog(context, 'Checking chat room...');
-
-    try {
-      // Check room existence
-      await _checkRoomExists(
-        context,
-        adId,
-        otherUserId,
-        adTitle: adTitle,
-        adPosterName: adPosterName,
-      );
-    } catch (e) {
-      if (!context.mounted) {
-        _loadingDialogShown = false;
-        return;
-      }
-      // Close loading dialog (guarded)
-      _closeLoadingDialog(context);
-
-      // Show error
-      _showErrorDialog(context, 'Failed to check chat room: $e');
-    }
-  }
-
-  /// Check if room exists for the ad and other user
-  static Future<void> _checkRoomExists(
-      BuildContext context, String adId, String otherUserId,
-      {required String adTitle, required String adPosterName}) async {
-    try {
-      // Import the chat API service
-      final chatApiService = ChatApiService();
-      final result = await chatApiService.checkRoomExists(adId, otherUserId);
-      if (!context.mounted) {
-        _loadingDialogShown = false;
-        return;
-      }
-
-      // Close loading dialog (guarded)
-      _closeLoadingDialog(context);
-
-      if (result['success'] == true && result['data']?['exists'] == true) {
-        final roomId = result['data']?['roomId'];
-
-        // Join the existing room
-        await _joinRoom(
-          context,
-          roomId,
-          adId,
-          otherUserId,
-          adTitle: adTitle,
-          adPosterName: adPosterName,
-          isNewRoom: false,
-        );
-      } else {
-        // Create a new room since none exists
-        await _createRoomAndJoin(
-          context,
-          adId,
-          otherUserId,
-          adTitle: adTitle,
-          adPosterName: adPosterName,
-        );
-      }
-    } catch (_) {
-      rethrow;
-    }
-  }
-
-  /// Create room and join when no room exists
-  static Future<void> _createRoomAndJoin(
-      BuildContext context, String adId, String otherUserId,
-      {required String adTitle, required String adPosterName}) async {
-    try {
-      // Get chat repository
-      final chatRepository = ChatRepository();
-
-      // Connect to chat service
-      final connected = await chatRepository.connect();
-      if (!context.mounted) return;
-      if (!connected) {
-        _showErrorDialog(context, 'Failed to connect to chat service');
-        return;
-      }
-
-      // Create room for the ad
-      final roomId = await chatRepository.createChatRoom(adId);
-      if (!context.mounted) return;
-
-      if (roomId != null) {
-        // Join the newly created room
-        await _joinRoom(
-          context,
-          roomId,
-          adId,
-          otherUserId,
-          adTitle: adTitle,
-          adPosterName: adPosterName,
-          isNewRoom: true,
-        );
-      } else {
-        _showErrorDialog(context, 'Failed to create chat room');
-      }
-    } catch (e) {
-      if (!context.mounted) {
-        _loadingDialogShown = false;
-        return;
-      }
-      // Close loading dialog if still visible (guarded — normally already
-      // closed after the room check; an unguarded pop removed the page)
-      _closeLoadingDialog(context);
-      _showErrorDialog(context, 'Failed to create room: $e');
-    }
-  }
-
-  /// Join room and navigate to chat page
-  static Future<void> _joinRoom(
-    BuildContext context,
-    String roomId,
-    String adId,
-    String otherUserId, {
-    required bool isNewRoom,
-    required String adTitle,
-    required String adPosterName,
-  }) async {
-    try {
-      // Get chat repository
-      final chatRepository = ChatRepository();
-
-      // Join the room
-      await chatRepository.joinChatRoom(roomId);
-
-      // Single proper log for room join result
-
-      // Navigate to chat page with all necessary parameters
-      if (context.mounted) {
-        final queryParams = <String, String>{
-          'from': 'ad-detail',
-          'name': adPosterName,
-          'adTitle': adTitle,
-          'adId': adId,
-        };
-        final queryString = queryParams.entries
-            .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
-            .join('&');
-        context.push('/chat/$roomId?$queryString');
-      }
-    } catch (e) {
-      // Show error dialog with delay to ensure context is stable
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Check if context is still mounted
-      if (context.mounted) {
-        _showErrorDialog(context, 'Failed to join room: $e');
-      } else {
-        // Fallback: Print error to console
-      }
-    }
-  }
-
-  // Guards the loading dialog so a stray pop can never remove a page route
-  // (QA audit 2026-07-10).
-  static bool _loadingDialogShown = false;
-
-  static void _closeLoadingDialog(BuildContext context) {
-    if (_loadingDialogShown && context.mounted) {
-      Navigator.of(context).pop();
-    }
-    _loadingDialogShown = false;
-  }
-
-  /// Show loading dialog
-  static void _showLoadingDialog(BuildContext context, String message) {
-    _loadingDialogShown = true;
-    showDialog(
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    var dialogOpen = true;
+    showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        content: Row(
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(width: 16),
-            Text(message),
-          ],
-        ),
+      useRootNavigator: true,
+      builder: (_) => const PopScope(
+        canPop: false,
+        child: Center(child: CircularProgressIndicator()),
       ),
-    );
+    ).whenComplete(() => dialogOpen = false);
+
+    void closeDialog() {
+      if (dialogOpen && navigator.mounted) navigator.pop();
+      dialogOpen = false;
+    }
+
+    try {
+      final room = await ChatRepository.instance.openChatForAd(adId);
+      closeDialog();
+      final text = initialMessage?.trim();
+      if (text != null && text.isNotEmpty) {
+        ChatRepository.instance.sendText(room.roomId, text);
+      }
+      if (context.mounted) {
+        context.push('/chat/${Uri.encodeComponent(room.roomId)}', extra: room);
+      }
+      return room;
+    } on ChatFailure catch (f) {
+      closeDialog();
+      messenger?.showSnackBar(SnackBar(
+        content: Text(_openError(f)),
+        behavior: SnackBarBehavior.floating,
+      ));
+      return null;
+    }
   }
 
-  /// Show error dialog
-  static void _showErrorDialog(BuildContext context, String message) {
-    // Ensure we're on the main thread
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (context.mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Error'),
-            content: Text(message),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      } else {}
-    });
-  }
+  static String _openError(ChatFailure f) => switch (f.kind) {
+        ChatFailureKind.offline || ChatFailureKind.timeout =>
+          'You\'re offline. Check your connection and try again.',
+        ChatFailureKind.closed || ChatFailureKind.notFound =>
+          'This ad is no longer available for chat.',
+        ChatFailureKind.invalid => f.serverMessage ?? 'You can\'t chat about this ad.',
+        ChatFailureKind.session => 'Your session ended. Log in again to chat.',
+        ChatFailureKind.suspended => 'Your account can\'t start chats right now.',
+        ChatFailureKind.rateLimited => 'Too many chats opened. Try again in a minute.',
+        _ => 'Couldn\'t open the chat. Try again.',
+      };
 }

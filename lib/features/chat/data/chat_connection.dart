@@ -15,6 +15,7 @@ import 'dart:async';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/config/app_config.dart';
 import 'package:ado_dad_user/services/auth_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 import 'chat_models.dart';
@@ -28,6 +29,7 @@ class ChatConnection {
   bool _refreshing = false;
   int _authRetries = 0;
   Timer? _reconnectingDelay;
+  Future<void>? _opening;
   final Set<String> _rooms = {};
 
   final _status = StreamController<ChatConnectionStatus>.broadcast();
@@ -36,7 +38,9 @@ class ChatConnection {
   final _rooms$ = StreamController<ChatRoom>.broadcast();
   final _reconnected = StreamController<void>.broadcast();
 
-  ChatConnectionStatus _current = ChatConnectionStatus.offline;
+  ChatConnectionStatus _current = ChatConnectionStatus.connecting;
+  StreamSubscription<List<ConnectivityResult>>? _netSub;
+  bool _networkDown = false;
 
   ChatConnectionStatus get status => _current;
   Stream<ChatConnectionStatus> get statusStream => _status.stream;
@@ -52,6 +56,7 @@ class ChatConnection {
   /// Idempotent. Call when chat UI (or the nav badge) needs realtime.
   Future<void> ensureConnected() async {
     _wanted = true;
+    _watchNetwork();
     if (_socket != null) {
       if (_socket!.connected || _current == ChatConnectionStatus.connecting) {
         return;
@@ -59,12 +64,18 @@ class ChatConnection {
       _socket!.connect();
       return;
     }
-    await _open();
+    await _openOnce();
   }
+
+  /// Single-flight guard: concurrent callers share one `_open()`.
+  Future<void> _openOnce() =>
+      _opening ??= _open().whenComplete(() => _opening = null);
 
   /// Call on logout. Clears joined rooms.
   void disconnect() {
     _wanted = false;
+    _netSub?.cancel();
+    _netSub = null;
     _rooms.clear();
     _teardown();
     _emit(ChatConnectionStatus.offline);
@@ -87,6 +98,31 @@ class ChatConnection {
   }
 
   // ---------------------------------------------------------------------------
+
+  /// Device has no network interface → `offline` (wireframe 11, amber banner).
+  void _watchNetwork() {
+    _netSub ??= Connectivity().onConnectivityChanged.listen((results) {
+      final down = results.isEmpty ||
+          results.every((r) => r == ConnectivityResult.none);
+      if (down == _networkDown) return;
+      _networkDown = down;
+      if (down) {
+        _emit(ChatConnectionStatus.offline);
+      } else if (_wanted) {
+        if (_socket?.connected == true) {
+          _emit(ChatConnectionStatus.online);
+        } else {
+          _emit(ChatConnectionStatus.reconnecting);
+          final s = _socket;
+          if (s == null) {
+            unawaited(_openOnce());
+          } else {
+            s.connect();
+          }
+        }
+      }
+    });
+  }
 
   Future<void> _open() async {
     final token = (await getToken())?.replaceFirst(RegExp(r'^Bearer\s+'), '');
@@ -168,7 +204,7 @@ class ChatConnection {
       return;
     }
     _reconnectingDelay = Timer(const Duration(seconds: 3), () {
-      if (_socket?.connected != true && _wanted) {
+      if (_socket?.connected != true && _wanted && !_networkDown) {
         _emit(ChatConnectionStatus.reconnecting);
       }
     });
@@ -198,7 +234,7 @@ class ChatConnection {
         _emit(ChatConnectionStatus.authFailed);
         return;
       }
-      if (_wanted) await _open();
+      if (_wanted) await _openOnce();
     } finally {
       _refreshing = false;
     }

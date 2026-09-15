@@ -118,10 +118,30 @@ class ChatApi {
         );
       });
 
-  Future<int> unreadTotal() => _guard(() async {
+  Future<int> unreadTotal() async => (await unreadSummary()).total;
+
+  /// Unread messages and unread chats, counted on the server.
+  Future<({int total, int rooms})> unreadSummary() => _guard(() async {
         final res = await _dio.get('/chats/unread-count');
         final data = _data(res.data);
-        return (data['total'] as num?)?.toInt() ?? 0;
+        return (
+          total: (data['total'] as num?)?.toInt() ?? 0,
+          rooms: (data['rooms'] as num?)?.toInt() ?? 0,
+        );
+      });
+
+  /// Per-user archive (screen 01 long-press).
+  Future<void> setArchived(String roomId, bool archived) => _guard(() async {
+        final path = '/chats/rooms/${Uri.encodeComponent(roomId)}/archive';
+        if (archived) {
+          await _dio.post(path);
+        } else {
+          await _dio.delete(path);
+        }
+      });
+
+  Future<void> markUnread(String roomId) => _guard(() async {
+        await _dio.post('/chats/rooms/${Uri.encodeComponent(roomId)}/unread');
       });
 
   Future<ChatUploadTicket> createUpload(
@@ -200,6 +220,11 @@ class ChatApi {
       throw const ChatFailure(ChatFailureKind.offline);
     } on TimeoutException {
       throw const ChatFailure(ChatFailureKind.timeout);
+    } on ChatFailure {
+      rethrow;
+    } catch (_) {
+      // Unexpected response shape etc. — never let a non-ChatFailure escape to cubits.
+      throw const ChatFailure(ChatFailureKind.unknown);
     }
   }
 

@@ -1,15 +1,55 @@
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/auth_guard.dart';
 import 'package:ado_dad_user/common/widgets/dialog_util.dart';
+import 'package:ado_dad_user/features/chat/state/chat_badge_cubit.dart';
+import 'package:ado_dad_user/features/chat/widgets/chat_pills.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// Persistent shell that hosts the four primary tabs (Home · My Activity ·
 /// Chat · Profile) with a floating pill nav and a raised centre Sell action.
 /// The nav stays mounted while branches switch, preserving each tab's state.
-class ScaffoldWithNavBar extends StatelessWidget {
+class ScaffoldWithNavBar extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
   const ScaffoldWithNavBar({super.key, required this.navigationShell});
+
+  @override
+  State<ScaffoldWithNavBar> createState() => _ScaffoldWithNavBarState();
+}
+
+class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
+  bool _badgeStarted = false;
+
+  StatefulNavigationShell get navigationShell => widget.navigationShell;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncChatBadge();
+  }
+
+  @override
+  void didUpdateWidget(covariant ScaffoldWithNavBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Rebuilt on every tab switch / login / logout: start or reset the badge.
+    _syncChatBadge();
+  }
+
+  Future<void> _syncChatBadge() async {
+    final authed = await AuthGuard.isAuthenticated();
+    if (!mounted) return;
+    final badge = context.read<ChatBadgeCubit>();
+    if (authed && !_badgeStarted) {
+      _badgeStarted = true;
+      await badge.start();
+    } else if (authed) {
+      await badge.refresh();
+    } else if (_badgeStarted) {
+      _badgeStarted = false;
+      badge.reset();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +164,8 @@ class _ShellNavBar extends StatelessWidget {
               label: 'Chat',
               branchIndex: 2,
               current: current,
-              protected: true),
+              protected: true,
+              showChatBadge: true),
           _navItem(context,
               icon: Icons.person_outline,
               label: 'Profile',
@@ -143,9 +184,28 @@ class _ShellNavBar extends StatelessWidget {
     required int branchIndex,
     required int current,
     required bool protected,
+    bool showChatBadge = false,
   }) {
     final bool active = current == branchIndex;
     final Color color = active ? AppColors.primaryColor : AppColors.greyColor;
+    Widget iconWidget = Icon(icon, size: 23, color: color);
+    if (showChatBadge) {
+      // Wireframe 01: brand count pill on the Chat tab (99+ cap).
+      iconWidget = BlocBuilder<ChatBadgeCubit, int>(
+        builder: (context, unread) => Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Icon(icon, size: 23, color: color),
+            if (unread > 0)
+              Positioned(
+                top: -5,
+                left: 14,
+                child: IgnorePointer(child: UnreadBadge(count: unread)),
+              ),
+          ],
+        ),
+      );
+    }
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -154,7 +214,7 @@ class _ShellNavBar extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 23, color: color),
+            iconWidget,
             const SizedBox(height: 3),
             Text(
               label,

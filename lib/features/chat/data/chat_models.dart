@@ -144,12 +144,16 @@ class ChatLastMessage {
   final String senderId;
   final DateTime createdAt;
 
+  /// My own last message only: [MessageStatus.sent] or [MessageStatus.read]. Null otherwise.
+  final MessageStatus? status;
+
   const ChatLastMessage({
     required this.id,
     required this.type,
     required this.preview,
     required this.senderId,
     required this.createdAt,
+    this.status,
   });
 
   factory ChatLastMessage.fromJson(Map<String, dynamic> j) => ChatLastMessage(
@@ -158,6 +162,11 @@ class ChatLastMessage {
         preview: (j['preview'] ?? j['content'] ?? '').toString(),
         senderId: (j['senderId'] ?? '').toString(),
         createdAt: _parseDate(j['createdAt']) ?? DateTime.now(),
+        status: switch (j['status']) {
+          'read' => MessageStatus.read,
+          'sent' => MessageStatus.sent,
+          _ => null,
+        },
       );
 
   Map<String, dynamic> toJson() => {
@@ -166,6 +175,7 @@ class ChatLastMessage {
         'preview': preview,
         'senderId': senderId,
         'createdAt': createdAt.toUtc().toIso8601String(),
+        if (status != null) 'status': status!.name,
       };
 }
 
@@ -174,6 +184,7 @@ class ChatRoom {
   final String adId;
   final ChatRole myRole;
   final bool isClosed;
+  final bool isArchived;
   final int unreadCount;
   final DateTime? lastActivityAt;
   final DateTime? createdAt;
@@ -186,6 +197,7 @@ class ChatRoom {
     required this.adId,
     required this.myRole,
     this.isClosed = false,
+    this.isArchived = false,
     this.unreadCount = 0,
     this.lastActivityAt,
     this.createdAt,
@@ -208,12 +220,14 @@ class ChatRoom {
     ChatLastMessage? lastMessage,
     DateTime? lastActivityAt,
     bool? isClosed,
+    bool? isArchived,
   }) =>
       ChatRoom(
         roomId: roomId,
         adId: adId,
         myRole: myRole,
         isClosed: isClosed ?? this.isClosed,
+        isArchived: isArchived ?? this.isArchived,
         unreadCount: unreadCount ?? this.unreadCount,
         lastActivityAt: lastActivityAt ?? this.lastActivityAt,
         createdAt: createdAt,
@@ -233,6 +247,7 @@ class ChatRoom {
       adId: (j['adId'] ?? '').toString(),
       myRole: j['myRole'] == 'selling' ? ChatRole.selling : ChatRole.buying,
       isClosed: j['isClosed'] == true,
+      isArchived: j['archived'] == true,
       unreadCount: _asInt(j['unreadCount']),
       lastActivityAt: _parseDate(j['lastMessageAt']),
       createdAt: _parseDate(j['createdAt']),
@@ -256,6 +271,7 @@ class ChatRoom {
         'adId': adId,
         'myRole': myRole.name,
         'isClosed': isClosed,
+        'archived': isArchived,
         'unreadCount': unreadCount,
         'lastMessageAt': lastActivityAt?.toUtc().toIso8601String(),
         'createdAt': createdAt?.toUtc().toIso8601String(),

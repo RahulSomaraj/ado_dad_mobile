@@ -23,6 +23,7 @@ class ChatListState {
     this.connection = ChatConnectionStatus.connecting,
     this.showingCache = false,
     this.searchingRemote = false,
+    this.serverUnreadRooms,
   });
 
   final ChatListStatus status;
@@ -39,6 +40,9 @@ class ChatListState {
   /// True while the list on screen came from the device cache.
   final bool showingCache;
   final bool searchingRemote;
+
+  /// Unread chats counted on the server (covers pages not loaded yet).
+  final int? serverUnreadRooms;
 
   bool get hasMore => nextCursor != null;
 
@@ -60,7 +64,8 @@ class ChatListState {
     }).toList();
   }
 
-  int get unreadRooms => rooms.where((r) => r.hasUnread).length;
+  int get unreadRooms =>
+      serverUnreadRooms ?? rooms.where((r) => r.hasUnread).length;
 
   ChatListState copyWith({
     ChatListStatus? status,
@@ -75,6 +80,7 @@ class ChatListState {
     ChatConnectionStatus? connection,
     bool? showingCache,
     bool? searchingRemote,
+    int? serverUnreadRooms,
   }) =>
       ChatListState(
         status: status ?? this.status,
@@ -87,6 +93,7 @@ class ChatListState {
         connection: connection ?? this.connection,
         showingCache: showingCache ?? this.showingCache,
         searchingRemote: searchingRemote ?? this.searchingRemote,
+        serverUnreadRooms: serverUnreadRooms ?? this.serverUnreadRooms,
       );
 }
 
@@ -175,7 +182,7 @@ class ChatListCubit extends Cubit<ChatListState> {
     if (i < 0 || !state.rooms[i].hasUnread) return;
     final next = List<ChatRoom>.of(state.rooms)
       ..[i] = state.rooms[i].copyWith(unreadCount: 0);
-    emit(state.copyWith(rooms: next));
+    _replaceRooms(next);
   }
 
   // ---------------------------------------------------------------------------
@@ -190,6 +197,7 @@ class ChatListCubit extends Cubit<ChatListState> {
       clearFailure: true,
       loadMoreFailed: false,
     ));
+    unawaited(_refreshUnreadSummary());
     try {
       final page = await _repo
           .fetchRooms(filter: _serverFilter)
@@ -235,7 +243,84 @@ class ChatListCubit extends Cubit<ChatListState> {
   }
 
   void _upsert(ChatRoom room) {
-    emit(state.copyWith(rooms: _sorted(_mergeRooms(state.rooms, [room]))));
+    if (room.isArchived) {
+      _replaceRooms(state.rooms.where((r) => r.roomId != room.roomId).toList());
+      return;
+    }
+    _replaceRooms(_sorted(_mergeRooms(state.rooms, [room])));
+  }
+
+  // ---- long-press actions (screen 01) -------------------------------------------
+
+  /// Optimistic. Returns false (and restores the row) when the server refuses.
+  Future<bool> archive(ChatRoom room) async {
+    _replaceRooms(state.rooms.where((r) => r.roomId != room.roomId).toList());
+    try {
+      await _repo.setArchived(room.roomId, true);
+      return true;
+    } on ChatFailure {
+      if (!isClosed) _replaceRooms(_sorted(_mergeRooms(state.rooms, [room])));
+      return false;
+    }
+  }
+
+  /// Undo from the snackbar.
+  Future<void> unarchive(ChatRoom room) async {
+    _replaceRooms(_sorted(_mergeRooms(state.rooms, [room.copyWith(isArchived: false)])));
+    try {
+      await _repo.setArchived(room.roomId, false);
+    } on ChatFailure {
+      if (!isClosed) {
+        _replaceRooms(state.rooms.where((r) => r.roomId != room.roomId).toList());
+      }
+    }
+  }
+
+  Future<bool> markUnread(ChatRoom room) async {
+    if (room.hasUnread) return true;
+    _setUnread(room.roomId, 1);
+    try {
+      await _repo.markUnread(room.roomId);
+      return true;
+    } on ChatFailure {
+      if (!isClosed) _setUnread(room.roomId, 0);
+      return false;
+    }
+  }
+
+  Future<void> markRead(ChatRoom room) async {
+    if (!room.hasUnread) return;
+    _setUnread(room.roomId, 0);
+    await _repo.markRead(room.roomId);
+  }
+
+  void _setUnread(String roomId, int count) {
+    final i = state.rooms.indexWhere((r) => r.roomId == roomId);
+    if (i < 0) return;
+    final next = List<ChatRoom>.of(state.rooms)
+      ..[i] = state.rooms[i].copyWith(unreadCount: count);
+    _replaceRooms(next);
+  }
+
+  /// Single-room changes: keep the server unread-chat count in step.
+  void _replaceRooms(List<ChatRoom> next) {
+    final before = state.rooms.where((r) => r.hasUnread).length;
+    final after = next.where((r) => r.hasUnread).length;
+    final server = state.serverUnreadRooms;
+    emit(state.copyWith(
+      rooms: next,
+      serverUnreadRooms:
+          server == null ? null : (server + after - before).clamp(0, 1 << 30).toInt(),
+    ));
+  }
+
+  Future<void> _refreshUnreadSummary() async {
+    try {
+      final summary = await _repo.unreadSummary();
+      if (!isClosed) emit(state.copyWith(serverUnreadRooms: summary.rooms));
+    } on ChatFailure {
+      // Falls back to counting loaded rows.
+    }
   }
 
   static List<ChatRoom> _mergeRooms(

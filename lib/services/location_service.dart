@@ -23,18 +23,52 @@ class LocationService {
 
   static const String _kLat = 'last_lat';
   static const String _kLng = 'last_lng';
+  static const String _kFixAt = 'last_fix_at';
 
   /// Distance (metres) a fresh fix must differ from the seed before it is worth
   /// re-issuing a feed request.
   static const double movedThresholdMeters = 2000;
 
+  /// How long a fix is trusted before [isStale] asks for a new one.
+  ///
+  /// The persisted fix exists to make a cold start instant, not to stand in for
+  /// the device's real position indefinitely. Without an age check, an app
+  /// resumed days later — in another city — kept querying the radius around
+  /// wherever it was last opened.
+  static const Duration staleAfter = Duration(minutes: 30);
+
   Position? _cached;
+  DateTime? _fixedAt;
   Future<Position?>? _inFlight;
   bool _seedLoaded = false;
 
   /// The best fix known without any await. Null until [seedPosition] has run
   /// once in this process.
   Position? get cachedPosition => _cached;
+
+  /// True when there is no fix at all, or the one held is older than
+  /// [staleAfter]. A seed restored from disk carries the timestamp it was
+  /// recorded with, so a fix persisted last week reads as stale on launch.
+  bool get isStale {
+    if (_cached == null) return true;
+    final at = _fixedAt;
+    if (at == null) return true;
+    return DateTime.now().difference(at) > staleAfter;
+  }
+
+  /// Whether the platform will serve a fix right now — services on and
+  /// permission granted. Cheap: it inspects state and never wakes the GPS, so
+  /// it is safe to call on every resume.
+  Future<bool> isAvailable() async {
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) return false;
+      final permission = await Geolocator.checkPermission();
+      return permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse;
+    } catch (_) {
+      return false;
+    }
+  }
 
   /// Instant, best-effort position: the coordinates persisted by an earlier
   /// launch, else whatever fix the platform already has cached. Returns in ~0 ms
@@ -50,6 +84,11 @@ class LocationService {
         final lng = prefs.getDouble(_kLng);
         if (lat != null && lng != null) {
           _cached = _synthetic(lat, lng);
+          final at = prefs.getInt(_kFixAt);
+          // A fix persisted before this key existed has no recorded age, so it
+          // is treated as stale rather than trusted indefinitely.
+          _fixedAt =
+              at == null ? null : DateTime.fromMillisecondsSinceEpoch(at);
         }
       } catch (_) {}
     }
@@ -59,6 +98,7 @@ class LocationService {
         final known = await Geolocator.getLastKnownPosition();
         if (known != null) {
           _cached = known;
+          _fixedAt = known.timestamp;
           unawaited(_persist(known));
         }
       } catch (_) {}
@@ -103,6 +143,7 @@ class LocationService {
         ),
       );
       _cached = pos;
+      _fixedAt = DateTime.now();
       unawaited(_persist(pos));
       return pos;
     } catch (_) {
@@ -128,6 +169,8 @@ class LocationService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble(_kLat, p.latitude);
       await prefs.setDouble(_kLng, p.longitude);
+      await prefs.setInt(
+          _kFixAt, (_fixedAt ?? DateTime.now()).millisecondsSinceEpoch);
     } catch (_) {}
   }
 

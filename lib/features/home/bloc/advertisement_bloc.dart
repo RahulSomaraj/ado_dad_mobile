@@ -99,6 +99,16 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
   /// users outside the covered districts as well as an emulator whose default
   /// fix is Mountain View.
   static const int _minNearbyResults = 5;
+
+  /// Radius used once the nearby feed is exhausted or too thin. 5000 km is the
+  /// server's hard maximum (it rejects anything larger with a 400), and from
+  /// anywhere in India it reaches the entire catalogue.
+  ///
+  /// Widening rather than dropping the coordinates matters: the backend only
+  /// computes each ad's `distance` via `$geoNear`, so a fallback that queried
+  /// without a location returned the right ads with every distance null, and
+  /// the "x km away" line silently disappeared from every card.
+  static const double _wideRadiusKm = 5000;
   bool _locationFallbackToAll = false;
   bool _locationQueryHasNext = false;
   int _allAdsPage = 1;
@@ -122,6 +132,63 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
   int? _maxArea;
   bool? _isFurnished;
   bool? _hasParking;
+
+  /// The feed used once the nearby radius is exhausted or came back too thin.
+  ///
+  /// Keeps the user's coordinates so every ad still carries a `distance`,
+  /// widening to [_wideRadiusKm] instead of dropping the location. Falls back to
+  /// a location-less query only when coordinates are unknown, or when even the
+  /// wide radius finds almost nothing — a user farther from the inventory than
+  /// the server's maximum radius allows. Those results genuinely cannot carry a
+  /// distance, which is correct: there is no meaningful one to show.
+  Future<PaginatedAdsResponse> _fetchWideFeed(int page) async {
+    if (_locationLatitude == null || _locationLongitude == null) {
+      return repository.fetchAllAds(page: page);
+    }
+
+    final wide = await repository.fetchAllAds(
+      page: page,
+      latitude: _locationLatitude,
+      longitude: _locationLongitude,
+      maxDistance: _wideRadiusKm,
+    );
+    if (wide.data.length >= _minNearbyResults || page > 1) return wide;
+
+    return repository.fetchAllAds(page: page);
+  }
+
+  /// One page of the filter screen's feed, carrying every remembered filter.
+  /// [maxDistance] applies only when coordinates are in play; pass
+  /// `withLocation: false` to drop them — which also drops each ad's distance.
+  Future<PaginatedAdsResponse> _fetchFilteredPage(
+    int page, {
+    bool withLocation = true,
+    double? maxDistance,
+  }) {
+    return repository.fetchAllAds(
+      page: page,
+      category: _categoryId,
+      latitude: withLocation ? _locationLatitude : null,
+      longitude: withLocation ? _locationLongitude : null,
+      maxDistance: withLocation ? maxDistance : null,
+      commercialVehicleTypes: _commercialVehicleTypes,
+      minYear: _minYear,
+      maxYear: _maxYear,
+      manufacturerIds: _manufacturerIds,
+      modelIds: _modelIds,
+      fuelTypeIds: _fuelTypeIds,
+      transmissionTypeIds: _transmissionTypeIds,
+      minPrice: _minPrice,
+      maxPrice: _maxPrice,
+      propertyTypes: _propertyTypes,
+      minBedrooms: _minBedrooms,
+      maxBedrooms: _maxBedrooms,
+      minArea: _minArea,
+      maxArea: _maxArea,
+      isFurnished: _isFurnished,
+      hasParking: _hasParking,
+    );
+  }
 
   List<AddModel> _mergeDedupe(List<AddModel> current, List<AddModel> incoming) {
     final ids = current.map((a) => a.id).toSet();
@@ -200,7 +267,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
           // (b) Location feed exhausted → start the full all-ads fallback feed.
           _locationFallbackToAll = true;
           _allAdsPage = 1;
-          final result = await repository.fetchAllAds(page: _allAdsPage);
+          final result = await _fetchWideFeed(_allAdsPage);
           emit(ListingsLoaded(
             listings: _mergeDedupe(currentState.listings, result.data),
             hasMore: result.hasNext,
@@ -208,7 +275,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
         } else if (_locationFallbackToAll) {
           // (d) Continue the all-ads fallback feed.
           _allAdsPage += 1;
-          final result = await repository.fetchAllAds(page: _allAdsPage);
+          final result = await _fetchWideFeed(_allAdsPage);
           emit(ListingsLoaded(
             listings: _mergeDedupe(currentState.listings, result.data),
             hasMore: result.hasNext,
@@ -344,30 +411,22 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
           hasParking: _hasParking);
 
       if (result.data.length < _minNearbyResults && _locationLatitude != null) {
-        // Same rule as the home feed: coordinates narrow a category/filter
-        // query, they must not be the reason a screen comes back empty. Retry
-        // once without them before showing "no results".
-        _locationLatitude = null;
-        _locationLongitude = null;
-        final wide = await repository.fetchAllAds(
-            page: _currentPage,
-            category: _categoryId,
-            commercialVehicleTypes: _commercialVehicleTypes,
-            minYear: _minYear,
-            maxYear: _maxYear,
-            manufacturerIds: _manufacturerIds,
-            modelIds: _modelIds,
-            fuelTypeIds: _fuelTypeIds,
-            transmissionTypeIds: _transmissionTypeIds,
-            minPrice: _minPrice,
-            maxPrice: _maxPrice,
-            propertyTypes: _propertyTypes,
-            minBedrooms: _minBedrooms,
-            maxBedrooms: _maxBedrooms,
-            minArea: _minArea,
-            maxArea: _maxArea,
-            isFurnished: _isFurnished,
-            hasParking: _hasParking);
+        // Coordinates narrow a category/filter query and must never be the
+        // reason a screen comes back empty. Widen to the server's maximum
+        // radius first: dropping them outright also drops each ad's `distance`,
+        // which is what made the "x km away" line vanish from these screens.
+        var wide =
+            await _fetchFilteredPage(_currentPage, maxDistance: _wideRadiusKm);
+
+        if (wide.data.length < _minNearbyResults) {
+          // Still thin at 5000 km, so the location really is the constraint.
+          // Only now give up the coordinates — and with them the distances,
+          // which at this range would not be meaningful anyway.
+          _locationLatitude = null;
+          _locationLongitude = null;
+          wide = await _fetchFilteredPage(_currentPage, withLocation: false);
+        }
+
         emit(AdvertisementState.listingsLoaded(
           listings: wide.data,
           hasMore: wide.hasNext,
@@ -453,7 +512,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
         _locationFallbackToAll = true;
         _locationQueryHasNext = false;
         _allAdsPage = 1;
-        final all = await repository.fetchAllAds(page: _allAdsPage);
+        final all = await _fetchWideFeed(_allAdsPage);
         final merged = _mergeDedupe(result.data, all.data);
         // Keep the nearby ones first, then the rest of the feed behind them.
         emit(AdvertisementState.listingsLoaded(

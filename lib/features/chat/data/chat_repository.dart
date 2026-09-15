@@ -149,6 +149,22 @@ class ChatRepository {
     return api.unreadTotal();
   }
 
+  Future<({int total, int rooms})> unreadSummary() async {
+    await start();
+    return api.unreadSummary();
+  }
+
+  /// Throws [ChatFailure] so the list can roll back its optimistic change.
+  Future<void> setArchived(String roomId, bool archived) async {
+    await start();
+    await api.setArchived(roomId, archived);
+  }
+
+  Future<void> markUnread(String roomId) async {
+    await start();
+    await api.markUnread(roomId);
+  }
+
   // ---- thread --------------------------------------------------------------------
 
   Future<bool> joinRoom(String roomId) => connection.joinRoom(roomId);

@@ -36,7 +36,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final CarouselSliderController _carouselController =
       CarouselSliderController();
 
@@ -46,9 +46,24 @@ class _HomePageState extends State<HomePage> {
   late final AdvertisementBloc _adBloc;
   bool _isLocationRecommendationsMode = false;
 
+  /// The sentinel older builds wrote into `user_location` when lookup failed.
+  /// Kept only so those saved values can be recognised and ignored.
+  static const String _kNoLocation = 'Location not available';
+
+  /// True once a resolution attempt has finished with nothing to show. Drives
+  /// the "Set location" affordance: distinct from `_userLocation == null`,
+  /// which is also the state while the first attempt is still running.
+  bool _locationUnavailable = false;
+
+  /// Guards [_refreshLocationOnResume]. Android delivers `resumed` for
+  /// transient things too — a dismissed permission sheet, the app switcher —
+  /// and each one would otherwise start its own GPS request.
+  bool _resumeRefreshInFlight = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     // Initialize Google Places service
     _placesService = GooglePlacesService(apiKey: AppConfig.googlePlacesApiKey);
@@ -101,7 +116,15 @@ class _HomePageState extends State<HomePage> {
 
     // ---- Phase 2: runs while the feed above is already loading. ----
     final prefs = await SharedPreferences.getInstance();
-    final savedLocation = prefs.getString('user_location');
+    // Older builds persisted the failure sentinel as if it were an address, so
+    // an upgrading user can have it on disk. Treat it as "nothing saved" rather
+    // than showing it as the user's location.
+    final rawSaved = prefs.getString('user_location');
+    final savedLocation = (rawSaved == null ||
+            rawSaved.trim().isEmpty ||
+            rawSaved == _kNoLocation)
+        ? null
+        : rawSaved;
     if (savedLocation != null && mounted) {
       setState(() {
         _userLocation = savedLocation;
@@ -132,6 +155,12 @@ class _HomePageState extends State<HomePage> {
       }
       // Reverse geocode for the address chip only — never blocks the ad load.
       unawaited(_updateAddressDisplay(fresh));
+    } else if (seed != null && savedLocation == null) {
+      // GPS failed but we did seed from a persisted fix. This used to fall
+      // through every branch and resolve no address at all, leaving the chip
+      // null — and so the whole section hidden — for the life of the process.
+      // The seed's coordinates are good enough to name a place.
+      await _applyResolvedAddress(seed.latitude, seed.longitude);
     } else if (seed == null && savedLocation != null) {
       // No GPS at all and we never seeded — fall back to the saved address.
       await _applyLocationBasedRecommendations(savedLocation);
@@ -179,8 +208,70 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_refreshLocationOnResume());
+    }
+  }
+
+  /// Re-resolves the user's location every time the app returns to the
+  /// foreground.
+  ///
+  /// Everything location-related used to run exactly once, from `initState`.
+  /// Granting the permission in Settings, switching location services back on,
+  /// or simply travelling while the app sat in the background therefore left
+  /// the chip — and the radius the feed queries — wrong until the process was
+  /// killed and restarted.
+  Future<void> _refreshLocationOnResume() async {
+    if (_resumeRefreshInFlight) return;
+    _resumeRefreshInFlight = true;
+    try {
+      final service = LocationService();
+
+      if (!await service.isAvailable()) {
+        // Permission or services still off. Keep a previously resolved address
+        // rather than blanking something correct, but make sure the section
+        // offers a way forward when there is nothing to show.
+        if (mounted && _userLocation == null) {
+          setState(() => _locationUnavailable = true);
+        }
+        return;
+      }
+
+      // Location is available now. When the chip is empty or was showing the
+      // unavailable state, this is the granted-in-Settings case and must be
+      // resolved even if the held fix still looks recent.
+      final bool needsAddress = _userLocation == null || _locationUnavailable;
+      if (!needsAddress && !service.isStale) return;
+
+      final previous = service.cachedPosition;
+      final fresh = await service.freshPosition();
+      if (fresh == null || !mounted) return;
+
+      await _applyResolvedAddress(fresh.latitude, fresh.longitude);
+      if (!mounted) return;
+
+      // Only disturb the feed when the device actually moved; a resume in the
+      // same place should not throw away the list the user was reading.
+      if (service.movedEnough(previous, fresh)) {
+        setState(() => _isLocationRecommendationsMode = true);
+        _adBloc.add(
+          AdvertisementEvent.searchByLocation(
+            latitude: fresh.latitude,
+            longitude: fresh.longitude,
+          ),
+        );
+      }
+    } finally {
+      _resumeRefreshInFlight = false;
+    }
   }
 
   Future<Position> _determinePosition() async {
@@ -204,92 +295,132 @@ class _HomePageState extends State<HomePage> {
       throw Exception('Location permissions are permanently denied.');
     }
 
-    return await Geolocator.getCurrentPosition(
-        locationSettings:
-            const LocationSettings(accuracy: LocationAccuracy.high));
+    // Delegated so there is one owner of device position, and bounded: the
+    // unbounded call this replaced could sit forever indoors, with no way for
+    // the caller — or the user staring at a spinner — to recover.
+    final position = await LocationService().freshPosition(
+      timeLimit: const Duration(seconds: 10),
+      accuracy: LocationAccuracy.high,
+    );
+    if (position == null) {
+      throw Exception('Could not obtain a location fix.');
+    }
+    return position;
   }
 
   Future<void> _getLocationAndAddress() async {
     try {
       final position = await _determinePosition();
 
-      // First try to get detailed address using Google Places reverse geocoding
-      try {
-        final placeDetails = await _getDetailedAddressFromCoordinates(
-            position.latitude, position.longitude);
-
-        if (placeDetails != null && placeDetails.isNotEmpty) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('user_location', placeDetails);
-
-          if (!mounted) return;
-          setState(() {
-            _userLocation = placeDetails;
-          });
-          await _applyLocationBasedRecommendations(placeDetails);
-          return;
-        }
-      } catch (_) {}
-
-      // Fallback to standard geocoding
-      final placemarks =
-          await placemarkFromCoordinates(position.latitude, position.longitude);
-      final place = placemarks.isNotEmpty ? placemarks.first : null;
-      if (place == null) {
-        throw Exception('No placemark found for the current position');
-      }
-
-      // Create a more detailed address format
-      final addressComponents = <String>[];
-
-      if (place.locality?.isNotEmpty == true) {
-        addressComponents.add(place.locality!);
-      }
-      if (place.subAdministrativeArea?.isNotEmpty == true &&
-          place.subAdministrativeArea != place.locality) {
-        addressComponents.add(place.subAdministrativeArea!);
-      }
-      if (place.administrativeArea?.isNotEmpty == true) {
-        addressComponents.add(place.administrativeArea!);
-      }
-
-      final newAddress = addressComponents.join(', ');
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_location', newAddress);
-
+      // One resolver, Google then the platform geocoder. This method used to
+      // carry its own inline copy of both attempts.
+      final resolved =
+          await _applyResolvedAddress(position.latitude, position.longitude);
       if (!mounted) return;
-      setState(() {
-        _userLocation = newAddress;
-      });
-      await _applyLocationBasedRecommendations(newAddress);
+
+      if (resolved && _userLocation != null) {
+        await _applyLocationBasedRecommendations(_userLocation!);
+        return;
+      }
+
+      // A fix but no name for it: still worth a radius query, the chip just
+      // stays on the retry affordance.
+      setState(() => _isLocationRecommendationsMode = true);
+      _adBloc.add(
+        AdvertisementEvent.searchByLocation(
+          latitude: position.latitude,
+          longitude: position.longitude,
+        ),
+      );
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _userLocation = "Location not available";
+        _locationUnavailable = true;
         _isLocationRecommendationsMode = false;
       });
     }
   }
 
+  /// Turn coordinates into a display address, Google first and the platform
+  /// geocoder second.
+  ///
+  /// Google's result has the "Place, District, State" shape the chip is built
+  /// around, but it needs a live API key and fails service-wide the moment that
+  /// key lapses or its quota runs out. `placemarkFromCoordinates` goes through
+  /// the OS and needs no key, so it is a genuine fallback rather than an equal
+  /// alternative — coarser, but it keeps the section populated when Google is
+  /// unavailable. Returns null only when both fail.
+  ///
+  /// Every caller goes through here. Previously each of the three call sites
+  /// had its own copy of this logic, and the one on the refresh path — the one
+  /// that matters most — was missing the fallback entirely.
+  Future<String?> _resolveAddress(double latitude, double longitude) async {
+    try {
+      final google =
+          await _getDetailedAddressFromCoordinates(latitude, longitude);
+      if (google != null && google.isNotEmpty) return google;
+    } catch (_) {
+      // Fall through to the platform geocoder.
+    }
+
+    try {
+      final placemarks = await placemarkFromCoordinates(latitude, longitude);
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        final parts = <String>[];
+        if (place.locality?.isNotEmpty == true) {
+          parts.add(place.locality!);
+        }
+        if (place.subAdministrativeArea?.isNotEmpty == true &&
+            place.subAdministrativeArea != place.locality) {
+          parts.add(place.subAdministrativeArea!);
+        }
+        if (place.administrativeArea?.isNotEmpty == true) {
+          parts.add(place.administrativeArea!);
+        }
+        if (parts.isNotEmpty) return parts.join(', ');
+      }
+    } catch (_) {
+      // Both geocoders are out; the caller shows the retry affordance.
+    }
+
+    return null;
+  }
+
+  /// Resolve [latitude]/[longitude], show it, and remember it. Returns whether
+  /// anything could be resolved, so callers can fall back.
+  Future<bool> _applyResolvedAddress(double latitude, double longitude) async {
+    final address = await _resolveAddress(latitude, longitude);
+    if (address == null || address.isEmpty) {
+      if (mounted && _userLocation == null) {
+        setState(() => _locationUnavailable = true);
+      }
+      return false;
+    }
+
+    if (!mounted) return false;
+    setState(() {
+      _userLocation = address;
+      _locationUnavailable = false;
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_location', address);
+    } catch (_) {
+      // A failed write only costs the next cold start its instant address.
+    }
+    return true;
+  }
+
   /// Reverse-geocode [position] and update the address chip without reloading ads.
   Future<void> _updateAddressDisplay(Position position) async {
-    try {
-      final address = await _getDetailedAddressFromCoordinates(
-          position.latitude, position.longitude);
-      if (address != null && address.isNotEmpty && mounted) {
-        setState(() {
-          _userLocation = address;
-        });
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('user_location', address);
-      }
-    } catch (_) {}
+    await _applyResolvedAddress(position.latitude, position.longitude);
   }
 
   Future<void> _applyLocationBasedRecommendations(String location) async {
     final query = location.trim();
-    if (query.isEmpty || query == "Location not available") {
+    if (query.isEmpty || query == _kNoLocation) {
       if (!mounted) return;
       setState(() {
         _isLocationRecommendationsMode = false;
@@ -963,23 +1094,63 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
-                  if (_userLocation != null) ...[
-                    SizedBox(height: 4),
-                    Tooltip(
-                      message: _userLocation!,
-                      child: Text(
-                        _userLocation!,
+                  // Always rendered. This used to be hidden whenever the
+                  // address was null, so a failed lookup made the whole section
+                  // disappear with nothing to tap and no sign anything was
+                  // wrong. Now it degrades: resolved address, else a prompt that
+                  // opens the same picker the pin icon does.
+                  SizedBox(height: 4),
+                  Builder(
+                    builder: (context) {
+                      final String? address = _userLocation;
+                      final bool hasAddress =
+                          address != null && address.trim().isNotEmpty;
+                      final String label = hasAddress
+                          ? address
+                          : (_locationUnavailable
+                              ? 'Set location'
+                              : 'Locating…');
+
+                      final text = Text(
+                        label,
                         style: TextStyle(
                           color: AppColors.whiteColor,
                           fontSize: locationFont,
+                          decoration: hasAddress
+                              ? TextDecoration.none
+                              : TextDecoration.underline,
+                          decorationColor: AppColors.whiteColor,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.end,
                         softWrap: true,
-                      ),
-                    ),
-                  ],
+                      );
+
+                      // Only the unresolved state is a control; a real address
+                      // stays plain text, tappable via the pin as before.
+                      if (hasAddress) {
+                        return Tooltip(message: address, child: text);
+                      }
+                      return GestureDetector(
+                        onTap: _locationUnavailable
+                            ? () async {
+                                final updated =
+                                    await _showLocationInputDialog();
+                                if (updated != null && mounted) {
+                                  setState(() {
+                                    _userLocation = updated;
+                                    _locationUnavailable = false;
+                                  });
+                                  await _applyLocationBasedRecommendations(
+                                      updated);
+                                }
+                              }
+                            : null,
+                        child: text,
+                      );
+                    },
+                  ),
                 ],
               ),
             ),

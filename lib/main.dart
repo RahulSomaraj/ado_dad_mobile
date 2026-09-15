@@ -36,7 +36,7 @@ import 'package:ado_dad_user/features/profile/MyAds/bloc/my_ads_bloc.dart';
 import 'package:ado_dad_user/repositories/my_ads_repo.dart';
 import 'package:ado_dad_user/features/home/ui/sellerprofile/bloc/bloc/seller_profile_bloc.dart';
 import 'package:ado_dad_user/repositories/seller_profile_repo.dart';
-import 'package:ado_dad_user/features/chat/bloc/chat_bloc.dart';
+import 'package:ado_dad_user/features/chat/state/chat_badge_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -46,6 +46,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// - If not logged in → go to home and show login popup (do not open notifications page).
 Future<void> _handleNotificationTap(RemoteMessage message) async {
   final isAuth = await AuthGuard.isAuthenticated();
+  // Chat push (backend data: {type: 'chat', roomId}) → open that conversation
+  // on top of the Chat tab so Back lands on the list.
+  final roomId = message.data['roomId']?.toString();
+  if (isAuth && message.data['type'] == 'chat' && roomId != null && roomId.isNotEmpty) {
+    AppRoutes.router.go('/chat-rooms');
+    AppRoutes.router.push('/chat/${Uri.encodeComponent(roomId)}');
+    return;
+  }
   if (isAuth) {
     AppRoutes.router.go('/notifications');
   } else {
@@ -104,7 +112,10 @@ Future<void> _initFcm() async {
           message.data['title'] ??
           'Notification';
       final body = message.notification?.body ?? message.data['body'] ?? '';
-      NotificationBadgeService.addNotification(title: title, body: body);
+      // Chat pushes belong to the Chat badge, not the notifications inbox.
+      if (message.data['type'] != 'chat') {
+        NotificationBadgeService.addNotification(title: title, body: body);
+      }
       LocalNotificationService.showFromFcmMessage(message);
     });
 
@@ -112,7 +123,9 @@ Future<void> _initFcm() async {
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
       final title = message.notification?.title ?? 'Notification';
       final body = message.notification?.body ?? '';
-      NotificationBadgeService.addNotification(title: title, body: body);
+      if (message.data['type'] != 'chat') {
+        NotificationBadgeService.addNotification(title: title, body: body);
+      }
       // Do not clear badge here – clear only when user opens the notifications page
       _handleNotificationTap(
           message); // async: opens notifications or home with login popup
@@ -240,8 +253,9 @@ class MyApp extends StatelessWidget {
           create: (context) =>
               ReportAdBloc(reportRepository: ReportRepository()),
         ),
-        BlocProvider<ChatBloc>(
-          create: (context) => ChatBloc(),
+        // Nav-bar unread badge. Started by the nav shell once signed in.
+        BlocProvider<ChatBadgeCubit>(
+          create: (context) => ChatBadgeCubit(),
         ),
         BlocProvider<NotificationBloc>(
           create: (context) => NotificationBloc(

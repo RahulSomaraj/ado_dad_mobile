@@ -4,8 +4,8 @@ import 'package:ado_dad_user/common/app_routes.dart';
 import 'package:ado_dad_user/common/secure_token_store.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/config/app_config.dart';
+import 'package:ado_dad_user/features/chat/data/chat_repository.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
-import 'package:ado_dad_user/services/chat_socket_service.dart';
 import 'package:dio/dio.dart';
 
 /// Centralized authentication service for token refresh and automatic logout
@@ -164,8 +164,8 @@ class AuthService {
       // Reset initial refresh flag
       resetInitialRefreshFlag();
 
-      // Disconnect socket connection
-      await ChatSocketService().disconnect();
+      // Disconnect the chat socket and drop cached chats/outbox
+      await ChatRepository.instance.signOut();
 
       // Clear all user data
       await clearUserData();
@@ -200,8 +200,8 @@ class AuthService {
     // Reset initial refresh flag
     resetInitialRefreshFlag();
 
-    // Disconnect socket connection
-    await ChatSocketService().disconnect();
+    // Disconnect the chat socket and drop cached chats/outbox
+    await ChatRepository.instance.signOut();
 
     await clearUserData();
 

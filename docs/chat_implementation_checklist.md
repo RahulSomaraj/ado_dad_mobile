@@ -28,15 +28,17 @@ Implemented items move to the **Done log** at the bottom. Only open work stays i
 | Method & path | Body / query | Returns |
 |---|---|---|
 | `POST /chats/rooms` | `{adId}` | `{success, data: RoomDto}` (idempotent get-or-create) |
-| `GET /chats/rooms` | `?limit&cursor&filter=all\|unread\|buying\|selling&q` | `{success, data: RoomDto[], nextCursor}`. Without `limit` → legacy full list (cap 200) |
+| `GET /chats/rooms` | `?limit&cursor&filter=all\|unread\|buying\|selling\|archived&q` | `{success, data: RoomDto[], nextCursor}`. Without `limit` → legacy full list (cap 200) |
 | `GET /chats/rooms/:roomId` | — | `{success, data: RoomDto}` |
 | `GET /chats/unread-count` | — | `{success, data: {total, rooms}}` |
 | `GET /chats/rooms/:roomId/messages` | `?limit&cursor` (older) `&after` (newer, catch-up) | `{success, data:{messages, nextCursor, hasMore}}` |
 | `POST /chats/rooms/:roomId/messages` | `{clientMessageId, type, content?, attachments?}` | `{success, data: MessageDto}`. Same `clientMessageId` → same message |
 | `POST /chats/rooms/:roomId/read` | `{lastMessageId?}` | `{success, data:{roomId, unreadCount:0, lastReadAt}}` |
+| `POST /chats/rooms/:roomId/archive` · `DELETE …/archive` | — | Per-user archive / unarchive. A new message unarchives for both |
+| `POST /chats/rooms/:roomId/unread` | — | Mark unread for me (`unreadCounts.<me>` ≥ 1) |
 | `POST /chats/rooms/:roomId/uploads` | `{kind: image\|audio, mimeType, size}` | `{success, data:{uploadUrl, method:'PUT', headers, url, key, expiresIn}}` |
 
-**RoomDto**: `roomId, adId, status, isClosed, myRole(buying|selling), createdAt, lastMessageAt, unreadCount, otherUser{id,name,profilePic,phoneNumber,countryCode}, ad{id,title,price,image,status}, lastMessage{id,type,preview,senderId,createdAt}`. Legacy keys `initiatorId, adPosterId, participants, messageCount, latestMessage, adDetails` are kept.
+**RoomDto**: `roomId, adId, status, isClosed, myRole(buying|selling), createdAt, lastMessageAt, unreadCount, archived, otherUser{id,name,profilePic,phoneNumber,countryCode}, ad{id,title,price,image,status}, lastMessage{id,type,preview,senderId,createdAt,status}`. `lastMessage.status` is `sent|read` only when the last message is mine (from the other user's `lastReadAt`); voice previews carry the duration (`Voice message · 0:24`). Legacy keys `initiatorId, adPosterId, participants, messageCount, latestMessage, adDetails` are kept.
 
 **MessageDto**: `_id, id, roomId, clientMessageId, senderId, type, content, attachments[], createdAt, isRead`. No `sender.email`.
 
@@ -56,7 +58,7 @@ Implemented items move to the **Done log** at the bottom. Only open work stays i
 
 ## Phase 4 — Backend
 
-Code is done and on disk. Chat specs pass (61/61) and `tsc` is clean for the chat module closure. Remaining work is cleanup and verification you run against a real DB:
+Code is done and on disk. Chat specs pass (66/66) and `tsc` is clean for the chat module closure. Remaining work is cleanup and verification you run against a real DB:
 
 ### B13 · Cleanup
 - [ ] Delete the unused legacy files `src/chat/guards/rate-limit.guard.ts` (+ spec) and `src/auth/guard/ws-guard.ts` (needs delete permission, or delete by hand)
@@ -64,7 +66,7 @@ Code is done and on disk. Chat specs pass (61/61) and `tsc` is clean for the cha
 
 ### B14 · Verification
 - [ ] `npx tsc --noEmit` on the **whole** project (only the chat module closure was compiled in the cloud)
-- [ ] `npx jest src/chat` locally (expect 61 passing + the untouched legacy `rate-limit.guard.spec`)
+- [ ] `npx jest src/chat` locally (expect 66 passing + the untouched legacy `rate-limit.guard.spec`)
 - [ ] `npm run start:dev`, then check Swagger shows the new `/chats` routes
 
 ### B15 · Deploy (UAT first)
@@ -77,30 +79,100 @@ Code is done and on disk. Chat specs pass (61/61) and `tsc` is clean for the cha
 
 ## Phase 5 — Mobile foundation (`lib/features/chat/`)
 
-Data and state layers are written but **not yet wired** into routes or main, so the current app is unaffected. They have not been compiled (no Flutter SDK in the cloud).
-- [ ] `flutter analyze lib/features/chat test/features/chat` and `flutter test test/features/chat` on your machine
-- [ ] **M7** Widgets per the wireframe component table (`lib/features/chat/widgets/`)
-- [ ] Wire `ChatRepository.instance.signOut()` into `AuthService.logout()` / `handleTokenExpiration()` (replaces `ChatSocketService().disconnect()`)
-- [ ] Provide `ChatBadgeCubit` in `main.dart` and start it after login
+The data, state and UI layers are written but **not yet wired** into routes or main, so the current app is unaffected. None of it has been compiled (no Flutter SDK in the cloud).
+- [ ] `flutter analyze lib/features/chat lib/main_chat_preview.dart test/features/chat`, fixing anything it reports
+- [ ] `flutter test test/features/chat`: models, format, and the screen smoke test (12 states × light/dark × text 1.0/1.3 = 48, plus 2 screen-01 behaviour tests)
+
+---
+
+## Design fidelity — the rules every chat screen is built and checked against
+
+**Source of truth:** `docs/chat_redesign_wireframes.html` (the PROPOSED phones, screens 01–14).
+**Code source of truth:** `lib/features/chat/widgets/chat_tokens.dart`. No literal sizes or colours in chat widgets.
+
+### DF-1 · Scale rule (how "pixel perfect" is defined)
+The wireframe phone screen is **278 px** wide and the Android baseline is **360 dp**. **dp = wireframe px × 1.3**, with type rounded to 0.5 dp and spacing to 1 dp. On a 360 dp device every screen has the wireframe's exact proportions; wider phones get more horizontal room, never bigger type.
+
+| Element | Wireframe px | App dp | Token |
+|---|---|---|---|
+| Side gutter | 14 | 18 | `ChatSize.gutter` |
+| List title "Chats" | 19 / 600 | 24.5 / 600 | `listTitle` |
+| Search field text / radius / padding | 11.5 / 11 / 10×7 | 15 / 14 / 13×9 | `searchFont` `searchRadius` `searchPadding` |
+| Filter chip text / radius / padding / gap | 10.5 / 14 / 10×4 / 6 | 13.5 / 18 / 13×5 / 8 | `chip*` |
+| Row padding (v) | 10 | 13 | `rowVPad` |
+| Avatar / header avatar / sheet avatar | 40 / 34 / 64 | 52 / 44 / 83 | `avatar*` |
+| Listing thumb on avatar (size / radius / ring / offset) | 21 / 6 / 2 / −5 | 27 / 8 / 2.5 / −6.5 | `avatarThumb*` |
+| Name / time / ad line / preview | 12.5 / 9.5 / 10 / 11.5 | 16 / 12.5 / 13 / 15 | `nameFont` `timeFont` `adLineFont` `previewFont` |
+| Unread badge height / text | 17 / 9 | 22 / 11.5 | `badge*` |
+| Divider inset | 66 | 84 | `dividerInset` |
+| Status pill text / radius | 8.5 / 5 | 11 / 6.5 | `pill*` |
+| Header name / sub | 12.5 / 9.5 | 16 / 12.5 | `headerName` `headerSub` |
+| Listing strip thumb / title / price / View | 40×32 / 10.5 / 12 / 10 | 52×42 / 13.5 / 15.5 / 13 | `strip*` |
+| Bubble text / padding / radius / tail / max width | 11.5 / 10×6 / 15 / 4 / 78% | 15 / 13×8 / 20 / 5 / 78% | `bubble*` |
+| Meta (time + tick) | 8.5 | 11 | `metaFont` `metaIcon` |
+| Gap same sender / sender switch | 2 / 7 | 3 / 9 | `sameSenderGap` `senderSwitchGap` |
+| Date chip text / radius | 9 / 9 | 12 / 12 | `date*` |
+| Composer field text / radius · send button | 11.5 / 18 · 32 | 15 / 24 · 42 | `field*` `sendButton` |
+| Image bubble / radius | 150×118 / 14 | 195×153 / 18 | `imageBubble` `imageRadius` |
+| Voice play button / min width | 26 / 150 | 34 / 195 | `voice*` |
+| Tray thumb / radius | 56 / 9 | 73 / 12 | `tray*` |
+| Banner text / padding | 10.5 / 12×6 | 13.5 / 16×8 | `banner*` |
+| Empty/error title / body / icon circle | 14 / 11 / 52 | 18 / 14.5 / 68 | `state*` |
+| Details sheet name / action circle / row text | 14 / 38 / 11.5 | 18 / 49 / 15 | `sheet*` `action*` |
+
+### DF-2 · Colour tokens (light / dark), from `app_colors.dart` + wireframe `--a-*`
+brand `#4F48EC` (fills, both themes) · brandText `#4F48EC` / `#9C98FF` · pending bubble `#8D88F2` · read tick `#BFF0DA` · background `#F6F7FB` / `#0F1115` · surface `#FFFFFF` / `#1B1F27` · chip `#F4F5F9` / `#232833` · divider `#E6E8EE` / `#2A2F3A` · soft `#EDEBFF` / `#26244A` · text `#0A0A0A` / `#ECEEF3` · text2 `#424242` / `#C2C7D0` · muted `#6B7080` / `#9AA1AF` · ok `#12805A` on `#E3F5EC` / `#5FD3A2` on `#15372A` · warn `#7A5200` on `#FFF3D6` / `#F2C66D` on `#3A2F12` · err `#C23030` on `#FDECEC` / `#FF8A8A` on `#3D1B1E` · call `#19A463`
+
+### DF-3 · Type
+Poppins (from `AppTheme`) everywhere. Weights: 400 body · 500 names/preview-unread/buttons · 600 titles/prices/badges/unread name. Tabular figures for times and durations. Only 12 dp and up at 1.0× scale.
+
+### DF-4 · Interaction and state rules
+- Unread rows change **weight** (and show a count + brand-coloured time), never background colour
+- Pending bubble = `#8D88F2` + clock + "Sending". Failed = err fill + err border + "Not sent · reason" + Retry (transient) or Edit (policy)
+- Banners sit directly under the header. "Reconnecting…" only after 3 s. Attachments disabled while offline
+- Reversed list, so the thread opens at the bottom with no scroll animation. Date chip whenever the day changes; time + tick only on the last bubble of a run
+- Composer: + · pill field (1–5 lines) · mic when empty → send when text. Photos → tray + caption + "Send N". Hold mic → recording bar, slide left 90 dp to cancel, auto-send at 3:00
+- Never show raw exceptions. All copy comes from `chat_copy.dart`
+
+### DF-5 · QA procedure (each screen must pass before it's ticked)
+1. `flutter run -t lib/main_chat_preview.dart` on a **360×800** emulator (Pixel 4a / "Small phone")
+2. Open the screen; screenshot light and dark
+3. Put the screenshot next to the wireframe's PROPOSED phone. Check spacing rhythm, alignment, hierarchy, colours and copy; within ±1 dp on the table above is a pass
+4. Repeat at **412×915** (layout holds, nothing stretches oddly) and **text scale 1.3** (no clipping; smoke test covers overflow)
+5. Tick the screen below and note any deliberate deviation in the Deviations log
+
+---
 
 ## Phase 6 — Chat list UI (screens 01–05)
-- [ ] ConversationTile, FilterChips, search (name/ad/preview), skeleton, empty, error kinds, pagination, pull-to-refresh awaits
-- [ ] Cache-first render. Socket never blocks the list (F-10)
-- [ ] Live row patch from `conversation_updated` (F-22)
-- [ ] Nav bar Chat badge (`ChatBadgeCubit`)
 
-## Phase 7 — Thread UI (screens 06–13) + entry points
-- [ ] Header, ListingStrip, reversed list, grouping, local time (F-11), date separators, status ticks
-- [ ] Load older (F-08). Join-then-fetch + catch-up (F-09)
-- [ ] Optimistic send / failed / retry / edit (screens 09–10)
-- [ ] Connection banner + queued sends (screen 11)
-- [ ] Attachment tray, image progress, voice 3:00 cap + duration, shared audio player, cached images (F-24–F-27)
-- [ ] New-conversation starters (role/category-aware) + safety tip (screen 08)
-- [ ] Details sheet: Call, profile, ad, report (screen 13)
-- [ ] Keyboard-inset composer (F-28). Dark tokens (screen 14)
-- [ ] Entry: ad detail Chat / Make offer → `POST /chats/rooms` → `/chat/:roomId` with no PII in the URL (F-23, F-31, F-15)
-- [ ] Push tap `{type:'chat', roomId}` → `/chat/:roomId`
-- [ ] Remove old `ChatBloc`, `ChatSocketService`, `ChatApiService`, `ChatRepository`, `ChatService`, `/chat-debug` (F-34, F-35)
+Implemented in `pages/chat_list_view.dart`, `pages/chat_list_page.dart` and `widgets/*`. Every item below still needs design QA (DF-5):
+- [ ] **01 Default** — header "Chats" + search + chips (server Unread count) · tile: avatar + listing thumb, name/time, tag + ad title · ₹price (no price on sold/removed), "You:" + ✓ sent / brand ✓✓ read, unread weight + badge + brand time, sold row dimmed with "Ad sold" pill, voice preview with duration · inset dividers · long-press → Mark as unread/read · Archive chat (+ Undo snackbar). Code audited against the wireframe on 15 Sep; only DF-5 visual QA remains
+- [ ] **02 Loading** — tile-shaped skeleton (first load only). Cached list + 2.5 dp progress line on refresh
+- [ ] **03 Empty** — mini listing card + bubbles illustration, "No chats yet", copy with bold **Chat**, Browse listings / Post an ad. Filter-empty variant with "Show all chats"
+- [ ] **04 Error** — icon circle, title/body by failure kind, Try again. "Showing saved chats · Retry" banner when cached data exists
+- [ ] **05 Search** — back arrow + focused field, "N CHATS" label, highlight in name / ad title / preview, "Searching older chats…" row, no-results copy
+
+## Phase 7 — Thread UI (screens 06–14) + entry points
+
+Implemented in `pages/chat_thread_view.dart`, `pages/chat_thread_page.dart` and `widgets/*`. Every item below still needs design QA (DF-5):
+- [ ] **06 Default** — header (back · avatar · name · "Buying/Selling · ad" · call · more), listing strip (thumb, title, ₹price, Live/Sold pill, View ›), date chips, grouped bubbles with tail + time on last of run, read ticks
+- [ ] **07 Loading** — header + strip immediately, alternating bubble skeleton, composer usable
+- [ ] **08 New conversation** — listing card, "Ask {first name} about this listing", role-aware starter chips that fill the composer, safety tip
+- [ ] **09 Sending** — optimistic `#8D88F2` bubble + clock → ✓ → mint ✓✓
+- [ ] **10 Failed** — err bubble, "Not sent · No connection · Retry" / "Not sent · Message not allowed · Edit", long-press Retry/Edit/Delete
+- [ ] **11 Offline** — amber banner under the header, queued bubbles "Sending", auto-flush on reconnect, attachments disabled
+- [ ] **12 Attachments** — tray (73 dp thumbs, remove, add tile), caption + "Send N", image bubble with progress ring, voice bubble (shared player, waveform, duration), recording bar with slide-to-cancel + 3:00 cap
+- [ ] **13 Details sheet** — 83 dp avatar, name, role, Call / Profile / View ad, Report row, "Chat started … about …"
+- [ ] **14 Dark mode** — all of the above in dark via `ChatColors`
+- [ ] Report user: hook the details-sheet row to the existing user-report API (currently a "coming soon" toast)
+- [ ] Remove old `ChatBloc`, `ChatSocketService`, `ChatApiService`, old `ChatRepository`, `ChatService`, `chat_page.dart`, `chat_rooms_page.dart`, `/chat-debug` (F-34, F-35)
+
+### Deviations log (deliberate differences from the wireframe)
+| Screen | Wireframe | App | Why |
+|---|---|---|---|
+| 06 | "Active now" + typing dots | Role · ad title subline, no typing | Presence/typing deferred (D5) |
+| 13 | Mute, Archive, Block, shared photos | Hidden | Need new APIs; rule "don't show what the backend can't do" |
+| 05 | Separate search screen | Same screen: header swaps to back + field when searching | Same visual; one route, keeps list state |
 
 ## Phase 8 — Performance
 - [ ] Baseline vs after: list first row, thread first bubble, send→ack, `explain` stats, rebuild counts
@@ -141,3 +213,35 @@ Data and state layers are written but **not yet wired** into routes or main, so 
 | M5 | Repository + outbox: optimistic send, explicit roomId (F-04), REST delivery with clientMessageId, auto-retry network failures on reconnect, uploads with progress, persisted failed text | `data/chat_repository.dart` |
 | M6 | `ChatListCubit` (cache-first, filters, search local+remote, pagination, live upsert), `ChatThreadCubit` (join→fetch, older pages, catch-up, read receipts, debounced mark-read, send/retry/discard), `ChatBadgeCubit` | `state/*.dart` |
 | — | Unit tests for parsing, failures, merge/dedupe, cache restore, id format | `test/features/chat/chat_models_test.dart` |
+
+### 15 Sep 2026 — New chat wired into the real app (main.dart)
+| Item | What changed | Files |
+|---|---|---|
+| Routes | `/chat-rooms` → `ChatListPage` (tab shell); `/chat/:roomId` → `ChatThreadPage` with the room as `extra`, URL carries only the id (F-31). `/chat-debug` kept for now | `common/app_routes.dart` |
+| Nav badge | `ChatBadgeCubit` provided in `main.dart`; the shell starts it when signed in, refreshes on tab switches, resets on logout; brand `UnreadBadge` on the Chat tab | `main.dart`, `common/widgets/scaffold_with_nav_bar.dart` |
+| Push tap | `{type:'chat', roomId}` → Chat tab + thread on top; chat pushes no longer land in the notifications inbox | `main.dart` |
+| Sign-out | `logout()` and `handleTokenExpiration()` also call `ChatRepository.instance.signOut()` (socket, cache, outbox) | `services/auth_service.dart` |
+| Ad detail entry | Chat and Make an offer use one get-or-create call, then open the thread; the offer is queued as the first message (optimistic). Old room-exists/socket-join flow and error dialogs removed | `features/home/services/chat_service.dart`, `offer_service.dart` |
+| Shell fit | List bottom padding and snackbar margin clear the floating nav bar | `pages/chat_list_page.dart`, `pages/chat_list_view.dart` |
+
+### 15 Sep 2026 — Screen 01 audit vs wireframe: gaps closed
+| Gap found | Fix | Files |
+|---|---|---|
+| Long-press Archive / Mark unread missing (wireframe marks it "new API") | Per-user `archivedFor` map; `POST/DELETE …/archive`, `POST …/unread`; list/unread summary exclude my archived chats; new message unarchives both; `conversation_updated` fan-out. App: actions sheet, optimistic cubit actions with rollback, Undo snackbar | backend `chat.service.ts`, `chat-messaging.service.ts`, `chat.controller.ts`, `schemas/chat-room.schema.ts`, `dto/chat-query.dto.ts`; app `widgets/chat_room_actions_sheet.dart`, `state/chat_list_cubit.dart`, `pages/chat_list_page.dart`, `pages/chat_list_view.dart`, `widgets/conversation_tile.dart`, `data/chat_api.dart`, `data/chat_repository.dart` |
+| "You:" always showed a read ✓✓ | `lastMessage.status` from the other user's `lastReadAt`; mark-read now also refreshes the other user's row. Tile: ✓ muted when sent, ✓✓ brand when read | `chat.service.ts`, `chat-messaging.service.ts`, `data/chat_models.dart`, `widgets/conversation_tile.dart` |
+| Voice preview lacked "· 0:24" | `previewFor` uses the attachment duration (list rows and push text) | `chat.service.ts`, `chat-messaging.service.ts` |
+| Unread chip counted only loaded rows ("counted on the server") | `GET /chats/unread-count` `rooms` seeds the chip, adjusted locally on read/unread/archive/live updates | `state/chat_list_cubit.dart`, `data/chat_api.dart` |
+| Sold row showed a price (wireframe: pill + title only) | Price hidden unless the ad is live | `widgets/conversation_tile.dart`, `widgets/chat_room_actions_sheet.dart` |
+| Search field ~4 dp taller than 7 px × 1.3 | Vertical padding from `searchPadding` (9 dp) | `widgets/chat_list_controls.dart` |
+| — | Specs +5 (archive filter, read/sent status, archive/unarchive, mark unread, unarchive on send, voice duration) → 66 passing; widget tests for the long-press sheet and row details | `chat.service.spec.ts`, `test/features/chat/chat_screens_smoke_test.dart` |
+
+### 15 Sep 2026 — Phase 6/7 UI built to the design spec (unwired, not yet compiled or QA'd)
+| Area | Files |
+|---|---|
+| Tokens (DF-1 scale ×1.3, DF-2 colours), formatting, copy | `widgets/chat_tokens.dart`, `widgets/chat_format.dart`, `widgets/chat_copy.dart` |
+| List widgets | `widgets/chat_avatar.dart`, `widgets/chat_pills.dart`, `widgets/conversation_tile.dart`, `widgets/chat_list_controls.dart`, `widgets/chat_skeletons.dart`, `widgets/chat_state_views.dart` |
+| Thread widgets | `widgets/chat_thread_header.dart`, `widgets/message_bubble.dart`, `widgets/chat_audio_controller.dart`, `widgets/message_composer.dart`, `widgets/chat_intro.dart`, `widgets/chat_details_sheet.dart` |
+| Pages (pure views + cubit wiring) | `pages/chat_list_view.dart`, `pages/chat_list_page.dart`, `pages/chat_thread_view.dart`, `pages/chat_thread_page.dart` |
+| Design QA harness (all states from fixtures) | `lib/main_chat_preview.dart`, `preview/chat_preview_fixtures.dart` |
+| Tests | `test/features/chat/chat_format_test.dart`, `test/features/chat/chat_screens_smoke_test.dart` |
+| Data layer tweak | `ChatConnection` watches connectivity → `offline` state for the amber banner; initial status `connecting` (no false offline flash) |
