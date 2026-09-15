@@ -263,7 +263,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                     final result = await context.push(
                         '/property-filter?categoryId=${widget.categoryId}&title=${Uri.encodeComponent(widget.categoryTitle)}',
                         extra: _filters);
-                    if (!mounted) return;
+                    if (!context.mounted) return;
                     if (result is Map<String, dynamic>) {
                       _filters = result;
                       context.read<AdvertisementBloc>().add(
@@ -289,7 +289,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                     final result = await context.push(
                         '/car-filter?categoryId=${widget.categoryId}&title=${Uri.encodeComponent(widget.categoryTitle)}',
                         extra: _filters);
-                    if (!mounted) return;
+                    if (!context.mounted) return;
                     if (result is Map<String, dynamic>) {
                       _filters = result;
                       context.read<AdvertisementBloc>().add(

@@ -53,8 +53,9 @@ class ChatConnection {
   Future<void> ensureConnected() async {
     _wanted = true;
     if (_socket != null) {
-      if (_socket!.connected || _current == ChatConnectionStatus.connecting)
+      if (_socket!.connected || _current == ChatConnectionStatus.connecting) {
         return;
+      }
       _socket!.connect();
       return;
     }
@@ -167,8 +168,9 @@ class ChatConnection {
       return;
     }
     _reconnectingDelay = Timer(const Duration(seconds: 3), () {
-      if (_socket?.connected != true && _wanted)
+      if (_socket?.connected != true && _wanted) {
         _emit(ChatConnectionStatus.reconnecting);
+      }
     });
   }
 

@@ -329,8 +329,9 @@ class ChatRepository {
           );
           await api.upload(ticket, job.bytes, onProgress: (p) {
             final latest = _outbox[cid];
-            if (latest != null)
+            if (latest != null) {
               _set(latest.copyWith(uploadProgress: p), persist: false);
+            }
           });
           job.uploaded = ChatAttachment(
             type: job.kind,

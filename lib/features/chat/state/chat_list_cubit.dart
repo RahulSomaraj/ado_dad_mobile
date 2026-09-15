@@ -126,7 +126,9 @@ class ChatListCubit extends Cubit<ChatListState> {
     final cursor = state.nextCursor;
     if (cursor == null ||
         state.status == ChatListStatus.loadingMore ||
-        state.query.isNotEmpty) return;
+        state.query.isNotEmpty) {
+      return;
+    }
     emit(state.copyWith(
         status: ChatListStatus.loadingMore, loadMoreFailed: false));
     final seq = _requestSeq;

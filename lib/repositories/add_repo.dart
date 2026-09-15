@@ -62,8 +62,9 @@ class AdsCache {
       if ((k == 'latitude' || k == 'longitude') && v is num) {
         return '$k=${v.toStringAsFixed(2)}';
       }
-      if (v is List)
+      if (v is List) {
         return '$k=${(v.map((e) => '$e').toList()..sort()).join(',')}';
+      }
       return '$k=$v';
     });
     return parts.join('&');

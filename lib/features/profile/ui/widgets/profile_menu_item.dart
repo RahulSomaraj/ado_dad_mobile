@@ -70,7 +70,7 @@ class ProfileMenuItem extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       color: isLogout
-                          ? AppColors.redColor.withOpacity(0.10)
+                          ? AppColors.redColor.withValues(alpha: 0.10)
                           : (AppColors.isDark
                               ? Colors.white10
                               : const Color(0xFFF1F2F6)),

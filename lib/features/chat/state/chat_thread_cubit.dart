@@ -169,8 +169,9 @@ class ChatThreadCubit extends Cubit<ChatThreadState> {
         loadingOlder: false,
       ));
     } on ChatFailure {
-      if (!isClosed)
+      if (!isClosed) {
         emit(state.copyWith(loadingOlder: false, olderFailed: true));
+      }
     }
   }
 
