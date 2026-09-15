@@ -3,6 +3,7 @@
 
 import 'dart:typed_data';
 
+import 'package:ado_dad_user/features/home/ui/report_ad_dialog.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -125,7 +126,10 @@ class _ChatThreadScreenState extends State<_ChatThreadScreen> with WidgetsBindin
       onCall: room.otherUser?.dialNumber != null ? () => _call(room) : null,
       onViewProfile: room.otherUser != null ? () => context.push('/seller-profile/${room.otherUser!.id}') : null,
       onViewAd: () => _openAd(room),
-      onReport: () => _toast('Reporting from chat is coming soon.'),
+      // Same report sheet as the ad page: reports the other user about this ad.
+      onReport: room.otherUser == null
+          ? null
+          : () => ReportAdDialog.show(context, reportedUserId: room.otherUser!.id, adId: room.adId),
     );
   }
 

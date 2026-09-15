@@ -1,5 +1,5 @@
 // Screen 13 — chat details. Only actions the backend supports today are shown
-// (Call, seller profile, view ad, report). Mute / archive / block / shared
+// (Call, seller profile, view ad, report via the ad-report sheet). Mute / block / shared
 // media need new APIs and stay off until those exist.
 
 import 'package:flutter/material.dart';

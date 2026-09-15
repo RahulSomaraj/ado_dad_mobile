@@ -61,27 +61,23 @@ Implemented items move to the **Done log** at the bottom. Only open work stays i
 Code is done and on disk. Chat specs pass (66/66) and `tsc` is clean for the chat module closure. Remaining work is cleanup and verification you run against a real DB:
 
 ### B13 · Cleanup
-- [ ] Delete the unused legacy files `src/chat/guards/rate-limit.guard.ts` (+ spec) and `src/auth/guard/ws-guard.ts` (needs delete permission, or delete by hand)
-- [ ] Add npm scripts: `"chat:backfill": "ts-node src/chat/scripts/backfill-chat-rooms.ts"`, `"chat:smoke": "ts-node src/chat/scripts/chat-smoke.ts"` (left out because another session is editing package.json)
+- [ ] `git rm src/chat/guards/rate-limit.guard.ts src/chat/guards/rate-limit.guard.spec.ts src/auth/guard/ws-guard.ts` (unused legacy; the Cowork shell can't delete on this drive)
 
 ### B14 · Verification
-- [ ] `npx tsc --noEmit` on the **whole** project (only the chat module closure was compiled in the cloud)
-- [ ] `npx jest src/chat` locally (expect 66 passing + the untouched legacy `rate-limit.guard.spec`)
-- [ ] `npm run start:dev`, then check Swagger shows the new `/chats` routes
+- [ ] `npx tsc --noEmit && npm run chat:test` (expect 66 passing), then `npm run start:dev` and check Swagger lists `/chats/rooms/{roomId}/archive` and `/unread`
 
 ### B15 · Deploy (UAT first)
-- [ ] `MONGO_URI=… npx ts-node src/chat/scripts/backfill-chat-rooms.ts --dry-run`, then without `--dry-run`
-- [ ] `MONGO_URI=… SMOKE_BUYER_ID=… SMOKE_AD_ID=… npx ts-node src/chat/scripts/chat-smoke.ts` → every line PASS
+- [ ] `MONGO_URI=… npm run chat:backfill -- --dry-run`, then without `--dry-run`
+- [ ] `MONGO_URI=… SMOKE_BUYER_ID=… SMOKE_AD_ID=… npm run chat:smoke` → every line PASS
 - [ ] One voice note from the **current store app** on UAT, to confirm the legacy presign fix (F-03)
 - [ ] Old app on UAT: list, open, send, image, offer all still work (backward-compat D2)
-- [ ] `explain()` the room list, history and unread queries, then drop unused message indexes (`isRead_1`, `createdAt_-1`, `roomRef_1_isRead_1`, `roomId_1_isRead_1`)
+- [ ] `MONGO_URI=… npm run chat:indexes` (prints the winning index per query), then `-- --apply` to drop the legacy message indexes it reports as unused
 - [ ] Set `CORS_ORIGINS` (gateway now reads it) and optional `CHAT_MEDIA_HOSTS` if media is served from a CDN
 
 ## Phase 5 — Mobile foundation (`lib/features/chat/`)
 
 The data, state and UI layers are written but **not yet wired** into routes or main, so the current app is unaffected. None of it has been compiled (no Flutter SDK in the cloud).
-- [ ] `flutter analyze lib/features/chat lib/main_chat_preview.dart test/features/chat`, fixing anything it reports
-- [ ] `flutter test test/features/chat`: models, format, and the screen smoke test (12 states × light/dark × text 1.0/1.3 = 48, plus 2 screen-01 behaviour tests)
+- [ ] `bash tool/chat_verify.sh --clean` — removes the old chat files, then `flutter analyze` + `flutter test test/features/chat` (analyze was clean on 15 Sep; the smoke-test overflows were fixed, re-run to confirm)
 
 ---
 
@@ -164,8 +160,6 @@ Implemented in `pages/chat_thread_view.dart`, `pages/chat_thread_page.dart` and 
 - [ ] **12 Attachments** — tray (73 dp thumbs, remove, add tile), caption + "Send N", image bubble with progress ring, voice bubble (shared player, waveform, duration), recording bar with slide-to-cancel + 3:00 cap
 - [ ] **13 Details sheet** — 83 dp avatar, name, role, Call / Profile / View ad, Report row, "Chat started … about …"
 - [ ] **14 Dark mode** — all of the above in dark via `ChatColors`
-- [ ] Report user: hook the details-sheet row to the existing user-report API (currently a "coming soon" toast)
-- [ ] Remove old `ChatBloc`, `ChatSocketService`, `ChatApiService`, old `ChatRepository`, `ChatService`, `chat_page.dart`, `chat_rooms_page.dart`, `/chat-debug` (F-34, F-35)
 
 ### Deviations log (deliberate differences from the wireframe)
 | Screen | Wireframe | App | Why |
@@ -213,6 +207,17 @@ Implemented in `pages/chat_thread_view.dart`, `pages/chat_thread_page.dart` and 
 | M5 | Repository + outbox: optimistic send, explicit roomId (F-04), REST delivery with clientMessageId, auto-retry network failures on reconnect, uploads with progress, persisted failed text | `data/chat_repository.dart` |
 | M6 | `ChatListCubit` (cache-first, filters, search local+remote, pagination, live upsert), `ChatThreadCubit` (join→fetch, older pages, catch-up, read receipts, debounced mark-read, send/retry/discard), `ChatBadgeCubit` | `state/*.dart` |
 | — | Unit tests for parsing, failures, merge/dedupe, cache restore, id format | `test/features/chat/chat_models_test.dart` |
+
+### 15 Sep 2026 — Last code items closed
+| Item | What | Files |
+|---|---|---|
+| Report from chat | Details-sheet Report row opens the existing report sheet (`ReportAdDialog`, `POST /user-reports`) for the other user + this ad | `pages/chat_thread_page.dart` |
+| npm scripts | `chat:test`, `chat:backfill`, `chat:smoke`, `chat:indexes` | `ado-dad/package.json` |
+| Index check | `chat-indexes.ts`: explains room list / unread / history / mark-read, lists legacy message indexes, drops only unused ones with `--apply` | `src/chat/scripts/chat-indexes.ts` |
+| One-shot verify | `tool/chat_verify.sh [--clean]`: old-file cleanup + analyze + chat tests | `ado_dad_mobile/tool/chat_verify.sh` |
+
+### 15 Sep 2026 — Old chat unhooked (F-34, F-35)
+Nothing references the old chat anymore: `ChatBloc` provider removed from `main.dart`; `/chat-debug` route and import removed from `app_routes.dart`; `ChatSocketService().disconnect()` removed from `auth_service.dart` and replaced by `ChatRepository.instance.signOut()` in `login_bloc.dart`. The old files themselves only reference each other and are deleted with the `git rm` above.
 
 ### 15 Sep 2026 — New chat wired into the real app (main.dart)
 | Item | What changed | Files |
