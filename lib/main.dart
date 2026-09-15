@@ -37,6 +37,8 @@ import 'package:ado_dad_user/repositories/my_ads_repo.dart';
 import 'package:ado_dad_user/features/home/ui/sellerprofile/bloc/bloc/seller_profile_bloc.dart';
 import 'package:ado_dad_user/repositories/seller_profile_repo.dart';
 import 'package:ado_dad_user/features/chat/state/chat_badge_cubit.dart';
+import 'package:ado_dad_user/services/location/location_lifecycle.dart';
+import 'package:ado_dad_user/services/location_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -154,6 +156,15 @@ void main() async {
   );
 
   await SharedPrefs().init();
+
+  // Hydrate the user's place (coordinates + name) before the first frame, so
+  // Home, the category list and ad detail all read it synchronously instead of
+  // showing "Locating…" while the answer sits on disk. One prefs read on the
+  // instance SharedPrefs just loaded; it never touches GPS or the network.
+  await LocationService().restore();
+  // App-level resume hook: refreshes a followed device location from any
+  // screen. Manual picks are left alone.
+  LocationLifecycle.instance.attach();
 
   // Loads the access/refresh tokens out of the keystore into memory (and
   // migrates any left in SharedPreferences by an older build). Must run before

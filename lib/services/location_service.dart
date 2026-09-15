@@ -1,158 +1,378 @@
 import 'dart:async';
 
+import 'package:ado_dad_user/common/google_places_service.dart';
+import 'package:ado_dad_user/config/app_config.dart';
+import 'package:ado_dad_user/services/location/device_locator.dart';
+import 'package:ado_dad_user/services/location/location_store.dart';
+import 'package:ado_dad_user/services/location/place_resolver.dart';
+import 'package:ado_dad_user/services/location/user_place.dart';
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-/// The app's single owner of device position.
+export 'package:ado_dad_user/services/location/place_resolver.dart'
+    show PlaceSuggestion;
+export 'package:ado_dad_user/services/location/user_place.dart';
+
+/// Drives the chip while there is no [UserPlace] to show.
+enum LocationStatus { idle, locating, unavailable, ready }
+
+enum LocateResult {
+  ok,
+  permissionDenied,
+  permissionDeniedForever,
+  servicesOff,
+  noFix,
+}
+
+enum SetPlaceResult { ok, empty, notFound }
+
+/// The app's single owner of "where the user is searching from".
 ///
-/// Three screens used to ask the platform for a fix independently — Home,
-/// the category list and the detail page's "similar near you" section — each
-/// paying up to 5–6 s and a GPS wake. This holds one fix, shares one in-flight
-/// request between all callers, and persists the last one so the *next* cold
-/// start has something to seed a radius query with even before the platform's
-/// own cache is warm.
+/// Holds one [UserPlace] (coordinates + name + source) in [place], hydrated
+/// from disk by [restore] before the first frame, and changed only through
+/// [_commit]. Widgets subscribe with `ValueListenableBuilder`; non-widget code
+/// (repositories) reads [place] or awaits [seedPosition].
 ///
-/// Two levels, deliberately separate:
-/// * [seedPosition] — instant (persisted value, else `getLastKnownPosition`).
-///   Never wakes the hardware. This is what paint-critical paths use.
-/// * [freshPosition] — a real fix, deduped across callers. Background work only.
+/// Rules this class enforces:
+/// * A manual pick is never replaced by GPS — only by another pick or
+///   [useDevice].
+/// * Every async result is fenced by a generation counter: a GPS fix or name
+///   lookup that finishes after a newer commit is dropped, never applied.
+/// * Only [useDevice] ever shows the permission prompt, and only a user action
+///   (or the first launch with nothing saved) calls it.
 class LocationService {
-  static final LocationService _instance = LocationService._internal();
+  static LocationService _instance = LocationService._internal();
   factory LocationService() => _instance;
-  LocationService._internal();
 
-  static const String _kLat = 'last_lat';
-  static const String _kLng = 'last_lng';
-  static const String _kFixAt = 'last_fix_at';
+  LocationService._internal()
+      : _store = PrefsLocationStore(),
+        _locator = const GeolocatorDeviceLocator(),
+        _resolverOverride = null,
+        _now = DateTime.now;
 
-  /// Distance (metres) a fresh fix must differ from the seed before it is worth
-  /// re-issuing a feed request.
+  @visibleForTesting
+  LocationService.forTesting({
+    required LocationStore store,
+    required DeviceLocator locator,
+    required PlaceResolver resolver,
+    DateTime Function()? now,
+  })  : _store = store,
+        _locator = locator,
+        _resolverOverride = resolver,
+        _now = now ?? DateTime.now;
+
+  @visibleForTesting
+  static set instanceForTesting(LocationService service) =>
+      _instance = service;
+
+  final LocationStore _store;
+  final DeviceLocator _locator;
+  final DateTime Function() _now;
+  PlaceResolver? _resolverOverride;
+
+  /// Built lazily: AppConfig's key is only loaded partway through `main()`.
+  PlaceResolver get resolver => _resolverOverride ??= DefaultPlaceResolver(
+      GooglePlacesService(apiKey: AppConfig.googlePlacesApiKey));
+
+  /// Distance (metres) a new device fix must move before the feed re-queries.
   static const double movedThresholdMeters = 2000;
 
-  /// How long a fix is trusted before [isStale] asks for a new one.
-  ///
-  /// The persisted fix exists to make a cold start instant, not to stand in for
-  /// the device's real position indefinitely. Without an age check, an app
-  /// resumed days later — in another city — kept querying the radius around
-  /// wherever it was last opened.
+  /// How long a device fix is trusted before [refreshIfFollowing] replaces it.
   static const Duration staleAfter = Duration(minutes: 30);
 
-  Position? _cached;
-  DateTime? _fixedAt;
-  Future<Position?>? _inFlight;
-  bool _seedLoaded = false;
+  /// The current place. Null only when nothing has ever been resolved.
+  final ValueNotifier<UserPlace?> place = ValueNotifier<UserPlace?>(null);
 
-  /// The best fix known without any await. Null until [seedPosition] has run
-  /// once in this process.
-  Position? get cachedPosition => _cached;
+  /// Meaningful while [place] is null: locating vs. nothing available.
+  final ValueNotifier<LocationStatus> status =
+      ValueNotifier<LocationStatus>(LocationStatus.idle);
 
-  /// True when there is no fix at all, or the one held is older than
-  /// [staleAfter]. A seed restored from disk carries the timestamp it was
-  /// recorded with, so a fix persisted last week reads as stale on launch.
-  bool get isStale {
-    if (_cached == null) return true;
-    final at = _fixedAt;
-    if (at == null) return true;
-    return DateTime.now().difference(at) > staleAfter;
-  }
+  /// Bumped by every commit that changes the point or source. Label-only
+  /// commits leave it alone so they do not invalidate an in-flight fix.
+  int _gen = 0;
 
-  /// Whether the platform will serve a fix right now — services on and
-  /// permission granted. Cheap: it inspects state and never wakes the GPS, so
-  /// it is safe to call on every resume.
-  Future<bool> isAvailable() async {
+  Future<void>? _restoring;
+  Future<void>? _starting;
+  Future<void>? _refreshing;
+  Future<DeviceFix?>? _inFlight;
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
+
+  /// Loads the saved place. Awaited in `main()` before `runApp`, so every
+  /// screen can read [place] synchronously from its first frame.
+  Future<void> restore() => _restoring ??= _doRestore();
+
+  Future<void> _doRestore() async {
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) return false;
-      final permission = await Geolocator.checkPermission();
-      return permission == LocationPermission.always ||
-          permission == LocationPermission.whileInUse;
-    } catch (_) {
-      return false;
+      final saved = await _store.load();
+      if (saved != null && place.value == null) {
+        place.value = saved;
+        status.value = LocationStatus.ready;
+      }
+    } catch (_) {}
+  }
+
+  /// Once per process, from Home. With nothing saved, asks for a device fix
+  /// (this is the first-launch permission prompt); otherwise refreshes a stale
+  /// device fix in the background.
+  Future<void> start() => _starting ??= _doStart();
+
+  Future<void> _doStart() async {
+    await restore();
+    if (place.value == null) {
+      await useDevice();
+    } else {
+      await refreshIfFollowing();
     }
   }
 
-  /// Instant, best-effort position: the coordinates persisted by an earlier
-  /// launch, else whatever fix the platform already has cached. Returns in ~0 ms
-  /// and never wakes the GPS.
-  Future<Position?> seedPosition() async {
-    if (_cached != null) return _cached;
+  // ---------------------------------------------------------------------------
+  // Writes — the only three ways the place changes
+  // ---------------------------------------------------------------------------
 
-    if (!_seedLoaded) {
-      _seedLoaded = true;
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final lat = prefs.getDouble(_kLat);
-        final lng = prefs.getDouble(_kLng);
-        if (lat != null && lng != null) {
-          _cached = _synthetic(lat, lng);
-          final at = prefs.getInt(_kFixAt);
-          // A fix persisted before this key existed has no recorded age, so it
-          // is treated as stale rather than trusted indefinitely.
-          _fixedAt =
-              at == null ? null : DateTime.fromMillisecondsSinceEpoch(at);
-        }
-      } catch (_) {}
+  /// Background refresh (start, app resume). Never prompts for permission and
+  /// never touches a manual place.
+  Future<void> refreshIfFollowing({bool force = false}) =>
+      _refreshing ??= _doRefresh(force).whenComplete(() => _refreshing = null);
+
+  Future<void> _doRefresh(bool force) async {
+    await restore();
+    final current = place.value;
+    if (current != null && current.isManual) return;
+    if (!force &&
+        current != null &&
+        current.hasLabel &&
+        !current.isStale(staleAfter, now: _now())) {
+      return;
     }
 
-    if (_cached == null) {
-      try {
-        final known = await Geolocator.getLastKnownPosition();
-        if (known != null) {
-          _cached = known;
-          _fixedAt = known.timestamp;
-          unawaited(_persist(known));
-        }
-      } catch (_) {}
+    if (current == null) status.value = LocationStatus.locating;
+    final startGen = _gen;
+
+    final fix = await _deviceFix(
+      timeLimit: const Duration(seconds: 6),
+      highAccuracy: false,
+    );
+
+    // Something committed while we waited. A manual pick always wins; a device
+    // fix wins if it is newer than ours. (A seed from the platform cache is
+    // older, so ours still replaces it.)
+    if (_gen != startGen) {
+      final latest = place.value;
+      if (latest == null || latest.isManual) return;
+      if (fix == null || !fix.at.isAfter(latest.fixedAt)) return;
     }
 
-    return _cached;
+    final next = fix == null
+        ? null
+        : UserPlace.tryCreate(
+            lat: fix.lat,
+            lng: fix.lng,
+            source: PlaceSource.device,
+            fixedAt: fix.at,
+          );
+
+    if (next == null) {
+      if (place.value == null) {
+        status.value = LocationStatus.unavailable;
+      } else if (!place.value!.hasLabel) {
+        // Coordinates without a name: try naming them again.
+        unawaited(_labelInBackground(place.value!, _gen));
+      }
+      return;
+    }
+
+    // Keep the existing name when the device has not left the area, so a
+    // routine refresh does not flicker the chip or spend a geocode call.
+    final keepLabel = current != null &&
+        current.hasLabel &&
+        current.distanceTo(next) <= movedThresholdMeters;
+    final committed = keepLabel ? next.withLabel(current.label) : next;
+    final gen = _commit(committed);
+    if (!committed.hasLabel) unawaited(_labelInBackground(committed, gen));
   }
 
-  /// A real fix. Concurrent callers share one platform request; the result is
-  /// cached in memory and persisted for the next launch. Returns null when
-  /// location is off, denied, or the fix times out — callers must treat that as
-  /// normal, not as an error.
-  Future<Position?> freshPosition({
-    Duration timeLimit = const Duration(seconds: 6),
-    LocationAccuracy accuracy = LocationAccuracy.low,
+  /// "Use current location": may prompt for permission, takes an accurate fix
+  /// and switches the app back to following the device.
+  Future<LocateResult> useDevice() async {
+    final access = await _locator.access(request: true);
+    if (access != DeviceLocationAccess.granted) {
+      if (place.value == null) status.value = LocationStatus.unavailable;
+      switch (access) {
+        case DeviceLocationAccess.servicesOff:
+          return LocateResult.servicesOff;
+        case DeviceLocationAccess.deniedForever:
+          return LocateResult.permissionDeniedForever;
+        case DeviceLocationAccess.denied:
+        case DeviceLocationAccess.granted:
+          return LocateResult.permissionDenied;
+      }
+    }
+
+    if (place.value == null) status.value = LocationStatus.locating;
+    final fix = await _deviceFix(
+      timeLimit: const Duration(seconds: 10),
+      highAccuracy: true,
+    );
+    final next = fix == null
+        ? null
+        : UserPlace.tryCreate(
+            lat: fix.lat,
+            lng: fix.lng,
+            source: PlaceSource.device,
+            fixedAt: fix.at,
+          );
+    if (next == null) {
+      if (place.value == null) status.value = LocationStatus.unavailable;
+      return LocateResult.noFix;
+    }
+
+    final gen = _commit(next);
+    unawaited(_labelInBackground(next, gen));
+    return LocateResult.ok;
+  }
+
+  /// A place the user chose. Resolves coordinates first and commits nothing
+  /// if that fails — a name without a point is never saved.
+  Future<SetPlaceResult> setManual({
+    String? placeId,
+    required String text,
+  }) async {
+    final query = text.trim();
+    if (query.isEmpty) return SetPlaceResult.empty;
+
+    ForwardResult? r;
+    try {
+      r = await resolver.forward(placeId: placeId, text: query);
+    } catch (_) {}
+    if (r == null) return SetPlaceResult.notFound;
+
+    final next = UserPlace.tryCreate(
+      lat: r.lat,
+      lng: r.lng,
+      label: r.label,
+      source: PlaceSource.manual,
+      fixedAt: _now(),
+    );
+    if (next == null) return SetPlaceResult.notFound;
+
+    _commit(next);
+    return SetPlaceResult.ok;
+  }
+
+  /// The single assignment point for [place].
+  int _commit(UserPlace next, {bool labelOnly = false}) {
+    if (!labelOnly) _gen++;
+    place.value = next;
+    status.value = LocationStatus.ready;
+    unawaited(_store.save(next));
+    return _gen;
+  }
+
+  Future<void> _labelInBackground(UserPlace p, int gen) async {
+    String? label;
+    try {
+      label = await resolver.reverse(p.lat, p.lng);
+    } catch (_) {}
+    if (label == null || gen != _gen) return;
+    final current = place.value;
+    if (current == null || !current.samePoint(p)) return;
+    _commit(current.withLabel(label), labelOnly: true);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Device access
+  // ---------------------------------------------------------------------------
+
+  /// One platform request shared by all concurrent callers.
+  Future<DeviceFix?> _deviceFix({
+    required Duration timeLimit,
+    required bool highAccuracy,
   }) {
     final existing = _inFlight;
     if (existing != null) return existing;
 
-    final request = _requestFresh(timeLimit, accuracy).whenComplete(() {
-      _inFlight = null;
+    late final Future<DeviceFix?> request;
+    request = _requestFix(timeLimit, highAccuracy).whenComplete(() {
+      if (identical(_inFlight, request)) _inFlight = null;
     });
     _inFlight = request;
     return request;
   }
 
-  Future<Position?> _requestFresh(
-      Duration timeLimit, LocationAccuracy accuracy) async {
+  Future<DeviceFix?> _requestFix(Duration timeLimit, bool highAccuracy) async {
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) return null;
-
-      final permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        return null;
-      }
-
-      final pos = await Geolocator.getCurrentPosition(
-        locationSettings: LocationSettings(
-          accuracy: accuracy,
-          timeLimit: timeLimit,
-        ),
+      final access = await _locator.access();
+      if (access != DeviceLocationAccess.granted) return null;
+      return await _locator.current(
+        timeLimit: timeLimit,
+        highAccuracy: highAccuracy,
       );
-      _cached = pos;
-      _fixedAt = DateTime.now();
-      unawaited(_persist(pos));
-      return pos;
     } catch (_) {
       return null;
     }
   }
 
-  /// True when [fresh] is far enough from [seed] to be worth re-querying.
-  /// A null seed always counts as moved.
+  Future<bool> openAppSettings() => _locator.openAppSettings();
+  Future<bool> openLocationSettings() => _locator.openLocationSettings();
+
+  // ---------------------------------------------------------------------------
+  // Reads
+  // ---------------------------------------------------------------------------
+
+  /// Whether the feed should re-query when the place changes from [from] to
+  /// [to]. A label-only change never does; a manual pick always does; device
+  /// drift only past [movedThresholdMeters].
+  static bool needsRequery(UserPlace? from, UserPlace? to) {
+    if (from == null || to == null) return from != to;
+    if (from.source != to.source) return true;
+    if (from.isManual || to.isManual) return !from.samePoint(to);
+    return from.distanceTo(to) > movedThresholdMeters;
+  }
+
+  /// Compatibility for callers that want a Position (repositories, the
+  /// category list, "similar near you"). Instant: the current place, else the
+  /// platform's cached fix — never wakes the GPS.
+  Future<Position?> seedPosition() async {
+    await restore();
+    final existing = place.value;
+    if (existing != null) return _toPosition(existing);
+
+    final known = await _locator.lastKnown();
+    if (known == null) return null;
+    final seeded = UserPlace.tryCreate(
+      lat: known.lat,
+      lng: known.lng,
+      source: PlaceSource.device,
+      fixedAt: known.at,
+    );
+    if (seeded == null) return null;
+    if (place.value == null) {
+      final gen = _commit(seeded);
+      unawaited(_labelInBackground(seeded, gen));
+    }
+    return _toPosition(place.value ?? seeded);
+  }
+
+  /// A raw device fix, deduplicated. Does not change [place].
+  Future<Position?> freshPosition({
+    Duration timeLimit = const Duration(seconds: 6),
+    LocationAccuracy accuracy = LocationAccuracy.low,
+  }) async {
+    final fix = await _deviceFix(
+      timeLimit: timeLimit,
+      highAccuracy: accuracy == LocationAccuracy.high ||
+          accuracy == LocationAccuracy.best ||
+          accuracy == LocationAccuracy.bestForNavigation,
+    );
+    return fix == null ? null : _synthetic(fix.lat, fix.lng, fix.at);
+  }
+
+  Future<bool> isAvailable() async =>
+      await _locator.access() == DeviceLocationAccess.granted;
+
   bool movedEnough(Position? seed, Position fresh) {
     if (seed == null) return true;
     return Geolocator.distanceBetween(
@@ -164,22 +384,12 @@ class LocationService {
         movedThresholdMeters;
   }
 
-  Future<void> _persist(Position p) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setDouble(_kLat, p.latitude);
-      await prefs.setDouble(_kLng, p.longitude);
-      await prefs.setInt(
-          _kFixAt, (_fixedAt ?? DateTime.now()).millisecondsSinceEpoch);
-    } catch (_) {}
-  }
+  Position _toPosition(UserPlace p) => _synthetic(p.lat, p.lng, p.fixedAt);
 
-  /// A Position carrying only coordinates — enough for a radius query, which is
-  /// all the seed is ever used for.
-  Position _synthetic(double lat, double lng) => Position(
+  Position _synthetic(double lat, double lng, DateTime at) => Position(
         latitude: lat,
         longitude: lng,
-        timestamp: DateTime.fromMillisecondsSinceEpoch(0),
+        timestamp: at,
         accuracy: 0,
         altitude: 0,
         altitudeAccuracy: 0,

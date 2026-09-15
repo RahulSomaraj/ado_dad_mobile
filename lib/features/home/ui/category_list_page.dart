@@ -109,25 +109,34 @@ class _CategoryListPageState extends State<CategoryListPage> {
       unawaited(_fetchManufacturerPremiumData());
     }
 
-    // Upgrade to a real fix in the background; only re-query if it moved enough
-    // to change what is nearby. If Home already has this request in flight we
-    // join it instead of opening a second one.
-    final pos = await LocationService().freshPosition(
-      timeLimit: const Duration(seconds: 5),
-    );
-    if (!mounted || pos == null) return;
+    // Follow the app's place rather than opening a GPS request of our own: a
+    // refreshed fix or a place picked elsewhere re-queries this list too.
+    _queriedPlace = LocationService().place.value;
+    LocationService().place.addListener(_onPlaceChanged);
+    _listeningToPlace = true;
+  }
 
-    if (LocationService().movedEnough(seed, pos)) {
-      _lat = pos.latitude;
-      _lng = pos.longitude;
-      bloc.add(
-        AdvertisementEvent.applyFilters(
-          categoryId: _effectiveCategoryId,
-          latitude: _lat,
-          longitude: _lng,
-        ),
-      );
-    }
+  UserPlace? _queriedPlace;
+  bool _listeningToPlace = false;
+
+  void _onPlaceChanged() {
+    if (!mounted) return;
+    final next = LocationService().place.value;
+    if (!LocationService.needsRequery(_queriedPlace, next)) return;
+    _queriedPlace = next;
+    _lat = next?.lat;
+    _lng = next?.lng;
+    // With filters applied, keep the user's result set and let the next
+    // filter change or pull-to-refresh pick up the new coordinates; resetting
+    // their filters from a background location update would be worse.
+    if (_filters.isNotEmpty) return;
+    context.read<AdvertisementBloc>().add(
+          AdvertisementEvent.applyFilters(
+            categoryId: _effectiveCategoryId,
+            latitude: _lat,
+            longitude: _lng,
+          ),
+        );
   }
 
   /// Fetch manufacturer isPremium data from API
@@ -177,6 +186,9 @@ class _CategoryListPageState extends State<CategoryListPage> {
     // Clear filter states when leaving the category list page
     _filterStateService.clearPropertyFilterState(widget.categoryId);
     _filterStateService.clearCarFilterState(widget.categoryId);
+    if (_listeningToPlace) {
+      LocationService().place.removeListener(_onPlaceChanged);
+    }
     _scrollController.dispose();
     super.dispose();
   }
