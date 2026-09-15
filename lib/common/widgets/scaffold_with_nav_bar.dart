@@ -3,6 +3,7 @@ import 'package:ado_dad_user/common/auth_guard.dart';
 import 'package:ado_dad_user/common/widgets/dialog_util.dart';
 import 'package:ado_dad_user/features/chat/state/chat_badge_cubit.dart';
 import 'package:ado_dad_user/features/chat/widgets/chat_pills.dart';
+import 'package:ado_dad_user/features/sell/flow/ui/sell_start.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -109,19 +110,8 @@ class _ShellNavBar extends StatelessWidget {
     }
   }
 
-  Future<void> _openSeller(BuildContext context) async {
-    final authed = await AuthGuard.isAuthenticated();
-    if (!context.mounted) return;
-    if (authed) {
-      context.push('/seller');
-    } else {
-      DialogUtil.showLoginPromptDialog(
-        context,
-        message: "Please login to post an ad.",
-        redirectPath: '/seller',
-      );
-    }
-  }
+  // Sell: login check, then the "What are you selling?" sheet (W01).
+  Future<void> _openSeller(BuildContext context) => openSell(context);
 
   @override
   Widget build(BuildContext context) {

@@ -72,6 +72,11 @@ class AuthGuard {
       }
     }
 
+    // Post-an-ad flow (/sell, /sell/:category, /sell/submitted/:id)
+    if (path == '/sell' || path.startsWith('/sell/')) {
+      return true;
+    }
+
     // Check for chat routes with roomId parameter
     if (path.startsWith('/chat/')) {
       return true;

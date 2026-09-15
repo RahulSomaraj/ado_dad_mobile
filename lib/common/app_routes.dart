@@ -26,12 +26,10 @@ import 'package:ado_dad_user/common/widgets/scaffold_with_nav_bar.dart';
 import 'package:ado_dad_user/features/profile/help/help.dart';
 import 'package:ado_dad_user/features/profile/wishlist/wishlist_page.dart';
 import 'package:ado_dad_user/features/search/ui/search.dart';
-import 'package:ado_dad_user/features/sell/ui/form/add_commercial_vehicle_form.dart';
-import 'package:ado_dad_user/features/sell/ui/form/add_private_vehicle_form.dart';
-import 'package:ado_dad_user/features/sell/ui/form/add_property_form.dart';
-import 'package:ado_dad_user/features/sell/ui/form/add_two_wheeler_form.dart';
-import 'package:ado_dad_user/features/sell/ui/item_category.dart';
-import 'package:ado_dad_user/features/sell/ui/seller.dart';
+import 'package:ado_dad_user/features/sell/flow/domain/sell_category.dart';
+import 'package:ado_dad_user/features/sell/flow/ui/sell_flow_page.dart';
+import 'package:ado_dad_user/features/sell/flow/ui/sell_start.dart';
+import 'package:ado_dad_user/features/sell/flow/ui/submitted_page.dart';
 import 'package:ado_dad_user/features/signup/ui/signup.dart';
 import 'package:ado_dad_user/features/splash/splash.dart';
 import 'package:ado_dad_user/features/splash/splash_screen1.dart';
@@ -175,10 +173,35 @@ class AppRoutes {
           );
         },
       ),
-      GoRoute(path: '/seller', builder: (context, state) => const Seller()),
+      // Post an ad (CREATE-07). `/seller` and `/item-category` are kept for
+      // old links and the Home shortcut; both land on the new start page.
+      GoRoute(path: '/seller', redirect: (context, state) => '/sell'),
+      GoRoute(path: '/item-category', redirect: (context, state) => '/sell'),
+      GoRoute(path: '/sell', builder: (context, state) => const SellStartPage()),
       GoRoute(
-          path: '/item-category',
-          builder: (context, state) => const ItemCategory()),
+        path: '/sell/submitted/:adId',
+        builder: (context, state) {
+          final adId = state.pathParameters['adId'] ?? '';
+          if (adId.isEmpty) return const _RouteErrorScreen.unavailable();
+          return SubmittedPage(
+            adId: adId,
+            info: state.extra is SubmittedInfo ? state.extra as SubmittedInfo : null,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/sell/:category',
+        builder: (context, state) {
+          final category =
+              SellCategory.fromSlug(state.pathParameters['category']);
+          if (category == null) return const _RouteErrorScreen.unavailable();
+          return SellFlowRoute(
+            key: ValueKey(state.uri.toString()),
+            category: category,
+            draftId: _nonEmpty(state.uri.queryParameters['draft']),
+          );
+        },
+      ),
       GoRoute(
         path: '/category-list-page',
         builder: (context, state) {
@@ -238,62 +261,10 @@ class AppRoutes {
           );
         },
       ),
-      GoRoute(
-        path: '/add-two-wheeler-form',
-        builder: (context, state) {
-          final extra = state.extra as Map<String, String>?;
-          final categoryId = extra?['categoryId'] ?? '';
-          if (categoryId.isEmpty) {
-            return const _RouteErrorScreen.unavailable();
-          }
-          return AddTwoWheelerForm(
-            categoryTitle: extra?['categoryTitle'] ?? '',
-            categoryId: categoryId,
-          );
-        },
-      ),
-      GoRoute(
-        path: '/add-commercial-vehicle-form',
-        builder: (context, state) {
-          final extra = state.extra as Map<String, String>?;
-          final categoryId = extra?['categoryId'] ?? '';
-          if (categoryId.isEmpty) {
-            return const _RouteErrorScreen.unavailable();
-          }
-          return AddCommercialVehicleForm(
-            categoryTitle: extra?['categoryTitle'] ?? '',
-            categoryId: categoryId,
-          );
-        },
-      ),
-      GoRoute(
-        path: '/add-private-vehicle-form',
-        builder: (context, state) {
-          final extra = state.extra as Map<String, String>?;
-          final categoryId = extra?['categoryId'] ?? '';
-          if (categoryId.isEmpty) {
-            return const _RouteErrorScreen.unavailable();
-          }
-          return AddPrivateVehicleForm(
-            categoryTitle: extra?['categoryTitle'] ?? '',
-            categoryId: categoryId,
-          );
-        },
-      ),
-      GoRoute(
-        path: '/add-property-form',
-        builder: (context, state) {
-          final extra = state.extra as Map<String, String>?;
-          final categoryId = extra?['categoryId'] ?? '';
-          if (categoryId.isEmpty) {
-            return const _RouteErrorScreen.unavailable();
-          }
-          return AddPropertyForm(
-            categoryTitle: extra?['categoryTitle'] ?? '',
-            categoryId: categoryId,
-          );
-        },
-      ),
+      GoRoute(path: '/add-two-wheeler-form', redirect: (context, state) => '/sell/bike'),
+      GoRoute(path: '/add-commercial-vehicle-form', redirect: (context, state) => '/sell/commercial'),
+      GoRoute(path: '/add-private-vehicle-form', redirect: (context, state) => '/sell/car'),
+      GoRoute(path: '/add-property-form', redirect: (context, state) => '/sell/property'),
       GoRoute(
         path: '/edit-two-wheeler',
         builder: (context, state) {
