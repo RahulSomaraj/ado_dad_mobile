@@ -97,7 +97,7 @@ class _ShellNavBar extends StatelessWidget {
         border: Border.all(color: AppColors.dividerColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.10),
+            color: Colors.black.withValues(alpha: 0.10),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -187,7 +187,7 @@ class _ShellNavBar extends StatelessWidget {
                 border: Border.all(color: AppColors.whiteColor, width: 4),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryColor.withOpacity(0.4),
+                    color: AppColors.primaryColor.withValues(alpha: 0.4),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),

@@ -13,7 +13,6 @@ class ChatService {
     required String adPosterName,
     required String otherUserId,
   }) async {
-
     // Show loading indicator
     _showLoadingDialog(context, 'Checking chat room...');
 
@@ -27,6 +26,10 @@ class ChatService {
         adPosterName: adPosterName,
       );
     } catch (e) {
+      if (!context.mounted) {
+        _loadingDialogShown = false;
+        return;
+      }
       // Close loading dialog (guarded)
       _closeLoadingDialog(context);
 
@@ -40,18 +43,19 @@ class ChatService {
       BuildContext context, String adId, String otherUserId,
       {required String adTitle, required String adPosterName}) async {
     try {
-
       // Import the chat API service
       final chatApiService = ChatApiService();
       final result = await chatApiService.checkRoomExists(adId, otherUserId);
+      if (!context.mounted) {
+        _loadingDialogShown = false;
+        return;
+      }
 
       // Close loading dialog (guarded)
       _closeLoadingDialog(context);
 
       if (result['success'] == true && result['data']?['exists'] == true) {
         final roomId = result['data']?['roomId'];
-        final initiatorId = result['data']?['initiatorId'];
-        final adIdFromResult = result['data']?['adId'];
 
         // Join the existing room
         await _joinRoom(
@@ -83,12 +87,12 @@ class ChatService {
       BuildContext context, String adId, String otherUserId,
       {required String adTitle, required String adPosterName}) async {
     try {
-
       // Get chat repository
       final chatRepository = ChatRepository();
 
       // Connect to chat service
       final connected = await chatRepository.connect();
+      if (!context.mounted) return;
       if (!connected) {
         _showErrorDialog(context, 'Failed to connect to chat service');
         return;
@@ -96,9 +100,9 @@ class ChatService {
 
       // Create room for the ad
       final roomId = await chatRepository.createChatRoom(adId);
+      if (!context.mounted) return;
 
       if (roomId != null) {
-
         // Join the newly created room
         await _joinRoom(
           context,
@@ -113,6 +117,10 @@ class ChatService {
         _showErrorDialog(context, 'Failed to create chat room');
       }
     } catch (e) {
+      if (!context.mounted) {
+        _loadingDialogShown = false;
+        return;
+      }
       // Close loading dialog if still visible (guarded — normally already
       // closed after the room check; an unguarded pop removed the page)
       _closeLoadingDialog(context);
@@ -131,7 +139,6 @@ class ChatService {
     required String adPosterName,
   }) async {
     try {
-
       // Get chat repository
       final chatRepository = ChatRepository();
 
@@ -154,7 +161,6 @@ class ChatService {
         context.push('/chat/$roomId?$queryString');
       }
     } catch (e) {
-
       // Show error dialog with delay to ensure context is stable
       await Future.delayed(const Duration(milliseconds: 500));
 
@@ -198,7 +204,6 @@ class ChatService {
 
   /// Show error dialog
   static void _showErrorDialog(BuildContext context, String message) {
-
     // Ensure we're on the main thread
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (context.mounted) {
@@ -215,8 +220,7 @@ class ChatService {
             ],
           ),
         );
-      } else {
-      }
+      } else {}
     });
   }
 }

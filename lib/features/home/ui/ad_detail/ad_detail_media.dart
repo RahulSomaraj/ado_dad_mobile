@@ -43,7 +43,6 @@ class _VideoPlayerWidgetState extends State<AdDetailVideoPlayer> {
 
   Future<void> _initializeVideo() async {
     try {
-
       // Validate URL
       if (widget.videoUrl.isEmpty) {
         throw Exception('Video URL is empty');
@@ -182,7 +181,6 @@ class _VideoPlayerWidgetState extends State<AdDetailVideoPlayer> {
 
   Future<void> _testWithSampleVideo() async {
     try {
-
       // Use a known working sample video URL
       const testVideoUrl =
           'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
@@ -507,7 +505,6 @@ class _VideoFullScreenViewerState extends State<AdDetailVideoFullScreen> {
 
   Future<void> _initializeVideo() async {
     try {
-
       if (widget.videoUrl.isEmpty) {
         throw Exception('Video URL is empty');
       }
@@ -703,8 +700,7 @@ class _VideoFullScreenViewerState extends State<AdDetailVideoFullScreen> {
                         SizedBox(height: 12),
                         Text(
                           'Loading video...',
-                          style:
-                              TextStyle(color: Colors.white, fontSize: 14),
+                          style: TextStyle(color: Colors.white, fontSize: 14),
                         ),
                       ],
                     ),

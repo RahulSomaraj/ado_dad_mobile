@@ -60,6 +60,7 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
   bool _hasInsurance = false;
   bool _hasRcBook = false;
   String _description = '';
+
   /// Photos/video live here and upload to S3 as soon as they are picked.
   late final MediaUploadBloc _mediaBloc =
       MediaUploadBloc(repository: AddRepository());
@@ -264,642 +265,694 @@ class _AddTwoWheelerFormState extends State<AddTwoWheelerForm> {
           // Step nav (Next enabled/disabled) depends on media state.
           listener: (_, __) => setState(() {}),
           child: BlocConsumer<AddPostBloc, AddPostState>(
-        listener: (context, state) async {
-          state.whenOrNull(
-            success: () async {
-              await showDialog<void>(
-                context: context,
-                barrierDismissible: false,
-                builder: (dialogContext) {
-                  return AlertDialog(
-                    title: const Text('Success'),
-                    content: const Text('Ad posted successfully'),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(dialogContext).pop();
-                        },
-                        child: const Text('OK'),
+            listener: (context, state) async {
+              state.whenOrNull(
+                success: () async {
+                  await showDialog<void>(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (dialogContext) {
+                      return AlertDialog(
+                        title: const Text('Success'),
+                        content: const Text('Ad posted successfully'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop();
+                            },
+                            child: const Text('OK'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                  if (!context.mounted) return;
+                  // ✅ Refresh home listings
+                  context
+                      .read<AdvertisementBloc>()
+                      .add(const AdvertisementEvent.fetchAllListings());
+                  context.go('/home');
+                },
+                failure: (msg) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        ErrorMessageUtil.getUserFriendlyMessage(msg),
+                        style: const TextStyle(color: Colors.white),
                       ),
-                    ],
+                      backgroundColor:
+                          Colors.red.shade300.withValues(alpha: 0.9),
+                    ),
                   );
                 },
               );
-              if (!context.mounted) return;
-              // ✅ Refresh home listings
-              context
-                  .read<AdvertisementBloc>()
-                  .add(const AdvertisementEvent.fetchAllListings());
-              context.go('/home');
             },
-            failure: (msg) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    ErrorMessageUtil.getUserFriendlyMessage(msg),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  backgroundColor: Colors.red.shade300.withOpacity(0.9),
-                ),
-              );
-            },
-          );
-        },
-        builder: (context, state) {
-          return SingleChildScrollView(
-            child: Form(
-              key: _sellerFormKey,
-              child: Column(
-                children: [
-                  _buildStepHeader(),
-                  Offstage(
-                    offstage: _step != 0,
-                    child: PhotoStepWidget(categoryId: widget.categoryId),
-                  ),
-                  Offstage(
-                    offstage: _step != 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                  _formHeader(),
-                  Divider(),
-                  Container(
-                    width: double.infinity,
-                    color: AppColors.whiteColor,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          Text(
-                            'Essential Details',
-                            style: AppTextstyle.sectionTitleTextStyle.copyWith(
-                              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                                context,
-                                mobile: AppTextstyle
-                                        .sectionTitleTextStyle.fontSize ??
-                                    18,
-                                tablet: 24,
-                                largeTablet: 30,
-                                desktop: 36,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 20,
-                              tablet: 28,
-                              largeTablet: 36,
-                              desktop: 44,
-                            ),
-                          ),
-                          GetInput(
-                            label: 'Price',
-                            isNumberField: true,
-                            onSaved: (val) =>
-                                _price = int.tryParse(val ?? '0') ?? 0,
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          GetInput(
-                            label: 'Title',
-                            required: false,
-                            onSaved: (val) => _title = val?.trim(),
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          LocationPickerWidget(
-                            label: 'Location',
-                            initialLocation: _location,
-                            initialLatitude: _latitude,
-                            initialLongitude: _longitude,
-                            onLocationSelected:
-                                (location, latitude, longitude) {
-                              setState(() {
-                                _location = location;
-                                _latitude = latitude;
-                                _longitude = longitude;
-                              });
-                            },
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please select a location';
-                              }
-                              return null;
-                            },
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          buildSearchableDropdown<VehicleManufacturer>(
-                            labelText: 'Manufacturer',
-                            items: _manufacturers,
-                            selectedValue: _selectedManufacturer,
-                            errorMsg: 'Please select a manufacturer',
-                            getDisplayText: (item) => item.displayName,
-                            onSearch: (query) async {
-                              return await AddRepository().fetchManufacturers(
-                                search: query,
-                                vehicleCategory: 'two_wheeler',
-                              );
-                            },
-                            onChanged: (manufacturer) async {
-                              setState(() {
-                                _selectedManufacturer = manufacturer;
-                                _selectedModel = null;
-                                _models = [];
-                              });
+            builder: (context, state) {
+              return SingleChildScrollView(
+                child: Form(
+                  key: _sellerFormKey,
+                  child: Column(
+                    children: [
+                      _buildStepHeader(),
+                      Offstage(
+                        offstage: _step != 0,
+                        child: PhotoStepWidget(categoryId: widget.categoryId),
+                      ),
+                      Offstage(
+                        offstage: _step != 1,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _formHeader(),
+                            Divider(),
+                            Container(
+                              width: double.infinity,
+                              color: AppColors.whiteColor,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Essential Details',
+                                      style: AppTextstyle.sectionTitleTextStyle
+                                          .copyWith(
+                                        fontSize: GetResponsiveSize
+                                            .getResponsiveFontSize(
+                                          context,
+                                          mobile: AppTextstyle
+                                                  .sectionTitleTextStyle
+                                                  .fontSize ??
+                                              18,
+                                          tablet: 24,
+                                          largeTablet: 30,
+                                          desktop: 36,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 20,
+                                        tablet: 28,
+                                        largeTablet: 36,
+                                        desktop: 44,
+                                      ),
+                                    ),
+                                    GetInput(
+                                      label: 'Price',
+                                      isNumberField: true,
+                                      onSaved: (val) => _price =
+                                          int.tryParse(val ?? '0') ?? 0,
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    GetInput(
+                                      label: 'Title',
+                                      required: false,
+                                      onSaved: (val) => _title = val?.trim(),
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    LocationPickerWidget(
+                                      label: 'Location',
+                                      initialLocation: _location,
+                                      initialLatitude: _latitude,
+                                      initialLongitude: _longitude,
+                                      onLocationSelected:
+                                          (location, latitude, longitude) {
+                                        setState(() {
+                                          _location = location;
+                                          _latitude = latitude;
+                                          _longitude = longitude;
+                                        });
+                                      },
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Please select a location';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    buildSearchableDropdown<
+                                        VehicleManufacturer>(
+                                      labelText: 'Manufacturer',
+                                      items: _manufacturers,
+                                      selectedValue: _selectedManufacturer,
+                                      errorMsg: 'Please select a manufacturer',
+                                      getDisplayText: (item) =>
+                                          item.displayName,
+                                      onSearch: (query) async {
+                                        return await AddRepository()
+                                            .fetchManufacturers(
+                                          search: query,
+                                          vehicleCategory: 'two_wheeler',
+                                        );
+                                      },
+                                      onChanged: (manufacturer) async {
+                                        setState(() {
+                                          _selectedManufacturer = manufacturer;
+                                          _selectedModel = null;
+                                          _models = [];
+                                        });
 
-                              if (manufacturer != null) {
-                                try {
-                                  final models = await AddRepository()
-                                      .fetchModelsByManufacturer(
-                                          manufacturer.id);
-                                  if (!mounted) return;
-                                  setState(() => _models = models);
-                                } catch (_) {
-                                  if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text('Failed to load models')),
-                                  );
-                                }
-                              }
-                            },
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          buildSearchableDropdown<VehicleModel>(
-                            labelText: 'Model',
-                            items: _models,
-                            selectedValue: _selectedModel,
-                            getDisplayText: (item) => item.displayName,
-                            enabled: _models.isNotEmpty &&
-                                _selectedManufacturer != null,
-                            onSearch: (query) async {
-                              if (_selectedManufacturer == null) {
-                                return [];
-                              }
-                              return await AddRepository()
-                                  .fetchModelsByManufacturer(
-                                _selectedManufacturer!.id,
-                                search: query,
-                              );
-                            },
-                            onChanged: (model) async {
-                              setState(() {
-                                _selectedModel = model;
-                              });
-                            },
-                            errorMsg: 'Please select a model',
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          // Transmission is optional for two-wheelers. The
-                          // dropdown's validator always requires a value, so
-                          // it is isolated in its own Form and therefore not
-                          // part of _sellerFormKey's validation.
-                          Form(
-                            child: buildSearchableDropdown<
-                                VehicleTransmissionType>(
-                              labelText: 'Transmission Type (optional)',
-                              items: _transmissionTypes,
-                              selectedValue: _selectedtransmissionType,
-                              getDisplayText: (item) => item.displayName,
-                              errorMsg: 'Please select a transmission type',
-                              onChanged: (transmissionType) async {
-                                setState(() {
-                                  _selectedtransmissionType = transmissionType;
-                                });
-                              },
-                            ),
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          buildSearchableDropdown<VehicleFuelType>(
-                            labelText: 'Fuel Type',
-                            items: _fuelTypes,
-                            selectedValue: _selectedfuelType,
-                            getDisplayText: (item) => item.displayName,
-                            errorMsg: 'Please select a fuel type',
-                            onChanged: (fuelType) async {
-                              setState(() {
-                                _selectedfuelType = fuelType;
-                              });
-                            },
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          GetInput(
-                            label: 'Year',
-                            isNumberField: true,
-                            onSaved: (val) =>
-                                _year = int.tryParse(val ?? '2023') ?? 2023,
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          GetInput(
-                            label: 'Mileage (km)',
-                            isNumberField: true,
-                            onSaved: (val) =>
-                                _mileage = int.tryParse(val ?? '0') ?? 0,
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          GetInput(
-                            label: 'Color',
-                            required: false,
-                            onSaved: (val) => _color = val ?? '',
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          CheckboxListTile(
-                            value: _isFirstOwner,
-                            title: Text(
-                              'Is First Owner',
-                              style: TextStyle(
-                                fontSize:
-                                    GetResponsiveSize.getResponsiveFontSize(
-                                  context,
-                                  mobile: 16,
-                                  tablet: 20,
-                                  largeTablet: 24,
-                                  desktop: 28,
+                                        if (manufacturer != null) {
+                                          try {
+                                            final models = await AddRepository()
+                                                .fetchModelsByManufacturer(
+                                                    manufacturer.id);
+                                            if (!mounted) return;
+                                            setState(() => _models = models);
+                                          } catch (_) {
+                                            if (!context.mounted) return;
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                  content: Text(
+                                                      'Failed to load models')),
+                                            );
+                                          }
+                                        }
+                                      },
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    buildSearchableDropdown<VehicleModel>(
+                                      labelText: 'Model',
+                                      items: _models,
+                                      selectedValue: _selectedModel,
+                                      getDisplayText: (item) =>
+                                          item.displayName,
+                                      enabled: _models.isNotEmpty &&
+                                          _selectedManufacturer != null,
+                                      onSearch: (query) async {
+                                        if (_selectedManufacturer == null) {
+                                          return [];
+                                        }
+                                        return await AddRepository()
+                                            .fetchModelsByManufacturer(
+                                          _selectedManufacturer!.id,
+                                          search: query,
+                                        );
+                                      },
+                                      onChanged: (model) async {
+                                        setState(() {
+                                          _selectedModel = model;
+                                        });
+                                      },
+                                      errorMsg: 'Please select a model',
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    // Transmission is optional for two-wheelers. The
+                                    // dropdown's validator always requires a value, so
+                                    // it is isolated in its own Form and therefore not
+                                    // part of _sellerFormKey's validation.
+                                    Form(
+                                      child: buildSearchableDropdown<
+                                          VehicleTransmissionType>(
+                                        labelText:
+                                            'Transmission Type (optional)',
+                                        items: _transmissionTypes,
+                                        selectedValue:
+                                            _selectedtransmissionType,
+                                        getDisplayText: (item) =>
+                                            item.displayName,
+                                        errorMsg:
+                                            'Please select a transmission type',
+                                        onChanged: (transmissionType) async {
+                                          setState(() {
+                                            _selectedtransmissionType =
+                                                transmissionType;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    buildSearchableDropdown<VehicleFuelType>(
+                                      labelText: 'Fuel Type',
+                                      items: _fuelTypes,
+                                      selectedValue: _selectedfuelType,
+                                      getDisplayText: (item) =>
+                                          item.displayName,
+                                      errorMsg: 'Please select a fuel type',
+                                      onChanged: (fuelType) async {
+                                        setState(() {
+                                          _selectedfuelType = fuelType;
+                                        });
+                                      },
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    GetInput(
+                                      label: 'Year',
+                                      isNumberField: true,
+                                      onSaved: (val) => _year =
+                                          int.tryParse(val ?? '2023') ?? 2023,
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    GetInput(
+                                      label: 'Mileage (km)',
+                                      isNumberField: true,
+                                      onSaved: (val) => _mileage =
+                                          int.tryParse(val ?? '0') ?? 0,
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    GetInput(
+                                      label: 'Color',
+                                      required: false,
+                                      onSaved: (val) => _color = val ?? '',
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    CheckboxListTile(
+                                      value: _isFirstOwner,
+                                      title: Text(
+                                        'Is First Owner',
+                                        style: TextStyle(
+                                          fontSize: GetResponsiveSize
+                                              .getResponsiveFontSize(
+                                            context,
+                                            mobile: 16,
+                                            tablet: 20,
+                                            largeTablet: 24,
+                                            desktop: 28,
+                                          ),
+                                        ),
+                                      ),
+                                      onChanged: (val) {
+                                        setState(() {
+                                          _isFirstOwner = val ?? false;
+                                        });
+                                      },
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    CheckboxListTile(
+                                      value: _hasInsurance,
+                                      title: Text(
+                                        'Has Insurance',
+                                        style: TextStyle(
+                                          fontSize: GetResponsiveSize
+                                              .getResponsiveFontSize(
+                                            context,
+                                            mobile: 16,
+                                            tablet: 20,
+                                            largeTablet: 24,
+                                            desktop: 28,
+                                          ),
+                                        ),
+                                      ),
+                                      onChanged: (val) {
+                                        setState(() {
+                                          _hasInsurance = val ?? false;
+                                        });
+                                      },
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    CheckboxListTile(
+                                      value: _hasRcBook,
+                                      title: Text(
+                                        'Has RC Book',
+                                        style: TextStyle(
+                                          fontSize: GetResponsiveSize
+                                              .getResponsiveFontSize(
+                                            context,
+                                            mobile: 16,
+                                            tablet: 20,
+                                            largeTablet: 24,
+                                            desktop: 28,
+                                          ),
+                                        ),
+                                      ),
+                                      onChanged: (val) {
+                                        setState(() {
+                                          _hasRcBook = val ?? false;
+                                        });
+                                      },
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    GetResponsiveSize.isTablet(context)
+                                        ? SizedBox(
+                                            height: GetResponsiveSize
+                                                .getResponsiveSize(
+                                              context,
+                                              mobile: 0,
+                                              tablet: 140,
+                                              largeTablet: 160,
+                                              desktop: 180,
+                                            ),
+                                            child: GetInput(
+                                              label: 'Description',
+                                              isDescription: true,
+                                              maxLines: 5,
+                                              onSaved: (val) =>
+                                                  _description = val ?? '',
+                                            ),
+                                          )
+                                        : GetInput(
+                                            label: 'Description',
+                                            isDescription: true,
+                                            maxLines: 5,
+                                            onSaved: (val) =>
+                                                _description = val ?? '',
+                                          ),
+                                  ],
                                 ),
                               ),
                             ),
-                            onChanged: (val) {
-                              setState(() {
-                                _isFirstOwner = val ?? false;
-                              });
-                            },
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          CheckboxListTile(
-                            value: _hasInsurance,
-                            title: Text(
-                              'Has Insurance',
-                              style: TextStyle(
-                                fontSize:
-                                    GetResponsiveSize.getResponsiveFontSize(
-                                  context,
-                                  mobile: 16,
-                                  tablet: 20,
-                                  largeTablet: 24,
-                                  desktop: 28,
+                            SizedBox(height: 15),
+                            Divider(),
+                            Container(
+                              width: double.infinity,
+                              color: AppColors.whiteColor,
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Additional Features',
+                                      style: AppTextstyle.sectionTitleTextStyle
+                                          .copyWith(
+                                        fontSize: GetResponsiveSize
+                                            .getResponsiveFontSize(
+                                          context,
+                                          mobile: AppTextstyle
+                                                  .sectionTitleTextStyle
+                                                  .fontSize ??
+                                              18,
+                                          tablet: 24,
+                                          largeTablet: 30,
+                                          desktop: 36,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    buildFeatureCheckboxList(
+                                      allFeatures: _allFeatures,
+                                      selectedFeatures: _selectedFeatures,
+                                      onChanged: (updated) {
+                                        setState(
+                                            () => _selectedFeatures = updated);
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                            onChanged: (val) {
-                              setState(() {
-                                _hasInsurance = val ?? false;
-                              });
-                            },
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          CheckboxListTile(
-                            value: _hasRcBook,
-                            title: Text(
-                              'Has RC Book',
-                              style: TextStyle(
-                                fontSize:
-                                    GetResponsiveSize.getResponsiveFontSize(
-                                  context,
-                                  mobile: 16,
-                                  tablet: 20,
-                                  largeTablet: 24,
-                                  desktop: 28,
-                                ),
-                              ),
-                            ),
-                            onChanged: (val) {
-                              setState(() {
-                                _hasRcBook = val ?? false;
-                              });
-                            },
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          GetResponsiveSize.isTablet(context)
-                              ? SizedBox(
-                                  height: GetResponsiveSize.getResponsiveSize(
-                                    context,
-                                    mobile: 0,
-                                    tablet: 140,
-                                    largeTablet: 160,
-                                    desktop: 180,
-                                  ),
-                                  child: GetInput(
-                                    label: 'Description',
-                                    isDescription: true,
-                                    maxLines: 5,
-                                    onSaved: (val) => _description = val ?? '',
-                                  ),
-                                )
-                              : GetInput(
-                                  label: 'Description',
-                                  isDescription: true,
-                                  maxLines: 5,
-                                  onSaved: (val) => _description = val ?? '',
-                                ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 15),
-                  Divider(),
-                  Container(
-                    width: double.infinity,
-                    color: AppColors.whiteColor,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          Text(
-                            'Additional Features',
-                            style: AppTextstyle.sectionTitleTextStyle.copyWith(
-                              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                                context,
-                                mobile: AppTextstyle
-                                        .sectionTitleTextStyle.fontSize ??
-                                    18,
-                                tablet: 24,
-                                largeTablet: 30,
-                                desktop: 36,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          buildFeatureCheckboxList(
-                            allFeatures: _allFeatures,
-                            selectedFeatures: _selectedFeatures,
-                            onChanged: (updated) {
-                              setState(() => _selectedFeatures = updated);
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                      ],
-                    ),
-                  ),
-                  Offstage(
-                    offstage: _step != 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'Review your details and post',
-                      style: AppTextstyle.sectionTitleTextStyle.copyWith(
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile:
-                              AppTextstyle.sectionTitleTextStyle.fontSize ?? 18,
-                          tablet: 24,
-                          largeTablet: 30,
-                          desktop: 36,
+                          ],
                         ),
                       ),
-                    ),
-                  ),
-                  _buildReviewSummary(),
-                  SafeArea(
-                    top: false,
-                    minimum: const EdgeInsets.only(bottom: 20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: GetResponsiveSize.getResponsivePadding(
-                              context,
-                              mobile: 16,
-                              tablet: 24,
-                              largeTablet: 32,
-                              desktop: 40,
+                      Offstage(
+                        offstage: _step != 2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                'Review your details and post',
+                                style:
+                                    AppTextstyle.sectionTitleTextStyle.copyWith(
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                    context,
+                                    mobile: AppTextstyle
+                                            .sectionTitleTextStyle.fontSize ??
+                                        18,
+                                    tablet: 24,
+                                    largeTablet: 30,
+                                    desktop: 36,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                          child: SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 50,
-                              tablet: 65,
-                              largeTablet: 75,
-                              desktop: 85,
-                            ),
-                            child: ElevatedButton(
-                              onPressed: state.maybeWhen(
-                                loading: () => () {
+                            _buildReviewSummary(),
+                            SafeArea(
+                              top: false,
+                              minimum: const EdgeInsets.only(bottom: 20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: GetResponsiveSize
+                                          .getResponsivePadding(
+                                        context,
+                                        mobile: 16,
+                                        tablet: 24,
+                                        largeTablet: 32,
+                                        desktop: 40,
+                                      ),
+                                    ),
+                                    child: SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 50,
+                                        tablet: 65,
+                                        largeTablet: 75,
+                                        desktop: 85,
+                                      ),
+                                      child: ElevatedButton(
+                                        onPressed: state.maybeWhen(
+                                          loading: () => () {
+                                            SizedBox(
+                                              height: GetResponsiveSize
+                                                  .getResponsiveSize(
+                                                context,
+                                                mobile: 20,
+                                                tablet: 28,
+                                                largeTablet: 34,
+                                                desktop: 40,
+                                              ),
+                                              width: GetResponsiveSize
+                                                  .getResponsiveSize(
+                                                context,
+                                                mobile: 20,
+                                                tablet: 28,
+                                                largeTablet: 34,
+                                                desktop: 40,
+                                              ),
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: GetResponsiveSize
+                                                    .getResponsiveSize(
+                                                  context,
+                                                  mobile: 2,
+                                                  tablet: 2.5,
+                                                  largeTablet: 3,
+                                                  desktop: 3.5,
+                                                ),
+                                                color: Colors.white,
+                                              ),
+                                            );
+                                          },
+                                          orElse: () => _addAdvertisement,
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              AppColors.primaryColor,
+                                          foregroundColor: AppColors.whiteColor,
+                                          elevation: 5,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              GetResponsiveSize
+                                                  .getResponsiveBorderRadius(
+                                                context,
+                                                mobile: 25,
+                                                tablet: 30,
+                                                largeTablet: 35,
+                                                desktop: 40,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            "Create Advertisement",
+                                            style: AppTextstyle.buttonText
+                                                .copyWith(
+                                              fontSize: GetResponsiveSize
+                                                  .getResponsiveFontSize(
+                                                context,
+                                                mobile: AppTextstyle
+                                                        .buttonText.fontSize ??
+                                                    16,
+                                                tablet: 20,
+                                                largeTablet: 24,
+                                                desktop: 28,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                   SizedBox(
                                     height: GetResponsiveSize.getResponsiveSize(
                                       context,
-                                      mobile: 20,
-                                      tablet: 28,
-                                      largeTablet: 34,
-                                      desktop: 40,
-                                    ),
-                                    width: GetResponsiveSize.getResponsiveSize(
-                                      context,
-                                      mobile: 20,
-                                      tablet: 28,
-                                      largeTablet: 34,
-                                      desktop: 40,
-                                    ),
-                                    child: CircularProgressIndicator(
-                                      strokeWidth:
-                                          GetResponsiveSize.getResponsiveSize(
-                                        context,
-                                        mobile: 2,
-                                        tablet: 2.5,
-                                        largeTablet: 3,
-                                        desktop: 3.5,
-                                      ),
-                                      color: Colors.white,
-                                    ),
-                                  );
-                                },
-                                orElse: () => _addAdvertisement,
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primaryColor,
-                                foregroundColor: AppColors.whiteColor,
-                                elevation: 5,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    GetResponsiveSize.getResponsiveBorderRadius(
-                                      context,
-                                      mobile: 25,
-                                      tablet: 30,
-                                      largeTablet: 35,
-                                      desktop: 40,
+                                      mobile: 30,
+                                      tablet: 40,
+                                      largeTablet: 50,
+                                      desktop: 60,
                                     ),
                                   ),
-                                ),
+                                ],
                               ),
-                              child: Center(
-                                child: Text(
-                                  "Create Advertisement",
-                                  style: AppTextstyle.buttonText.copyWith(
-                                    fontSize:
-                                        GetResponsiveSize.getResponsiveFontSize(
-                                      context,
-                                      mobile:
-                                          AppTextstyle.buttonText.fontSize ??
-                                              16,
-                                      tablet: 20,
-                                      largeTablet: 24,
-                                      desktop: 28,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                            )
+                          ],
                         ),
-                        SizedBox(
-                          height: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 30,
-                            tablet: 40,
-                            largeTablet: 50,
-                            desktop: 60,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                      ],
-                    ),
+                      ),
+                      _buildStepNav(),
+                    ],
                   ),
-                  _buildStepNav(),
-                ],
-              ),
-            ),
-          );
-        },
+                ),
+              );
+            },
           ),
         ),
       ),

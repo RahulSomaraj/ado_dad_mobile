@@ -6,4 +6,3 @@ class CommercialVehicleTypeFilterEvent with _$CommercialVehicleTypeFilterEvent {
   const factory CommercialVehicleTypeFilterEvent.load() =
       _LoadCommercialVehicleTypes;
 }
-

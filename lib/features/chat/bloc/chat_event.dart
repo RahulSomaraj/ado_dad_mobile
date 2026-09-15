@@ -44,11 +44,14 @@ class NewMessageReceived extends ChatEvent {
 class SendMessage extends ChatEvent {
   final String content;
   final String type;
+
   /// Required when sending image/audio (for API call).
   final String? roomId;
+
   /// File bytes for image or audio attachment.
   final List<int>? fileBytes;
   final String? mimeType;
+
   /// 'image' or 'audio' when sending attachment.
   final String? attachmentType;
 

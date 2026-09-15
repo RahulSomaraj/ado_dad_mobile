@@ -14,7 +14,7 @@ class ChatDebugPage extends StatefulWidget {
 
 class _ChatDebugPageState extends State<ChatDebugPage> {
   final ChatRepository _chatRepository = ChatRepository();
-  List<String> _logs = [];
+  final List<String> _logs = [];
   bool _isConnected = false;
 
   @override

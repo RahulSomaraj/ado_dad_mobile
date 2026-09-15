@@ -2,7 +2,6 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/common/widgets/rich_ad_card.dart';
 import 'package:ado_dad_user/common/widgets/skeleton.dart';
@@ -157,8 +156,7 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                           ),
                         ),
                         SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                                context,
+                            height: GetResponsiveSize.getResponsiveSize(context,
                                 mobile: 14,
                                 tablet: 18,
                                 largeTablet: 22,
@@ -407,7 +405,7 @@ class _SellerCard extends StatelessWidget {
           CircleAvatar(
             radius: GetResponsiveSize.getResponsiveSize(context,
                 mobile: 32, tablet: 42, largeTablet: 52, desktop: 62),
-            backgroundColor: AppColors.primaryColor.withOpacity(0.1),
+            backgroundColor: AppColors.primaryColor.withValues(alpha: 0.1),
             backgroundImage: seller.profilePic?.trim().isNotEmpty == true
                 ? NetworkImage(seller.profilePic!)
                 : null,
@@ -418,12 +416,8 @@ class _SellerCard extends StatelessWidget {
                     style: TextStyle(
                       color: AppColors.primaryColor,
                       fontWeight: FontWeight.w700,
-                      fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: 20,
-                          tablet: 26,
-                          largeTablet: 32,
-                          desktop: 38),
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(context,
+                          mobile: 20, tablet: 26, largeTablet: 32, desktop: 38),
                     ),
                   ),
           ),
@@ -585,290 +579,4 @@ class _StatTile extends StatelessWidget {
       ),
     );
   }
-}
-
-class _ProductTile extends StatelessWidget {
-  const _ProductTile({required this.ad, this.onTap});
-  final AddModel ad;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    // Generate title - for vehicles: "ManufacturerName ModelName (Year)"
-    String title;
-    if (ad.category == 'property') {
-      if (ad.propertyType?.toLowerCase() == 'plot') {
-        title = '${_toTitleCase(ad.propertyType)} • ${ad.areaSqft ?? 0} sqft';
-      } else {
-        title =
-            '${_toTitleCase(ad.propertyType)} • ${ad.bedrooms ?? 0} BHK • ${ad.areaSqft ?? 0} sqft';
-      }
-    } else {
-      // Vehicle format: ManufacturerName ModelName (Year)
-      final manufacturerName = ad.manufacturer?.displayName ??
-          ad.manufacturer?.name ??
-          'Unknown Brand';
-      final modelName =
-          ad.model?.displayName ?? ad.model?.name ?? 'Unknown Model';
-      final year = ad.year ?? '';
-
-      // Clean up the title - remove extra spaces and handle empty values
-      final cleanManufacturer = manufacturerName.trim();
-      final cleanModel = modelName.trim();
-      final cleanYear = year.toString().trim();
-
-      if (cleanManufacturer.isNotEmpty && cleanModel.isNotEmpty) {
-        title = cleanYear.isNotEmpty
-            ? '$cleanManufacturer $cleanModel ($cleanYear)'
-            : '$cleanManufacturer $cleanModel';
-      } else if (cleanManufacturer.isNotEmpty) {
-        title = cleanYear.isNotEmpty
-            ? '$cleanManufacturer ($cleanYear)'
-            : cleanManufacturer;
-      } else if (cleanModel.isNotEmpty) {
-        title = cleanYear.isNotEmpty ? '$cleanModel ($cleanYear)' : cleanModel;
-      } else {
-        title = cleanYear.isNotEmpty ? 'Vehicle ($cleanYear)' : 'Vehicle';
-      }
-    }
-
-    // Generate subtitle with fuel/mileage info
-    String subtitle = '';
-    if (ad.category != 'property') {
-      if (ad.mileage != null && ad.fuelType != null) {
-        subtitle = '${ad.mileage} KM / ${ad.fuelType}';
-      } else if (ad.fuelType != null) {
-        subtitle = ad.fuelType!;
-      }
-    }
-
-    return Material(
-      color: Colors.white, // White tiles on lavender background
-      borderRadius: BorderRadius.circular(
-        GetResponsiveSize.getResponsiveBorderRadius(context,
-            mobile: 20, tablet: 24, largeTablet: 28, desktop: 32),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(
-          GetResponsiveSize.getResponsiveBorderRadius(context,
-              mobile: 20, tablet: 24, largeTablet: 28, desktop: 32),
-        ),
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.all(
-            GetResponsiveSize.getResponsivePadding(context,
-                mobile: 10, tablet: 14, largeTablet: 18, desktop: 22),
-          ),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(
-                  GetResponsiveSize.getResponsiveBorderRadius(context,
-                      mobile: 14, tablet: 16, largeTablet: 18, desktop: 20),
-                ),
-                child: ad.images.isNotEmpty
-                    ? Image.network(
-                        ad.images.first,
-                        width: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 80,
-                            tablet: 110,
-                            largeTablet: 140,
-                            desktop: 170),
-                        height: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 80,
-                            tablet: 110,
-                            largeTablet: 140,
-                            desktop: 170),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: GetResponsiveSize.getResponsiveSize(context,
-                                mobile: 80,
-                                tablet: 110,
-                                largeTablet: 140,
-                                desktop: 170),
-                            height: GetResponsiveSize.getResponsiveSize(context,
-                                mobile: 80,
-                                tablet: 110,
-                                largeTablet: 140,
-                                desktop: 170),
-                            color: Colors.grey.shade200,
-                            child: Icon(
-                              Icons.image_not_supported,
-                              size: GetResponsiveSize.getResponsiveSize(context,
-                                  mobile: 24,
-                                  tablet: 32,
-                                  largeTablet: 40,
-                                  desktop: 48),
-                            ),
-                          );
-                        },
-                      )
-                    : Container(
-                        width: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 80,
-                            tablet: 110,
-                            largeTablet: 140,
-                            desktop: 170),
-                        height: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 80,
-                            tablet: 110,
-                            largeTablet: 140,
-                            desktop: 170),
-                        color: Colors.grey.shade200,
-                        child: Icon(
-                          Icons.image_not_supported,
-                          size: GetResponsiveSize.getResponsiveSize(context,
-                              mobile: 24,
-                              tablet: 32,
-                              largeTablet: 40,
-                              desktop: 48),
-                        ),
-                      ),
-              ),
-              SizedBox(
-                  width: GetResponsiveSize.getResponsiveSize(context,
-                      mobile: 12, tablet: 16, largeTablet: 20, desktop: 24)),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '₹ ${_formatINR(ad.price)}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile:
-                                theme.textTheme.titleMedium?.fontSize ?? 16.0,
-                            tablet: 22,
-                            largeTablet: 26,
-                            desktop: 30),
-                      ),
-                    ),
-                    SizedBox(
-                        height: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 2, tablet: 4, largeTablet: 6, desktop: 8)),
-                    Text(
-                      title.trim().isNotEmpty ? title : 'Ad',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile: theme.textTheme.bodyLarge?.fontSize ?? 16.0,
-                            tablet: 20,
-                            largeTablet: 24,
-                            desktop: 28),
-                      ),
-                    ),
-                    SizedBox(
-                        height: GetResponsiveSize.getResponsiveSize(context,
-                            mobile: 2, tablet: 4, largeTablet: 6, desktop: 8)),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          size: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 12,
-                            tablet: 16,
-                            largeTablet: 18,
-                            desktop: 20,
-                          ),
-                          color: const Color(0xFF6B7280),
-                        ),
-                        SizedBox(
-                          width: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 4,
-                            tablet: 6,
-                            largeTablet: 8,
-                            desktop: 8,
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            ad.location,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: const Color(0xFF6B7280),
-                              fontWeight: FontWeight.w600,
-                              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                                  context,
-                                  mobile: theme.textTheme.bodySmall?.fontSize ??
-                                      12.0,
-                                  tablet: 16,
-                                  largeTablet: 20,
-                                  desktop: 24),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (subtitle.isNotEmpty) ...[
-                      SizedBox(
-                          height: GetResponsiveSize.getResponsiveSize(context,
-                              mobile: 2,
-                              tablet: 4,
-                              largeTablet: 6,
-                              desktop: 8)),
-                      Text(
-                        subtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF6B7280),
-                          fontWeight: FontWeight.w600,
-                          fontSize: GetResponsiveSize.getResponsiveFontSize(
-                              context,
-                              mobile:
-                                  theme.textTheme.bodySmall?.fontSize ?? 12.0,
-                              tablet: 16,
-                              largeTablet: 20,
-                              desktop: 24),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.chevron_right,
-                color: const Color(0xFF9CA3AF),
-                size: GetResponsiveSize.getResponsiveSize(context,
-                    mobile: 24, tablet: 28, largeTablet: 32, desktop: 36),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-String _formatINR(int amount) {
-  // simple Indian grouping (##,##,###)
-  final s = amount.toString();
-  if (s.length <= 3) return s;
-  final last3 = s.substring(s.length - 3);
-  String rest = s.substring(0, s.length - 3);
-  final buf = StringBuffer();
-  while (rest.length > 2) {
-    buf.write(',${rest.substring(rest.length - 2)}');
-    rest = rest.substring(0, rest.length - 2);
-  }
-  return '$rest${buf.toString()},$last3';
-}
-
-String _toTitleCase(String? input) {
-  if (input == null) return '';
-  final s = input.toLowerCase().trim();
-  if (s.isEmpty) return '';
-  return s
-      .split(' ')
-      .map((w) => w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}')
-      .join(' ');
 }

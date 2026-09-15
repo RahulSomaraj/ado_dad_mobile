@@ -168,8 +168,8 @@ class CarFilterState {
       selectedTransmissionTypeIds:
           selectedTransmissionTypeIds ?? this.selectedTransmissionTypeIds,
       selectedModelIds: selectedModelIds ?? this.selectedModelIds,
-      selectedCommercialVehicleTypes: selectedCommercialVehicleTypes ??
-          this.selectedCommercialVehicleTypes,
+      selectedCommercialVehicleTypes:
+          selectedCommercialVehicleTypes ?? this.selectedCommercialVehicleTypes,
       minYear: minYear ?? this.minYear,
       maxYear: maxYear ?? this.maxYear,
       minPrice: minPrice ?? this.minPrice,

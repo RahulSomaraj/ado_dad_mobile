@@ -123,9 +123,7 @@ class ThemeModeTile extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 9),
                     child: Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: AppColors.dividerColor),
+                        height: 1, thickness: 1, color: AppColors.dividerColor),
                   ),
                 ],
               ),

@@ -169,7 +169,7 @@ class PasswordFieldBuilders {
                 ),
                 child: CupertinoButton(
                   padding: EdgeInsets.zero,
-                  minSize: 0,
+                  minimumSize: Size.zero,
                   onPressed: onToggleVisibility,
                   child: Icon(
                     isVisible ? CupertinoIcons.eye_slash : CupertinoIcons.eye,

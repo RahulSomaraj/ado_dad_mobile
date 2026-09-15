@@ -21,7 +21,6 @@ class ShowroomUser {
 
   factory ShowroomUser.fromJson(Map<String, dynamic> json) {
     try {
-
       final id = json['_id']?.toString() ?? '';
       final name = json['name'] ?? '';
       final email = json['email'] ?? '';

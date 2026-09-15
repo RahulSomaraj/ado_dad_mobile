@@ -178,8 +178,8 @@ class ItemCategory extends StatelessWidget {
                               desktop: 120,
                             ),
                             decoration: BoxDecoration(
-                              color:
-                                  AppColors.primaryColor.withValues(alpha: 0.08),
+                              color: AppColors.primaryColor
+                                  .withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(
                                 GetResponsiveSize.getResponsiveBorderRadius(
                                   context,

@@ -43,8 +43,7 @@ class ProfileMenuItem extends StatelessWidget {
       largeTablet: 18,
       desktop: 20,
     );
-    final Color accent =
-        isLogout ? AppColors.redColor : AppColors.primaryColor;
+    final Color accent = isLogout ? AppColors.redColor : AppColors.primaryColor;
 
     return Material(
       color: Colors.transparent,

@@ -174,8 +174,7 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
     try {
       _manufacturers =
           await repo.fetchManufacturers(vehicleCategory: 'passenger_car');
-    } catch (_) {
-    }
+    } catch (_) {}
     if (!mounted) return;
 
     final manufacturerId = widget.ad.manufacturer?.id;
@@ -188,8 +187,7 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
     if (manufacturer != null) {
       try {
         _models = await repo.fetchModelsByManufacturer(manufacturer.id);
-      } catch (_) {
-      }
+      } catch (_) {}
       if (!mounted) return;
     }
 
@@ -202,8 +200,7 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
     if (model != null) {
       try {
         _variants = await repo.fetchVariantsByModel(model.id);
-      } catch (_) {
-      }
+      } catch (_) {}
       if (!mounted) return;
     }
 
@@ -236,8 +233,7 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
               _firstWhereOrNull(_transmissionTypes,
                   (t) => _transLabel(t).toLowerCase() == name) ??
               _firstOrNull(_transmissionTypes);
-    } catch (_) {
-    }
+    } catch (_) {}
     if (!mounted) return;
 
     try {
@@ -247,12 +243,12 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
       _fuelTypes = fuels.where((f) => f.appliesTo(_vehicleCategory)).toList();
       final fuelId = widget.ad.fuelTypeId;
       final name = (widget.ad.fuelType ?? '').toLowerCase();
-      _selectedFuelType = _firstWhereOrNull(_fuelTypes, (f) => f.id == fuelId) ??
-          _firstWhereOrNull(
-              _fuelTypes, (f) => _fuelLabel(f).toLowerCase() == name) ??
-          _firstOrNull(_fuelTypes);
-    } catch (_) {
-    }
+      _selectedFuelType =
+          _firstWhereOrNull(_fuelTypes, (f) => f.id == fuelId) ??
+              _firstWhereOrNull(
+                  _fuelTypes, (f) => _fuelLabel(f).toLowerCase() == name) ??
+              _firstOrNull(_fuelTypes);
+    } catch (_) {}
 
     if (mounted) setState(() {});
   }
@@ -303,8 +299,7 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
                   false; // Reset removal flag when video is uploaded
             });
           }
-        } else {
-        }
+        } else {}
       } catch (e) {
         // Optionally show error to user
         if (mounted) {
@@ -393,6 +388,7 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
       payload['title'] = titleValue;
     }
 
+    if (!context.mounted) return;
     context.read<AdEditBloc>().add(
           AdEditEvent.submit(
             adId: widget.ad.id,
@@ -455,7 +451,7 @@ class _PrivateVehicleFormEditState extends State<PrivateVehicleFormEdit> {
                   ErrorMessageUtil.getUserFriendlyMessage(msg),
                   style: const TextStyle(color: Colors.white),
                 ),
-                backgroundColor: Colors.red.shade300.withOpacity(0.9),
+                backgroundColor: Colors.red.shade300.withValues(alpha: 0.9),
               )),
             );
           },

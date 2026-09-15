@@ -180,12 +180,10 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
     final maxBedrooms = _maxBedroomsCtrl.text.isNotEmpty
         ? int.tryParse(_maxBedroomsCtrl.text)
         : null;
-    final minPrice = _minPriceCtrl.text.isNotEmpty
-        ? int.tryParse(_minPriceCtrl.text)
-        : null;
-    final maxPrice = _maxPriceCtrl.text.isNotEmpty
-        ? int.tryParse(_maxPriceCtrl.text)
-        : null;
+    final minPrice =
+        _minPriceCtrl.text.isNotEmpty ? int.tryParse(_minPriceCtrl.text) : null;
+    final maxPrice =
+        _maxPriceCtrl.text.isNotEmpty ? int.tryParse(_maxPriceCtrl.text) : null;
     final minArea =
         _minAreaCtrl.text.isNotEmpty ? int.tryParse(_minAreaCtrl.text) : null;
     final maxArea =

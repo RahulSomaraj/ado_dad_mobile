@@ -170,7 +170,7 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
                   'Failed to send OTP: ${message.replaceAll('Exception: ', '')}',
                   style: const TextStyle(color: Colors.white),
                 ),
-                backgroundColor: Colors.red.shade300.withOpacity(0.9),
+                backgroundColor: Colors.red.shade300.withValues(alpha: 0.9),
               ),
             );
           },
@@ -280,7 +280,9 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
                   child: TextButton(
                     onPressed: _toggleMode,
                     child: Text(
-                      _emailMode ? 'Use phone number instead' : 'Use email instead',
+                      _emailMode
+                          ? 'Use phone number instead'
+                          : 'Use email instead',
                       style: TextStyle(
                           decoration: TextDecoration.underline,
                           fontSize: GetResponsiveSize.getResponsiveFontSize(
@@ -343,7 +345,8 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
   Widget _buildOrDivider() {
     return Row(
       children: [
-        Expanded(child: Divider(color: AppColors.greyColor.withValues(alpha: 0.5))),
+        Expanded(
+            child: Divider(color: AppColors.greyColor.withValues(alpha: 0.5))),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
@@ -356,7 +359,8 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
             ),
           ),
         ),
-        Expanded(child: Divider(color: AppColors.greyColor.withValues(alpha: 0.5))),
+        Expanded(
+            child: Divider(color: AppColors.greyColor.withValues(alpha: 0.5))),
       ],
     );
   }
@@ -410,8 +414,9 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
     final textField = TextFormField(
       controller: _otpInputController,
       onChanged: _onPhoneChanged,
-      autofillHints:
-          _emailMode ? const [AutofillHints.email] : const [AutofillHints.telephoneNumberNational],
+      autofillHints: _emailMode
+          ? const [AutofillHints.email]
+          : const [AutofillHints.telephoneNumberNational],
       keyboardType:
           _emailMode ? TextInputType.emailAddress : TextInputType.phone,
       inputFormatters: _emailMode

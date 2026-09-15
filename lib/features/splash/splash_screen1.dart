@@ -28,7 +28,7 @@ class _SplashScreen1State extends State<SplashScreen1> {
   void initState() {
     super.initState();
     Future.delayed(const Duration(milliseconds: 600), () {
-      context.go('/splash-2');
+      if (mounted) context.go('/splash-2');
     });
   }
 
@@ -95,7 +95,7 @@ class _SplashScreen2State extends State<SplashScreen2>
     await Future.delayed(const Duration(milliseconds: 0));
     await _logoController.forward();
     await Future.delayed(const Duration(milliseconds: 600));
-    context.go('/splash-3');
+    if (mounted) context.go('/splash-3');
   }
 
   @override
@@ -124,7 +124,7 @@ class _SplashScreen2State extends State<SplashScreen2>
               color: const Color(0xFF4F46E5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: 25,
                   spreadRadius: 1,
                   offset: const Offset(0, 12),
@@ -229,7 +229,7 @@ class _SplashScreen3State extends State<SplashScreen3>
     await Future.delayed(const Duration(milliseconds: 0));
     await _logoFadeController.forward();
     await Future.delayed(const Duration(milliseconds: 1000));
-    context.go('/splash-4');
+    if (mounted) context.go('/splash-4');
   }
 
   @override
@@ -308,7 +308,7 @@ class _SplashScreen4State extends State<SplashScreen4> {
   void initState() {
     super.initState();
     Future.delayed(const Duration(milliseconds: 1600), () {
-      context.go('/login');
+      if (mounted) context.go('/login');
     });
   }
 

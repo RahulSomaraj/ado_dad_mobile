@@ -97,8 +97,10 @@ class LocationService {
       }
 
       final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: accuracy,
-        timeLimit: timeLimit,
+        locationSettings: LocationSettings(
+          accuracy: accuracy,
+          timeLimit: timeLimit,
+        ),
       );
       _cached = pos;
       unawaited(_persist(pos));

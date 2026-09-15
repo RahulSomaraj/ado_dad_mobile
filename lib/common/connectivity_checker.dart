@@ -39,7 +39,9 @@ class _StartupConnectivityGateState extends State<StartupConnectivityGate> {
 
     try {
       final iface = await Connectivity().checkConnectivity();
-      final hasInterface = iface != ConnectivityResult.none;
+      // connectivity_plus >= 6 returns a list; comparing it to a single
+      // enum value was always true, so the "no network" path never ran.
+      final hasInterface = iface.any((r) => r != ConnectivityResult.none);
 
       bool hasInternet = false;
       if (hasInterface) {

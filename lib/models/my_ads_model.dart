@@ -129,8 +129,8 @@ class MyAd {
     final commercialVehicleDetailsRaw = json['commercialVehicleDetails'];
     if (commercialVehicleDetailsRaw is List) {
       commercialVehicleDetails = commercialVehicleDetailsRaw
-          .where((e) => e is Map)
-          .map((e) => Map<String, dynamic>.from(e as Map))
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
           .toList();
     } else if (commercialVehicleDetailsRaw != null) {
       // If commercialVehicleDetails is not a List, log warning

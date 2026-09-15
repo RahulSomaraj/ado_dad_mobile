@@ -455,8 +455,8 @@ class _AdDetailPageState extends State<AdDetailPage> {
             SliverToBoxAdapter(child: AdDetailSellerCard(ad: ad)),
             if (!isSold)
               SliverToBoxAdapter(
-                child: AdDetailSafetyNote(
-                    isProperty: specs.category.isProperty),
+                child:
+                    AdDetailSafetyNote(isProperty: specs.category.isProperty),
               ),
           ],
           SliverToBoxAdapter(child: AdDetailSimilarAds(ad: ad)),
@@ -572,7 +572,8 @@ class _ConfirmSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(title, style: AppTextstyle.sectionTitle.copyWith(fontSize: 18)),
+            Text(title,
+                style: AppTextstyle.sectionTitle.copyWith(fontSize: 18)),
             const SizedBox(height: AppSpacing.sm8),
             Text(body, style: AppTextstyle.bodyText),
             const SizedBox(height: AppSpacing.xl24),

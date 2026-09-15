@@ -184,7 +184,6 @@ class ProfileRepo {
         throw Exception("Failed to update profile.");
       }
     } on DioException catch (e) {
-
       // Provide more specific error messages for profile update failures
       if (e.response?.statusCode == 400) {
         final errorData = e.response?.data;
@@ -296,7 +295,6 @@ class ProfileRepo {
         throw Exception("Failed to delete my data.");
       }
     } on DioException catch (e) {
-
       // Check if DioException occurred but status code indicates success
       if (e.response != null) {
         final statusCode = e.response!.statusCode;

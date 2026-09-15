@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io' show File, Platform;
-import 'dart:typed_data' show Uint8List;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -116,8 +115,7 @@ class _ChatPageState extends State<ChatPage> {
     try {
       final chatRepository = ChatRepository();
       _currentUserId = await chatRepository.getCurrentUserId();
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   /// Loads the pinned ad so the listing card can display its price.
@@ -154,154 +152,127 @@ class _ChatPageState extends State<ChatPage> {
         _handleBackNavigation();
       },
       child: Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
-      appBar: AppBar(
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 16,
-                tablet: 20,
-                largeTablet: 24,
-                desktop: 28,
-              ),
-              backgroundColor: Colors.grey[300],
-              backgroundImage: widget.otherUserProfilePic != null &&
-                      widget.otherUserProfilePic != 'default-profile-pic-url'
-                  ? NetworkImage(widget.otherUserProfilePic!)
-                  : null,
-              child: widget.otherUserProfilePic == null ||
-                      widget.otherUserProfilePic == 'default-profile-pic-url'
-                  ? Text(
-                      ((widget.otherUserName ?? '').trim().isEmpty
-                              ? 'U'
-                              : widget.otherUserName!.trim()[0])
-                          .toUpperCase(),
-                      style: TextStyle(
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: 14,
-                          tablet: 18,
-                          largeTablet: 22,
-                          desktop: 26,
+        backgroundColor: AppColors.scaffoldBackground,
+        appBar: AppBar(
+          title: Row(
+            children: [
+              CircleAvatar(
+                radius: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 16,
+                  tablet: 20,
+                  largeTablet: 24,
+                  desktop: 28,
+                ),
+                backgroundColor: Colors.grey[300],
+                backgroundImage: widget.otherUserProfilePic != null &&
+                        widget.otherUserProfilePic != 'default-profile-pic-url'
+                    ? NetworkImage(widget.otherUserProfilePic!)
+                    : null,
+                child: widget.otherUserProfilePic == null ||
+                        widget.otherUserProfilePic == 'default-profile-pic-url'
+                    ? Text(
+                        ((widget.otherUserName ?? '').trim().isEmpty
+                                ? 'U'
+                                : widget.otherUserName!.trim()[0])
+                            .toUpperCase(),
+                        style: TextStyle(
+                          fontSize: GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: 14,
+                            tablet: 18,
+                            largeTablet: 22,
+                            desktop: 26,
+                          ),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    )
-                  : null,
-            ),
-            SizedBox(
-              width: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 12,
-                tablet: 16,
-                largeTablet: 20,
-                desktop: 24,
+                      )
+                    : null,
               ),
-            ),
-            Expanded(
-              child: GestureDetector(
-                onTap: widget.adId != null ? () => _navigateToAdDetail() : null,
-                child: Text(
-                  widget.adTitle ?? (widget.otherUserName ?? 'Chat'),
-                  style: TextStyle(
-                    fontSize: GetResponsiveSize.getResponsiveFontSize(
-                      context,
-                      mobile: 16,
-                      tablet: 20,
-                      largeTablet: 24,
-                      desktop: 28,
-                    ),
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                    decoration: TextDecoration.none,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+              SizedBox(
+                width: GetResponsiveSize.getResponsiveSize(
+                  context,
+                  mobile: 12,
+                  tablet: 16,
+                  largeTablet: 20,
+                  desktop: 24,
                 ),
               ),
+              Expanded(
+                child: GestureDetector(
+                  onTap:
+                      widget.adId != null ? () => _navigateToAdDetail() : null,
+                  child: Text(
+                    widget.adTitle ?? (widget.otherUserName ?? 'Chat'),
+                    style: TextStyle(
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 16,
+                        tablet: 20,
+                        largeTablet: 24,
+                        desktop: 28,
+                      ),
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      decoration: TextDecoration.none,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: AppColors.primaryColor,
+          foregroundColor: Colors.white,
+          leading: IconButton(
+            icon: Icon(
+              (!kIsWeb && Platform.isIOS)
+                  ? Icons.arrow_back_ios
+                  : Icons.arrow_back,
+              size: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 24,
+                tablet: 30,
+                largeTablet: 32,
+                desktop: 36,
+              ),
             ),
+            onPressed: () => _handleBackNavigation(),
+          ),
+          actions: [
+            if (widget.otherUserPhone != null &&
+                widget.otherUserPhone!.trim().isNotEmpty)
+              IconButton(
+                icon: Icon(
+                  Icons.phone,
+                  size: GetResponsiveSize.getResponsiveSize(
+                    context,
+                    mobile: 22,
+                    tablet: 28,
+                    largeTablet: 32,
+                    desktop: 36,
+                  ),
+                ),
+                onPressed: _callUser,
+              ),
           ],
         ),
-        backgroundColor: AppColors.primaryColor,
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: Icon(
-            (!kIsWeb && Platform.isIOS)
-                ? Icons.arrow_back_ios
-                : Icons.arrow_back,
-            size: GetResponsiveSize.getResponsiveSize(
-              context,
-              mobile: 24,
-              tablet: 30,
-              largeTablet: 32,
-              desktop: 36,
-            ),
-          ),
-          onPressed: () => _handleBackNavigation(),
-        ),
-        actions: [
-          if (widget.otherUserPhone != null &&
-              widget.otherUserPhone!.trim().isNotEmpty)
-            IconButton(
-              icon: Icon(
-                Icons.phone,
-                size: GetResponsiveSize.getResponsiveSize(
-                  context,
-                  mobile: 22,
-                  tablet: 28,
-                  largeTablet: 32,
-                  desktop: 36,
-                ),
-              ),
-              onPressed: _callUser,
-            ),
-        ],
-      ),
-      body: BlocListener<ChatBloc, ChatState>(
-        listener: (context, state) {
-          if (!mounted) return; // Check if widget is still mounted
+        body: BlocListener<ChatBloc, ChatState>(
+          listener: (context, state) {
+            if (!mounted) return; // Check if widget is still mounted
 
-          if (state is ChatRoomJoined) {
-          } else if (state is MessagesLoaded) {
-            if (mounted) {
-              setState(() {
-                // Reverse messages to show oldest first (top to bottom)
-                _messages = List.from(state.messages.reversed);
-              });
-            }
-
-            // Scroll to bottom after messages are loaded
-            if (mounted) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted && _scrollController.hasClients) {
-                  _scrollController.animateTo(
-                    _scrollController.position.maxScrollExtent,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOut,
-                  );
-                }
-              });
-            }
-          } else if (state is NewMessageReceivedState) {
-            // Ignore messages that belong to a different room.
-            if (state.roomId != null && state.roomId != widget.roomId) {
-              return;
-            }
-            // Check if message already exists to prevent duplicates
-            final messageId = state.message['id'] ?? state.message['_id'];
-            final existingMessage =
-                _messages.any((msg) => (msg['id'] ?? msg['_id']) == messageId);
-
-            if (!existingMessage) {
-              // Add the new message to the local list
+            if (state is ChatRoomJoined) {
+            } else if (state is MessagesLoaded) {
               if (mounted) {
                 setState(() {
-                  _messages.add(state.message);
+                  // Reverse messages to show oldest first (top to bottom)
+                  _messages = List.from(state.messages.reversed);
                 });
+              }
 
-                // Scroll to bottom to show the new message
+              // Scroll to bottom after messages are loaded
+              if (mounted) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted && _scrollController.hasClients) {
                     _scrollController.animateTo(
@@ -312,136 +283,162 @@ class _ChatPageState extends State<ChatPage> {
                   }
                 });
               }
-            } else {
-            }
-          } else if (state is ChatErrorState) {
-          }
-        },
-        child: BlocBuilder<ChatBloc, ChatState>(
-          builder: (context, state) {
-            // Only show loading indicator if messages are empty (initial load)
-            // Don't show loading during refreshes when messages already exist
-            if (state is ChatLoading && _messages.isEmpty) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
+            } else if (state is NewMessageReceivedState) {
+              // Ignore messages that belong to a different room.
+              if (state.roomId != null && state.roomId != widget.roomId) {
+                return;
+              }
+              // Check if message already exists to prevent duplicates
+              final messageId = state.message['id'] ?? state.message['_id'];
+              final existingMessage = _messages
+                  .any((msg) => (msg['id'] ?? msg['_id']) == messageId);
 
-            // Surface a clear, actionable error instead of a silent empty thread
-            // when messages fail to load (e.g. socket/connection failure).
-            if (state is ChatErrorState && _messages.isEmpty) {
-              return _buildThreadError(state.error);
-            }
+              if (!existingMessage) {
+                // Add the new message to the local list
+                if (mounted) {
+                  setState(() {
+                    _messages.add(state.message);
+                  });
 
-            return Column(
-              children: [
-                // Pinned listing context (tap to open the ad)
-                if (widget.adId != null) _buildPinnedListingCard(),
-                // Messages list
-                Expanded(
-                  child: _messages.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.chat_bubble_outline,
-                                size: GetResponsiveSize.getResponsiveSize(
-                                  context,
-                                  mobile: 64,
-                                  tablet: 80,
-                                  largeTablet: 96,
-                                  desktop: 112,
-                                ),
-                                color: Colors.grey,
-                              ),
-                              SizedBox(
-                                height: GetResponsiveSize.getResponsiveSize(
-                                  context,
-                                  mobile: 16,
-                                  tablet: 20,
-                                  largeTablet: 24,
-                                  desktop: 28,
-                                ),
-                              ),
-                              Text(
-                                'No messages yet',
-                                style: TextStyle(
-                                  fontSize:
-                                      GetResponsiveSize.getResponsiveFontSize(
-                                    context,
-                                    mobile: 18,
-                                    tablet: 22,
-                                    largeTablet: 26,
-                                    desktop: 30,
-                                  ),
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              SizedBox(
-                                height: GetResponsiveSize.getResponsiveSize(
-                                  context,
-                                  mobile: 8,
-                                  tablet: 12,
-                                  largeTablet: 16,
-                                  desktop: 20,
-                                ),
-                              ),
-                              Text(
-                                'Start a conversation!',
-                                style: TextStyle(
-                                  fontSize:
-                                      GetResponsiveSize.getResponsiveFontSize(
-                                    context,
-                                    mobile: 14,
-                                    tablet: 18,
-                                    largeTablet: 20,
-                                    desktop: 24,
-                                  ),
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          controller: _scrollController,
-                          padding: EdgeInsets.all(
-                            GetResponsiveSize.getResponsivePadding(
-                              context,
-                              mobile: 16,
-                              tablet: 24,
-                              largeTablet: 32,
-                              desktop: 40,
-                            ),
-                          ),
-                          itemCount: _messages.length,
-                          itemBuilder: (context, index) {
-                            final message = _messages[index];
-                            return _buildMessageBubble(message, index);
-                          },
-                        ),
-                ),
-
-                // Message input
-                SafeArea(
-                  top: false,
-                  minimum: EdgeInsets.only(
-                    bottom: GetResponsiveSize.getResponsiveSize(
-                      context,
-                      mobile: 50,
-                      tablet: 50,
-                      largeTablet: 50,
-                      desktop: 50,
-                    ),
-                  ),
-                  child: _buildMessageInput(),
-                ),
-              ],
-            );
+                  // Scroll to bottom to show the new message
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted && _scrollController.hasClients) {
+                      _scrollController.animateTo(
+                        _scrollController.position.maxScrollExtent,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOut,
+                      );
+                    }
+                  });
+                }
+              } else {}
+            } else if (state is ChatErrorState) {}
           },
+          child: BlocBuilder<ChatBloc, ChatState>(
+            builder: (context, state) {
+              // Only show loading indicator if messages are empty (initial load)
+              // Don't show loading during refreshes when messages already exist
+              if (state is ChatLoading && _messages.isEmpty) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+
+              // Surface a clear, actionable error instead of a silent empty thread
+              // when messages fail to load (e.g. socket/connection failure).
+              if (state is ChatErrorState && _messages.isEmpty) {
+                return _buildThreadError(state.error);
+              }
+
+              return Column(
+                children: [
+                  // Pinned listing context (tap to open the ad)
+                  if (widget.adId != null) _buildPinnedListingCard(),
+                  // Messages list
+                  Expanded(
+                    child: _messages.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.chat_bubble_outline,
+                                  size: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 64,
+                                    tablet: 80,
+                                    largeTablet: 96,
+                                    desktop: 112,
+                                  ),
+                                  color: Colors.grey,
+                                ),
+                                SizedBox(
+                                  height: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 16,
+                                    tablet: 20,
+                                    largeTablet: 24,
+                                    desktop: 28,
+                                  ),
+                                ),
+                                Text(
+                                  'No messages yet',
+                                  style: TextStyle(
+                                    fontSize:
+                                        GetResponsiveSize.getResponsiveFontSize(
+                                      context,
+                                      mobile: 18,
+                                      tablet: 22,
+                                      largeTablet: 26,
+                                      desktop: 30,
+                                    ),
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: GetResponsiveSize.getResponsiveSize(
+                                    context,
+                                    mobile: 8,
+                                    tablet: 12,
+                                    largeTablet: 16,
+                                    desktop: 20,
+                                  ),
+                                ),
+                                Text(
+                                  'Start a conversation!',
+                                  style: TextStyle(
+                                    fontSize:
+                                        GetResponsiveSize.getResponsiveFontSize(
+                                      context,
+                                      mobile: 14,
+                                      tablet: 18,
+                                      largeTablet: 20,
+                                      desktop: 24,
+                                    ),
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            controller: _scrollController,
+                            padding: EdgeInsets.all(
+                              GetResponsiveSize.getResponsivePadding(
+                                context,
+                                mobile: 16,
+                                tablet: 24,
+                                largeTablet: 32,
+                                desktop: 40,
+                              ),
+                            ),
+                            itemCount: _messages.length,
+                            itemBuilder: (context, index) {
+                              final message = _messages[index];
+                              return _buildMessageBubble(message, index);
+                            },
+                          ),
+                  ),
+
+                  // Message input
+                  SafeArea(
+                    top: false,
+                    minimum: EdgeInsets.only(
+                      bottom: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 50,
+                        tablet: 50,
+                        largeTablet: 50,
+                        desktop: 50,
+                      ),
+                    ),
+                    child: _buildMessageInput(),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
-      ),
       ),
     );
   }
@@ -499,8 +496,7 @@ class _ChatPageState extends State<ChatPage> {
   /// wireframe ("📌 Maruti Swift VXI · ₹5,40,000"). Tap opens the ad.
   Widget _buildPinnedListingCard() {
     final title = widget.adTitle ?? 'View listing';
-    final label =
-        _adPrice != null ? '$title · ₹${_inr(_adPrice!)}' : title;
+    final label = _adPrice != null ? '$title · ₹${_inr(_adPrice!)}' : title;
     return Align(
       alignment: Alignment.center,
       child: Padding(
@@ -523,8 +519,7 @@ class _ChatPageState extends State<ChatPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.push_pin,
-                      size: 13, color: AppColors.primaryColor),
+                  Icon(Icons.push_pin, size: 13, color: AppColors.primaryColor),
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
@@ -708,8 +703,18 @@ class _ChatPageState extends State<ChatPage> {
     if (diff == 0) return 'Today';
     if (diff == 1) return 'Yesterday';
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
     final label = '${ts.day} ${months[ts.month - 1]}';
     return ts.year == now.year ? label : '$label ${ts.year}';
@@ -836,8 +841,8 @@ class _ChatPageState extends State<ChatPage> {
                 ),
                 child: Text(
                   replies[i],
-                  style: TextStyle(
-                      color: AppColors.primaryColor, fontSize: 12.5),
+                  style:
+                      TextStyle(color: AppColors.primaryColor, fontSize: 12.5),
                 ),
               ),
             );
@@ -884,7 +889,9 @@ class _ChatPageState extends State<ChatPage> {
                 children: [
                   IconButton(
                     icon: Icon(
-                      _stagedVoicePlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                      _stagedVoicePlaying
+                          ? Icons.pause_circle_filled
+                          : Icons.play_circle_filled,
                       color: AppColors.primaryColor,
                       size: 36,
                     ),
@@ -905,7 +912,8 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 24),
+                    icon: const Icon(Icons.delete_outline,
+                        color: Colors.red, size: 24),
                     onPressed: _clearStagedVoice,
                     tooltip: 'Delete recording',
                   ),
@@ -1267,6 +1275,7 @@ class _ChatPageState extends State<ChatPage> {
       file.readAsBytes().then((bytes) async {
         if (!mounted) return;
         await _stagedVoicePlayer.stop();
+        if (!mounted) return;
         setState(() {
           _stagedVoicePath = null;
           _stagedVoicePlaying = false;
@@ -1432,7 +1441,7 @@ class _ChatPageState extends State<ChatPage> {
               'Failed to load ad details: ${e.toString()}',
               style: const TextStyle(color: Colors.white),
             ),
-            backgroundColor: Colors.red.shade300.withOpacity(0.9),
+            backgroundColor: Colors.red.shade300.withValues(alpha: 0.9),
           ),
         );
       }
@@ -1475,6 +1484,7 @@ class _AudioMessagePlayerState extends State<_AudioMessagePlayer> {
   final just_audio.AudioPlayer _player = just_audio.AudioPlayer();
   bool _playing = false;
   bool _loading = false;
+
   /// URL we have already loaded (so we can resume from pause without re-downloading).
   String? _loadedUrl;
   StreamSubscription<just_audio.PlayerState>? _stateSub;
@@ -1500,10 +1510,12 @@ class _AudioMessagePlayerState extends State<_AudioMessagePlayer> {
         widget.currentlyPlayingUrl != widget.url &&
         (_playing || _loadedUrl == widget.url)) {
       _player.stop();
-      if (mounted) setState(() {
-        _playing = false;
-        _loadedUrl = null;
-      });
+      if (mounted) {
+        setState(() {
+          _playing = false;
+          _loadedUrl = null;
+        });
+      }
     }
   }
 
@@ -1511,7 +1523,8 @@ class _AudioMessagePlayerState extends State<_AudioMessagePlayer> {
   Future<String?> _downloadToTempFile(String url) async {
     final dir = await getTemporaryDirectory();
     final ext = url.toLowerCase().contains('.webm') ? 'webm' : 'm4a';
-    final path = p.join(dir.path, 'chat_audio_${DateTime.now().millisecondsSinceEpoch}.$ext');
+    final path = p.join(
+        dir.path, 'chat_audio_${DateTime.now().millisecondsSinceEpoch}.$ext');
     final response = await Dio().get<List<int>>(
       url,
       options: Options(responseType: ResponseType.bytes),
@@ -1531,7 +1544,9 @@ class _AudioMessagePlayerState extends State<_AudioMessagePlayer> {
       });
       widget.onPlayingUrlChanged(null);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Audio playback failed. The file may be unsupported or unavailable.')),
+        const SnackBar(
+            content: Text(
+                'Audio playback failed. The file may be unsupported or unavailable.')),
       );
     }
   }
@@ -1635,7 +1650,7 @@ class _AudioMessagePlayerState extends State<_AudioMessagePlayer> {
             padding: EdgeInsets.zero,
             icon: Icon(
               _playing ? Icons.pause_circle_filled : Icons.play_circle_filled,
-              color: _loading ? fg.withOpacity(0.6) : fg,
+              color: _loading ? fg.withValues(alpha: 0.6) : fg,
               size: 40,
             ),
             // Keep button enabled when playing so user can pause; disable only while loading (and not yet playing).
@@ -1652,7 +1667,7 @@ class _AudioMessagePlayerState extends State<_AudioMessagePlayer> {
                   borderRadius: BorderRadius.circular(2),
                   child: LinearProgressIndicator(
                     value: _playing ? progress : (_loading ? null : progress),
-                    backgroundColor: fg70.withOpacity(0.3),
+                    backgroundColor: fg70.withValues(alpha: 0.3),
                     valueColor: AlwaysStoppedAnimation<Color>(fg),
                     minHeight: 3,
                   ),

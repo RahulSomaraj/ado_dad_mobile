@@ -49,7 +49,8 @@ Future<void> _handleNotificationTap(RemoteMessage message) async {
   if (isAuth) {
     AppRoutes.router.go('/notifications');
   } else {
-    AppRoutes.router.go('/home?prompt=notifications'); // home + login popup only
+    AppRoutes.router
+        .go('/home?prompt=notifications'); // home + login popup only
   }
 }
 
@@ -116,8 +117,7 @@ Future<void> _initFcm() async {
       _handleNotificationTap(
           message); // async: opens notifications or home with login popup
     });
-  } catch (_, __) {
-  }
+  } catch (_, __) {}
 }
 
 void main() async {

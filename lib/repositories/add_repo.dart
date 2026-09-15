@@ -22,10 +22,8 @@ class _AdsCacheEntry {
   final PaginatedAdsResponse value;
   final DateTime storedAt;
 
-  bool get isFresh =>
-      DateTime.now().difference(storedAt) < AdsCache.freshFor;
-  bool get isUsable =>
-      DateTime.now().difference(storedAt) < AdsCache.keepFor;
+  bool get isFresh => DateTime.now().difference(storedAt) < AdsCache.freshFor;
+  bool get isUsable => DateTime.now().difference(storedAt) < AdsCache.keepFor;
 }
 
 /// Memory cache + in-flight dedupe for `/v2/ads/list`.
@@ -64,7 +62,8 @@ class AdsCache {
       if ((k == 'latitude' || k == 'longitude') && v is num) {
         return '$k=${v.toStringAsFixed(2)}';
       }
-      if (v is List) return '$k=${(v.map((e) => '$e').toList()..sort()).join(',')}';
+      if (v is List)
+        return '$k=${(v.map((e) => '$e').toList()..sort()).join(',')}';
       return '$k=$v';
     });
     return parts.join('&');
@@ -125,7 +124,8 @@ class AdsCache {
 /// the Future (not the value) also dedupes the five parallel calls a single
 /// sheet open makes.
 class _ReferenceCache {
-  static final Map<String, Future<dynamic>> _futures = <String, Future<dynamic>>{};
+  static final Map<String, Future<dynamic>> _futures =
+      <String, Future<dynamic>>{};
 
   static Future<T> get<T>(String key, Future<T> Function() load) {
     final existing = _futures[key];
@@ -181,40 +181,41 @@ class AddRepository {
     double? latitude,
     double? longitude,
     double? maxDistance,
+
     /// Set by pull-to-refresh: skip the cache and go to the network.
     bool forceRefresh = false,
   }) async {
     final body = <String, dynamic>{
-        'page': page,
-        'limit': limit,
-        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
-        if (category != null) 'category': category,
-        if (commercialVehicleTypes != null && commercialVehicleTypes.isNotEmpty)
-          'commercialVehicleTypes': commercialVehicleTypes,
-        if (minYear != null) 'minYear': minYear,
-        if (maxYear != null) 'maxYear': maxYear,
-        if (minPrice != null) 'minPrice': minPrice,
-        if (maxPrice != null) 'maxPrice': maxPrice,
-        if (manufacturerIds != null && manufacturerIds.isNotEmpty)
-          'manufacturerIds': manufacturerIds,
-        if (modelIds != null && modelIds.isNotEmpty) 'modelIds': modelIds,
-        if (fuelTypeIds != null && fuelTypeIds.isNotEmpty)
-          'fuelTypeIds': fuelTypeIds, // ✅ plural
-        if (transmissionTypeIds != null && transmissionTypeIds.isNotEmpty)
-          'transmissionTypeIds': transmissionTypeIds, // ✅ plural
-        // Property-specific filters
-        if (propertyTypes != null && propertyTypes.isNotEmpty)
-          'propertyTypes': propertyTypes,
-        if (minBedrooms != null) 'minBedrooms': minBedrooms,
-        if (maxBedrooms != null) 'maxBedrooms': maxBedrooms,
-        if (minArea != null) 'minArea': minArea,
-        if (maxArea != null) 'maxArea': maxArea,
-        if (isFurnished != null) 'isFurnished': isFurnished,
-        if (hasParking != null) 'hasParking': hasParking,
-        // Location-based filters
-        if (latitude != null) 'latitude': latitude,
-        if (longitude != null) 'longitude': longitude,
-        if (maxDistance != null) 'maxDistance': maxDistance,
+      'page': page,
+      'limit': limit,
+      if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+      if (category != null) 'category': category,
+      if (commercialVehicleTypes != null && commercialVehicleTypes.isNotEmpty)
+        'commercialVehicleTypes': commercialVehicleTypes,
+      if (minYear != null) 'minYear': minYear,
+      if (maxYear != null) 'maxYear': maxYear,
+      if (minPrice != null) 'minPrice': minPrice,
+      if (maxPrice != null) 'maxPrice': maxPrice,
+      if (manufacturerIds != null && manufacturerIds.isNotEmpty)
+        'manufacturerIds': manufacturerIds,
+      if (modelIds != null && modelIds.isNotEmpty) 'modelIds': modelIds,
+      if (fuelTypeIds != null && fuelTypeIds.isNotEmpty)
+        'fuelTypeIds': fuelTypeIds, // ✅ plural
+      if (transmissionTypeIds != null && transmissionTypeIds.isNotEmpty)
+        'transmissionTypeIds': transmissionTypeIds, // ✅ plural
+      // Property-specific filters
+      if (propertyTypes != null && propertyTypes.isNotEmpty)
+        'propertyTypes': propertyTypes,
+      if (minBedrooms != null) 'minBedrooms': minBedrooms,
+      if (maxBedrooms != null) 'maxBedrooms': maxBedrooms,
+      if (minArea != null) 'minArea': minArea,
+      if (maxArea != null) 'maxArea': maxArea,
+      if (isFurnished != null) 'isFurnished': isFurnished,
+      if (hasParking != null) 'hasParking': hasParking,
+      // Location-based filters
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (maxDistance != null) 'maxDistance': maxDistance,
     };
 
     final cache = AdsCache.instance;
@@ -297,9 +298,8 @@ class AddRepository {
   /// Accurate per-user counts for the profile stats strip
   /// (My ads / Wishlist / Chats). Backed by GET /v2/ads/me/stats.
   Future<Map<String, int>> fetchProfileStats() async {
-    int asInt(dynamic v) => v is int
-        ? v
-        : (v is num ? v.toInt() : int.tryParse('${v ?? 0}') ?? 0);
+    int asInt(dynamic v) =>
+        v is int ? v : (v is num ? v.toInt() : int.tryParse('${v ?? 0}') ?? 0);
     try {
       final response = await _dio.get('/v2/ads/me/stats');
       final data = (response.data as Map?) ?? const {};
@@ -528,7 +528,8 @@ class AddRepository {
   }) {
     return _ReferenceCache.get(
       'transmissionTypes|$vehicleCategory',
-      () => _fetchTransmissionTypesFromNetwork(vehicleCategory: vehicleCategory),
+      () =>
+          _fetchTransmissionTypesFromNetwork(vehicleCategory: vehicleCategory),
     );
   }
 
@@ -539,7 +540,8 @@ class AddRepository {
     // Add category parameter if provided (mirrors fetchManufacturers)
     if (vehicleCategory != null && vehicleCategory.isNotEmpty) {
       queryParameters['vehicleCategory'] = vehicleCategory;
-      queryParameters['category'] = vehicleCategory; // same key fetchManufacturers uses
+      queryParameters['category'] =
+          vehicleCategory; // same key fetchManufacturers uses
     }
 
     final resp = await _dio.get(
@@ -588,7 +590,8 @@ class AddRepository {
     // Add category parameter if provided (mirrors fetchManufacturers)
     if (vehicleCategory != null && vehicleCategory.isNotEmpty) {
       queryParameters['vehicleCategory'] = vehicleCategory;
-      queryParameters['category'] = vehicleCategory; // same key fetchManufacturers uses
+      queryParameters['category'] =
+          vehicleCategory; // same key fetchManufacturers uses
     }
 
     final resp = await _dio.get(
@@ -782,11 +785,6 @@ class AddRepository {
           sendTimeout: const Duration(minutes: 10),
           receiveTimeout: const Duration(minutes: 5),
         ),
-        onSendProgress: (sent, total) {
-          if (total > 0) {
-            final progress = (sent / total * 100).toStringAsFixed(1);
-          }
-        },
       );
 
       if (uploadResponse.statusCode == 200 ||
@@ -907,8 +905,7 @@ class AddRepository {
           };
         }
       } catch (_) {}
-      final response =
-          await _dio.get('/v2/ads/$adId', queryParameters: query);
+      final response = await _dio.get('/v2/ads/$adId', queryParameters: query);
       final raw = response.data;
 
       // Accept either {data: {...}} or plain {...}
@@ -947,7 +944,6 @@ class AddRepository {
 
   Future<AddModel> markAdAsSold(String adId) async {
     try {
-
       final resp = await _dio.put(
         '/ads/$adId/sold',
         data: {
@@ -976,7 +972,6 @@ class AddRepository {
 
       return AddModel.fromJson(obj);
     } on DioException catch (e) {
-
       // If v1 fails with 404, try v2 endpoint
       if (e.response?.statusCode == 404) {
         try {
@@ -1006,8 +1001,7 @@ class AddRepository {
 
           return AddModel.fromJson(obj2);
         } catch (e2) {
-          if (e2 is DioException) {
-          }
+          if (e2 is DioException) {}
         }
       }
 

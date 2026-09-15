@@ -37,6 +37,7 @@ class _VersionCheckWrapperState extends State<VersionCheckWrapper> {
             showUpdateAppDialog(navigatorContext, result: result);
           }
         }
+
         showIfReady();
         if (AppRoutes.rootNavigatorKey.currentContext == null) {
           Future.delayed(const Duration(milliseconds: 300), () {
@@ -44,8 +45,7 @@ class _VersionCheckWrapperState extends State<VersionCheckWrapper> {
             showIfReady();
           });
         }
-      } else {
-      }
+      } else {}
     } catch (_, __) {
       _checked = true;
       // On failure (e.g. no network, backend error), allow app to run

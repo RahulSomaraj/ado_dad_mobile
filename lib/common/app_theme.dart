@@ -21,7 +21,8 @@ class AppTheme {
     final Color scaffold =
         isDark ? AppColors.darkBackground : const Color(0xFFF6F7FB);
     final Color surface = isDark ? AppColors.darkSurface : Colors.white;
-    final Color textPrimary = isDark ? AppColors.darkText : AppColors.lightBlack;
+    final Color textPrimary =
+        isDark ? AppColors.darkText : AppColors.lightBlack;
     final Color textSecondary =
         isDark ? AppColors.darkText1 : AppColors.lightBlack1;
     final Color border =
@@ -42,11 +43,12 @@ class AppTheme {
       onSurface: textPrimary,
     );
 
-    final TextTheme baseText =
-        GoogleFonts.poppinsTextTheme(isDark ? ThemeData.dark().textTheme : ThemeData.light().textTheme)
-            .apply(bodyColor: textPrimary, displayColor: textPrimary);
+    final TextTheme baseText = GoogleFonts.poppinsTextTheme(
+            isDark ? ThemeData.dark().textTheme : ThemeData.light().textTheme)
+        .apply(bodyColor: textPrimary, displayColor: textPrimary);
 
-    OutlineInputBorder inputBorder(Color c, [double w = 1]) => OutlineInputBorder(
+    OutlineInputBorder inputBorder(Color c, [double w = 1]) =>
+        OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: c, width: w),
         );
@@ -61,9 +63,8 @@ class AppTheme {
       primaryColor: _primary,
       textTheme: baseText,
       iconTheme: IconThemeData(color: textSecondary),
-      splashColor: _primary.withOpacity(0.08),
-      highlightColor: _primary.withOpacity(0.05),
-
+      splashColor: _primary.withValues(alpha: 0.08),
+      highlightColor: _primary.withValues(alpha: 0.05),
       appBarTheme: AppBarTheme(
         backgroundColor: surface,
         foregroundColor: textPrimary,
@@ -74,7 +75,6 @@ class AppTheme {
             fontSize: 18, fontWeight: FontWeight.w600, color: textPrimary),
         iconTheme: IconThemeData(color: textPrimary),
       ),
-
       cardTheme: CardThemeData(
         color: surface,
         elevation: 0,
@@ -84,7 +84,6 @@ class AppTheme {
           side: BorderSide(color: border),
         ),
       ),
-
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surface,
@@ -97,7 +96,6 @@ class AppTheme {
         errorBorder: inputBorder(_danger),
         focusedErrorBorder: inputBorder(_danger, 1.5),
       ),
-
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: _primary,
@@ -106,11 +104,10 @@ class AppTheme {
           minimumSize: const Size.fromHeight(50),
           textStyle:
               GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
-
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: textPrimary,
@@ -118,26 +115,22 @@ class AppTheme {
           side: BorderSide(color: border),
           textStyle:
               GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
-
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(foregroundColor: _primary),
       ),
-
       chipTheme: ChipThemeData(
         backgroundColor: surface,
         selectedColor: _primary,
         side: BorderSide(color: border),
         labelStyle: TextStyle(color: textPrimary, fontSize: 12),
         secondaryLabelStyle: const TextStyle(color: Colors.white, fontSize: 12),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       ),
-
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: surface,
         selectedItemColor: _primary,
@@ -145,25 +138,20 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
-
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: surface,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
       ),
-
       dialogTheme: DialogThemeData(
         backgroundColor: surface,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
-
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: _primary,
         foregroundColor: Colors.white,
       ),
-
       dividerTheme: DividerThemeData(color: border, thickness: 1),
       scrollbarTheme: ScrollbarThemeData(
         thumbVisibility: WidgetStateProperty.all(true),

@@ -185,8 +185,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
     try {
       _manufacturers =
           await repo.fetchManufacturers(vehicleCategory: 'passenger_car');
-    } catch (_) {
-    }
+    } catch (_) {}
     if (!mounted) return;
     setState(() {});
 
@@ -204,8 +203,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
     if (manufacturer != null) {
       try {
         _models = await repo.fetchModelsByManufacturer(manufacturer.id);
-      } catch (_) {
-      }
+      } catch (_) {}
       if (!mounted) return;
       setState(() {});
       final modelId = widget.ad.model?.id;
@@ -219,8 +217,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
     if (model != null) {
       try {
         _variants = await repo.fetchVariantsByModel(model.id);
-      } catch (_) {
-      }
+      } catch (_) {}
       if (!mounted) return;
       setState(() {});
 
@@ -250,11 +247,10 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
       final name = (widget.ad.transmission ?? '').toLowerCase();
       _selectedTransmissionType = _firstWhereOrNull(
               _transmissionTypes, (t) => t.id == widget.ad.transmissionId) ??
-          _firstWhereOrNull(_transmissionTypes,
-              (t) => t.displayName.toLowerCase() == name) ??
+          _firstWhereOrNull(
+              _transmissionTypes, (t) => t.displayName.toLowerCase() == name) ??
           _firstOrNull(_transmissionTypes);
-    } catch (_) {
-    }
+    } catch (_) {}
     if (!mounted) return;
 
     // fuel (scoped to this category)
@@ -269,8 +265,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
               _firstWhereOrNull(
                   _fuelTypes, (f) => f.displayName.toLowerCase() == name) ??
               _firstOrNull(_fuelTypes);
-    } catch (_) {
-    }
+    } catch (_) {}
 
     if (mounted) setState(() {});
   }
@@ -333,8 +328,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
             _uploadedVideoUrl = url;
             _videoRemoved = false; // Reset removal flag when video is uploaded
           });
-        } else {
-        }
+        } else {}
       } catch (e) {
         // Optionally show error to user
         if (mounted) {
@@ -437,6 +431,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
       payload['title'] = titleValue;
     }
 
+    if (!context.mounted) return;
     context.read<AdEditBloc>().add(AdEditEvent.submit(
           adId: widget.ad.id,
           category: widget.ad.category.isNotEmpty
@@ -501,7 +496,7 @@ class _CommercialVehicleFormEditState extends State<CommercialVehicleFormEdit> {
                       ErrorMessageUtil.getUserFriendlyMessage(msg),
                       style: const TextStyle(color: Colors.white),
                     ),
-                    backgroundColor: Colors.red.shade300.withOpacity(0.9),
+                    backgroundColor: Colors.red.shade300.withValues(alpha: 0.9),
                   ),
                 );
               },

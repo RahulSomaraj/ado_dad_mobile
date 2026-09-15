@@ -17,7 +17,6 @@ class ReportAdBloc extends Bloc<ReportAdEvent, ReportAdState> {
       await event.when(
         reportAd: (reportedUserId, reason, description, relatedAd,
             evidenceUrls) async {
-
           emit(const ReportAdState.reporting());
           try {
             final reportData = ReportAdModel(

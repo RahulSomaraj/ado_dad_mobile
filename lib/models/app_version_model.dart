@@ -19,7 +19,8 @@ class AppVersionResponse {
       statusCode: (json['statusCode'] is int) ? json['statusCode'] as int : 200,
       message: json['message']?.toString(),
       data: dataJson is Map<String, dynamic>
-          ? AppVersionData.fromJson(dataJson, message: json['message']?.toString())
+          ? AppVersionData.fromJson(dataJson,
+              message: json['message']?.toString())
           : null,
     );
   }

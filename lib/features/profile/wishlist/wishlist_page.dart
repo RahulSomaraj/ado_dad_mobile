@@ -93,7 +93,7 @@ class _WishlistPageState extends State<WishlistPage> {
                 style: const TextStyle(color: Colors.white),
               ),
               duration: const Duration(seconds: 2),
-              backgroundColor: Colors.red.shade300.withOpacity(0.9),
+              backgroundColor: Colors.red.shade300.withValues(alpha: 0.9),
             ),
           );
         }
@@ -105,37 +105,37 @@ class _WishlistPageState extends State<WishlistPage> {
             : AppBar(
                 backgroundColor: AppColors.primaryColor,
                 elevation: 0,
-          leading: IconButton(
-            icon: Icon(
-              (!kIsWeb && Platform.isIOS)
-                  ? Icons.arrow_back_ios
-                  : Icons.arrow_back,
-              color: Colors.white,
-              size: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 24,
-                tablet: 30,
-                largeTablet: 32,
-                desktop: 36,
+                leading: IconButton(
+                  icon: Icon(
+                    (!kIsWeb && Platform.isIOS)
+                        ? Icons.arrow_back_ios
+                        : Icons.arrow_back,
+                    color: Colors.white,
+                    size: GetResponsiveSize.getResponsiveSize(
+                      context,
+                      mobile: 24,
+                      tablet: 30,
+                      largeTablet: 32,
+                      desktop: 36,
+                    ),
+                  ),
+                  onPressed: () => context.pop(),
+                ),
+                title: Text(
+                  'My Wishlist',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: GetResponsiveSize.getResponsiveFontSize(
+                      context,
+                      mobile: 20,
+                      tablet: 24,
+                      largeTablet: 28,
+                      desktop: 32,
+                    ),
+                  ),
+                ),
               ),
-            ),
-            onPressed: () => context.pop(),
-          ),
-          title: Text(
-            'My Wishlist',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                context,
-                mobile: 20,
-                tablet: 24,
-                largeTablet: 28,
-                desktop: 32,
-              ),
-            ),
-          ),
-        ),
         body: SafeArea(
           top: false,
           minimum: const EdgeInsets.only(bottom: 30),
@@ -501,7 +501,7 @@ class _WishlistPageState extends State<WishlistPage> {
                                     desktop: 64,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.35),
+                                    color: Colors.black.withValues(alpha: 0.35),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Center(

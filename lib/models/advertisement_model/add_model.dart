@@ -400,13 +400,14 @@ class AddModel {
 
       // commercial
       bodyType: (json['bodyType'] ?? vd?['bodyType']) as String?,
-      payloadCapacity: _asInt(json['payloadCapacity'] ?? vd?['payloadCapacity']),
+      payloadCapacity:
+          _asInt(json['payloadCapacity'] ?? vd?['payloadCapacity']),
       payloadUnit: (json['payloadUnit'] ?? vd?['payloadUnit']) as String?,
       axleCount: _asInt(json['axleCount'] ?? vd?['axleCount']),
-      seatingCapacity: _asInt(json['seatingCapacity'] ?? vd?['seatingCapacity']),
-      commercialVehicleType:
-          (json['commercialVehicleType'] ?? vd?['commercialVehicleType'])
-              as String?,
+      seatingCapacity:
+          _asInt(json['seatingCapacity'] ?? vd?['seatingCapacity']),
+      commercialVehicleType: (json['commercialVehicleType'] ??
+          vd?['commercialVehicleType']) as String?,
       hasFitness: (json['hasFitness'] ?? vd?['hasFitness']) as bool?,
       hasPermit: (json['hasPermit'] ?? vd?['hasPermit']) as bool?,
       // Favorite fields

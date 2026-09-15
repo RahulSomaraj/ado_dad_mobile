@@ -15,7 +15,7 @@ class AuthHelper {
   /// Require authentication before executing a callback
   /// Shows login prompt if user is not authenticated
   /// Executes the callback if user is authenticated
-  /// 
+  ///
   /// Example:
   /// ```dart
   /// AuthHelper.requireAuth(
@@ -33,6 +33,7 @@ class AuthHelper {
     String? redirectPath,
   }) async {
     final isAuth = await isAuthenticated();
+    if (!context.mounted) return;
     if (isAuth) {
       // User is authenticated, execute the callback
       onAuthenticated();
@@ -48,7 +49,7 @@ class AuthHelper {
 
   /// Show login prompt dialog
   /// Uses platform-specific design (iOS Cupertino, Android Material)
-  /// 
+  ///
   /// Example:
   /// ```dart
   /// AuthHelper.showLoginPrompt(
@@ -72,7 +73,7 @@ class AuthHelper {
   /// Check authentication before navigating to a route
   /// Shows login prompt if not authenticated
   /// Navigates to route if authenticated
-  /// 
+  ///
   /// Example:
   /// ```dart
   /// AuthHelper.checkAuthAndNavigate(
@@ -86,6 +87,7 @@ class AuthHelper {
     String? message,
   }) async {
     final isAuth = await isAuthenticated();
+    if (!context.mounted) return;
     if (isAuth) {
       // User is authenticated, navigate to route
       context.push(route);
@@ -100,7 +102,7 @@ class AuthHelper {
   }
 
   /// Check authentication and execute different callbacks based on auth status
-  /// 
+  ///
   /// Example:
   /// ```dart
   /// AuthHelper.checkAuth(
@@ -128,4 +130,3 @@ class AuthHelper {
     }
   }
 }
-

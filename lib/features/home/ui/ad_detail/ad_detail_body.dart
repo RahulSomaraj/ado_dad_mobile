@@ -45,7 +45,8 @@ class _AdDetailExpandableTextState extends State<AdDetailExpandableText> {
                 widget.text,
                 style: style,
                 maxLines: _expanded ? null : _lines,
-                overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                overflow:
+                    _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
               ),
             ),
             if (overflows)
@@ -208,45 +209,45 @@ class _AdDetailSafetyNoteState extends State<AdDetailSafetyNote> {
       children: [
         const SizedBox(height: AppSpacing.sm8),
         Container(
-      color: AppColors.whiteColor,
-      padding: EdgeInsets.fromLTRB(g, AppSpacing.lg16, g, AppSpacing.lg16),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 12, 4, 12),
-        decoration: BoxDecoration(
-          color: AppColors.primarySoft,
-          borderRadius: BorderRadius.circular(AppRadius.control12),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Icon(Icons.shield_outlined,
-                size: 20, color: AppColors.primaryColor),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 1),
-                child: Text(
-                  text,
-                  style: AppTextstyle.caption
-                      .copyWith(color: AppColors.blackColor1),
+          color: AppColors.whiteColor,
+          padding: EdgeInsets.fromLTRB(g, AppSpacing.lg16, g, AppSpacing.lg16),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(12, 12, 4, 12),
+            decoration: BoxDecoration(
+              color: AppColors.primarySoft,
+              borderRadius: BorderRadius.circular(AppRadius.control12),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.shield_outlined,
+                    size: 20, color: AppColors.primaryColor),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 1),
+                    child: Text(
+                      text,
+                      style: AppTextstyle.caption
+                          .copyWith(color: AppColors.blackColor1),
+                    ),
+                  ),
                 ),
-              ),
+                SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    tooltip: 'Dismiss',
+                    iconSize: 18,
+                    color: AppColors.textMuted,
+                    onPressed: _dismiss,
+                    icon: const Icon(Icons.close),
+                  ),
+                ),
+              ],
             ),
-            SizedBox(
-              width: 36,
-              height: 36,
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                tooltip: 'Dismiss',
-                iconSize: 18,
-                color: AppColors.textMuted,
-                onPressed: _dismiss,
-                icon: const Icon(Icons.close),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
         ),
       ],
     );

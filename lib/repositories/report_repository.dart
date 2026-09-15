@@ -7,14 +7,12 @@ class ReportRepository {
 
   Future<ReportAdModel> reportAd(ReportAdModel reportData) async {
     try {
-
       final response = await _dio.post(
         '/user-reports',
         data: reportData.toJson(),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-
         // Parse the response to get the created report with all details
         final responseData = response.data;
         if (responseData is Map<String, dynamic>) {
@@ -27,9 +25,7 @@ class ReportRepository {
         throw Exception('Failed to report ad');
       }
     } on DioException catch (e) {
-
       if (e.response != null) {
-
         // Try to extract error message from different possible fields
         String errorMessage = 'Failed to report ad';
         if (e.response!.data is Map<String, dynamic>) {

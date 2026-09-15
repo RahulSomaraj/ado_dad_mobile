@@ -125,7 +125,7 @@ class _MyAdsPageState extends State<MyAdsPage> {
               'Please login to view your ads',
               style: TextStyle(color: Colors.white),
             ),
-            backgroundColor: Colors.red.shade300.withOpacity(0.9),
+            backgroundColor: Colors.red.shade300.withValues(alpha: 0.9),
           ),
         );
         context.go('/login');
@@ -133,9 +133,7 @@ class _MyAdsPageState extends State<MyAdsPage> {
       return;
     }
     if (mounted) {
-      context
-          .read<MyAdsBloc>()
-          .add(const MyAdsEvent.load(page: 1, limit: 20));
+      context.read<MyAdsBloc>().add(const MyAdsEvent.load(page: 1, limit: 20));
     }
   }
 
@@ -157,9 +155,7 @@ class _MyAdsPageState extends State<MyAdsPage> {
   }
 
   void _reload(BuildContext context) {
-    context
-        .read<MyAdsBloc>()
-        .add(const MyAdsEvent.load(page: 1, limit: 20));
+    context.read<MyAdsBloc>().add(const MyAdsEvent.load(page: 1, limit: 20));
   }
 
   /// Opens ad detail; it pops `true` after mark-as-sold / delete (and after
@@ -181,8 +177,7 @@ class _MyAdsPageState extends State<MyAdsPage> {
       );
       return;
     }
-    final changed =
-        await context.push<bool>(route, extra: _toAddModel(ad));
+    final changed = await context.push<bool>(route, extra: _toAddModel(ad));
     if (changed == true && context.mounted) {
       _reload(context);
     }
@@ -195,15 +190,13 @@ class _MyAdsPageState extends State<MyAdsPage> {
     try {
       await AddRepository().markAdAsSold(ad.id);
       if (!context.mounted) return;
-      context
-          .read<MyAdsBloc>()
-          .add(const MyAdsEvent.load(page: 1, limit: 20));
+      context.read<MyAdsBloc>().add(const MyAdsEvent.load(page: 1, limit: 20));
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Marked as sold')));
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Could not mark as sold: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not mark as sold: $e')));
       }
     }
   }
@@ -215,21 +208,18 @@ class _MyAdsPageState extends State<MyAdsPage> {
     try {
       await AddRepository().deleteAd(ad.id);
       if (!context.mounted) return;
-      context
-          .read<MyAdsBloc>()
-          .add(const MyAdsEvent.load(page: 1, limit: 20));
+      context.read<MyAdsBloc>().add(const MyAdsEvent.load(page: 1, limit: 20));
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Advertisement deleted')));
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Could not delete: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Could not delete: $e')));
       }
     }
   }
 
-  Future<bool?> _confirm(
-      BuildContext context, String title, String message) {
+  Future<bool?> _confirm(BuildContext context, String title, String message) {
     return showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
@@ -323,10 +313,7 @@ class _MyAdsPageState extends State<MyAdsPage> {
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: GetResponsiveSize.getResponsiveFontSize(context,
-                          mobile: 20,
-                          tablet: 24,
-                          largeTablet: 28,
-                          desktop: 32),
+                          mobile: 20, tablet: 24, largeTablet: 28, desktop: 32),
                       color: const Color(0xFF16181B),
                     ),
                   );
@@ -344,9 +331,8 @@ class _MyAdsPageState extends State<MyAdsPage> {
               initial: (_) => const SkeletonList(),
               error: (e) => _ErrorView(
                 message: e.message,
-                onRetry: () => context
-                    .read<MyAdsBloc>()
-                    .add(const MyAdsEvent.load()),
+                onRetry: () =>
+                    context.read<MyAdsBloc>().add(const MyAdsEvent.load()),
               ),
               loaded: (loaded) {
                 if (loaded.ads.isEmpty) {
@@ -373,8 +359,7 @@ class _MyAdsPageState extends State<MyAdsPage> {
                           ? Center(
                               child: Text(
                                 'No ads in this filter',
-                                style:
-                                    TextStyle(color: Colors.grey.shade600),
+                                style: TextStyle(color: Colors.grey.shade600),
                               ),
                             )
                           : GridView.builder(
@@ -413,8 +398,7 @@ class _MyAdsPageState extends State<MyAdsPage> {
                                       right: 5,
                                       child: _MyAdActionsButton(
                                         ad: ad,
-                                        onEdit: () =>
-                                            _handleEdit(context, ad),
+                                        onEdit: () => _handleEdit(context, ad),
                                         onMarkSold: () =>
                                             _handleMarkSold(context, ad),
                                         onDelete: () =>
@@ -534,8 +518,8 @@ class _MyAdActionsButton extends StatelessWidget {
       width: 28,
       height: 28,
       child: DecoratedBox(
-        decoration: const BoxDecoration(
-            color: Colors.white, shape: BoxShape.circle),
+        decoration:
+            const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
         child: PopupMenuButton<String>(
           icon: Icon(Icons.more_vert, size: 16, color: AppColors.greyColor),
           padding: EdgeInsets.zero,

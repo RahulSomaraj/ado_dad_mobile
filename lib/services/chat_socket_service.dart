@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/config/app_config.dart';
 
@@ -9,7 +9,7 @@ class ChatSocketService {
   factory ChatSocketService() => _instance;
   ChatSocketService._internal();
 
-  IO.Socket? _socket;
+  io.Socket? _socket;
   bool _isConnected = false;
   String? _currentRoomId;
 
@@ -85,9 +85,9 @@ class ChatSocketService {
       }
 
       // Create socket connection
-      _socket = IO.io(
+      _socket = io.io(
           socketUrl,
-          IO.OptionBuilder()
+          io.OptionBuilder()
               .setTransports(['websocket', 'polling'])
               .setAuth({'token': cleanToken})
               .setTimeout(10000)
@@ -165,8 +165,7 @@ class ChatSocketService {
     });
 
     // Chat room events
-    _socket!.on('connected', (data) {
-    });
+    _socket!.on('connected', (data) {});
 
     _socket!.on('chatRoomCreated', (data) {
       // Set the current room ID when room is created
@@ -189,21 +188,18 @@ class ChatSocketService {
 
     // Message events - server broadcasts individual messages
     _socket!.on('message', (message) {
-
       // Add the individual message as a list to the stream
       _messagesController.add([message as Map<String, dynamic>]);
     });
 
     // Alternative message event (as mentioned in HTML file) - Only for logging
     _socket!.on('newMessage', (message) {
-
       // Don't add to stream to prevent duplicates
       // The main 'message' event should handle all messages
     });
 
     // Add debugging for all socket events
-    _socket!.onAny((event, data) {
-    });
+    _socket!.onAny((event, data) {});
 
     _socket!.on('sendMessageResponse', (response) {
       if (response['success'] == true) {
@@ -215,7 +211,6 @@ class ChatSocketService {
     // Room list response
     _socket!.on('getUserChatRoomsResponse', (response) {
       if (response['success'] == true) {
-        final rooms = response['chatRooms'] ?? [];
         _roomController.add({'type': 'roomsList', 'data': response});
       } else {
         _errorController.add('Failed to load rooms: ${response['error']}');
@@ -400,8 +395,7 @@ class ChatSocketService {
         _socket!.emit('joinChatRoom', {'roomId': roomToRejoin});
         _currentRoomId = roomToRejoin;
       }
-    } else {
-    }
+    } else {}
   }
 
   /// Keep connection alive after operations

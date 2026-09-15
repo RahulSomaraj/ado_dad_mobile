@@ -15,13 +15,11 @@ class OfferService {
     required String otherUserId,
     int? adPrice,
   }) async {
-
     // Store ScaffoldMessenger from the page context (more stable than dialog context)
     ScaffoldMessengerState? pageScaffoldMessenger;
     try {
       pageScaffoldMessenger = ScaffoldMessenger.maybeOf(context);
-    } catch (_) {
-    }
+    } catch (_) {}
 
     // Show the offer popup
     await offer_popup.showOfferPopup(
@@ -31,7 +29,6 @@ class OfferService {
       adPosterName: adPosterName,
       adPrice: adPrice,
       onOfferSubmitted: (amount) async {
-
         // Close the popup
         Navigator.of(context).pop();
 
@@ -44,6 +41,10 @@ class OfferService {
           await _checkRoomExists(
               context, adId, otherUserId, amount, pageScaffoldMessenger);
         } catch (e) {
+          if (!context.mounted) {
+            _loadingDialogShown = false;
+            return;
+          }
           // Close loading dialog (guarded — never pops a page route)
           _closeLoadingDialog(context);
 
@@ -62,18 +63,19 @@ class OfferService {
       double offerAmount,
       ScaffoldMessengerState? scaffoldMessenger) async {
     try {
-
       // Import the chat API service
       final chatApiService = ChatApiService();
       final result = await chatApiService.checkRoomExists(adId, otherUserId);
+      if (!context.mounted) {
+        _loadingDialogShown = false;
+        return;
+      }
 
       // Close loading dialog (guarded)
       _closeLoadingDialog(context);
 
       if (result['success'] == true && result['data']?['exists'] == true) {
         final roomId = result['data']?['roomId'];
-        final initiatorId = result['data']?['initiatorId'];
-        final adIdFromResult = result['data']?['adId'];
 
         // Join the existing room
         await _joinRoom(context, roomId, adId, otherUserId, offerAmount,
@@ -93,12 +95,12 @@ class OfferService {
       BuildContext context, String adId, String otherUserId, double offerAmount,
       {ScaffoldMessengerState? scaffoldMessenger}) async {
     try {
-
       // Get chat repository
       final chatRepository = ChatRepository();
 
       // Connect to chat service
       final connected = await chatRepository.connect();
+      if (!context.mounted) return;
       if (!connected) {
         _showErrorDialog(context, 'Failed to connect to chat service');
         return;
@@ -106,9 +108,9 @@ class OfferService {
 
       // Create room for the ad
       final roomId = await chatRepository.createChatRoom(adId);
+      if (!context.mounted) return;
 
       if (roomId != null) {
-
         // Join the newly created room (no loading dialog shown)
         await _joinRoom(context, roomId, adId, otherUserId, offerAmount,
             isNewRoom: true, scaffoldMessenger: scaffoldMessenger);
@@ -116,6 +118,10 @@ class OfferService {
         _showErrorDialog(context, 'Failed to create chat room');
       }
     } catch (e) {
+      if (!context.mounted) {
+        _loadingDialogShown = false;
+        return;
+      }
       // Close loading dialog if still visible (guarded — it was normally
       // closed already after the room check, so an unguarded pop here used
       // to remove the underlying page)
@@ -130,21 +136,18 @@ class OfferService {
       {required bool isNewRoom,
       ScaffoldMessengerState? scaffoldMessenger}) async {
     try {
-
       // Get chat repository
       final chatRepository = ChatRepository();
 
       // Join the room
       await chatRepository.joinChatRoom(roomId);
-
-      // Single proper log for room join result
+      if (!context.mounted) return;
 
       // Send message to the room after successful join
       await _sendMessageToRoom(
           context, roomId, adId, otherUserId, offerAmount, isNewRoom,
           scaffoldMessenger: scaffoldMessenger);
     } catch (e) {
-
       // Show error dialog with delay to ensure context is stable
       await Future.delayed(const Duration(milliseconds: 500));
 
@@ -170,15 +173,11 @@ class OfferService {
           scaffoldMessenger = ScaffoldMessenger.maybeOf(rootNavigator.context);
         }
         // Fallback to passed context if root navigator doesn't work
-        if (scaffoldMessenger == null) {
-          scaffoldMessenger = ScaffoldMessenger.maybeOf(context);
-        }
-      } catch (_) {
-      }
+        scaffoldMessenger ??= ScaffoldMessenger.maybeOf(context);
+      } catch (_) {}
     }
 
     try {
-
       // Get chat repository
       final chatRepository = ChatRepository();
 
@@ -245,9 +244,7 @@ class OfferService {
               }
 
               // If still null, try the passed context
-              if (fallbackMessenger == null) {
-                fallbackMessenger = ScaffoldMessenger.maybeOf(context);
-              }
+              fallbackMessenger ??= ScaffoldMessenger.maybeOf(context);
 
               if (fallbackMessenger != null) {
                 fallbackMessenger.showSnackBar(
@@ -280,16 +277,12 @@ class OfferService {
                     duration: const Duration(seconds: 3),
                   ),
                 );
-              } else {
-              }
-            } catch (_) {
-            }
+              } else {}
+            } catch (_) {}
           }
-        } catch (_) {
-        }
+        } catch (_) {}
       });
     } catch (e) {
-
       // Show error dialog with delay to ensure context is stable
       await Future.delayed(const Duration(milliseconds: 500));
 
@@ -302,130 +295,8 @@ class OfferService {
     }
   }
 
-  /// Show room joined dialog
-  static void _showRoomJoinedDialog(
-      BuildContext context, String roomId, String adId, bool isNewRoom) {
-
-    // Ensure we're on the main thread
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (context.mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: true,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Row(
-              children: [
-                Icon(
-                  Icons.check_circle,
-                  color: Colors.green.shade600,
-                  size: 28,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    isNewRoom
-                        ? 'Room Created & Joined!'
-                        : 'Room Joined Successfully!',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isNewRoom
-                            ? '🎉 A new chat room has been created and you have joined it!'
-                            : '✅ You have successfully joined the existing room!',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildInfoRow('Room ID', roomId),
-                      _buildInfoRow('Ad ID', adId),
-                      _buildInfoRow('Status', 'Active'),
-                      _buildInfoRow(
-                          'Type', isNewRoom ? 'New Room' : 'Existing Room'),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.shade200),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.chat, color: Colors.blue, size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'You can now start chatting!',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade600,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: const Text(
-                    'Great! Let\'s Chat',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      } else {
-      }
-    });
-  }
-
   /// Show message error dialog
   static void _showMessageErrorDialog(BuildContext context, String message) {
-
     // Ensure we're on the main thread
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (context.mounted) {
@@ -535,41 +406,8 @@ class OfferService {
             ],
           ),
         );
-      } else {
-      }
+      } else {}
     });
-  }
-
-  /// Build info row for dialog
-  static Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 80,
-            child: Text(
-              '$label:',
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   // Tracks whether the offer-flow loading dialog is on screen, so a stray
@@ -603,7 +441,6 @@ class OfferService {
 
   /// Show error dialog
   static void _showErrorDialog(BuildContext context, String message) {
-
     // Ensure we're on the main thread
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (context.mounted) {
@@ -620,8 +457,7 @@ class OfferService {
             ],
           ),
         );
-      } else {
-      }
+      } else {}
     });
   }
 }

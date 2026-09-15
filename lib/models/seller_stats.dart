@@ -29,9 +29,8 @@ class SellerStats {
   });
 
   factory SellerStats.fromJson(Map<dynamic, dynamic> json) {
-    int asInt(dynamic v) => v is int
-        ? v
-        : (v is num ? v.toInt() : int.tryParse('${v ?? ''}') ?? 0);
+    int asInt(dynamic v) =>
+        v is int ? v : (v is num ? v.toInt() : int.tryParse('${v ?? ''}') ?? 0);
     int? asIntOrNull(dynamic v) =>
         v == null ? null : (v is num ? v.toInt() : int.tryParse('$v'));
     double? asDoubleOrNull(dynamic v) =>

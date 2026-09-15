@@ -33,7 +33,7 @@ class ApiService {
   }
 
   /// Prepares the Authorization header with the token
-  /// Set useBearerPrefix to true if API expects "Bearer <token>", false if it expects just the token
+  /// Set useBearerPrefix to true if API expects `Bearer <token>`, false if it expects just the token
   /// Most REST APIs use "Bearer " prefix, but some APIs don't
   static const bool _useBearerPrefix =
       true; // Set to false if API expects just the token without "Bearer "

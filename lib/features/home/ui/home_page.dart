@@ -12,7 +12,6 @@ import 'package:ado_dad_user/config/app_config.dart';
 import 'package:ado_dad_user/features/home/banner_bloc/banner_bloc.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
-import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/models/cayegory_model.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:ado_dad_user/services/location_service.dart';
@@ -206,7 +205,8 @@ class _HomePageState extends State<HomePage> {
     }
 
     return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
+        locationSettings:
+            const LocationSettings(accuracy: LocationAccuracy.high));
   }
 
   Future<void> _getLocationAndAddress() async {
@@ -229,8 +229,7 @@ class _HomePageState extends State<HomePage> {
           await _applyLocationBasedRecommendations(placeDetails);
           return;
         }
-      } catch (_) {
-      }
+      } catch (_) {}
 
       // Fallback to standard geocoding
       final placemarks =
@@ -334,8 +333,7 @@ class _HomePageState extends State<HomePage> {
           return;
         }
       }
-    } catch (_) {
-    }
+    } catch (_) {}
 
     if (!mounted) return;
     setState(() {
@@ -469,7 +467,7 @@ class _HomePageState extends State<HomePage> {
                         child: CircularProgressIndicator(),
                       )
                     else if (suggestions.isNotEmpty)
-                      Container(
+                      SizedBox(
                         height: 120,
                         child: ListView.builder(
                           itemCount: suggestions.length,
@@ -547,6 +545,7 @@ class _HomePageState extends State<HomePage> {
                           setDialogState(() {
                             isLoadingSuggestions = false;
                           });
+                          if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                                 content: Text("Failed to fetch location: $e")),
@@ -568,6 +567,7 @@ class _HomePageState extends State<HomePage> {
                     if (input.isNotEmpty) {
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.setString('user_location', input);
+                      if (!context.mounted) return;
                       Navigator.pop(context, input); // Return location
                     } else {
                       Navigator.pop(context); // No update
@@ -585,17 +585,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final width = screenSize.width;
-    final isTablet = GetResponsiveSize.isTablet(context);
-    final isLargeTablet = GetResponsiveSize.isLargeTablet(context);
-    final scale = GetResponsiveSize.getResponsiveSize(
-      context,
-      mobile: 1.0,
-      tablet: 1.18,
-      largeTablet: 1.35,
-      desktop: 1.5,
-    );
     return BlocListener<FavoriteBloc, FavoriteState>(
       listener: (context, state) {
         if (state is FavoriteToggleSuccess) {
@@ -637,7 +626,7 @@ class _HomePageState extends State<HomePage> {
                   style: const TextStyle(color: Colors.white),
                 ),
                 duration: const Duration(seconds: 2),
-                backgroundColor: Colors.red.shade300.withOpacity(0.9),
+                backgroundColor: Colors.red.shade300.withValues(alpha: 0.9),
               ),
             );
           }
@@ -697,64 +686,67 @@ class _HomePageState extends State<HomePage> {
                   slivers: [
                     SliverToBoxAdapter(
                       child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // 🔷 PROMO BANNER
-                      Padding(
-                        padding: const EdgeInsets.only(top: 14),
-                        child: _buildPromoBanner(),
-                      ),
-                      const SizedBox(height: 8),
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // 🔷 PROMO BANNER
+                          Padding(
+                            padding: const EdgeInsets.only(top: 14),
+                            child: _buildPromoBanner(),
+                          ),
+                          const SizedBox(height: 8),
 
-                  // 🔷 CATEGORIES
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: buildSectionTitle("Categories"),
-                  ),
-                  const SizedBox(height: 5),
-                  buildCategories(context),
+                          // 🔷 CATEGORIES
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: buildSectionTitle("Categories"),
+                          ),
+                          const SizedBox(height: 5),
+                          buildCategories(context),
 
-                  // extra space above Recommendations on larger devices
-                  SizedBox(
-                    height: GetResponsiveSize.getResponsiveSize(
-                      context,
-                      mobile: 0, // unchanged for phones
-                      tablet: 25,
-                      largeTablet: 30,
-                      desktop: 30,
-                    ),
-                  ),
-
-                  // 🔷 RECOMMENDATIONS TITLE
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(child: buildSectionTitle("Fresh near you")),
-                        GestureDetector(
-                          onTap: () => context.push('/search?from=/home'),
-                          child: Text(
-                            "See all",
-                            style: TextStyle(
-                              color: AppColors.primaryColor,
-                              fontWeight: FontWeight.w500,
-                              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                                context,
-                                mobile: 12,
-                                tablet: 16,
-                                largeTablet: 18,
-                                desktop: 18,
-                              ),
+                          // extra space above Recommendations on larger devices
+                          SizedBox(
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 0, // unchanged for phones
+                              tablet: 25,
+                              largeTablet: 30,
+                              desktop: 30,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                    ],
-                  ),
+
+                          // 🔷 RECOMMENDATIONS TITLE
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Flexible(
+                                    child: buildSectionTitle("Fresh near you")),
+                                GestureDetector(
+                                  onTap: () =>
+                                      context.push('/search?from=/home'),
+                                  child: Text(
+                                    "See all",
+                                    style: TextStyle(
+                                      color: AppColors.primaryColor,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: GetResponsiveSize
+                                          .getResponsiveFontSize(
+                                        context,
+                                        mobile: 12,
+                                        tablet: 16,
+                                        largeTablet: 18,
+                                        desktop: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                        ],
+                      ),
                     ),
 
                     // 🔷 MAIN AD GRID — a real sliver, so it builds lazily.
@@ -842,9 +834,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget buildTopBar() {
-    final width = MediaQuery.of(context).size.width;
-    final isTablet = GetResponsiveSize.isTablet(context);
-    final isLargeTablet = GetResponsiveSize.isLargeTablet(context);
     final double locationFont = GetResponsiveSize.getResponsiveFontSize(
       context,
       mobile: 12,
@@ -1010,7 +999,7 @@ class _HomePageState extends State<HomePage> {
         padding: EdgeInsets.zero,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
-          child: Container(
+          child: SizedBox(
             height: 150,
             width: double.infinity,
             // color: Colors.red,
@@ -1031,8 +1020,7 @@ class _HomePageState extends State<HomePage> {
     final Uri uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-    }
+    } else {}
   }
 
   Widget buildSectionTitle(String title) {
@@ -1067,7 +1055,7 @@ class _HomePageState extends State<HomePage> {
           border: Border.all(color: AppColors.dividerColor),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -1129,106 +1117,109 @@ class _HomePageState extends State<HomePage> {
               child: SizedBox(
                 width: itemWidth,
                 child: GestureDetector(
-              onTap: () async {
-                // Special handling for Showroom category
-                if (category.categoryId == 'showroom') {
-                  // Navigate to showroom users - page handles both authenticated and unauthenticated access
-                  context.push('/showroom-users');
-                  return;
-                }
+                  onTap: () async {
+                    // Special handling for Showroom category
+                    if (category.categoryId == 'showroom') {
+                      // Navigate to showroom users - page handles both authenticated and unauthenticated access
+                      context.push('/showroom-users');
+                      return;
+                    }
 
-                // context.read<AdvertisementBloc>().add(
-                //       AdvertisementEvent.fetchByCategory(
-                //           categoryId: category.categoryId),
-                //     );
-                // context.push(
-                //     '/category-list-page?categoryId=${category.categoryId}&title=${category.name}');
+                    // context.read<AdvertisementBloc>().add(
+                    //       AdvertisementEvent.fetchByCategory(
+                    //           categoryId: category.categoryId),
+                    //     );
+                    // context.push(
+                    //     '/category-list-page?categoryId=${category.categoryId}&title=${category.name}');
 
-                // No refetch on return. The category list runs on its own
-                // route-scoped bloc now, so Home's listings and scroll position
-                // survive the trip; a write (post / edit / sold / delete)
-                // clears the repository cache, so anything genuinely stale is
-                // refreshed by the next fetch rather than by a blanket reload
-                // of the whole feed on every back press.
-                await context.push(
-                  '/category-list-page?categoryId=${category.categoryId}&title=${category.name}',
-                );
-              },
-              child: Column(
-                children: [
-                  Container(
-                    height: GetResponsiveSize.getResponsiveSize(
-                      context,
-                      mobile: 70, // unchanged for phones
-                      tablet: 110,
-                      largeTablet: 135,
-                      desktop: 150,
-                    ),
-                    padding: EdgeInsets.all(GetResponsiveSize.getResponsiveSize(
-                      context,
-                      mobile: 16,
-                      tablet: 20,
-                      largeTablet: 22,
-                      desktop: 22,
-                    )),
-                    decoration: BoxDecoration(
-                      color: AppColors.whiteColor,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black12, blurRadius: 2)
-                      ],
-                    ),
-                    child: SizedBox(
-                      width: GetResponsiveSize.getResponsiveSize(
-                        context,
-                        mobile: 38, // leave phone small as before
-                        tablet: 60,
-                        largeTablet: 75,
-                        desktop: 80,
-                      ),
-                      height: GetResponsiveSize.getResponsiveSize(
-                        context,
-                        mobile: 38,
-                        tablet: 60,
-                        largeTablet: 70,
-                        desktop: 80,
-                      ),
-                      child: Image.asset(category.image, fit: BoxFit.contain),
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Builder(
-                    builder: (context) {
-                      final double baseSize =
-                          AppTextstyle.categoryLabelTextStyle.fontSize ?? 12;
-                      final double labelSize =
-                          GetResponsiveSize.getResponsiveFontSize(
-                        context,
-                        mobile: baseSize, // keep phone unchanged
-                        tablet: baseSize + 10,
-                        largeTablet: baseSize + 13,
-                        desktop: baseSize + 13,
-                      );
-                      // Allow multi-line text but ensure words don't break
-                      // Text widget naturally wraps at word boundaries (not mid-word)
-                      // Use ConstrainedBox to limit width, allowing natural word wrapping
-                      return ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: itemWidth),
-                        child: Text(
-                          category.name,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          softWrap: true, // Wraps at word boundaries only
-                          style: AppTextstyle.categoryLabelTextStyle
-                              .copyWith(fontSize: labelSize),
+                    // No refetch on return. The category list runs on its own
+                    // route-scoped bloc now, so Home's listings and scroll position
+                    // survive the trip; a write (post / edit / sold / delete)
+                    // clears the repository cache, so anything genuinely stale is
+                    // refreshed by the next fetch rather than by a blanket reload
+                    // of the whole feed on every back press.
+                    await context.push(
+                      '/category-list-page?categoryId=${category.categoryId}&title=${category.name}',
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      Container(
+                        height: GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 70, // unchanged for phones
+                          tablet: 110,
+                          largeTablet: 135,
+                          desktop: 150,
                         ),
-                      );
-                    },
+                        padding:
+                            EdgeInsets.all(GetResponsiveSize.getResponsiveSize(
+                          context,
+                          mobile: 16,
+                          tablet: 20,
+                          largeTablet: 22,
+                          desktop: 22,
+                        )),
+                        decoration: BoxDecoration(
+                          color: AppColors.whiteColor,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black12, blurRadius: 2)
+                          ],
+                        ),
+                        child: SizedBox(
+                          width: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 38, // leave phone small as before
+                            tablet: 60,
+                            largeTablet: 75,
+                            desktop: 80,
+                          ),
+                          height: GetResponsiveSize.getResponsiveSize(
+                            context,
+                            mobile: 38,
+                            tablet: 60,
+                            largeTablet: 70,
+                            desktop: 80,
+                          ),
+                          child:
+                              Image.asset(category.image, fit: BoxFit.contain),
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Builder(
+                        builder: (context) {
+                          final double baseSize =
+                              AppTextstyle.categoryLabelTextStyle.fontSize ??
+                                  12;
+                          final double labelSize =
+                              GetResponsiveSize.getResponsiveFontSize(
+                            context,
+                            mobile: baseSize, // keep phone unchanged
+                            tablet: baseSize + 10,
+                            largeTablet: baseSize + 13,
+                            desktop: baseSize + 13,
+                          );
+                          // Allow multi-line text but ensure words don't break
+                          // Text widget naturally wraps at word boundaries (not mid-word)
+                          // Use ConstrainedBox to limit width, allowing natural word wrapping
+                          return ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: itemWidth),
+                            child: Text(
+                              category.name,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: true, // Wraps at word boundaries only
+                              style: AppTextstyle.categoryLabelTextStyle
+                                  .copyWith(fontSize: labelSize),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
               ),
             );
           }).toList(),
@@ -1311,7 +1302,7 @@ class _HomePageState extends State<HomePage> {
                   (context, index) {
                     if (index < listings.length) {
                       final ad = listings[index];
-                      return RichAdCard(key: ValueKey('${ad.id}'), ad: ad);
+                      return RichAdCard(key: ValueKey(ad.id), ad: ad);
                     }
                     return const Padding(
                       padding: EdgeInsets.all(16.0),
@@ -1323,8 +1314,7 @@ class _HomePageState extends State<HomePage> {
                   // image state across pagination instead of rebuilding rows.
                   findChildIndexCallback: (key) {
                     if (key is ValueKey<String>) {
-                      final i = listings
-                          .indexWhere((ad) => '${ad.id}' == key.value);
+                      final i = listings.indexWhere((ad) => ad.id == key.value);
                       return i == -1 ? null : i;
                     }
                     return null;
@@ -1368,7 +1358,6 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
-
 }
 
 class BuildIndicator extends StatefulWidget {
@@ -1476,7 +1465,7 @@ class BottomNavBar extends StatelessWidget {
         border: Border.all(color: AppColors.dividerColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.10),
+            color: Colors.black.withValues(alpha: 0.10),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -1497,9 +1486,7 @@ class BottomNavBar extends StatelessWidget {
               label: 'Chat',
               route: '/chat-rooms?from=home'),
           _navItem(context, current,
-              icon: Icons.person_outline,
-              label: 'Profile',
-              route: '/profile'),
+              icon: Icons.person_outline, label: 'Profile', route: '/profile'),
         ],
       ),
     );
@@ -1558,7 +1545,7 @@ class BottomNavBar extends StatelessWidget {
                 border: Border.all(color: AppColors.whiteColor, width: 4),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryColor.withOpacity(0.4),
+                    color: AppColors.primaryColor.withValues(alpha: 0.4),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),

@@ -20,7 +20,8 @@ class AddPostBloc extends Bloc<AddPostEvent, AddPostState> {
       started: (_) async {
         emit(const AddPostState.initial());
       },
-      loadCommercialVehicleTypes: (e) => _handleLoadCommercialVehicleTypes(e, emit),
+      loadCommercialVehicleTypes: (e) =>
+          _handleLoadCommercialVehicleTypes(e, emit),
       postAd: (e) => _handlePostAd(e, emit),
     );
   }

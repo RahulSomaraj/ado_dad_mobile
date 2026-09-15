@@ -167,7 +167,7 @@ class RichAdCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.55),
+          color: Colors.black.withValues(alpha: 0.55),
           borderRadius: BorderRadius.circular(5)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -291,7 +291,7 @@ class RichAdCard extends StatelessWidget {
                   if (ad.soldOut == true)
                     Positioned.fill(
                       child: Container(
-                        color: Colors.black.withOpacity(0.45),
+                        color: Colors.black.withValues(alpha: 0.45),
                         alignment: Alignment.center,
                         child: const Text('SOLD',
                             style: TextStyle(
@@ -420,7 +420,8 @@ double richAdCardMainAxisExtent(
   final available =
       screenWidth - (horizontalPadding * 2) - (spacing * (columns - 1));
   final cardWidth = available / columns;
-  final aspectRatio = GetResponsiveSize.isTablet(context) ? (16 / 9) : (16 / 10);
+  final aspectRatio =
+      GetResponsiveSize.isTablet(context) ? (16 / 9) : (16 / 10);
   final imageHeight = cardWidth / aspectRatio;
   // price + title + chips + footer (now two lines: place, then distance/time).
   const textBlockHeight = 15 + 18 + 3 + 16 + 6 + 22 + 14 + 18 + 6 + 10;

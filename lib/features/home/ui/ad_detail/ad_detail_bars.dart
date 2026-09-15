@@ -199,7 +199,8 @@ class AdDetailBarButton extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primaryColor,
             foregroundColor: Colors.white,
-            disabledBackgroundColor: AppColors.primaryColor.withValues(alpha: 0.5),
+            disabledBackgroundColor:
+                AppColors.primaryColor.withValues(alpha: 0.5),
             disabledForegroundColor: Colors.white,
             elevation: 0,
             minimumSize: size,

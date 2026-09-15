@@ -243,7 +243,7 @@ class _LocationPickerDialogState extends State<_LocationPickerDialog> {
 
     if (placeDetails?.geometry?.location != null) {
       final location = placeDetails!.geometry!.location;
-      final address = placeDetails.formattedAddress ?? prediction.description;
+      final address = placeDetails.formattedAddress;
 
       setState(() {
         _selectedLocation = LatLng(location.lat, location.lng);
@@ -302,7 +302,7 @@ class _LocationPickerDialogState extends State<_LocationPickerDialog> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Container(
+      child: SizedBox(
         width: MediaQuery.of(context).size.width > 600
             ? 600
             : MediaQuery.of(context).size.width * 0.95,
@@ -387,7 +387,7 @@ class _LocationPickerDialogState extends State<_LocationPickerDialog> {
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: Colors.black.withValues(alpha: 0.1),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),

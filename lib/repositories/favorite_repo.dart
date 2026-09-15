@@ -131,8 +131,7 @@ class FavoriteRepository {
               manufacturerMap[favorite.vehicleDetails!.manufacturerId];
           if (manufacturer != null) {
             manufacturerName = manufacturer.displayName;
-          } else {
-          }
+          } else {}
         }
 
         // Get model name
@@ -159,8 +158,7 @@ class FavoriteRepository {
 
             if (model != null) {
               modelName = model.displayName;
-            } else {
-            }
+            } else {}
           } catch (_) {
             // Error fetching model - continue with empty name
           }

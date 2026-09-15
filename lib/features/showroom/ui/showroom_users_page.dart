@@ -76,7 +76,6 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
         _isLoading = false;
       });
     } catch (e) {
-
       // Extract user-friendly error message
       String errorMessage =
           "Unable to load showroom users. Please try again later.";
@@ -359,7 +358,7 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
                 ),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primaryColor.withOpacity(0.1),
+                  color: AppColors.primaryColor.withValues(alpha: 0.1),
                   image: user.profilePic != null
                       ? DecorationImage(
                           image: NetworkImage(user.profilePic!),

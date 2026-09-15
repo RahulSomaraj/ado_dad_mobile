@@ -16,10 +16,14 @@ class Home extends StatelessWidget {
     return _VersionCheckOnHome(
       child: DeviceChecker(
         showLoginPromptForNotifications: showLoginPromptForNotifications,
-        androidTabletView: HomePage(showLoginPromptForNotifications: showLoginPromptForNotifications),
-        androidMobileView: AndroidHomeMobile(showLoginPromptForNotifications: showLoginPromptForNotifications),
-        iosTabletView: HomePage(showLoginPromptForNotifications: showLoginPromptForNotifications),
-        iosMobileView: IosHomeMobile(showLoginPromptForNotifications: showLoginPromptForNotifications),
+        androidTabletView: HomePage(
+            showLoginPromptForNotifications: showLoginPromptForNotifications),
+        androidMobileView: AndroidHomeMobile(
+            showLoginPromptForNotifications: showLoginPromptForNotifications),
+        iosTabletView: HomePage(
+            showLoginPromptForNotifications: showLoginPromptForNotifications),
+        iosMobileView: IosHomeMobile(
+            showLoginPromptForNotifications: showLoginPromptForNotifications),
       ),
     );
   }

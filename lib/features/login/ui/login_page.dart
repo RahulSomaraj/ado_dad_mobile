@@ -136,6 +136,7 @@ class _LoginPageState extends State<LoginPage> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not open link')),
       );
@@ -673,7 +674,7 @@ class _LoginPageState extends State<LoginPage> {
                   'Error: $message',
                   style: const TextStyle(color: Colors.white),
                 ),
-                backgroundColor: Colors.red.shade300.withOpacity(0.9),
+                backgroundColor: Colors.red.shade300.withValues(alpha: 0.9),
               ),
             );
           },

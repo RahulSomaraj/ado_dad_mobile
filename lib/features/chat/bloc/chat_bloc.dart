@@ -44,8 +44,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       // Connect to WebSocket
       final connected = await _chatRepository.connect();
       if (!connected) {
-      } else {
-      }
+      } else {}
 
       _ensureSubscriptions();
 
@@ -75,7 +74,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     // Listen to messages stream for real-time messages
     _messagesSubscription ??=
         _chatRepository.messagesStream.listen((messageList) {
-
       // Process each message in the list (each item is a single message object)
       for (final message in messageList) {
         if (!isClosed) add(NewMessageReceived(message));
@@ -129,7 +127,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onJoinChatRoom(
       JoinChatRoom event, Emitter<ChatState> emit) async {
-
     // Check authentication before joining chat room
     final isAuthenticated = await AuthGuard.isAuthenticated();
     if (!isAuthenticated) {
@@ -138,9 +135,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
 
     try {
-
-      // Get and log current user ID
-      final currentUserId = await _chatRepository.getCurrentUserId();
+      // Resolve the current user id before subscribing
+      await _chatRepository.getCurrentUserId();
 
       emit(ChatLoading());
       _ensureSubscriptions();
@@ -156,7 +152,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onLoadRoomMessages(
       LoadRoomMessages event, Emitter<ChatState> emit) async {
-
     // Check authentication before loading messages
     final isAuthenticated = await AuthGuard.isAuthenticated();
     if (!isAuthenticated) {

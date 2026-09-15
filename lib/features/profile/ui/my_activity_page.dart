@@ -41,7 +41,7 @@ class _MyActivityPageState extends State<MyActivityPage> {
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: AppColors.isDark
-                    ? Colors.white.withOpacity(0.06)
+                    ? Colors.white.withValues(alpha: 0.06)
                     : const Color(0xFFEDEAFB),
                 borderRadius: BorderRadius.circular(10),
               ),

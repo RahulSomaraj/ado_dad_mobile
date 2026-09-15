@@ -69,7 +69,6 @@ class SignupRepository {
         throw Exception("Failed to signup: ${response.statusMessage}");
       }
     } on DioException catch (e) {
-
       if (e.response != null) {
         throw Exception(e.response!.data['message'] ?? "API error occurred");
       } else {

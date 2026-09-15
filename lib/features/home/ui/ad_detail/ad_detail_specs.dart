@@ -36,15 +36,14 @@ class AdDetailSpecs {
   final AddModel ad;
   final AdCategory category;
 
-  String? get _brand => AdFormat.titleCase(
-      AdFormat.clean(ad.manufacturer?.displayName) ??
+  String? get _brand =>
+      AdFormat.titleCase(AdFormat.clean(ad.manufacturer?.displayName) ??
           AdFormat.clean(ad.manufacturer?.name));
 
   String? get _model => AdFormat.titleCase(
       AdFormat.clean(ad.model?.displayName) ?? AdFormat.clean(ad.model?.name));
 
-  String? get _year =>
-      (ad.year != null && ad.year! > 0) ? '${ad.year}' : null;
+  String? get _year => (ad.year != null && ad.year! > 0) ? '${ad.year}' : null;
 
   String? get _fuel => AdFormat.titleCase(AdFormat.clean(ad.fuelType));
 
@@ -142,8 +141,8 @@ class AdDetailSpecs {
               ? KeyFact(Icons.local_gas_station_outlined, _fuel!, 'Fuel')
               : null,
           _ownership != null
-              ? KeyFact(Icons.person_outline,
-                  ad.isFirstOwner! ? '1st' : '2nd+', 'Owner')
+              ? KeyFact(Icons.person_outline, ad.isFirstOwner! ? '1st' : '2nd+',
+                  'Owner')
               : null,
         ];
         break;
@@ -176,7 +175,8 @@ class AdDetailSpecs {
     if (category.isProperty) {
       final listing = AdFormat.clean(ad.listingType)?.toLowerCase();
       rows.addAll([
-        row('Property type', AdFormat.titleCase(AdFormat.clean(ad.propertyType))),
+        row('Property type',
+            AdFormat.titleCase(AdFormat.clean(ad.propertyType))),
         row('Listed for',
             listing == null ? null : (listing == 'rent' ? 'Rent' : 'Sale')),
         row('Bedrooms', (ad.bedrooms ?? 0) > 0 ? '${ad.bedrooms}' : null),
@@ -185,12 +185,16 @@ class AdDetailSpecs {
         // and built-up area are captured separately.
         row('Area', _area),
         row('Floor', _floor),
-        row('Furnishing', ad.isFurnished == null
-            ? null
-            : (ad.isFurnished! ? 'Furnished' : 'Unfurnished')),
-        row('Parking', ad.hasParking == null
-            ? null
-            : (ad.hasParking! ? 'Available' : 'No')),
+        row(
+            'Furnishing',
+            ad.isFurnished == null
+                ? null
+                : (ad.isFurnished! ? 'Furnished' : 'Unfurnished')),
+        row(
+            'Parking',
+            ad.hasParking == null
+                ? null
+                : (ad.hasParking! ? 'Available' : 'No')),
       ]);
     } else {
       rows.addAll([
@@ -372,8 +376,8 @@ class AdDetailSpecTable extends StatelessWidget {
           const SizedBox(width: AppSpacing.xs4),
           Flexible(
             child: Text(r.value,
-                style:
-                    AppTextstyle.specValue.copyWith(color: AppColors.positiveText)),
+                style: AppTextstyle.specValue
+                    .copyWith(color: AppColors.positiveText)),
           ),
         ],
       );

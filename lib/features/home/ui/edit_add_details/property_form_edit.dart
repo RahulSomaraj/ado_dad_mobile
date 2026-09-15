@@ -182,8 +182,7 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
             _uploadedVideoUrl = url;
             _videoRemoved = false; // Reset removal flag when video is uploaded
           });
-        } else {
-        }
+        } else {}
       } catch (e) {
         // Optionally show error to user
         if (mounted) {
@@ -295,6 +294,7 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
       payload['title'] = titleValue;
     }
 
+    if (!context.mounted) return;
     context.read<AdEditBloc>().add(
           AdEditEvent.submit(
             adId: widget.ad.id,
@@ -358,7 +358,7 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
                       ErrorMessageUtil.getUserFriendlyMessage(msg),
                       style: const TextStyle(color: Colors.white),
                     ),
-                    backgroundColor: Colors.red.shade300.withOpacity(0.9),
+                    backgroundColor: Colors.red.shade300.withValues(alpha: 0.9),
                   ),
                 );
               },

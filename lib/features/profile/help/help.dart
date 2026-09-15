@@ -245,13 +245,13 @@ class _HelpState extends State<Help> {
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(9),
-                borderSide:
-                    BorderSide(color: AppColors.greyColor.withOpacity(0.4)),
+                borderSide: BorderSide(
+                    color: AppColors.greyColor.withValues(alpha: 0.4)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(9),
-                borderSide: const BorderSide(
-                    color: AppColors.primaryColor, width: 1.5),
+                borderSide:
+                    const BorderSide(color: AppColors.primaryColor, width: 1.5),
               ),
             ),
           ),
@@ -280,8 +280,8 @@ class _HelpState extends State<Help> {
                 margin: const EdgeInsets.only(bottom: 9),
                 decoration: BoxDecoration(
                   color: AppColors.whiteColor,
-                  border:
-                      Border.all(color: AppColors.greyColor.withOpacity(0.35)),
+                  border: Border.all(
+                      color: AppColors.greyColor.withValues(alpha: 0.35)),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 clipBehavior: Clip.antiAlias,
@@ -351,7 +351,8 @@ class _HelpState extends State<Help> {
             icon: const Icon(Icons.mail_outline,
                 size: 17, color: AppColors.primaryColor),
             style: OutlinedButton.styleFrom(
-              side: BorderSide(color: AppColors.greyColor.withOpacity(0.6)),
+              side:
+                  BorderSide(color: AppColors.greyColor.withValues(alpha: 0.6)),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(11),
               ),

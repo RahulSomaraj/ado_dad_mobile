@@ -67,6 +67,10 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _locationQueryHasNext = false;
     _locationLatitude = null;
     _locationLongitude = null;
+    // Deliberately outside an event handler: this runs on logout for every live
+    // feed, and the state classes are freezed (adding an event needs codegen).
+    // Safe because isClosed was checked above.
+    // ignore: invalid_use_of_visible_for_testing_member
     emit(const AdvertisementState.initial());
   }
 
@@ -119,8 +123,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
   bool? _isFurnished;
   bool? _hasParking;
 
-  List<AddModel> _mergeDedupe(
-      List<AddModel> current, List<AddModel> incoming) {
+  List<AddModel> _mergeDedupe(List<AddModel> current, List<AddModel> incoming) {
     final ids = current.map((a) => a.id).toSet();
     return [
       ...current,

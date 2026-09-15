@@ -170,7 +170,8 @@ class _PhotoStepWidgetState extends State<PhotoStepWidget> {
               ),
             ListTile(
               leading: Icon(Icons.delete_outline, color: AppColors.redColor),
-              title: Text('Remove', style: TextStyle(color: AppColors.redColor)),
+              title:
+                  Text('Remove', style: TextStyle(color: AppColors.redColor)),
               onTap: () {
                 Navigator.of(sheetCtx).pop();
                 _bloc.add(MediaUploadEvent.imageRemoved(item.localId));
@@ -227,7 +228,9 @@ class _PhotoStepWidgetState extends State<PhotoStepWidget> {
                 ),
               ),
               const SizedBox(height: 16),
-              if (!state.hasImages) _buildEmptyDrop(context) else ...[
+              if (!state.hasImages)
+                _buildEmptyDrop(context)
+              else ...[
                 _buildCountRow(context, state),
                 const SizedBox(height: 10),
                 _buildGrid(context, state),

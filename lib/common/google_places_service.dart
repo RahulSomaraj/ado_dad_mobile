@@ -141,7 +141,7 @@ class GooglePlacesService {
 
           // Helper function to score how specific a result's location components are
           // Higher score = more specific location (e.g., sublocality_level_2 is better than locality)
-          int _getLocationSpecificityScore(Map<String, dynamic> result) {
+          int locationSpecificityScore(Map<String, dynamic> result) {
             final addressComponents =
                 result['address_components'] as List<dynamic>?;
             if (addressComponents == null) return 0;
@@ -174,7 +174,7 @@ class GooglePlacesService {
 
           for (var result in results) {
             final resultMap = result as Map<String, dynamic>;
-            final specificityScore = _getLocationSpecificityScore(resultMap);
+            final specificityScore = locationSpecificityScore(resultMap);
             final locationType =
                 resultMap['geometry']?['location_type'] as String?;
 

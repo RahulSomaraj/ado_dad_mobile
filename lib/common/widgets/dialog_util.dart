@@ -11,7 +11,7 @@ class DialogUtil {
       {VoidCallback? onOkPressed, String? navigateTo}) {
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -45,14 +45,14 @@ class DialogUtil {
           actions: [
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop();
 
                 if (onOkPressed != null) {
                   Future.delayed(
                       const Duration(milliseconds: 100), onOkPressed);
                 } else if (navigateTo != null) {
                   Future.delayed(const Duration(milliseconds: 100), () {
-                    context.go(navigateTo);
+                    if (context.mounted) context.go(navigateTo);
                   });
                 }
               },

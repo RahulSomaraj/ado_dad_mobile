@@ -162,8 +162,7 @@ class ChatApiService {
   /// Send message via HTTP API to store in database.
   /// For image/audio, pass type and attachments (content can be empty).
   Future<Map<String, dynamic>> sendMessage(String roomId, String content,
-      {String type = 'text',
-      List<Map<String, dynamic>>? attachments}) async {
+      {String type = 'text', List<Map<String, dynamic>>? attachments}) async {
     try {
       final baseUrl = AppConfig.baseUrl;
       final url = '$baseUrl/chats/rooms/$roomId/messages';
@@ -206,7 +205,8 @@ class ChatApiService {
               ? (errorData['message'] ?? errorData['error'] ?? errorMessage)
               : errorMessage;
         } catch (_) {
-          errorMessage = response.body.isNotEmpty ? response.body : 'Unknown error';
+          errorMessage =
+              response.body.isNotEmpty ? response.body : 'Unknown error';
         }
         throw Exception('Failed to send message: $errorMessage');
       }

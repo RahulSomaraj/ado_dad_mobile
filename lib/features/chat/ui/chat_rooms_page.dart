@@ -65,8 +65,7 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
         } else if (currentState is! ChatRoomsSuccess) {
           // For any other state, reload rooms
           _chatBloc.add(LoadChatRooms());
-        } else {
-        }
+        } else {}
       }
     });
   }
@@ -137,12 +136,10 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
                 // background so the preview/unread badge catches up.
                 _silentReloadThrottled();
               } else if (state is ChatRoomJoined) {
-
                 // Load messages for the joined room
                 context.read<ChatBloc>().add(LoadRoomMessages(state.roomId));
               } else if (state is MessagesLoaded) {
-              } else if (state is ChatErrorState) {
-              }
+              } else if (state is ChatErrorState) {}
             },
             child: BlocBuilder<ChatBloc, ChatState>(
               builder: (context, state) {
@@ -438,7 +435,7 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
           children: [
             CircleAvatar(
               radius: avatarRadius,
-              backgroundColor: AppColors.primaryColor.withOpacity(0.12),
+              backgroundColor: AppColors.primaryColor.withValues(alpha: 0.12),
               backgroundImage: otherUser?['profilePic'] != null &&
                       otherUser!['profilePic'] != 'default-profile-pic-url'
                   ? NetworkImage(otherUser['profilePic'])
@@ -618,9 +615,8 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
     // differently ('id', 'roomId', '_id'); an empty value cannot be routed to
     // (it would produce '/chat/' which GoRouter can't match) so we stop early
     // with a clear message instead of throwing an unreadable exception.
-    final roomId = (room['id'] ?? room['roomId'] ?? room['_id'] ?? '')
-        .toString()
-        .trim();
+    final roomId =
+        (room['id'] ?? room['roomId'] ?? room['_id'] ?? '').toString().trim();
     if (roomId.isEmpty) {
       _showOpenError('This conversation can’t be opened right now.');
       return;

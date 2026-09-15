@@ -164,7 +164,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.greyColor.withOpacity(0.5),
+                    color: AppColors.greyColor.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -202,7 +202,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   border: Border.all(
-                      color: AppColors.greyColor.withOpacity(0.35)),
+                      color: AppColors.greyColor.withValues(alpha: 0.35)),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -211,7 +211,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                       width: 46,
                       height: 46,
                       decoration: BoxDecoration(
-                        color: AppColors.primaryColor.withOpacity(0.08),
+                        color: AppColors.primaryColor.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
@@ -256,13 +256,12 @@ class _OfferSheetState extends State<_OfferSheet> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.poppins(
-                              fontSize:
-                                  GetResponsiveSize.getResponsiveFontSize(
-                                      context,
-                                      mobile: 12.5,
-                                      tablet: 15,
-                                      largeTablet: 17,
-                                      desktop: 19),
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                  context,
+                                  mobile: 12.5,
+                                  tablet: 15,
+                                  largeTablet: 17,
+                                  desktop: 19),
                               color: AppColors.blackColor,
                             ),
                           ),
@@ -312,12 +311,12 @@ class _OfferSheetState extends State<_OfferSheet> {
                     fontWeight: FontWeight.w600,
                     color: AppColors.blackColor,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 13),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(11),
                     borderSide: BorderSide(
-                        color: AppColors.greyColor.withOpacity(0.4)),
+                        color: AppColors.greyColor.withValues(alpha: 0.4)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(11),
@@ -357,15 +356,13 @@ class _OfferSheetState extends State<_OfferSheet> {
                         selectedColor: AppColors.primaryColor,
                         labelStyle: GoogleFonts.poppins(
                           fontSize: 12,
-                          color: selected
-                              ? Colors.white
-                              : AppColors.blackColor,
+                          color: selected ? Colors.white : AppColors.blackColor,
                         ),
                         shape: StadiumBorder(
                           side: BorderSide(
                             color: selected
                                 ? AppColors.primaryColor
-                                : AppColors.greyColor.withOpacity(0.4),
+                                : AppColors.greyColor.withValues(alpha: 0.4),
                           ),
                         ),
                         backgroundColor: AppColors.whiteColor,
@@ -391,7 +388,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                       ),
                       shape: StadiumBorder(
                         side: BorderSide(
-                          color: AppColors.greyColor.withOpacity(0.4),
+                          color: AppColors.greyColor.withValues(alpha: 0.4),
                         ),
                       ),
                       backgroundColor: AppColors.whiteColor,
@@ -409,7 +406,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryColor.withOpacity(0.06),
+                    color: AppColors.primaryColor.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -431,7 +428,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                       onPressed: () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(
-                            color: AppColors.greyColor.withOpacity(0.6)),
+                            color: AppColors.greyColor.withValues(alpha: 0.6)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(11),
                         ),
@@ -467,7 +464,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryColor,
                         disabledBackgroundColor:
-                            AppColors.greyColor.withOpacity(0.4),
+                            AppColors.greyColor.withValues(alpha: 0.4),
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(

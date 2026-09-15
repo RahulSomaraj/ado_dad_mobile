@@ -35,7 +35,9 @@ class VersionCheckResult {
 List<int> _parseVersion(String version) {
   final normalized = version.split('+').first.trim();
   final parts = normalized.split('.').map((s) => int.tryParse(s) ?? 0).toList();
-  while (parts.length < 3) parts.add(0);
+  while (parts.length < 3) {
+    parts.add(0);
+  }
   return parts.take(3).toList();
 }
 
@@ -82,12 +84,11 @@ class VersionCheckService {
     }
 
     final latest = Platform.isIOS ? config.iosVersion : config.androidVersion;
-    final storeUrl = (Platform.isIOS
-            ? config.iosStoreUrl
-            : config.androidStoreUrl) ??
-        (Platform.isIOS
-            ? VersionRepository.defaultIosStoreUrl
-            : VersionRepository.defaultAndroidStoreUrl);
+    final storeUrl =
+        (Platform.isIOS ? config.iosStoreUrl : config.androidStoreUrl) ??
+            (Platform.isIOS
+                ? VersionRepository.defaultIosStoreUrl
+                : VersionRepository.defaultAndroidStoreUrl);
 
     final cmp = _compareVersions(current, latest);
 
@@ -96,7 +97,9 @@ class VersionCheckService {
       // Patch-only change (e.g. 1.1.4 → 1.1.5): always optional update
       final requirement = _isPatchOnlyChange(current, latest)
           ? UpdateRequirement.optional
-          : (config.forceUpdate ? UpdateRequirement.force : UpdateRequirement.optional);
+          : (config.forceUpdate
+              ? UpdateRequirement.force
+              : UpdateRequirement.optional);
       return VersionCheckResult(
         requirement: requirement,
         currentVersion: current,
@@ -113,5 +116,4 @@ class VersionCheckService {
       storeUrl: storeUrl,
     );
   }
-
 }

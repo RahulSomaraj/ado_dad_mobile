@@ -97,7 +97,7 @@ class _AppNetworkImageState extends State<AppNetworkImage> {
               height: 22,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: AppColors.primaryColor.withOpacity(0.7),
+                color: AppColors.primaryColor.withValues(alpha: 0.7),
               ),
             )
           : Icon(
@@ -155,7 +155,7 @@ class _AppNetworkImageState extends State<AppNetworkImage> {
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   value: progress.progress,
-                  color: AppColors.primaryColor.withOpacity(0.7),
+                  color: AppColors.primaryColor.withValues(alpha: 0.7),
                 ),
               ),
             );

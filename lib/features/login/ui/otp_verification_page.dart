@@ -170,7 +170,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
             'Please enter complete OTP',
             style: TextStyle(color: Colors.white),
           ),
-          backgroundColor: Colors.red.shade300.withOpacity(0.9),
+          backgroundColor: Colors.red.shade300.withValues(alpha: 0.9),
         ),
       );
     }
@@ -198,7 +198,8 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         state.whenOrNull(
           verifyOtpSuccess: (username) {
             final target = widget.redirect;
-            context.go((target != null && target.isNotEmpty) ? target : '/home');
+            context
+                .go((target != null && target.isNotEmpty) ? target : '/home');
           },
           verifyOtpFailure: (message) {
             DialogUtil.showLoginErrorDialog(context, message);
@@ -221,7 +222,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                   'Failed to send OTP: ${message.replaceAll('Exception: ', '')}',
                   style: const TextStyle(color: Colors.white),
                 ),
-                backgroundColor: Colors.red.shade300.withOpacity(0.9),
+                backgroundColor: Colors.red.shade300.withValues(alpha: 0.9),
               ),
             );
           },
@@ -631,40 +632,40 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                         ),
                       )
                     : isResending
-                    ? SizedBox(
-                        width: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 14,
-                          tablet: 18,
-                          largeTablet: 22,
-                          desktop: 26,
-                        ),
-                        height: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 14,
-                          tablet: 18,
-                          largeTablet: 22,
-                          desktop: 26,
-                        ),
-                        child: const CircularProgressIndicator(
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : Text(
-                        'Resend Code',
-                        style: TextStyle(
-                          fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile: 14.0, // Keep mobile unchanged
-                            tablet: 20.0,
-                            largeTablet: 25.0,
-                            desktop: 30.0,
+                        ? SizedBox(
+                            width: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 14,
+                              tablet: 18,
+                              largeTablet: 22,
+                              desktop: 26,
+                            ),
+                            height: GetResponsiveSize.getResponsiveSize(
+                              context,
+                              mobile: 14,
+                              tablet: 18,
+                              largeTablet: 22,
+                              desktop: 26,
+                            ),
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            'Resend Code',
+                            style: TextStyle(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                context,
+                                mobile: 14.0, // Keep mobile unchanged
+                                tablet: 20.0,
+                                largeTablet: 25.0,
+                                desktop: 30.0,
+                              ),
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.primaryColor,
+                              decoration: TextDecoration.underline,
+                            ),
                           ),
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.primaryColor,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
               ),
             ],
           ),

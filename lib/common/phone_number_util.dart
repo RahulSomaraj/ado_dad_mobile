@@ -28,8 +28,7 @@ class PhoneNumberUtil {
     final expected = _nationalLength[cc];
 
     // "00" international prefix (e.g. 0091…)
-    if (digits.startsWith('00$cc') &&
-        digits.length > cc.length + 2) {
+    if (digits.startsWith('00$cc') && digits.length > cc.length + 2) {
       digits = digits.substring(cc.length + 2);
     }
 

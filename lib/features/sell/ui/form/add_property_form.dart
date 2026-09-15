@@ -35,6 +35,7 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
   String _location = '';
   double? _latitude;
   double? _longitude;
+
   /// Photos/video live here and upload to S3 as soon as they are picked.
   late final MediaUploadBloc _mediaBloc =
       MediaUploadBloc(repository: AddRepository());
@@ -224,609 +225,657 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
           // Step nav (Next enabled/disabled) depends on media state.
           listener: (_, __) => setState(() {}),
           child: BlocConsumer<AddPostBloc, AddPostState>(
-        listener: (context, state) async {
-          state.whenOrNull(
-            success: () async {
-              await showDialog<void>(
-                context: context,
-                barrierDismissible: false,
-                builder: (dialogContext) {
-                  return AlertDialog(
-                    title: const Text('Success'),
-                    content: const Text('Ad posted successfully'),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(dialogContext).pop();
-                        },
-                        child: const Text('OK'),
+            listener: (context, state) async {
+              state.whenOrNull(
+                success: () async {
+                  await showDialog<void>(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (dialogContext) {
+                      return AlertDialog(
+                        title: const Text('Success'),
+                        content: const Text('Ad posted successfully'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop();
+                            },
+                            child: const Text('OK'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                  if (!context.mounted) return;
+                  context.go('/home');
+                },
+                failure: (msg) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        ErrorMessageUtil.getUserFriendlyMessage(msg),
+                        style: const TextStyle(color: Colors.white),
                       ),
-                    ],
+                      backgroundColor:
+                          Colors.red.shade300.withValues(alpha: 0.9),
+                    ),
                   );
                 },
               );
-              if (!context.mounted) return;
-              context.go('/home');
             },
-            failure: (msg) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    ErrorMessageUtil.getUserFriendlyMessage(msg),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  backgroundColor: Colors.red.shade300.withOpacity(0.9),
-                ),
-              );
-            },
-          );
-        },
-        builder: (context, state) {
-          return SingleChildScrollView(
-            child: Form(
-              key: _sellerFormKey,
-              child: Column(
-                children: [
-                  _buildStepHeader(),
-                  Offstage(
-                    offstage: _step != 0,
-                    child: PhotoStepWidget(categoryId: widget.categoryId),
-                  ),
-                  Offstage(
-                    offstage: _step != 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                  _formHeader(),
-                  Divider(),
-                  Container(
-                    width: double.infinity,
-                    color: AppColors.whiteColor,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: GetResponsiveSize.getResponsivePadding(
-                          context,
-                          mobile: 16,
-                          tablet: 24,
-                          largeTablet: 32,
-                          desktop: 40,
-                        ),
+            builder: (context, state) {
+              return SingleChildScrollView(
+                child: Form(
+                  key: _sellerFormKey,
+                  child: Column(
+                    children: [
+                      _buildStepHeader(),
+                      Offstage(
+                        offstage: _step != 0,
+                        child: PhotoStepWidget(categoryId: widget.categoryId),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          Text(
-                            'Essential Details',
-                            style: AppTextstyle.sectionTitleTextStyle.copyWith(
-                              fontSize: GetResponsiveSize.getResponsiveFontSize(
-                                context,
-                                mobile: AppTextstyle
-                                        .sectionTitleTextStyle.fontSize ??
-                                    18,
-                                tablet: 24,
-                                largeTablet: 30,
-                                desktop: 36,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 20,
-                              tablet: 28,
-                              largeTablet: 36,
-                              desktop: 44,
-                            ),
-                          ),
-                          GetInput(
-                            label: 'Price',
-                            isNumberField: true,
-                            onSaved: (val) =>
-                                _price = int.tryParse(val ?? '0') ?? 0,
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          GetInput(
-                            label: 'Title',
-                            required: false,
-                            onSaved: (val) => _title = val?.trim(),
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          LocationPickerWidget(
-                            label: 'Location',
-                            initialLocation: _location,
-                            initialLatitude: _latitude,
-                            initialLongitude: _longitude,
-                            onLocationSelected:
-                                (location, latitude, longitude) {
-                              setState(() {
-                                _location = location;
-                                _latitude = latitude;
-                                _longitude = longitude;
-                              });
-                            },
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please select a location';
-                              }
-                              return null;
-                            },
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          buildDropdown<String>(
-                            labelText: 'Property Type',
-                            items: _propertyTypeMap.keys.toList(),
-                            selectedValue: _selectedPropertyType,
-                            errorMsg: 'Please select a property type',
-                            onChanged: (val) {
-                              setState(() {
-                                _selectedPropertyType = val;
-                                // Auto-set listingType to 'Sell' for plot
-                                if (val == 'plot') {
-                                  _listingType = 'Sell';
-                                }
-                              });
-                            },
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          _buildListingTypeDropdown(),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          if (_selectedPropertyType != 'plot' &&
-                              _selectedPropertyType != 'commercial' &&
-                              _selectedPropertyType != 'office' &&
-                              _selectedPropertyType != 'shop' &&
-                              _selectedPropertyType != 'warehouse') ...[
-                            GetInput(
-                              label: 'Bedrooms',
-                              isNumberField: true,
-                              required: !_isRestrictedPropertyType(),
-                              onSaved: (val) =>
-                                  _bedrooms = int.tryParse(val ?? '0') ?? 0,
-                            ),
-                            SizedBox(
-                              height: GetResponsiveSize.getResponsiveSize(
-                                context,
-                                mobile: 10,
-                                tablet: 16,
-                                largeTablet: 22,
-                                desktop: 28,
-                              ),
-                            ),
-                            GetInput(
-                              label: 'Bathrooms',
-                              isNumberField: true,
-                              required: !_isRestrictedPropertyType(),
-                              onSaved: (val) =>
-                                  _bathrooms = int.tryParse(val ?? '0') ?? 0,
-                            ),
-                          ],
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          GetInput(
-                            label: 'Area Sqft',
-                            isNumberField: true,
-                            onSaved: (val) =>
-                                _areasqft = int.tryParse(val ?? '0') ?? 0,
-                          ),
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          if (_selectedPropertyType != 'plot' &&
-                              _selectedPropertyType != 'warehouse') ...[
-                            GetInput(
-                              label: 'Floor',
-                              isNumberField: true,
-                              required: !_isRestrictedPropertyType(),
-                              onSaved: (val) =>
-                                  _floor = int.tryParse(val ?? '0') ?? 0,
-                            ),
-                            SizedBox(
-                              height: GetResponsiveSize.getResponsiveSize(
-                                context,
-                                mobile: 10,
-                                tablet: 16,
-                                largeTablet: 22,
-                                desktop: 28,
-                              ),
-                            ),
-                            CheckboxListTile(
-                              value: _isFurnished,
-                              title: Text(
-                                'Is Furnished?',
-                                style: TextStyle(
-                                  fontSize:
-                                      GetResponsiveSize.getResponsiveFontSize(
-                                    context,
-                                    mobile: 16,
-                                    tablet: 20,
-                                    largeTablet: 24,
-                                    desktop: 28,
-                                  ),
-                                ),
-                              ),
-                              onChanged: (val) {
-                                setState(() {
-                                  _isFurnished = val ?? false;
-                                });
-                              },
-                            ),
-                            SizedBox(
-                              height: GetResponsiveSize.getResponsiveSize(
-                                context,
-                                mobile: 10,
-                                tablet: 16,
-                                largeTablet: 22,
-                                desktop: 28,
-                              ),
-                            ),
-                          ],
-                          if (_selectedPropertyType != 'plot') ...[
-                            CheckboxListTile(
-                              value: _hasParking,
-                              title: Text(
-                                'Has Parking?',
-                                style: TextStyle(
-                                  fontSize:
-                                      GetResponsiveSize.getResponsiveFontSize(
-                                    context,
-                                    mobile: 16,
-                                    tablet: 20,
-                                    largeTablet: 24,
-                                    desktop: 28,
-                                  ),
-                                ),
-                              ),
-                              onChanged: (val) {
-                                setState(() {
-                                  _hasParking = val ?? false;
-                                });
-                              },
-                            ),
-                            SizedBox(
-                              height: GetResponsiveSize.getResponsiveSize(
-                                context,
-                                mobile: 10,
-                                tablet: 16,
-                                largeTablet: 22,
-                                desktop: 28,
-                              ),
-                            ),
-                          ],
-                          if (_selectedPropertyType != 'plot' &&
-                              _selectedPropertyType != 'warehouse') ...[
-                            CheckboxListTile(
-                              value: _hasGarden,
-                              title: Text(
-                                'Has Garden?',
-                                style: TextStyle(
-                                  fontSize:
-                                      GetResponsiveSize.getResponsiveFontSize(
-                                    context,
-                                    mobile: 16,
-                                    tablet: 20,
-                                    largeTablet: 24,
-                                    desktop: 28,
-                                  ),
-                                ),
-                              ),
-                              onChanged: (val) {
-                                setState(() {
-                                  _hasGarden = val ?? false;
-                                });
-                              },
-                            ),
-                          ],
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 10,
-                              tablet: 16,
-                              largeTablet: 22,
-                              desktop: 28,
-                            ),
-                          ),
-                          GetResponsiveSize.isTablet(context)
-                              ? SizedBox(
-                                  height: GetResponsiveSize.getResponsiveSize(
-                                    context,
-                                    mobile: 0,
-                                    tablet: 140,
-                                    largeTablet: 160,
-                                    desktop: 180,
-                                  ),
-                                  child: GetInput(
-                                    label: 'Description',
-                                    maxLines: 5,
-                                    isDescription: true,
-                                    onSaved: (val) => _description = val ?? '',
-                                  ),
-                                )
-                              : GetInput(
-                                  label: 'Description',
-                                  isDescription: true,
-                                  maxLines: 5,
-                                  onSaved: (val) => _description = val ?? '',
-                                ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: GetResponsiveSize.getResponsiveSize(
-                      context,
-                      mobile: 15,
-                      tablet: 20,
-                      largeTablet: 26,
-                      desktop: 32,
-                    ),
-                  ),
-                  if (_selectedPropertyType != 'plot') ...[
-                    Divider(),
-                    Container(
-                      width: double.infinity,
-                      color: AppColors.whiteColor,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: GetResponsiveSize.getResponsivePadding(
-                            context,
-                            mobile: 16,
-                            tablet: 24,
-                            largeTablet: 32,
-                            desktop: 40,
-                          ),
-                        ),
+                      Offstage(
+                        offstage: _step != 1,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(
-                              height: GetResponsiveSize.getResponsiveSize(
-                                context,
-                                mobile: 10,
-                                tablet: 16,
-                                largeTablet: 22,
-                                desktop: 28,
-                              ),
-                            ),
-                            Text(
-                              'Amenities',
-                              style:
-                                  AppTextstyle.sectionTitleTextStyle.copyWith(
-                                fontSize:
-                                    GetResponsiveSize.getResponsiveFontSize(
-                                  context,
-                                  mobile: AppTextstyle
-                                          .sectionTitleTextStyle.fontSize ??
-                                      18,
-                                  tablet: 24,
-                                  largeTablet: 30,
-                                  desktop: 36,
+                            _formHeader(),
+                            Divider(),
+                            Container(
+                              width: double.infinity,
+                              color: AppColors.whiteColor,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal:
+                                      GetResponsiveSize.getResponsivePadding(
+                                    context,
+                                    mobile: 16,
+                                    tablet: 24,
+                                    largeTablet: 32,
+                                    desktop: 40,
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Essential Details',
+                                      style: AppTextstyle.sectionTitleTextStyle
+                                          .copyWith(
+                                        fontSize: GetResponsiveSize
+                                            .getResponsiveFontSize(
+                                          context,
+                                          mobile: AppTextstyle
+                                                  .sectionTitleTextStyle
+                                                  .fontSize ??
+                                              18,
+                                          tablet: 24,
+                                          largeTablet: 30,
+                                          desktop: 36,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 20,
+                                        tablet: 28,
+                                        largeTablet: 36,
+                                        desktop: 44,
+                                      ),
+                                    ),
+                                    GetInput(
+                                      label: 'Price',
+                                      isNumberField: true,
+                                      onSaved: (val) => _price =
+                                          int.tryParse(val ?? '0') ?? 0,
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    GetInput(
+                                      label: 'Title',
+                                      required: false,
+                                      onSaved: (val) => _title = val?.trim(),
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    LocationPickerWidget(
+                                      label: 'Location',
+                                      initialLocation: _location,
+                                      initialLatitude: _latitude,
+                                      initialLongitude: _longitude,
+                                      onLocationSelected:
+                                          (location, latitude, longitude) {
+                                        setState(() {
+                                          _location = location;
+                                          _latitude = latitude;
+                                          _longitude = longitude;
+                                        });
+                                      },
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Please select a location';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    buildDropdown<String>(
+                                      labelText: 'Property Type',
+                                      items: _propertyTypeMap.keys.toList(),
+                                      selectedValue: _selectedPropertyType,
+                                      errorMsg: 'Please select a property type',
+                                      onChanged: (val) {
+                                        setState(() {
+                                          _selectedPropertyType = val;
+                                          // Auto-set listingType to 'Sell' for plot
+                                          if (val == 'plot') {
+                                            _listingType = 'Sell';
+                                          }
+                                        });
+                                      },
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    _buildListingTypeDropdown(),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    if (_selectedPropertyType != 'plot' &&
+                                        _selectedPropertyType != 'commercial' &&
+                                        _selectedPropertyType != 'office' &&
+                                        _selectedPropertyType != 'shop' &&
+                                        _selectedPropertyType !=
+                                            'warehouse') ...[
+                                      GetInput(
+                                        label: 'Bedrooms',
+                                        isNumberField: true,
+                                        required: !_isRestrictedPropertyType(),
+                                        onSaved: (val) => _bedrooms =
+                                            int.tryParse(val ?? '0') ?? 0,
+                                      ),
+                                      SizedBox(
+                                        height:
+                                            GetResponsiveSize.getResponsiveSize(
+                                          context,
+                                          mobile: 10,
+                                          tablet: 16,
+                                          largeTablet: 22,
+                                          desktop: 28,
+                                        ),
+                                      ),
+                                      GetInput(
+                                        label: 'Bathrooms',
+                                        isNumberField: true,
+                                        required: !_isRestrictedPropertyType(),
+                                        onSaved: (val) => _bathrooms =
+                                            int.tryParse(val ?? '0') ?? 0,
+                                      ),
+                                    ],
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    GetInput(
+                                      label: 'Area Sqft',
+                                      isNumberField: true,
+                                      onSaved: (val) => _areasqft =
+                                          int.tryParse(val ?? '0') ?? 0,
+                                    ),
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    if (_selectedPropertyType != 'plot' &&
+                                        _selectedPropertyType !=
+                                            'warehouse') ...[
+                                      GetInput(
+                                        label: 'Floor',
+                                        isNumberField: true,
+                                        required: !_isRestrictedPropertyType(),
+                                        onSaved: (val) => _floor =
+                                            int.tryParse(val ?? '0') ?? 0,
+                                      ),
+                                      SizedBox(
+                                        height:
+                                            GetResponsiveSize.getResponsiveSize(
+                                          context,
+                                          mobile: 10,
+                                          tablet: 16,
+                                          largeTablet: 22,
+                                          desktop: 28,
+                                        ),
+                                      ),
+                                      CheckboxListTile(
+                                        value: _isFurnished,
+                                        title: Text(
+                                          'Is Furnished?',
+                                          style: TextStyle(
+                                            fontSize: GetResponsiveSize
+                                                .getResponsiveFontSize(
+                                              context,
+                                              mobile: 16,
+                                              tablet: 20,
+                                              largeTablet: 24,
+                                              desktop: 28,
+                                            ),
+                                          ),
+                                        ),
+                                        onChanged: (val) {
+                                          setState(() {
+                                            _isFurnished = val ?? false;
+                                          });
+                                        },
+                                      ),
+                                      SizedBox(
+                                        height:
+                                            GetResponsiveSize.getResponsiveSize(
+                                          context,
+                                          mobile: 10,
+                                          tablet: 16,
+                                          largeTablet: 22,
+                                          desktop: 28,
+                                        ),
+                                      ),
+                                    ],
+                                    if (_selectedPropertyType != 'plot') ...[
+                                      CheckboxListTile(
+                                        value: _hasParking,
+                                        title: Text(
+                                          'Has Parking?',
+                                          style: TextStyle(
+                                            fontSize: GetResponsiveSize
+                                                .getResponsiveFontSize(
+                                              context,
+                                              mobile: 16,
+                                              tablet: 20,
+                                              largeTablet: 24,
+                                              desktop: 28,
+                                            ),
+                                          ),
+                                        ),
+                                        onChanged: (val) {
+                                          setState(() {
+                                            _hasParking = val ?? false;
+                                          });
+                                        },
+                                      ),
+                                      SizedBox(
+                                        height:
+                                            GetResponsiveSize.getResponsiveSize(
+                                          context,
+                                          mobile: 10,
+                                          tablet: 16,
+                                          largeTablet: 22,
+                                          desktop: 28,
+                                        ),
+                                      ),
+                                    ],
+                                    if (_selectedPropertyType != 'plot' &&
+                                        _selectedPropertyType !=
+                                            'warehouse') ...[
+                                      CheckboxListTile(
+                                        value: _hasGarden,
+                                        title: Text(
+                                          'Has Garden?',
+                                          style: TextStyle(
+                                            fontSize: GetResponsiveSize
+                                                .getResponsiveFontSize(
+                                              context,
+                                              mobile: 16,
+                                              tablet: 20,
+                                              largeTablet: 24,
+                                              desktop: 28,
+                                            ),
+                                          ),
+                                        ),
+                                        onChanged: (val) {
+                                          setState(() {
+                                            _hasGarden = val ?? false;
+                                          });
+                                        },
+                                      ),
+                                    ],
+                                    SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 10,
+                                        tablet: 16,
+                                        largeTablet: 22,
+                                        desktop: 28,
+                                      ),
+                                    ),
+                                    GetResponsiveSize.isTablet(context)
+                                        ? SizedBox(
+                                            height: GetResponsiveSize
+                                                .getResponsiveSize(
+                                              context,
+                                              mobile: 0,
+                                              tablet: 140,
+                                              largeTablet: 160,
+                                              desktop: 180,
+                                            ),
+                                            child: GetInput(
+                                              label: 'Description',
+                                              maxLines: 5,
+                                              isDescription: true,
+                                              onSaved: (val) =>
+                                                  _description = val ?? '',
+                                            ),
+                                          )
+                                        : GetInput(
+                                            label: 'Description',
+                                            isDescription: true,
+                                            maxLines: 5,
+                                            onSaved: (val) =>
+                                                _description = val ?? '',
+                                          ),
+                                  ],
                                 ),
                               ),
                             ),
                             SizedBox(
                               height: GetResponsiveSize.getResponsiveSize(
                                 context,
-                                mobile: 10,
-                                tablet: 16,
-                                largeTablet: 22,
-                                desktop: 28,
+                                mobile: 15,
+                                tablet: 20,
+                                largeTablet: 26,
+                                desktop: 32,
                               ),
                             ),
-                            buildAmenitiesCheckboxList(
-                              allFeatures: _selectedPropertyType == 'warehouse'
-                                  ? ['Security', 'Lift', '24/7 Water Supply']
-                                  : _allAmenities,
-                              selectedFeatures: _selectedAmenities,
-                              onChanged: (updated) {
-                                setState(() => _selectedAmenities = updated);
-                              },
-                            ),
+                            if (_selectedPropertyType != 'plot') ...[
+                              Divider(),
+                              Container(
+                                width: double.infinity,
+                                color: AppColors.whiteColor,
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal:
+                                        GetResponsiveSize.getResponsivePadding(
+                                      context,
+                                      mobile: 16,
+                                      tablet: 24,
+                                      largeTablet: 32,
+                                      desktop: 40,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(
+                                        height:
+                                            GetResponsiveSize.getResponsiveSize(
+                                          context,
+                                          mobile: 10,
+                                          tablet: 16,
+                                          largeTablet: 22,
+                                          desktop: 28,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Amenities',
+                                        style: AppTextstyle
+                                            .sectionTitleTextStyle
+                                            .copyWith(
+                                          fontSize: GetResponsiveSize
+                                              .getResponsiveFontSize(
+                                            context,
+                                            mobile: AppTextstyle
+                                                    .sectionTitleTextStyle
+                                                    .fontSize ??
+                                                18,
+                                            tablet: 24,
+                                            largeTablet: 30,
+                                            desktop: 36,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height:
+                                            GetResponsiveSize.getResponsiveSize(
+                                          context,
+                                          mobile: 10,
+                                          tablet: 16,
+                                          largeTablet: 22,
+                                          desktop: 28,
+                                        ),
+                                      ),
+                                      buildAmenitiesCheckboxList(
+                                        allFeatures:
+                                            _selectedPropertyType == 'warehouse'
+                                                ? [
+                                                    'Security',
+                                                    'Lift',
+                                                    '24/7 Water Supply'
+                                                  ]
+                                                : _allAmenities,
+                                        selectedFeatures: _selectedAmenities,
+                                        onChanged: (updated) {
+                                          setState(() =>
+                                              _selectedAmenities = updated);
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Divider(),
+                            ],
                           ],
                         ),
                       ),
-                    ),
-                    Divider(),
-                  ],
-                      ],
-                    ),
-                  ),
-                  Offstage(
-                    offstage: _step != 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'Review your details and post',
-                      style: AppTextstyle.sectionTitleTextStyle.copyWith(
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile:
-                              AppTextstyle.sectionTitleTextStyle.fontSize ?? 18,
-                          tablet: 24,
-                          largeTablet: 30,
-                          desktop: 36,
-                        ),
-                      ),
-                    ),
-                  ),
-                  _buildReviewSummary(),
-                  SafeArea(
-                    top: false,
-                    minimum: const EdgeInsets.only(bottom: 20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: GetResponsiveSize.getResponsivePadding(
-                              context,
-                              mobile: 16,
-                              tablet: 24,
-                              largeTablet: 32,
-                              desktop: 40,
+                      Offstage(
+                        offstage: _step != 2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                'Review your details and post',
+                                style:
+                                    AppTextstyle.sectionTitleTextStyle.copyWith(
+                                  fontSize:
+                                      GetResponsiveSize.getResponsiveFontSize(
+                                    context,
+                                    mobile: AppTextstyle
+                                            .sectionTitleTextStyle.fontSize ??
+                                        18,
+                                    tablet: 24,
+                                    largeTablet: 30,
+                                    desktop: 36,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                          child: SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 50,
-                              tablet: 65,
-                              largeTablet: 75,
-                              desktop: 85,
-                            ),
-                            child: ElevatedButton(
-                              onPressed: state.maybeWhen(
-                                loading: () => () {
+                            _buildReviewSummary(),
+                            SafeArea(
+                              top: false,
+                              minimum: const EdgeInsets.only(bottom: 20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: GetResponsiveSize
+                                          .getResponsivePadding(
+                                        context,
+                                        mobile: 16,
+                                        tablet: 24,
+                                        largeTablet: 32,
+                                        desktop: 40,
+                                      ),
+                                    ),
+                                    child: SizedBox(
+                                      height:
+                                          GetResponsiveSize.getResponsiveSize(
+                                        context,
+                                        mobile: 50,
+                                        tablet: 65,
+                                        largeTablet: 75,
+                                        desktop: 85,
+                                      ),
+                                      child: ElevatedButton(
+                                        onPressed: state.maybeWhen(
+                                          loading: () => () {
+                                            SizedBox(
+                                              height: GetResponsiveSize
+                                                  .getResponsiveSize(
+                                                context,
+                                                mobile: 20,
+                                                tablet: 28,
+                                                largeTablet: 34,
+                                                desktop: 40,
+                                              ),
+                                              width: GetResponsiveSize
+                                                  .getResponsiveSize(
+                                                context,
+                                                mobile: 20,
+                                                tablet: 28,
+                                                largeTablet: 34,
+                                                desktop: 40,
+                                              ),
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: GetResponsiveSize
+                                                    .getResponsiveSize(
+                                                  context,
+                                                  mobile: 2,
+                                                  tablet: 2.5,
+                                                  largeTablet: 3,
+                                                  desktop: 3.5,
+                                                ),
+                                                color: Colors.white,
+                                              ),
+                                            );
+                                          },
+                                          orElse: () => _addAdvertisement,
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              AppColors.primaryColor,
+                                          foregroundColor: AppColors.whiteColor,
+                                          elevation: 5,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              GetResponsiveSize
+                                                  .getResponsiveBorderRadius(
+                                                context,
+                                                mobile: 25,
+                                                tablet: 30,
+                                                largeTablet: 35,
+                                                desktop: 40,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            "Create Advertisement",
+                                            style: AppTextstyle.buttonText
+                                                .copyWith(
+                                              fontSize: GetResponsiveSize
+                                                  .getResponsiveFontSize(
+                                                context,
+                                                mobile: AppTextstyle
+                                                        .buttonText.fontSize ??
+                                                    16,
+                                                tablet: 20,
+                                                largeTablet: 24,
+                                                desktop: 28,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                   SizedBox(
                                     height: GetResponsiveSize.getResponsiveSize(
                                       context,
-                                      mobile: 20,
-                                      tablet: 28,
-                                      largeTablet: 34,
-                                      desktop: 40,
-                                    ),
-                                    width: GetResponsiveSize.getResponsiveSize(
-                                      context,
-                                      mobile: 20,
-                                      tablet: 28,
-                                      largeTablet: 34,
-                                      desktop: 40,
-                                    ),
-                                    child: CircularProgressIndicator(
-                                      strokeWidth:
-                                          GetResponsiveSize.getResponsiveSize(
-                                        context,
-                                        mobile: 2,
-                                        tablet: 2.5,
-                                        largeTablet: 3,
-                                        desktop: 3.5,
-                                      ),
-                                      color: Colors.white,
-                                    ),
-                                  );
-                                },
-                                orElse: () => _addAdvertisement,
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primaryColor,
-                                foregroundColor: AppColors.whiteColor,
-                                elevation: 5,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    GetResponsiveSize.getResponsiveBorderRadius(
-                                      context,
-                                      mobile: 25,
-                                      tablet: 30,
-                                      largeTablet: 35,
-                                      desktop: 40,
+                                      mobile: 30,
+                                      tablet: 40,
+                                      largeTablet: 50,
+                                      desktop: 60,
                                     ),
                                   ),
-                                ),
+                                ],
                               ),
-                              child: Center(
-                                child: Text(
-                                  "Create Advertisement",
-                                  style: AppTextstyle.buttonText.copyWith(
-                                    fontSize:
-                                        GetResponsiveSize.getResponsiveFontSize(
-                                      context,
-                                      mobile:
-                                          AppTextstyle.buttonText.fontSize ??
-                                              16,
-                                      tablet: 20,
-                                      largeTablet: 24,
-                                      desktop: 28,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                            )
+                          ],
                         ),
-                        SizedBox(
-                          height: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 30,
-                            tablet: 40,
-                            largeTablet: 50,
-                            desktop: 60,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                      ],
-                    ),
+                      ),
+                      _buildStepNav(),
+                    ],
                   ),
-                  _buildStepNav(),
-                ],
-              ),
-            ),
-          );
-        },
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -1318,6 +1367,7 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
     final displayValue = isPlot ? 'Sell' : _listingType;
 
     final dropdown = DropdownButtonFormField<String>(
+      key: ValueKey<String?>(displayValue),
       decoration:
           CommonDecoration.textFieldDecoration(labelText: 'Listing Type')
               .copyWith(
@@ -1347,7 +1397,7 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
           ),
         ),
       ),
-      value: displayValue,
+      initialValue: displayValue,
       dropdownColor: Colors.white,
       isExpanded: true,
       iconSize: GetResponsiveSize.getResponsiveSize(
@@ -1414,5 +1464,4 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
       children: [dropdown],
     );
   }
-
 }

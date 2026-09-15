@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/widgets/ado_dad_logo.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
@@ -60,8 +58,9 @@ class _SignupPageState extends State<SignupPage> {
     if (value.isEmpty) return 0;
     var score = 0;
     if (value.length >= 8) score++;
-    if (RegExp(r'[A-Z]').hasMatch(value) &&
-        RegExp(r'[0-9]').hasMatch(value)) score++;
+    if (RegExp(r'[A-Z]').hasMatch(value) && RegExp(r'[0-9]').hasMatch(value)) {
+      score++;
+    }
     if (RegExp(r'[!@#\$%^&*(),.?":{}|<>_\-]').hasMatch(value)) score++;
     return score;
   }
@@ -227,7 +226,7 @@ class _SignupPageState extends State<SignupPage> {
                               desktop: 85,
                             ),
                             backgroundColor:
-                                AppColors.primaryColor.withOpacity(.1),
+                                AppColors.primaryColor.withValues(alpha: .1),
                             backgroundImage: _avatarBytes != null
                                 ? MemoryImage(_avatarBytes!)
                                 : null,
@@ -392,8 +391,8 @@ class _SignupPageState extends State<SignupPage> {
       initialValue: _phone,
       // Strip a pasted/autofilled "+91 …" / "0091…" / trunk "0" so
       // phoneNumber is the bare national number; countryCode is sent apart.
-      onSaved: (value) =>
-          _phone = PhoneNumberUtil.normalise(value ?? "", _countryCode).national,
+      onSaved: (value) => _phone =
+          PhoneNumberUtil.normalise(value ?? "", _countryCode).national,
       keyboardType: TextInputType.phone,
       onChanged: (value) => setState(() => _phoneInput = value),
       inputFormatters: [
@@ -454,8 +453,7 @@ class _SignupPageState extends State<SignupPage> {
                 ),
                 const SizedBox(width: 10),
                 Text(_countryCode,
-                    style: TextStyle(
-                        fontSize: 16, color: AppColors.greyColor)),
+                    style: TextStyle(fontSize: 16, color: AppColors.greyColor)),
                 const Icon(Icons.arrow_drop_down, size: 20),
               ],
             ),
@@ -528,7 +526,7 @@ class _SignupPageState extends State<SignupPage> {
               decoration: BoxDecoration(
                 color: active
                     ? activeColor
-                    : AppColors.greyColor.withOpacity(0.3),
+                    : AppColors.greyColor.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),

@@ -37,7 +37,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
   String _sort = 'newest'; // newest | price_desc | price_asc
   final FilterStateService _filterStateService = FilterStateService();
   final Dio _dio = ApiService().dio;
-  Map<String, bool?> _manufacturerPremiumCache =
+  final Map<String, bool?> _manufacturerPremiumCache =
       {}; // Cache manufacturer isPremium
   double? _lat;
   double? _lng;
@@ -148,8 +148,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
           }
         }
       }
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   /// Enrich ad's manufacturer with isPremium from cache
@@ -264,6 +263,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                     final result = await context.push(
                         '/property-filter?categoryId=${widget.categoryId}&title=${Uri.encodeComponent(widget.categoryTitle)}',
                         extra: _filters);
+                    if (!mounted) return;
                     if (result is Map<String, dynamic>) {
                       _filters = result;
                       context.read<AdvertisementBloc>().add(
@@ -289,6 +289,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                     final result = await context.push(
                         '/car-filter?categoryId=${widget.categoryId}&title=${Uri.encodeComponent(widget.categoryTitle)}',
                         extra: _filters);
+                    if (!mounted) return;
                     if (result is Map<String, dynamic>) {
                       _filters = result;
                       context.read<AdvertisementBloc>().add(
@@ -459,25 +460,13 @@ class _CategoryListPageState extends State<CategoryListPage> {
                   final specificAd =
                       items.where((ad) => ad.id == specificAdId).firstOrNull;
                   if (specificAd != null) {
-                  } else {
-                  }
-
-                  // Count how many have isPremium == true
-                  final premiumCount = items
-                      .where((ad) => ad.manufacturer?.isPremium == true)
-                      .length;
+                  } else {}
 
                   // First filter by isPremium
                   items = items.where((ad) {
                     final isPremium = ad.manufacturer?.isPremium == true;
-                    if (ad.id == specificAdId) {
-                    }
                     return isPremium;
                   }).toList();
-
-                  // Check if specific ad is in filtered list
-                  final isInFilteredList =
-                      items.any((ad) => ad.id == specificAdId);
 
                   // Debug: Print all filtered ad IDs
 
@@ -488,13 +477,12 @@ class _CategoryListPageState extends State<CategoryListPage> {
                     // Use Future.microtask to avoid setState during build
                     Future.microtask(() {
                       if (mounted) {
-                        context.read<AdvertisementBloc>().add(
+                        this.context.read<AdvertisementBloc>().add(
                               const AdvertisementEvent.fetchNextPage(),
                             );
                       }
                     });
-                  } else {
-                  }
+                  } else {}
 
                   // Then apply all other filters from _filters map
                   // Manufacturer filter
@@ -638,7 +626,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                   side: BorderSide(
                     color: selected
                         ? AppColors.primaryColor
-                        : AppColors.greyColor.withOpacity(0.4),
+                        : AppColors.greyColor.withValues(alpha: 0.4),
                   ),
                 ),
                 showCheckmark: false,
@@ -694,7 +682,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
             OutlinedButton(
               onPressed: _resetFilters,
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: AppColors.greyColor.withOpacity(0.6)),
+                side: BorderSide(
+                    color: AppColors.greyColor.withValues(alpha: 0.6)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(11),
                 ),
@@ -738,108 +727,77 @@ class _CategoryListPageState extends State<CategoryListPage> {
     final isPremiumCategory =
         widget.categoryTitle.toLowerCase().contains('premium');
     return RefreshIndicator(
-                  onRefresh: () async {
-                    // Pull-to-refresh must reach the network, not the cache.
-                    AddRepository.invalidateAdsCache();
-                    if (widget.categoryId == 'property') {
-                      // Property filters
-                      context.read<AdvertisementBloc>().add(
-                            AdvertisementEvent.applyFilters(
-                              categoryId: widget.categoryId,
-                              latitude: _lat,
-                              longitude: _lng,
-                              propertyTypes:
-                                  (_filters['propertyTypes'] as List?)
-                                      ?.cast<String>(),
-                              minBedrooms: _filters['minBedrooms'] as int?,
-                              maxBedrooms: _filters['maxBedrooms'] as int?,
-                              minPrice: _filters['minPrice'] as int?,
-                              maxPrice: _filters['maxPrice'] as int?,
-                              minArea: _filters['minArea'] as int?,
-                              maxArea: _filters['maxArea'] as int?,
-                              isFurnished: _filters['isFurnished'] as bool?,
-                              hasParking: _filters['hasParking'] as bool?,
-                            ),
-                          );
-                    } else {
-                      // Vehicle filters
-                      // For Premium Vehicles, pass null to fetch all categories
-                      context.read<AdvertisementBloc>().add(
-                            AdvertisementEvent.applyFilters(
-                              categoryId: _effectiveCategoryId,
-                              latitude: _lat,
-                              longitude: _lng,
-                              commercialVehicleTypes:
-                                  (_filters['commercialVehicleTypes'] as List?)
-                                      ?.cast<String>(),
-                              minYear: _filters['minYear'] as int?,
-                              maxYear: _filters['maxYear'] as int?,
-                              manufacturerIds:
-                                  (_filters['manufacturerIds'] as List?)
-                                      ?.cast<String>(),
-                              modelIds: (_filters['modelIds'] as List?)
-                                  ?.cast<String>(),
-                              fuelTypeIds: (_filters['fuelTypeIds'] as List?)
-                                  ?.cast<String>(),
-                              transmissionTypeIds:
-                                  (_filters['transmissionTypeIds'] as List?)
-                                      ?.cast<String>(),
-                              minPrice: _filters['minPrice'] as int?,
-                              maxPrice: _filters['maxPrice'] as int?,
-                            ),
-                          );
-                    }
-                  },
-                  child: GridView.builder(
-                    controller: _scrollController,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 15,
-                      mainAxisSpacing: 15,
-                      mainAxisExtent:
-                          richAdCardMainAxisExtent(context, columns: 2),
-                    ),
-                    padding: const EdgeInsets.fromLTRB(15, 10, 15, 100),
-                    // For Premium Vehicles, don't show loading indicator once list is loaded
-                    // For other categories, show loading indicator if more pages are available
-                    itemCount: items.length +
-                        ((!isPremiumCategory && state.hasMore) ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index < items.length) {
-                        return RichAdCard(ad: items[index]);
-                      } else {
-                        return const Center(
-                            child: CircularProgressIndicator());
-                      }
-                    },
-                  ),
-                );
-  }
-
-  String _getAdTitle(AddModel ad) {
-    if (ad.vehicleType != null) {
-      return '${ad.manufacturer?.name ?? ''} ${ad.model?.name ?? ''} ${ad.year ?? ''}'
-          .trim();
-    } else if (ad.propertyType != null) {
-      if (ad.propertyType!.toLowerCase() == 'plot') {
-        return ad.propertyType!;
-      }
-      return '${ad.propertyType} - ${ad.bedrooms ?? 0} BHK';
-    } else {
-      return ad.description.length > 50
-          ? '${ad.description.substring(0, 50)}...'
-          : ad.description;
-    }
-  }
-
-  String _getAdSubtitle(AddModel ad) {
-    if (ad.vehicleType != null) {
-      return '${ad.mileage ?? 0} KM • ${ad.fuelType ?? 'N/A'} • ${ad.transmission ?? 'N/A'}';
-    } else if (ad.propertyType != null) {
-      return '${ad.areaSqft ?? 0} sq ft • ${ad.bathrooms ?? 0} bathrooms';
-    } else {
-      return ''; // Don't show category for other ad types
-    }
+      onRefresh: () async {
+        // Pull-to-refresh must reach the network, not the cache.
+        AddRepository.invalidateAdsCache();
+        if (widget.categoryId == 'property') {
+          // Property filters
+          context.read<AdvertisementBloc>().add(
+                AdvertisementEvent.applyFilters(
+                  categoryId: widget.categoryId,
+                  latitude: _lat,
+                  longitude: _lng,
+                  propertyTypes:
+                      (_filters['propertyTypes'] as List?)?.cast<String>(),
+                  minBedrooms: _filters['minBedrooms'] as int?,
+                  maxBedrooms: _filters['maxBedrooms'] as int?,
+                  minPrice: _filters['minPrice'] as int?,
+                  maxPrice: _filters['maxPrice'] as int?,
+                  minArea: _filters['minArea'] as int?,
+                  maxArea: _filters['maxArea'] as int?,
+                  isFurnished: _filters['isFurnished'] as bool?,
+                  hasParking: _filters['hasParking'] as bool?,
+                ),
+              );
+        } else {
+          // Vehicle filters
+          // For Premium Vehicles, pass null to fetch all categories
+          context.read<AdvertisementBloc>().add(
+                AdvertisementEvent.applyFilters(
+                  categoryId: _effectiveCategoryId,
+                  latitude: _lat,
+                  longitude: _lng,
+                  commercialVehicleTypes:
+                      (_filters['commercialVehicleTypes'] as List?)
+                          ?.cast<String>(),
+                  minYear: _filters['minYear'] as int?,
+                  maxYear: _filters['maxYear'] as int?,
+                  manufacturerIds:
+                      (_filters['manufacturerIds'] as List?)?.cast<String>(),
+                  modelIds: (_filters['modelIds'] as List?)?.cast<String>(),
+                  fuelTypeIds:
+                      (_filters['fuelTypeIds'] as List?)?.cast<String>(),
+                  transmissionTypeIds:
+                      (_filters['transmissionTypeIds'] as List?)
+                          ?.cast<String>(),
+                  minPrice: _filters['minPrice'] as int?,
+                  maxPrice: _filters['maxPrice'] as int?,
+                ),
+              );
+        }
+      },
+      child: GridView.builder(
+        controller: _scrollController,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 15,
+          mainAxisSpacing: 15,
+          mainAxisExtent: richAdCardMainAxisExtent(context, columns: 2),
+        ),
+        padding: const EdgeInsets.fromLTRB(15, 10, 15, 100),
+        // For Premium Vehicles, don't show loading indicator once list is loaded
+        // For other categories, show loading indicator if more pages are available
+        itemCount:
+            items.length + ((!isPremiumCategory && state.hasMore) ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index < items.length) {
+            return RichAdCard(ad: items[index]);
+          } else {
+            return const Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
+    );
   }
 
   String _getUserFriendlyErrorMessage(String errorMessage) {

@@ -138,8 +138,7 @@ class ChatRepository {
     if (changed) _roomsController.add(List.from(_rooms));
     try {
       await _socketService.markRoomRead(roomId);
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   /// Connect to chat server
@@ -180,8 +179,7 @@ class ChatRepository {
         // Check if controller is still open before adding events
         if (!_roomsController.isClosed) {
           _roomsController.add(List.from(_rooms));
-        } else {
-        }
+        } else {}
       } else {
         throw Exception('API returned success: false');
       }
@@ -195,15 +193,13 @@ class ChatRepository {
   /// Join a chat room and wait for success callback
   Future<void> joinChatRoom(String roomId) async {
     try {
-
       // Check if socket is connected, if not, try to connect first
       if (!_socketService.isConnected) {
         final connected = await _socketService.connect();
         if (!connected) {
           throw Exception('Failed to connect to server');
         }
-      } else {
-      }
+      } else {}
 
       // Use the new joinRoomAndWait method that waits for callback
       final success = await _socketService.joinRoomAndWait(roomId);
@@ -222,7 +218,6 @@ class ChatRepository {
   /// Get messages for a specific room
   Future<List<Map<String, dynamic>>> getRoomMessages(String roomId) async {
     try {
-
       // Use HTTP API to get messages
       final response = await _apiService.getRoomMessages(roomId);
 
@@ -258,8 +253,8 @@ class ChatRepository {
 
   /// Send message with attachments via API (for image/audio). Falls back to
   /// WebSocket if the API POST /chats/rooms/:roomId/messages is not available.
-  Future<void> sendMessageWithAttachments(String roomId, String type,
-      List<Map<String, dynamic>> attachments,
+  Future<void> sendMessageWithAttachments(
+      String roomId, String type, List<Map<String, dynamic>> attachments,
       {String content = ''}) async {
     try {
       await _apiService.sendMessage(roomId, content,
@@ -292,22 +287,32 @@ class ChatRepository {
   /// Upload file to S3 and send as image message.
   Future<void> sendImageMessage(
       String roomId, Uint8List fileBytes, String mimeType) async {
-    final url = await AddRepository().uploadFileToS3(fileBytes, mimeType,
-        filePrefix: 'image');
+    final url = await AddRepository()
+        .uploadFileToS3(fileBytes, mimeType, filePrefix: 'image');
     if (url == null) throw Exception('Image upload failed');
     await sendMessageWithAttachments(roomId, 'image', [
-      {'type': 'image', 'url': url, 'mimeType': mimeType, 'size': fileBytes.length}
+      {
+        'type': 'image',
+        'url': url,
+        'mimeType': mimeType,
+        'size': fileBytes.length
+      }
     ]);
   }
 
   /// Upload file to S3 and send as audio message.
   Future<void> sendAudioMessage(
       String roomId, Uint8List fileBytes, String mimeType) async {
-    final url = await AddRepository().uploadFileToS3(fileBytes, mimeType,
-        filePrefix: 'audio');
+    final url = await AddRepository()
+        .uploadFileToS3(fileBytes, mimeType, filePrefix: 'audio');
     if (url == null) throw Exception('Audio upload failed');
     await sendMessageWithAttachments(roomId, 'audio', [
-      {'type': 'audio', 'url': url, 'mimeType': mimeType, 'size': fileBytes.length}
+      {
+        'type': 'audio',
+        'url': url,
+        'mimeType': mimeType,
+        'size': fileBytes.length
+      }
     ]);
   }
 
@@ -374,7 +379,7 @@ class ChatRepository {
       }
 
       // 2️⃣ Try joining room and wait for success
-      final joined = await _socketService.joinRoomAndWait(roomId!);
+      await _socketService.joinRoomAndWait(roomId!);
 
       // 3️⃣ Send message only after successful join
       final msg =
@@ -383,7 +388,7 @@ class ChatRepository {
     } catch (e) {
       if (e.toString().contains('not a participant')) {
         roomId = await createChatRoom(adId);
-        final joined = await _socketService.joinRoomAndWait(roomId!);
+        await _socketService.joinRoomAndWait(roomId!);
 
         // Send message after successful join
         final msg =
@@ -391,7 +396,7 @@ class ChatRepository {
         _socketService.sendMessage(msg, type: 'offer');
       } else {
         roomId = await createChatRoom(adId);
-        final joined = await _socketService.joinRoomAndWait(roomId!);
+        await _socketService.joinRoomAndWait(roomId!);
 
         // Send message after successful join
         final msg =
@@ -418,7 +423,7 @@ class ChatRepository {
       }
 
       // 2️⃣ Try joining room and wait for success
-      final joined = await _socketService.joinRoomAndWait(roomId!);
+      await _socketService.joinRoomAndWait(roomId!);
 
       // 3️⃣ Send message only after successful join
       final msg =
@@ -427,7 +432,7 @@ class ChatRepository {
     } catch (e) {
       if (e.toString().contains('not a participant')) {
         roomId = await createChatRoom(adId);
-        final joined = await _socketService.joinRoomAndWait(roomId!);
+        await _socketService.joinRoomAndWait(roomId!);
 
         // Send message after successful join
         final msg =
@@ -435,7 +440,7 @@ class ChatRepository {
         _socketService.sendMessage(msg, type: 'offer');
       } else {
         roomId = await createChatRoom(adId);
-        final joined = await _socketService.joinRoomAndWait(roomId!);
+        await _socketService.joinRoomAndWait(roomId!);
 
         // Send message after successful join
         final msg =
@@ -490,7 +495,6 @@ class ChatRepository {
   /// Find existing room by ad ID (legacy method - kept for compatibility)
   Future<String?> findRoomByAdId(String adId) async {
     try {
-
       // Ensure socket connected
       if (!_socketService.isConnected) await _socketService.connect();
 
@@ -515,7 +519,6 @@ class ChatRepository {
   /// Check if a chat room exists for an ad
   Future<String?> getExistingRoomForAd(String adId) async {
     try {
-
       // Get all chat rooms
       final response = await _apiService.getUserChatRooms();
       final rooms = response['data'] as List<dynamic>? ?? [];
@@ -537,7 +540,6 @@ class ChatRepository {
   /// Create a new chat room for an ad
   Future<String?> createChatRoom(String adId) async {
     try {
-
       // Ensure socket connected
       if (!_socketService.isConnected) {
         final connected = await _socketService.connect();

@@ -43,7 +43,8 @@ class AdDetailSkeleton extends StatelessWidget {
           ),
           Container(
             color: AppColors.whiteColor,
-            padding: EdgeInsets.fromLTRB(g, AppSpacing.md12, g, AppSpacing.xl20),
+            padding:
+                EdgeInsets.fromLTRB(g, AppSpacing.md12, g, AppSpacing.xl20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -60,7 +61,8 @@ class AdDetailSkeleton extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm8),
           Container(
             color: AppColors.whiteColor,
-            padding: EdgeInsets.fromLTRB(g, AppSpacing.lg16, g, AppSpacing.xl20),
+            padding:
+                EdgeInsets.fromLTRB(g, AppSpacing.lg16, g, AppSpacing.xl20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -154,7 +156,9 @@ class AdDetailSoldBanner extends StatelessWidget {
       color: AppColors.redColor,
       padding: EdgeInsets.symmetric(horizontal: g, vertical: AppSpacing.sm8),
       child: Text(
-        isProperty ? 'This property is no longer available' : 'This ad is marked as sold',
+        isProperty
+            ? 'This property is no longer available'
+            : 'This ad is marked as sold',
         style: const TextStyle(
           color: Colors.white,
           fontSize: 12.5,

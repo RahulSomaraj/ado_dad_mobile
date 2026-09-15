@@ -48,8 +48,7 @@ class ShowroomRepo {
           try {
             final user = ShowroomUser.fromJson(data[i]);
             users.add(user);
-          } catch (_) {
-          }
+          } catch (_) {}
         }
 
         // Check if there are more pages to fetch
@@ -99,8 +98,7 @@ class ShowroomRepo {
                       if (user.type == 'SR') {
                         users.add(user);
                       }
-                    } catch (_) {
-                    }
+                    } catch (_) {}
                   }
 
                   final nextHasNext = nextResponseData is Map<String, dynamic>
@@ -142,7 +140,6 @@ class ShowroomRepo {
       }
     } catch (e) {
       if (e is DioException) {
-
         // Handle network connection errors first
         if (e.type == DioExceptionType.connectionTimeout) {
           throw Exception(
@@ -211,7 +208,6 @@ class ShowroomRepo {
     int limit = 20,
   }) async {
     try {
-
       final response = await _dio.get(
         '/ads/user/$userId',
         queryParameters: {
@@ -231,8 +227,7 @@ class ShowroomRepo {
             "Failed to load showroom user ads - Status: ${response.statusCode}");
       }
     } catch (e) {
-      if (e is DioException) {
-      }
+      if (e is DioException) {}
       throw Exception("Error fetching showroom user ads: $e");
     }
   }
@@ -281,10 +276,8 @@ class ShowroomRepo {
             // Filter to only include SR type users
             if (user.type == 'SR') {
               users.add(user);
-            } else {
-            }
-          } catch (_) {
-          }
+            } else {}
+          } catch (_) {}
         }
 
         // Check if there are more pages to fetch (for public endpoint)
@@ -334,8 +327,7 @@ class ShowroomRepo {
                       if (user.type == 'SR') {
                         users.add(user);
                       }
-                    } catch (_) {
-                    }
+                    } catch (_) {}
                   }
 
                   final nextHasNext = nextResponseData is Map<String, dynamic>
@@ -377,7 +369,6 @@ class ShowroomRepo {
       }
     } catch (e) {
       if (e is DioException) {
-
         // Handle network connection errors first
         if (e.type == DioExceptionType.connectionTimeout) {
           throw Exception(

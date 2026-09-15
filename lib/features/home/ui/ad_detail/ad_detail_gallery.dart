@@ -106,7 +106,8 @@ class _AdDetailGalleryState extends State<AdDetailGallery> {
 
     Widget media;
     if (items.isEmpty) {
-      media = _NoPhotos(isOwner: widget.isOwner, onAddPhotos: widget.onAddPhotos);
+      media =
+          _NoPhotos(isOwner: widget.isOwner, onAddPhotos: widget.onAddPhotos);
     } else {
       media = CarouselSlider(
         carouselController: _controller,

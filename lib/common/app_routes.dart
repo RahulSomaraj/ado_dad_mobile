@@ -85,8 +85,7 @@ class AppRoutes {
         ),
       ),
       GoRoute(
-          path: '/login-password',
-          builder: (context, state) => const Login()),
+          path: '/login-password', builder: (context, state) => const Login()),
       // Old deep links / stale references (keep ?redirect=… etc.).
       GoRoute(
         path: '/login-otp',
@@ -353,8 +352,9 @@ class AppRoutes {
             providers: [
               if (categoryId == 'commercial_vehicle')
                 BlocProvider(
-                  create: (_) => CommercialVehicleTypeFilterBloc(repository: repo)
-                    ..add(const CommercialVehicleTypeFilterEvent.load()),
+                  create: (_) =>
+                      CommercialVehicleTypeFilterBloc(repository: repo)
+                        ..add(const CommercialVehicleTypeFilterEvent.load()),
                 ),
               BlocProvider(
                 create: (_) => ManufacturerBloc(repository: repo)
@@ -407,8 +407,8 @@ class AppRoutes {
             final fromPage = state.uri.queryParameters['from'];
             final adId = state.uri.queryParameters['adId'];
             final adTitle = state.uri.queryParameters['adTitle'];
-            final adPrice = int.tryParse(
-                state.uri.queryParameters['price'] ?? '');
+            final adPrice =
+                int.tryParse(state.uri.queryParameters['price'] ?? '');
             return ChatPage(
               roomId: roomId,
               otherUserName: otherUserName,
@@ -450,7 +450,7 @@ class _RouteErrorScreen extends StatelessWidget {
   /// Body text; null shows the generic broken-link copy.
   final String? message;
 
-  const _RouteErrorScreen({this.error, this.message});
+  const _RouteErrorScreen({this.error}) : message = null;
 
   /// Shown when a route is opened without the `extra` / query data it needs
   /// (e.g. restored from a deep link or after a process restart).
@@ -473,8 +473,7 @@ class _RouteErrorScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline,
-                  size: 64, color: AppColors.greyColor),
+              Icon(Icons.error_outline, size: 64, color: AppColors.greyColor),
               const SizedBox(height: 16),
               Text(
                 'We couldn’t open that page',

@@ -89,8 +89,10 @@ class LocalNotificationService {
 
   /// Call from FCM foreground handler: show in system shade and add to in-app list.
   static Future<void> showFromFcmMessage(RemoteMessage message) async {
-    final title = message.notification?.title ?? message.data['title'] ?? 'Notification';
+    final title =
+        message.notification?.title ?? message.data['title'] ?? 'Notification';
     final body = message.notification?.body ?? message.data['body'] ?? '';
-    await showNotification(title: title, body: body, payload: 'open_notifications');
+    await showNotification(
+        title: title, body: body, payload: 'open_notifications');
   }
 }

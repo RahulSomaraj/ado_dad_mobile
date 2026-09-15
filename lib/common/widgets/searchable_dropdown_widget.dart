@@ -334,7 +334,8 @@ class _SearchableDialogState<T> extends State<_SearchableDialog<T>> {
               child: widget.useCategoryFilter &&
                       widget.vehicleCategories != null
                   ? DropdownButtonFormField<String>(
-                      value: _selectedCategory,
+                      key: ValueKey<String?>(_selectedCategory),
+                      initialValue: _selectedCategory,
                       decoration: InputDecoration(
                         labelText: 'Select vehicle category',
                         border: OutlineInputBorder(
@@ -544,7 +545,7 @@ class _SearchableDialogState<T> extends State<_SearchableDialog<T>> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? Colors.blue.withOpacity(0.1)
+                                      ? Colors.blue.withValues(alpha: 0.1)
                                       : Colors.transparent,
                                 ),
                                 child: Row(

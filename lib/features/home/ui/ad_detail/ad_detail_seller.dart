@@ -90,7 +90,10 @@ class _AdDetailSellerCardState extends State<AdDetailSellerCard> {
       if (_replyValue(_stats?.avgReplyMinutes) != null)
         (_replyValue(_stats?.avgReplyMinutes)!, 'Replies in'),
       if ((_stats?.adCount ?? 0) > 0)
-        ('${_stats!.adCount}', _stats!.adCount == 1 ? 'Ad posted' : 'Ads posted'),
+        (
+          '${_stats!.adCount}',
+          _stats!.adCount == 1 ? 'Ad posted' : 'Ads posted'
+        ),
     ];
 
     return AdDetailSection(
@@ -303,8 +306,9 @@ class _AdDetailSimilarAdsState extends State<AdDetailSimilarAds> {
   @override
   Widget build(BuildContext context) {
     if (_loading || _items.isEmpty) return const SizedBox.shrink();
-    final modelName = AdFormat.titleCase(AdFormat.clean(widget.ad.model?.displayName) ??
-        AdFormat.clean(widget.ad.model?.name));
+    final modelName = AdFormat.titleCase(
+        AdFormat.clean(widget.ad.model?.displayName) ??
+            AdFormat.clean(widget.ad.model?.name));
     final title = _sameModel && modelName != null
         ? 'Similar $modelName near you'
         : 'Similar near you';
@@ -322,26 +326,27 @@ class _AdDetailSimilarAdsState extends State<AdDetailSimilarAds> {
       children: [
         const AdDetailBand(),
         AdDetailSection(
-      title: title,
-      bleedRight: true,
-      trailing: AdDetailTextAction(
-        label: 'See all',
-        onTap: () => context.push('/search?from=ad-detail'),
-      ),
-      child: SizedBox(
-        height: cardH,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: EdgeInsets.only(right: g),
-          itemCount: _items.length,
-          separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md12),
-          itemBuilder: (_, i) => SizedBox(
-            width: _cardWidth,
-            height: cardH,
-            child: RichAdCard(ad: _items[i]),
+          title: title,
+          bleedRight: true,
+          trailing: AdDetailTextAction(
+            label: 'See all',
+            onTap: () => context.push('/search?from=ad-detail'),
           ),
-        ),
-      ),
+          child: SizedBox(
+            height: cardH,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.only(right: g),
+              itemCount: _items.length,
+              separatorBuilder: (_, __) =>
+                  const SizedBox(width: AppSpacing.md12),
+              itemBuilder: (_, i) => SizedBox(
+                width: _cardWidth,
+                height: cardH,
+                child: RichAdCard(ad: _items[i]),
+              ),
+            ),
+          ),
         ),
       ],
     );

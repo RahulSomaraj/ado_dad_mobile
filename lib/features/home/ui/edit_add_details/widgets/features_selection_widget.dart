@@ -52,7 +52,7 @@ class FeaturesSelectionWidget extends StatelessWidget {
             side: BorderSide(
               color: isSelected
                   ? AppColors.primaryColor
-                  : AppColors.greyColor.withOpacity(0.4),
+                  : AppColors.greyColor.withValues(alpha: 0.4),
             ),
           ),
           visualDensity: VisualDensity.compact,

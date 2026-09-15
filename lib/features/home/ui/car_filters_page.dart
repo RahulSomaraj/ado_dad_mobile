@@ -57,7 +57,8 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
   final Set<String> _selectedFuelTypeIds = {};
   final Set<String> _selectedTransmissionTypeIds = {};
   final Set<String> _selectedModelIds = {};
-  final Set<String> _selectedCommercialVehicleTypes = {}; // e.g. {'van','truck'}
+  final Set<String> _selectedCommercialVehicleTypes =
+      {}; // e.g. {'van','truck'}
   final _minYearCtrl = TextEditingController();
   final _maxYearCtrl = TextEditingController();
   final _minPriceCtrl = TextEditingController();
@@ -72,7 +73,6 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
   // Debounce timer for manufacturer search
   Timer? _manufacturerSearchTimer;
   // Debounce timer for model search
-  Timer? _modelSearchTimer;
 
   // Live result count
   final AddRepository _repo = AddRepository();
@@ -191,7 +191,6 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
   @override
   void dispose() {
     _manufacturerSearchTimer?.cancel();
-    _modelSearchTimer?.cancel();
     _countTimer?.cancel();
     _minYearCtrl.dispose();
     _maxYearCtrl.dispose();
@@ -314,8 +313,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
   // ===========================================================================
   void _dispatchBrandSearch(String v) {
     _manufacturerSearchTimer?.cancel();
-    _manufacturerSearchTimer =
-        Timer(const Duration(milliseconds: 500), () {
+    _manufacturerSearchTimer = Timer(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       final vehicleCategory = _getVehicleCategoryForFilter();
       if (v.isEmpty) {
@@ -326,18 +324,6 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
         context.read<ManufacturerBloc>().add(
               ManufacturerEvent.search(v, vehicleCategory: vehicleCategory),
             );
-      }
-    });
-  }
-
-  void _dispatchModelSearch(String v) {
-    _modelSearchTimer?.cancel();
-    _modelSearchTimer = Timer(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      if (v.isEmpty) {
-        context.read<ModelFilterBloc>().add(const ModelFilterEvent.load());
-      } else {
-        context.read<ModelFilterBloc>().add(ModelFilterEvent.search(v));
       }
     });
   }
@@ -879,105 +865,115 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
       ),
       builder: (sheetContext) {
         return BlocProvider.value(
-          value: manufacturerBloc,
-          child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-          ),
-          child: SizedBox(
-            height: MediaQuery.of(sheetContext).size.height * 0.8,
-            child: StatefulBuilder(
-              builder: (context, setSheetState) {
-                return Column(
-                  children: [
-                    _sheetHeader('Select Brand'),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                      child: _searchField(
-                        controller: _brandSearchCtrl,
-                        hint: 'Search Brand',
-                        onChanged: (v) {
-                          setSheetState(() {});
-                          setState(() => brandQuery = v);
-                          _dispatchBrandSearch(v);
-                        },
-                      ),
-                    ),
-                    const Divider(height: 1),
-                    Expanded(
-                      child: BlocBuilder<ManufacturerBloc, ManufacturerState>(
-                        builder: (context, state) {
-                          return state.when(
-                            initial: () => const SizedBox.shrink(),
-                            loading: () => const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                            error: (msg) => Center(child: Text(msg)),
-                            loaded: (items) {
-                              return NotificationListener<ScrollNotification>(
-                                onNotification: (n) {
-                                  if (n.metrics.pixels >=
-                                          n.metrics.maxScrollExtent - 200 &&
-                                      brandVisible < items.length) {
-                                    setSheetState(() => brandVisible += 20);
-                                  }
-                                  return false;
-                                },
-                                child: ListView.separated(
-                                padding:
-                                    const EdgeInsets.fromLTRB(8, 8, 8, 20),
-                                itemCount: brandVisible.clamp(0, items.length),
-                                itemBuilder: (_, i) {
-                                  final m = items[i];
-                                  final id = m.id;
-                                  final checked =
-                                      _selectedManufacturerIds.contains(id);
-                                  return CheckboxListTile(
-                                    value: checked,
-                                    onChanged: (_) {
-                                      setSheetState(() {
-                                        if (checked) {
-                                          _selectedManufacturerIds.remove(id);
-                                        } else {
-                                          _selectedManufacturerIds.add(id);
-                                        }
-                                      });
-                                    },
-                                    dense: true,
-                                    controlAffinity:
-                                        ListTileControlAffinity.leading,
-                                    title: Text(
-                                      m.displayName.trim(),
-                                      style: TextStyle(
-                                        fontSize: GetResponsiveSize
-                                            .getResponsiveFontSize(
-                                          context,
-                                          mobile: 16.0,
-                                          tablet: 20.0,
-                                          largeTablet: 24.0,
-                                          desktop: 28.0,
-                                        ),
-                                      ),
-                                    ),
-                                    checkboxShape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                  );
-                                },
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(height: 2),
-                              ));
+            value: manufacturerBloc,
+            child: Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+              ),
+              child: SizedBox(
+                height: MediaQuery.of(sheetContext).size.height * 0.8,
+                child: StatefulBuilder(
+                  builder: (context, setSheetState) {
+                    return Column(
+                      children: [
+                        _sheetHeader('Select Brand'),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                          child: _searchField(
+                            controller: _brandSearchCtrl,
+                            hint: 'Search Brand',
+                            onChanged: (v) {
+                              setSheetState(() {});
+                              setState(() => brandQuery = v);
+                              _dispatchBrandSearch(v);
                             },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ));
+                          ),
+                        ),
+                        const Divider(height: 1),
+                        Expanded(
+                          child:
+                              BlocBuilder<ManufacturerBloc, ManufacturerState>(
+                            builder: (context, state) {
+                              return state.when(
+                                initial: () => const SizedBox.shrink(),
+                                loading: () => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                                error: (msg) => Center(child: Text(msg)),
+                                loaded: (items) {
+                                  return NotificationListener<
+                                          ScrollNotification>(
+                                      onNotification: (n) {
+                                        if (n.metrics.pixels >=
+                                                n.metrics.maxScrollExtent -
+                                                    200 &&
+                                            brandVisible < items.length) {
+                                          setSheetState(
+                                              () => brandVisible += 20);
+                                        }
+                                        return false;
+                                      },
+                                      child: ListView.separated(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            8, 8, 8, 20),
+                                        itemCount:
+                                            brandVisible.clamp(0, items.length),
+                                        itemBuilder: (_, i) {
+                                          final m = items[i];
+                                          final id = m.id;
+                                          final checked =
+                                              _selectedManufacturerIds
+                                                  .contains(id);
+                                          return CheckboxListTile(
+                                            value: checked,
+                                            onChanged: (_) {
+                                              setSheetState(() {
+                                                if (checked) {
+                                                  _selectedManufacturerIds
+                                                      .remove(id);
+                                                } else {
+                                                  _selectedManufacturerIds
+                                                      .add(id);
+                                                }
+                                              });
+                                            },
+                                            dense: true,
+                                            controlAffinity:
+                                                ListTileControlAffinity.leading,
+                                            title: Text(
+                                              m.displayName.trim(),
+                                              style: TextStyle(
+                                                fontSize: GetResponsiveSize
+                                                    .getResponsiveFontSize(
+                                                  context,
+                                                  mobile: 16.0,
+                                                  tablet: 20.0,
+                                                  largeTablet: 24.0,
+                                                  desktop: 28.0,
+                                                ),
+                                              ),
+                                            ),
+                                            checkboxShape:
+                                                RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                          );
+                                        },
+                                        separatorBuilder: (_, __) =>
+                                            const SizedBox(height: 2),
+                                      ));
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ));
       },
     );
     // Sheet dismissed: sync the outer page + count.
@@ -1091,8 +1087,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
                               itemBuilder: (_, i) {
                                 final m = items[i];
                                 final id = m.id;
-                                final checked =
-                                    _selectedModelIds.contains(id);
+                                final checked = _selectedModelIds.contains(id);
                                 return CheckboxListTile(
                                   value: checked,
                                   onChanged: (_) {
@@ -1147,7 +1142,8 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
     }
   }
 
-  Future<List<VehicleModel>> _fetchModelsForBrands(List<String> brandIds) async {
+  Future<List<VehicleModel>> _fetchModelsForBrands(
+      List<String> brandIds) async {
     final all = <VehicleModel>[];
     final seen = <String>{};
     for (final id in brandIds) {

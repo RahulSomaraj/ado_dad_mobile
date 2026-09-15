@@ -7,8 +7,8 @@ part 'commercial_vehicle_type_filter_event.dart';
 part 'commercial_vehicle_type_filter_state.dart';
 part 'commercial_vehicle_type_filter_bloc.freezed.dart';
 
-class CommercialVehicleTypeFilterBloc extends Bloc<CommercialVehicleTypeFilterEvent,
-    CommercialVehicleTypeFilterState> {
+class CommercialVehicleTypeFilterBloc extends Bloc<
+    CommercialVehicleTypeFilterEvent, CommercialVehicleTypeFilterState> {
   final AddRepository repository;
 
   CommercialVehicleTypeFilterBloc({required this.repository})
@@ -30,4 +30,3 @@ class CommercialVehicleTypeFilterBloc extends Bloc<CommercialVehicleTypeFilterEv
     }
   }
 }
-

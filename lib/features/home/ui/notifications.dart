@@ -109,8 +109,7 @@ class _NotificationsState extends State<Notifications> {
               );
               if (items.isEmpty) return const SizedBox.shrink();
               return ValueListenableBuilder<Set<String>>(
-                valueListenable:
-                    NotificationBadgeService.readNotificationIds,
+                valueListenable: NotificationBadgeService.readNotificationIds,
                 builder: (context, readIds, _) {
                   final hasUnread = items.any(
                     (n) => !NotificationBadgeService.isNotificationRead(n.id),
@@ -191,7 +190,8 @@ class _NotificationsState extends State<Notifications> {
       valueListenable: NotificationBadgeService.dismissedNotificationIds,
       builder: (context, dismissedIds, _) {
         final visible = items
-            .where((n) => !NotificationBadgeService.isNotificationDismissed(n.id))
+            .where(
+                (n) => !NotificationBadgeService.isNotificationDismissed(n.id))
             .toList();
 
         if (visible.isEmpty) return const _EmptyState();
@@ -216,8 +216,7 @@ class _NotificationsState extends State<Notifications> {
                           ? const SizedBox(
                               height: 32,
                               width: 32,
-                              child:
-                                  CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : null,
                     ),
@@ -327,7 +326,8 @@ class _ListEntry {
   final int headerNewCount;
   final NotificationModel? notification;
 
-  _ListEntry.header(this.headerLabel, this.headerNewCount) : notification = null;
+  _ListEntry.header(this.headerLabel, this.headerNewCount)
+      : notification = null;
   _ListEntry.item(this.notification)
       : headerLabel = null,
         headerNewCount = 0;
@@ -345,8 +345,7 @@ class _NotifKind {
 
   static _NotifKind of(NotificationModel n) {
     final priority = n.data.priority.toUpperCase();
-    final type =
-        (n.data.data?.type ?? n.data.targetType).toUpperCase();
+    final type = (n.data.data?.type ?? n.data.targetType).toUpperCase();
 
     if (priority == 'HIGH' || priority == 'URGENT' || type.contains('ALERT')) {
       return _NotifKind(Icons.error_outline, AppColors.redColor,
@@ -674,9 +673,7 @@ class _NotificationTile extends StatelessWidget {
 
     if (diff.inMinutes < 1) return 'Just now';
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24 &&
-        local.day == now.day &&
-        local.month == now.month) {
+    if (diff.inHours < 24 && local.day == now.day && local.month == now.month) {
       return '${diff.inHours}h ago';
     }
 
@@ -687,8 +684,18 @@ class _NotificationTile extends StatelessWidget {
     }
 
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
     final m = months[local.month - 1];
     return local.year == now.year

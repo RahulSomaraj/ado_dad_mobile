@@ -177,7 +177,7 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                     height: 4,
                     margin: const EdgeInsets.only(bottom: 8),
                     decoration: BoxDecoration(
-                      color: AppColors.greyColor.withOpacity(0.5),
+                      color: AppColors.greyColor.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -212,31 +212,37 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
 
                 Text('REASON', style: _sectionLabelStyle(context)),
                 const SizedBox(height: 4),
-                ..._reasons.map(
-                  (reason) => RadioListTile<String>(
-                    value: reason,
-                    groupValue:
-                        _selectedReason.isEmpty ? null : _selectedReason,
-                    onChanged: (value) => setState(() {
-                      _selectedReason = value ?? '';
-                      _errorText = null;
-                    }),
-                    dense: true,
-                    visualDensity: VisualDensity.compact,
-                    contentPadding: EdgeInsets.zero,
-                    activeColor: AppColors.primaryColor,
-                    title: Text(
-                      _reasonLabels[reason] ?? reason,
-                      style: GoogleFonts.poppins(
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile: 13.5,
-                            tablet: 16,
-                            largeTablet: 18,
-                            desktop: 20),
-                        color: AppColors.blackColor,
+                RadioGroup<String>(
+                  groupValue: _selectedReason.isEmpty ? null : _selectedReason,
+                  onChanged: (value) => setState(() {
+                    _selectedReason = value ?? '';
+                    _errorText = null;
+                  }),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ..._reasons.map(
+                        (reason) => RadioListTile<String>(
+                          value: reason,
+                          dense: true,
+                          visualDensity: VisualDensity.compact,
+                          contentPadding: EdgeInsets.zero,
+                          activeColor: AppColors.primaryColor,
+                          title: Text(
+                            _reasonLabels[reason] ?? reason,
+                            style: GoogleFonts.poppins(
+                              fontSize: GetResponsiveSize.getResponsiveFontSize(
+                                  context,
+                                  mobile: 13.5,
+                                  tablet: 16,
+                                  largeTablet: 18,
+                                  desktop: 20),
+                              color: AppColors.blackColor,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -270,8 +276,8 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                         horizontal: 12, vertical: 12),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(9),
-                      borderSide:
-                          BorderSide(color: AppColors.greyColor.withOpacity(0.4)),
+                      borderSide: BorderSide(
+                          color: AppColors.greyColor.withValues(alpha: 0.4)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(9),
@@ -309,13 +315,12 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                                 : () => Navigator.of(context).pop(),
                             style: OutlinedButton.styleFrom(
                               side: BorderSide(
-                                  color:
-                                      AppColors.greyColor.withOpacity(0.6)),
+                                  color: AppColors.greyColor
+                                      .withValues(alpha: 0.6)),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(11),
                               ),
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 13),
+                              padding: const EdgeInsets.symmetric(vertical: 13),
                             ),
                             child: Text(
                               'Cancel',
@@ -343,8 +348,7 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(11),
                               ),
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 13),
+                              padding: const EdgeInsets.symmetric(vertical: 13),
                             ),
                             child: isSubmitting
                                 ? const SizedBox(

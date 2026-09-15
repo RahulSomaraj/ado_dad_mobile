@@ -25,7 +25,10 @@ class AdDetailHeader extends StatelessWidget {
   /// 30 days on an unsold ad.
   String? get _priceDrop {
     final prev = ad.previousPrice;
-    if (ad.soldOut == true || prev == null || prev <= ad.price || ad.price <= 0) {
+    if (ad.soldOut == true ||
+        prev == null ||
+        prev <= ad.price ||
+        ad.price <= 0) {
       return null;
     }
     final changed = AdFormat.parse(ad.priceChangedAt);
@@ -35,7 +38,9 @@ class AdDetailHeader extends StatelessWidget {
     }
     final when = AdFormat.relativeTime(ad.priceChangedAt);
     final amount = AdFormat.inr(prev - ad.price);
-    return when == null ? 'Price dropped $amount' : 'Price dropped $amount · $when';
+    return when == null
+        ? 'Price dropped $amount'
+        : 'Price dropped $amount · $when';
   }
 
   @override
@@ -53,7 +58,8 @@ class AdDetailHeader extends StatelessWidget {
         AdFormat.relativeTime(ad.postedAt)!,
     ];
 
-    final price = AdFormat.inr(ad.price, monthly: specs.category.isProperty && isRent);
+    final price =
+        AdFormat.inr(ad.price, monthly: specs.category.isProperty && isRent);
     final facts = specs.keyFacts;
 
     return Container(
@@ -288,9 +294,8 @@ class _StatsStrip extends StatelessWidget {
                         style: AppTextstyle.specValue.copyWith(
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
-                          color: cells[i].$2 == null
-                              ? AppColors.textMuted
-                              : null,
+                          color:
+                              cells[i].$2 == null ? AppColors.textMuted : null,
                         ),
                       ),
                       Text(cells[i].$1, style: AppTextstyle.micro),

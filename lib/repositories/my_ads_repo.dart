@@ -132,8 +132,7 @@ class MyAdsRepo {
               }
             }
           }
-        } catch (_) {
-        }
+        } catch (_) {}
       }
 
       // Get all unique model IDs with their manufacturer IDs
@@ -183,8 +182,7 @@ class MyAdsRepo {
               }
             }
           }
-        } catch (_) {
-        }
+        } catch (_) {}
       }
 
       // Create enriched ads with manufacturer and model names

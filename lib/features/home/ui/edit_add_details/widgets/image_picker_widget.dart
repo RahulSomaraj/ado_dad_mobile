@@ -42,10 +42,10 @@ class ImagePickerWidget extends StatelessWidget {
           final url = urlEntry.value;
           final isCover = urlEntry.key == 0;
           return Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
                   url,
                   width: GetResponsiveSize.getResponsiveSize(
                     context,
@@ -63,61 +63,61 @@ class ImagePickerWidget extends StatelessWidget {
                   ),
                   fit: BoxFit.cover,
                 ),
-                ),
-                if (isCover)
-                  Positioned(
-                    left: 4,
-                    top: 4,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 5, vertical: 1.5),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryColor,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        'COVER',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 8.5,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.4,
-                        ),
-                      ),
-                    ),
-                  ),
+              ),
+              if (isCover)
                 Positioned(
-                  right: 0,
-                  top: 0,
-                  child: GestureDetector(
-                    onTap: () => onRemoveImage(url),
-                    child: Container(
-                      color: Colors.black54,
-                      padding: EdgeInsets.all(
-                        GetResponsiveSize.getResponsivePadding(
-                          context,
-                          mobile: 2,
-                          tablet: 4,
-                          largeTablet: 6,
-                          desktop: 8,
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.close,
-                        size: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 14,
-                          tablet: 18,
-                          largeTablet: 22,
-                          desktop: 26,
-                        ),
+                  left: 4,
+                  top: 4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 5, vertical: 1.5),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryColor,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      'COVER',
+                      style: TextStyle(
                         color: Colors.white,
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.4,
                       ),
                     ),
                   ),
                 ),
-              ],
-            );
+              Positioned(
+                right: 0,
+                top: 0,
+                child: GestureDetector(
+                  onTap: () => onRemoveImage(url),
+                  child: Container(
+                    color: Colors.black54,
+                    padding: EdgeInsets.all(
+                      GetResponsiveSize.getResponsivePadding(
+                        context,
+                        mobile: 2,
+                        tablet: 4,
+                        largeTablet: 6,
+                        desktop: 8,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.close,
+                      size: GetResponsiveSize.getResponsiveSize(
+                        context,
+                        mobile: 14,
+                        tablet: 18,
+                        largeTablet: 22,
+                        desktop: 26,
+                      ),
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
         }),
         ...newImageFiles.asMap().entries.map((entry) {
           final index = entry.key;
@@ -199,7 +199,7 @@ class ImagePickerWidget extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.transparent,
               border: Border.all(
-                color: AppColors.greyColor.withOpacity(0.6),
+                color: AppColors.greyColor.withValues(alpha: 0.6),
               ),
               borderRadius: BorderRadius.circular(10),
             ),

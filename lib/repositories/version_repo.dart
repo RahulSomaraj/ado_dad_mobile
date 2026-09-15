@@ -14,7 +14,8 @@ class VersionRepository {
     try {
       final response = await _dio.get(_versionPath);
 
-      if (response.statusCode != 200 || response.data is! Map<String, dynamic>) {
+      if (response.statusCode != 200 ||
+          response.data is! Map<String, dynamic>) {
         return null;
       }
       final apiResponse = AppVersionResponse.fromJson(
@@ -22,8 +23,7 @@ class VersionRepository {
       );
       final data = apiResponse.data;
       if (data != null) {
-      } else {
-      }
+      } else {}
       return data;
     } on DioException catch (e) {
       if (e.response?.statusCode != null) {

@@ -44,7 +44,9 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
       ));
     } catch (e) {
       emit(NotificationState.error(
-        e is Exception ? e.toString().replaceFirst('Exception: ', '') : e.toString(),
+        e is Exception
+            ? e.toString().replaceFirst('Exception: ', '')
+            : e.toString(),
       ));
     }
   }

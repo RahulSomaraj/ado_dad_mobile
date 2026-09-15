@@ -16,10 +16,8 @@ class AppColors {
   AppColors._();
 
   // ---- Active brightness (driven by the MaterialApp builder) ----
-  static Brightness _brightness = Brightness.light;
-  static set brightness(Brightness value) => _brightness = value;
-  static Brightness get brightness => _brightness;
-  static bool get isDark => _brightness == Brightness.dark;
+  static Brightness brightness = Brightness.light;
+  static bool get isDark => brightness == Brightness.dark;
 
   // ---- Brand colors (constant in both themes — existing palette) ----
   static const Color primaryColor = Color(0xFF4F48EC);
@@ -63,8 +61,7 @@ class AppColors {
 
   /// Muted text that still passes WCAG AA on white (4.9:1). `greyColor`
   /// (#959CA9) is only 2.8:1 — keep it for borders/icons, not 12–13 sp text.
-  static Color get textMuted =>
-      isDark ? darkGrey : const Color(0xFF6B7080);
+  static Color get textMuted => isDark ? darkGrey : const Color(0xFF6B7080);
 
   /// Green for positive *text* (document checks, price drop): 4.9:1 on white.
   static Color get positiveText =>

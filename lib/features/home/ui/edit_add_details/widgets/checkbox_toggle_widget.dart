@@ -33,7 +33,7 @@ class CheckboxToggleWidget extends StatelessWidget {
           ),
         ),
       ),
-      activeColor: AppColors.primaryColor,
+      activeThumbColor: AppColors.primaryColor,
       dense: true,
       onChanged: (v) => onChanged(v),
       contentPadding: EdgeInsets.zero,

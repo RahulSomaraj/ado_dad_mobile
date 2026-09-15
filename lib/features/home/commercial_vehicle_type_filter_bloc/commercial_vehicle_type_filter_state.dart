@@ -8,4 +8,3 @@ class CommercialVehicleTypeFilterState with _$CommercialVehicleTypeFilterState {
       List<CommercialVehicleType> items) = _Loaded;
   const factory CommercialVehicleTypeFilterState.error(String message) = _Error;
 }
-

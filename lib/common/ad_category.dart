@@ -10,10 +10,8 @@ enum AdCategory {
   /// Tolerant of case, dashes and spaces: "commercial-vehicle",
   /// "Commercial Vehicle" and "commercial_vehicle" all resolve.
   static AdCategory fromApi(String? raw) {
-    final v = (raw ?? '')
-        .toLowerCase()
-        .replaceAll(RegExp(r'[\s\-]+'), '_')
-        .trim();
+    final v =
+        (raw ?? '').toLowerCase().replaceAll(RegExp(r'[\s\-]+'), '_').trim();
     switch (v) {
       case 'two_wheeler':
       case 'twowheeler':

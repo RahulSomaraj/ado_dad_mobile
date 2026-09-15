@@ -23,6 +23,9 @@ class DropdownWidget<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dropdown = DropdownButtonFormField<T>(
+      // `value` is deprecated; initialValue only applies on first build, so key
+      // on the value to rebuild the field when the parent changes it.
+      key: ValueKey<T?>(selectedValue),
       decoration:
           CommonDecoration.textFieldDecoration(labelText: labelText).copyWith(
         labelStyle: TextStyle(
@@ -51,7 +54,7 @@ class DropdownWidget<T> extends StatelessWidget {
           ),
         ),
       ),
-      value: selectedValue,
+      initialValue: selectedValue,
       dropdownColor: Colors.white,
       isExpanded: true,
       iconSize: GetResponsiveSize.getResponsiveSize(
