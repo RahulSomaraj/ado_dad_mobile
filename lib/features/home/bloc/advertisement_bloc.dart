@@ -88,6 +88,13 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
   // by the backend ($geoNear), so each page returns progressively farther ads.
   // Once that feed is exhausted, fall back to the full all-ads feed.
   static const double _locationRadiusKm = 200;
+
+  /// A "near you" page this thin is not a feed — it is a dead end. Below this
+  /// many nearby results the bloc widens to the full all-ads feed instead of
+  /// leaving the user staring at one or two stray listings. This covers real
+  /// users outside the covered districts as well as an emulator whose default
+  /// fix is Mountain View.
+  static const int _minNearbyResults = 5;
   bool _locationFallbackToAll = false;
   bool _locationQueryHasNext = false;
   int _allAdsPage = 1;
@@ -153,7 +160,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
       final result = await repository.fetchAllAds(page: _currentPage);
       emit(AdvertisementState.listingsLoaded(
           listings: result.data, hasMore: result.hasNext));
-    } catch (_) {
+    } catch (e) {
       // Emit user-friendly message instead of raw exception
       emit(AdvertisementState.error(
           "Unable to load recommendations. Please try again later."));
@@ -332,6 +339,39 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
           maxArea: _maxArea,
           isFurnished: _isFurnished,
           hasParking: _hasParking);
+
+      if (result.data.length < _minNearbyResults && _locationLatitude != null) {
+        // Same rule as the home feed: coordinates narrow a category/filter
+        // query, they must not be the reason a screen comes back empty. Retry
+        // once without them before showing "no results".
+        _locationLatitude = null;
+        _locationLongitude = null;
+        final wide = await repository.fetchAllAds(
+            page: _currentPage,
+            category: _categoryId,
+            commercialVehicleTypes: _commercialVehicleTypes,
+            minYear: _minYear,
+            maxYear: _maxYear,
+            manufacturerIds: _manufacturerIds,
+            modelIds: _modelIds,
+            fuelTypeIds: _fuelTypeIds,
+            transmissionTypeIds: _transmissionTypeIds,
+            minPrice: _minPrice,
+            maxPrice: _maxPrice,
+            propertyTypes: _propertyTypes,
+            minBedrooms: _minBedrooms,
+            maxBedrooms: _maxBedrooms,
+            minArea: _minArea,
+            maxArea: _maxArea,
+            isFurnished: _isFurnished,
+            hasParking: _hasParking);
+        emit(AdvertisementState.listingsLoaded(
+          listings: wide.data,
+          hasMore: wide.hasNext,
+        ));
+        return;
+      }
+
       emit(AdvertisementState.listingsLoaded(
         listings: result.data,
         hasMore: result.hasNext,
@@ -401,6 +441,23 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
         longitude: event.longitude,
         maxDistance: _locationRadiusKm,
       );
+
+      if (result.data.length < _minNearbyResults) {
+        // Too little within the radius. This happens for real users outside the
+        // covered regions, and on an emulator whose default fix is Mountain
+        // View — either way the location filter must never be allowed to
+        // produce an empty home. Fall straight through to the full feed.
+        _locationFallbackToAll = true;
+        _locationQueryHasNext = false;
+        _allAdsPage = 1;
+        final all = await repository.fetchAllAds(page: _allAdsPage);
+        final merged = _mergeDedupe(result.data, all.data);
+        // Keep the nearby ones first, then the rest of the feed behind them.
+        emit(AdvertisementState.listingsLoaded(
+            listings: merged, hasMore: all.hasNext));
+        return;
+      }
+
       _locationQueryHasNext = result.hasNext;
       // Keep hasMore=true so scrolling can widen the radius and then fall back
       // to the full all-ads feed once nearby results are exhausted.

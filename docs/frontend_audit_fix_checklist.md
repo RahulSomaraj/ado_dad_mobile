@@ -35,6 +35,41 @@ Last updated 2026-09-14.
       likely to surface a caching bug)
 - [ ] Pull-to-refresh on Home and on a category reaches the network
 
+### V2 — Ad detail polish (pass 5, 2026-09-15) — verify on device
+Written without a compiler. Run `flutter analyze lib` first; expect fixes to be
+small (a missing import, a const). Spec: `claude/ad-detail-polish-pass5.md`.
+- [ ] `flutter analyze lib` clean for `lib/features/home/ui/ad_detail/`,
+      `add_detail_page.dart`, `lib/common/ad_format.dart`, `ad_category.dart`,
+      `app_spacing.dart`, `app_colors.dart`, `app_textstyle.dart`, `add_model.dart`
+- [ ] Buyer, car ad: price reads ₹4,85,000; 4 key facts; Overview table has no
+      "-" rows; Documents shows RC / insurance only when the ad has them
+- [ ] Two-wheeler, commercial and property ads each show their own key facts
+      and rows (commercial: payload/axles/fitness/permit; property: beds/area)
+- [ ] Gallery: no auto-advance, photos not dimmed, controls clear the notch,
+      thumbnail tap jumps, "+N" opens fullscreen, video plays fullscreen
+- [ ] Owner: Live pill + Views/Saved/Chats + tip; bar = Edit · Mark as sold;
+      ⋮ → Delete ad asks for confirmation; no favourite/report/seller card
+- [ ] Owner controls correct on the first frame (no buyer bar flash)
+- [ ] Mark as sold / delete still pop back with `true` and lists refresh
+- [ ] Call dials `+91…` (E.164); Chat/Offer send the ad *title*, not description
+- [ ] Safety note dismiss survives an app restart (30-day snooze)
+- [ ] Similar: "Similar Swift near you" when ≥2 same-model ads within ±20%,
+      otherwise falls back to "Similar near you"
+- [ ] Dark mode: no white blocks on the detail page
+- [ ] Text scale 1.3×: key facts and bottom bar don't overflow
+- [x] Key names confirmed against `get-ad-by-id.uc.ts`: `viewCount`,
+      `favoritesCount`, `chatsCount`, `status` (approved/pending/rejected)
+- [ ] Needs backend D-1…D-5 deployed (`ado-dad/BACKEND_FIX_CHECKLIST.md` §D):
+      sold ad opens with the SOLD banner; "Price dropped ₹X · 3 days ago" after
+      a price cut; distance appears in the meta line (detail now sends the
+      seed `lat`/`lng`); verified tick shows for `isVerified` sellers
+- [ ] Once analyze is green, delete the now-unused widgets in
+      `ui/widgets/`: `ad_detail_title_price`, `ad_detail_description`,
+      `ad_detail_seller_tile`, `ad_detail_bottom_buttons`,
+      `ad_detail_carousel_dots`, `ad_detail_card_shell`, `ad_detail_key_val_row`,
+      `ad_detail_spec_tile`, `ad_detail_tabs_section`, `ad_detail_report_button`,
+      `ad_detail_mark_as_sold_button` (grep for other importers first)
+
 ### M — Baseline numbers (no performance claim is real without these)
 Same device, cold start, 5 runs, report the median:
 - [ ] launch → first `/v2/ads/list` on the wire (ms)
@@ -59,8 +94,6 @@ Same device, cold start, 5 runs, report the median:
 
 ### P4-1 · God widgets
 - [ ] `profile_page.dart` — 171 KB, one file
-- [ ] `add_detail_page.dart` — ~114 KB; `_SimilarAdsSection`, the carousel and
-      `_VideoPlayerWidget` are the natural first extractions
 - [ ] Lift the remaining geocoding / direct API calls out of `initState` /
       `build` into services
 - [ ] Deliberately not started: a mechanical split of this size needs
@@ -103,6 +136,34 @@ Blocked on the backend agent.
 ## Done
 
 Implemented and committed to `dev_redesign`; unverified until section **V** passes.
+
+### 2026-09-15 · ad detail polish (pass 5)
+
+Written to disk, **not committed and not compiled** — see **V2**.
+
+- `add_detail_page.dart` 3,094 → ~600 lines. One build path for all 8 bloc
+  states (was 5 duplicated slivers trees); owner resolved synchronously from
+  `SharedPrefs().getString('user_id')` (was 8+ `FutureBuilder`s).
+- Sections moved to `lib/features/home/ui/ad_detail/`: `ad_detail_gallery`
+  (carousel + thumbs + overlay buttons), `ad_detail_header` (price/title/meta,
+  owner status/stats/tip), `ad_detail_specs` (per-category key facts, Overview,
+  Documents, Features), `ad_detail_body` (expandable description, footer,
+  safety note), `ad_detail_seller` (seller card + similar ads), `ad_detail_bars`
+  (buyer / owner / sold bars), `ad_detail_states` (skeleton, error, sold
+  banner), `ad_detail_section`, `ad_detail_media` (video + fullscreen viewers,
+  moved verbatim).
+- New `lib/common/ad_format.dart` (`AdFormat`: Indian grouping, km, relative
+  time, title case), `ad_category.dart` (`AdCategory` enum + edit routes),
+  `app_spacing.dart` (`AppSpacing`, `AppRadius`).
+- `AppColors`: `textMuted` (#6B7080, 4.9:1), `positiveText`, `chipFill`,
+  `primarySoft`, `successColor`. `AppTextstyle`: priceLarge, sectionTitle,
+  titleMedium, bodyText, specValue, specLabel, caption, micro, button.
+- `AddModel`: optional `viewCount`, `favoritesCount`, `chatsCount`, `status`.
+- Bugs fixed: raw `₹ 485000` price, `Kmpl` odometer, fake EMI (detail and
+  `RichAdCard`), full-photo gradient, gallery auto-advance timer, "No Parking" /
+  "No Garden" as features, chat/offer sent `description` as the title, call
+  ignored `countryCode`, hardcoded 65 dp bottom gap, `top: 50` controls,
+  hardcoded white/black colours (dark mode), 9 sp badges.
 
 ### 2026-09-14 · second pass
 

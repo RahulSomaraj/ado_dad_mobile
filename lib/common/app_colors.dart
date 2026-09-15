@@ -60,4 +60,24 @@ class AppColors {
   static Color get dividerColor =>
       isDark ? const Color(0xFF2A2F3A) : const Color(0xFFE6E8EE);
   static Color get onPrimary => Colors.white; // text/icons on the purple brand
+
+  /// Muted text that still passes WCAG AA on white (4.9:1). `greyColor`
+  /// (#959CA9) is only 2.8:1 — keep it for borders/icons, not 12–13 sp text.
+  static Color get textMuted =>
+      isDark ? darkGrey : const Color(0xFF6B7080);
+
+  /// Green for positive *text* (document checks, price drop): 4.9:1 on white.
+  static Color get positiveText =>
+      isDark ? const Color(0xFF5FD3A2) : const Color(0xFF12805A);
+
+  /// Soft chip / tile fill on a section surface.
+  static Color get chipFill =>
+      isDark ? const Color(0xFF232833) : const Color(0xFFF4F5F9);
+
+  /// Tint behind brand-coloured notes (safety tip, avatar initial).
+  static Color get primarySoft =>
+      isDark ? const Color(0xFF26244A) : const Color(0xFFEDEBFF);
+
+  /// Status green (Live pill, call icon).
+  static const Color successColor = Color(0xFF19A463);
 }

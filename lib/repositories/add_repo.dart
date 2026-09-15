@@ -11,6 +11,7 @@ import 'package:ado_dad_user/models/advertisement_post_model/vehicle_transmissio
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_variant_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehilce_model.dart';
 import 'package:ado_dad_user/models/seller_stats.dart';
+import 'package:ado_dad_user/services/location_service.dart';
 import 'package:dio/dio.dart';
 import 'package:mime/mime.dart';
 
@@ -85,10 +86,17 @@ class AdsCache {
 
   Future<PaginatedAdsResponse> track(
       String key, Future<PaginatedAdsResponse> request) {
+    // NOTE: the callback body must be a block, not an arrow. `Map.remove`
+    // returns the removed value — which here is `tracked` itself — and
+    // `whenComplete` waits on a Future returned by its callback. An arrow body
+    // therefore made the future wait for itself and never complete: the
+    // response arrived, no error was thrown, and every caller's `await` hung.
     final tracked = request.then((value) {
       store(key, value);
       return value;
-    }).whenComplete(() => _inFlight.remove(key));
+    }).whenComplete(() {
+      _inFlight.remove(key);
+    });
     _inFlight[key] = tracked;
     return tracked;
   }
@@ -128,7 +136,9 @@ class _ReferenceCache {
     // A failed lookup must not be cached, or the filter sheet stays broken for
     // the rest of the session. This listener swallows nothing — the caller's
     // copy of the future still carries the error — it only evicts the key.
-    future.then<void>((_) {}, onError: (Object _) => _futures.remove(key));
+    future.then<void>((_) {}, onError: (Object _) {
+      _futures.remove(key);
+    });
     return future;
   }
 
@@ -885,7 +895,20 @@ class AddRepository {
 
   Future<AddModel> fetchAdDetail(String adId) async {
     try {
-      final response = await _dio.get('/v2/ads/$adId');
+      // Send the already-known position (never wakes the GPS) so the response
+      // carries `distance`. The endpoint ignores missing/invalid coordinates.
+      Map<String, dynamic>? query;
+      try {
+        final seed = await LocationService().seedPosition();
+        if (seed != null) {
+          query = {
+            'lat': seed.latitude.toStringAsFixed(4),
+            'lng': seed.longitude.toStringAsFixed(4),
+          };
+        }
+      } catch (_) {}
+      final response =
+          await _dio.get('/v2/ads/$adId', queryParameters: query);
       final raw = response.data;
 
       // Accept either {data: {...}} or plain {...}

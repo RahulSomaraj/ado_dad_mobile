@@ -71,6 +71,18 @@ class AddModel {
   // Video field
   final String? link; // Video URL
 
+  // Engagement / moderation (returned by GET /v2/ads/:id; null on list rows)
+  final int? viewCount;
+  final int? favoritesCount;
+  final int? chatsCount;
+
+  /// Moderation status: "approved", "pending" or "rejected".
+  final String? status;
+
+  /// Price before the most recent change, and when it changed (detail only).
+  final int? previousPrice;
+  final String? priceChangedAt;
+
   AddModel({
     // basic
     required this.id,
@@ -126,6 +138,12 @@ class AddModel {
     this.distance,
     // Video field
     this.link,
+    this.viewCount,
+    this.favoritesCount,
+    this.chatsCount,
+    this.status,
+    this.previousPrice,
+    this.priceChangedAt,
     String? postedAt,
   }) : postedAt = postedAt ?? updatedAt;
 
@@ -183,6 +201,12 @@ class AddModel {
     double? distance,
     // Video field
     String? link,
+    int? viewCount,
+    int? favoritesCount,
+    int? chatsCount,
+    String? status,
+    int? previousPrice,
+    String? priceChangedAt,
   }) {
     return AddModel(
       id: id ?? this.id,
@@ -238,6 +262,12 @@ class AddModel {
       distance: distance ?? this.distance,
       // Video field
       link: link ?? this.link,
+      viewCount: viewCount ?? this.viewCount,
+      favoritesCount: favoritesCount ?? this.favoritesCount,
+      chatsCount: chatsCount ?? this.chatsCount,
+      status: status ?? this.status,
+      previousPrice: previousPrice ?? this.previousPrice,
+      priceChangedAt: priceChangedAt ?? this.priceChangedAt,
       postedAt: postedAt ?? this.postedAt,
     );
   }
@@ -388,6 +418,12 @@ class AddModel {
       distance: _asDouble(json['distance']),
       // Video field
       link: json['link'] as String?,
+      viewCount: _asInt(json['viewCount'] ?? json['views']),
+      favoritesCount: _asInt(json['favoritesCount'] ?? json['favoriteCount']),
+      chatsCount: _asInt(json['chatsCount'] ?? json['chatCount']),
+      status: json['status']?.toString(),
+      previousPrice: _asInt(json['previousPrice']),
+      priceChangedAt: json['priceChangedAt']?.toString(),
       postedAt: (json['postedAt'] ?? '').toString(),
     );
   }

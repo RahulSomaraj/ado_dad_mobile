@@ -1,0 +1,1246 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+<title>AdoDad Chat Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap">
+<style>
+:root{
+  --pg:#F1F1F6; --pg2:#FFFFFF; --ink:#16161D; --ink2:#4E4E5C; --mut:#72728A; --line:#DCDCE7;
+  --brand:#4F48EC; --brandText:#4F48EC; --def:#CF3434; --defSoft:#FBE9E9; --newSoft:#ECEBFE;
+  --frame:#1D1D26; --shadow:0 1px 0 rgba(22,22,29,.04),0 18px 40px -22px rgba(40,36,110,.35);
+  /* app tokens (light) — lib/common/app_colors.dart */
+  --a-bg:#F6F7FB; --a-surface:#FFFFFF; --a-text:#0A0A0A; --a-text2:#424242; --a-muted:#6B7080;
+  --a-div:#E6E8EE; --a-chip:#F4F5F9; --a-soft:#EDEBFF; --a-okBg:#E3F5EC; --a-ok:#12805A;
+  --a-warnBg:#FFF3D6; --a-warn:#7A5200; --a-errBg:#FDECEC; --a-err:#C23030;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --pg:#0F1016; --pg2:#171822; --ink:#ECECF3; --ink2:#B9BAC8; --mut:#8C8DA0; --line:#2A2B38;
+    --brandText:#9C98FF; --def:#FF7373; --defSoft:#3A1C22; --newSoft:#24224A;
+    --frame:#34353F; --shadow:0 18px 40px -22px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --pg:#0F1016; --pg2:#171822; --ink:#ECECF3; --ink2:#B9BAC8; --mut:#8C8DA0; --line:#2A2B38;
+  --brandText:#9C98FF; --def:#FF7373; --defSoft:#3A1C22; --newSoft:#24224A;
+  --frame:#34353F; --shadow:0 18px 40px -22px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--pg);color:var(--ink);font:15px/1.55 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:20px}
+.wrap{max-width:1180px;margin:0 auto;padding-block:40px 64px}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:.86em}
+a{color:var(--brandText)}
+h1{font-size:34px;line-height:1.15;letter-spacing:-.02em;margin:0;font-weight:600;text-wrap:balance}
+h2{font-size:22px;letter-spacing:-.01em;margin:0;font-weight:600;text-wrap:balance}
+h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:0;font-weight:500}
+.lede{color:var(--ink2);max-width:68ch;margin:10px 0 0}
+.meta-line{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:14px;color:var(--mut);font-size:13px}
+.meta-line span b{color:var(--ink);font-weight:500}
+
+.top{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:30px}
+.panel{background:var(--pg2);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.panel ul{margin:10px 0 0;padding-left:18px;color:var(--ink2);font-size:14px}
+.panel li+li{margin-top:6px}
+.legend{display:grid;gap:10px;margin-top:12px;font-size:14px;color:var(--ink2)}
+.legend div{display:flex;gap:10px;align-items:flex-start}
+.tag{display:inline-block;font:500 11px/1 "IBM Plex Mono",monospace;padding:4px 6px;border-radius:5px;white-space:nowrap}
+.tag.ok{background:var(--a-okBg);color:var(--a-ok)}
+.tag.api{background:var(--newSoft);color:var(--brandText)}
+.tag.q{background:var(--defSoft);color:var(--def)}
+
+.index{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--pg);padding-block:12px;margin-top:26px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.index span{font-size:12px;color:var(--mut);letter-spacing:.06em;text-transform:uppercase;margin-right:2px}
+.index a{font-size:13px;text-decoration:none;color:var(--ink2);padding:3px 0;border-bottom:1px solid transparent}
+.index a:hover,.index a:focus-visible{color:var(--brandText);border-color:var(--brandText);outline:none}
+.index i{width:1px;height:14px;background:var(--line)}
+
+section.scr-sec{display:grid;grid-template-columns:330px 1fr;gap:34px;padding-block:44px;border-bottom:1px solid var(--line);scroll-margin-top:70px}
+.sec-head .no{font:500 12px "IBM Plex Mono",monospace;color:var(--brandText)}
+.sec-head p{color:var(--ink2);margin:8px 0 18px;font-size:14.5px}
+dl.spec{display:grid;grid-template-columns:86px 1fr;gap:9px 12px;margin:0;font-size:13.5px}
+dl.spec dt{font:500 10.5px/1.9 "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
+dl.spec dd{margin:0;color:var(--ink2)}
+dl.spec dd code{color:var(--ink)}
+
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px;align-items:start}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.cap{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500}
+.cap .v{font:600 10.5px/1 "IBM Plex Mono",monospace;padding:4px 7px;border-radius:5px;letter-spacing:.04em}
+.cap .v.old{background:var(--defSoft);color:var(--def)}
+.cap .v.new{background:var(--newSoft);color:var(--brandText)}
+.notes{list-style:none;margin:0;padding:0;display:grid;gap:7px;font-size:13px;color:var(--ink2)}
+.notes li{display:grid;grid-template-columns:20px 1fr;gap:8px}
+.notes code{color:var(--ink)}
+
+.mk{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;font:600 9.5px/1 "IBM Plex Sans",sans-serif;color:#fff;flex:none;vertical-align:middle;box-shadow:0 0 0 2px rgba(255,255,255,.9)}
+.mk.o{background:#D63B3B}
+.mk.n{background:#4F48EC}
+.notes .mk{box-shadow:none;margin-top:1px}
+
+/* ---------- phone ---------- */
+.ph{width:100%;max-width:292px;border-radius:32px;padding:7px;background:var(--frame);box-shadow:var(--shadow)}
+.sc{height:580px;border-radius:26px;overflow:hidden;background:var(--a-bg);color:var(--a-text);font:12px/1.35 Poppins,system-ui,sans-serif;display:flex;flex-direction:column;position:relative}
+.ph.dark .sc{--a-bg:#0F1115;--a-surface:#1B1F27;--a-text:#ECEEF3;--a-text2:#C2C7D0;--a-muted:#9AA1AF;--a-div:#2A2F3A;--a-chip:#232833;--a-soft:#26244A;--a-okBg:#15372A;--a-ok:#5FD3A2;--a-warnBg:#3A2F12;--a-warn:#F2C66D;--a-errBg:#3D1B1E;--a-err:#FF8A8A}
+.sb{height:24px;display:flex;justify-content:space-between;align-items:center;padding:2px 20px 0;font-size:10px;font-weight:600;flex:none;background:var(--a-surface)}
+.sb.p{background:#4F48EC;color:#fff}
+.sb .dots{display:flex;gap:3px;align-items:center}
+.sb .dots i{width:12px;height:6px;border-radius:2px;background:currentColor;opacity:.85}
+.sb .dots i:first-child{width:8px}
+.ic{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.s{width:12px;height:12px}
+.ic.xs{width:10px;height:10px;stroke-width:2.4}
+.grow{flex:1;min-width:0}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row{display:flex;align-items:center}
+.body{flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column}
+
+/* old app bar */
+.oab{background:#4F48EC;color:#fff;display:flex;align-items:center;gap:10px;padding:9px 12px 11px;flex:none}
+.oab .t{font-size:15px;font-weight:600}
+.oav{width:28px;height:28px;border-radius:50%;background:#DADAF0;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+
+/* nav */
+.nav{display:flex;justify-content:space-around;align-items:flex-end;padding:6px 6px 12px;background:var(--a-surface);border-top:.5px solid var(--a-div);flex:none}
+.nv{display:flex;flex-direction:column;align-items:center;font-size:8.5px;color:var(--a-muted);gap:2px;position:relative;width:48px}
+.nv.on{color:#4F48EC;font-weight:500}
+.nv .ub{position:absolute;top:-4px;left:28px}
+.fab{width:40px;height:40px;border-radius:50%;background:#4F48EC;color:#fff;display:grid;place-items:center;margin-top:-20px;border:3px solid var(--a-surface)}
+
+/* avatars & thumbs */
+.av{width:40px;height:40px;border-radius:50%;background:var(--a-soft);color:#4F48EC;display:grid;place-items:center;font-weight:600;font-size:15px;flex:none;position:relative}
+.av.sm{width:34px;height:34px;font-size:13px}
+.av.lg{width:64px;height:64px;font-size:24px}
+.av .lt{position:absolute;right:-5px;bottom:-5px;width:21px;height:21px;border-radius:6px;border:2px solid var(--a-surface)}
+.av .on{position:absolute;right:0;bottom:1px;width:9px;height:9px;border-radius:50%;background:#19A463;border:2px solid var(--a-surface)}
+.t1{background:linear-gradient(140deg,#D5DCEA 0%,#9AA6BF 55%,#6C7892 100%)}
+.t2{background:linear-gradient(140deg,#EAD9C4 0%,#B98D62 60%,#7A5334 100%)}
+.t3{background:linear-gradient(140deg,#D8E5D6 0%,#94AE93 60%,#5E7A5E 100%)}
+.t4{background:linear-gradient(140deg,#E6E0EF 0%,#A99BC2 60%,#6E5E8E 100%)}
+.t5{background:linear-gradient(140deg,#F0D9D6 0%,#C48C84 60%,#8A5249 100%)}
+
+/* old list rows */
+.orow{display:flex;gap:10px;padding:10px 12px;align-items:center;background:var(--a-bg)}
+.orow+.orow{border-top:.5px solid var(--a-div);margin-left:62px;padding-left:0}
+.orow .nm{font-weight:700;font-size:12px}
+.orow .tm{font-size:10px;color:var(--a-muted)}
+.orow .pv{font-size:11px;color:var(--a-muted)}
+
+/* new list */
+.nhead{background:var(--a-surface);padding:6px 14px 10px;flex:none}
+.nhead .t{font-size:19px;font-weight:600;letter-spacing:-.01em}
+.srch{display:flex;align-items:center;gap:7px;background:var(--a-chip);border-radius:11px;padding:7px 10px;color:var(--a-muted);font-size:11.5px;margin-top:8px}
+.srch.focus{box-shadow:inset 0 0 0 1.5px #4F48EC;color:var(--a-text)}
+.chips{display:flex;gap:6px;padding:0 14px 10px;background:var(--a-surface);flex:none;border-bottom:.5px solid var(--a-div)}
+.chip{flex:none;font-size:10.5px;padding:4px 10px;border-radius:14px;background:var(--a-chip);color:var(--a-text2);display:inline-flex;gap:5px;align-items:center}
+.chip.on{background:#4F48EC;color:#fff}
+.chip.line{background:transparent;box-shadow:inset 0 0 0 1px #4F48EC;color:#4F48EC}
+.chip .c{font-size:9px;font-weight:600;opacity:.9}
+.nrow{display:flex;gap:11px;padding:10px 14px;align-items:flex-start;background:var(--a-surface)}
+.nrow+.nrow{box-shadow:inset 66px 0 0 var(--a-surface),inset 0 .5px 0 var(--a-div)}
+.nrow .l1{display:flex;align-items:baseline;gap:6px}
+.nrow .nm{font-size:12.5px;font-weight:500}
+.nrow .tm{font-size:9.5px;color:var(--a-muted);margin-left:auto;flex:none}
+.nrow .ad{font-size:10px;color:var(--a-muted);display:flex;gap:4px;align-items:center;margin-top:1px}
+.nrow .l3{display:flex;align-items:center;gap:6px;margin-top:2px}
+.nrow .pv{font-size:11.5px;color:var(--a-muted)}
+.nrow.unread .nm{font-weight:600}
+.nrow.unread .pv{color:var(--a-text);font-weight:500}
+.nrow.unread .tm{color:#4F48EC;font-weight:600}
+.nrow.dim{opacity:.62}
+.ub{background:#4F48EC;color:#fff;font-size:9px;font-weight:600;min-width:17px;height:17px;border-radius:9px;padding:0 5px;display:inline-grid;place-items:center;flex:none}
+.pill{font-size:8.5px;font-weight:600;padding:2px 6px;border-radius:5px;display:inline-block;line-height:1.2}
+.pill.live{background:var(--a-okBg);color:var(--a-ok)}
+.pill.sold{background:var(--a-chip);color:var(--a-muted)}
+.you{color:var(--a-muted);display:inline-flex;align-items:center;gap:2px}
+.hl{background:#FFE58A;color:#0A0A0A;border-radius:2px;padding:0 1px}
+.ph.dark .hl{background:#6B5A12;color:#FFF3C4}
+.grp{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--a-muted);padding:10px 14px 4px;background:var(--a-bg)}
+
+/* skeleton */
+.sk{background:var(--a-div);border-radius:6px}
+.shim{animation:sh 1.4s ease-in-out infinite}
+@keyframes sh{50%{opacity:.5}}
+@media (prefers-reduced-motion:reduce){.shim,.typing i{animation:none}}
+
+/* thread */
+.nh{display:flex;align-items:center;gap:8px;padding:6px 10px 8px;background:var(--a-surface);flex:none}
+.nh .nm{font-size:12.5px;font-weight:600;line-height:1.2}
+.nh .sub{font-size:9.5px;color:var(--a-muted)}
+.nh .sub.ok{color:#19A463}
+.ib{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:var(--a-text2);flex:none}
+.ib.call{color:#19A463}
+.ls{display:flex;gap:9px;align-items:center;padding:7px 12px;background:var(--a-surface);border-top:.5px solid var(--a-div);border-bottom:.5px solid var(--a-div);flex:none}
+.ls .th{width:40px;height:32px;border-radius:7px;flex:none}
+.ls .ti{font-size:10.5px;color:var(--a-text2)}
+.ls .pr{font-size:12px;font-weight:600}
+.ls .vw{font-size:10px;color:#4F48EC;font-weight:500;display:flex;align-items:center;gap:1px}
+.opin{align-self:center;display:flex;align-items:center;gap:5px;background:var(--a-surface);border:.5px solid var(--a-div);border-radius:14px;padding:4px 10px;font-size:10px;font-weight:600;margin:10px auto 2px;max-width:84%}
+.msgs{flex:1;overflow:hidden;padding:8px 12px 10px;display:flex;flex-direction:column;justify-content:flex-end;gap:2px}
+.b{max-width:78%;padding:6px 10px 5px;border-radius:15px;font-size:11.5px;line-height:1.38;position:relative}
+.b.in{align-self:flex-start;background:var(--a-surface);border:.5px solid var(--a-div)}
+.b.out{align-self:flex-end;background:#4F48EC;color:#fff}
+.b.in.tail{border-bottom-left-radius:4px}
+.b.out.tail{border-bottom-right-radius:4px}
+.b + .b.sw{margin-top:7px}
+.b .mt{font-size:8.5px;display:flex;gap:3px;align-items:center;justify-content:flex-end;margin-top:1px;opacity:.78}
+.b.in .mt{color:var(--a-muted);opacity:1}
+.b.out .mt .rd{color:#BFF0DA}
+.b.fail{background:var(--a-errBg);color:var(--a-text);box-shadow:inset 0 0 0 1px var(--a-err)}
+.b.pend{background:#8D88F2}
+.failnote{align-self:flex-end;font-size:9.5px;color:var(--a-err);display:flex;gap:4px;align-items:center;margin:2px 2px 0;font-weight:500}
+.failnote u{text-decoration:none;color:#4F48EC;font-weight:600}
+.ds{align-self:center;font-size:9px;color:var(--a-muted);background:var(--a-chip);padding:2px 9px;border-radius:9px;margin:6px 0 5px;font-weight:500}
+.ods{align-self:center;font-size:9.5px;color:var(--a-muted);background:var(--a-surface);border:.5px solid var(--a-div);padding:3px 10px;border-radius:10px;margin:8px 0 6px;font-weight:600}
+.ob{max-width:76%;padding:7px 11px;border-radius:14px;font-size:12px;margin-bottom:8px}
+.ob.in{align-self:flex-start;background:var(--a-surface);border:.5px solid var(--a-div);border-bottom-left-radius:4px}
+.ob.out{align-self:flex-end;background:#4F48EC;color:#fff;border-bottom-right-radius:4px}
+.ob .mt{font-size:9px;opacity:.75;margin-top:2px}
+.typing{align-self:flex-start;background:var(--a-surface);border:.5px solid var(--a-div);border-radius:14px;border-bottom-left-radius:4px;padding:8px 11px;display:flex;gap:3px;margin-top:7px}
+.typing i{width:5px;height:5px;border-radius:50%;background:var(--a-muted);animation:sh 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+.qr{display:flex;gap:6px;padding:8px 10px 0;overflow:hidden;background:var(--a-surface)}
+.qr span{flex:none;font-size:10px;padding:4px 10px;border-radius:14px;box-shadow:inset 0 0 0 1px #4F48EC;color:#4F48EC}
+.cp{display:flex;align-items:center;gap:6px;padding:8px 10px 10px;background:var(--a-surface);flex:none;border-top:.5px solid var(--a-div)}
+.fld{flex:1;background:var(--a-chip);border-radius:18px;padding:8px 12px;color:var(--a-muted);font-size:11.5px;min-width:0}
+.fld.typed{color:var(--a-text)}
+.sendb{width:32px;height:32px;border-radius:50%;background:#4F48EC;color:#fff;display:grid;place-items:center;flex:none}
+.sendb.off{background:var(--a-chip);color:var(--a-muted)}
+.ocp{display:flex;align-items:center;gap:6px;padding:10px 12px;background:var(--a-surface);border-top:1px solid var(--a-div);flex:none}
+.ogap{height:50px;background:var(--a-surface);flex:none;position:relative}
+.ogap::after{content:"";position:absolute;inset:6px 30px;border:1px dashed #D63B3B;border-radius:6px;opacity:.55}
+.bn{display:flex;align-items:center;gap:7px;font-size:10.5px;padding:6px 12px;flex:none;font-weight:500}
+.bn.warn{background:var(--a-warnBg);color:var(--a-warn)}
+.bn.err{background:var(--a-errBg);color:var(--a-err)}
+.bn .act{margin-left:auto;font-weight:600;color:#4F48EC}
+.safety{display:flex;gap:8px;background:var(--a-soft);color:var(--a-text2);font-size:10px;border-radius:10px;padding:8px 10px;margin:0 2px}
+.center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;gap:6px}
+.center .h{font-size:14px;font-weight:600;color:var(--a-text)}
+.center .s{font-size:11px;color:var(--a-muted);max-width:210px}
+.btn{background:#4F48EC;color:#fff;border-radius:10px;padding:8px 16px;font-size:11.5px;font-weight:500;display:inline-flex;gap:6px;align-items:center}
+.btn.ghost{background:transparent;color:#4F48EC;box-shadow:inset 0 0 0 1px var(--a-div)}
+.snack{position:absolute;left:10px;right:10px;bottom:62px;background:#2B2B33;color:#fff;border-radius:8px;padding:8px 10px;font-size:10px}
+
+.tray{background:var(--a-surface);padding:8px 10px 0;display:flex;gap:7px;border-top:.5px solid var(--a-div);flex:none}
+.tray .tt{width:56px;height:56px;border-radius:9px;position:relative;flex:none}
+.tray .x{position:absolute;top:-5px;right:-5px;width:17px;height:17px;border-radius:50%;background:#16161D;color:#fff;display:grid;place-items:center;border:1.5px solid var(--a-surface)}
+.tray .add{width:56px;height:56px;border-radius:9px;box-shadow:inset 0 0 0 1px var(--a-div);display:grid;place-items:center;color:var(--a-muted)}
+.imgb{align-self:flex-end;width:150px;height:118px;border-radius:14px;border-bottom-right-radius:4px;position:relative;overflow:hidden;margin-top:6px}
+.imgb .ring{position:absolute;inset:0;display:grid;place-items:center;background:rgba(15,15,25,.35);color:#fff;font-size:10px;font-weight:600}
+.imgb .ring b{width:36px;height:36px;border-radius:50%;background:conic-gradient(#fff 0 64%,rgba(255,255,255,.3) 0);display:grid;place-items:center}
+.imgb .ring b i{width:28px;height:28px;border-radius:50%;background:rgba(40,36,110,.85);display:grid;place-items:center;font-style:normal;font-size:8.5px}
+.voice{display:flex;align-items:center;gap:8px;min-width:150px}
+.voice .pl{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center}
+.wave{display:flex;gap:2px;align-items:center;height:18px;flex:1}
+.wave i{width:2px;border-radius:2px;background:currentColor;opacity:.75}
+.rec{display:flex;align-items:center;gap:8px;padding:9px 12px 11px;background:var(--a-surface);border-top:.5px solid var(--a-div);font-size:11px;flex:none}
+.rec .dot{width:8px;height:8px;border-radius:50%;background:#E5484D}
+
+.sheet{position:absolute;left:0;right:0;bottom:0;top:40px;background:var(--a-surface);border-radius:18px 18px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column;overflow:hidden}
+.grab{width:34px;height:4px;border-radius:2px;background:var(--a-div);margin:7px auto 4px}
+.scrim{position:absolute;inset:0;background:rgba(10,10,20,.38)}
+.acts{display:flex;justify-content:center;gap:18px;padding:10px 0 12px}
+.acts div{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:9.5px;color:var(--a-text2)}
+.acts b{width:38px;height:38px;border-radius:50%;background:var(--a-chip);display:grid;place-items:center;color:#4F48EC}
+.lrow{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:11.5px;border-top:.5px solid var(--a-div)}
+.lrow .k{font-size:9.5px;color:var(--a-muted)}
+.lrow.danger{color:var(--a-err)}
+.media{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:0 16px 10px}
+.media i{aspect-ratio:1;border-radius:5px;display:block}
+.subh{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--a-muted);padding:10px 16px 6px;display:flex;justify-content:space-between}
+
+/* components table */
+.comp{margin-top:40px}
+.tblwrap{overflow-x:auto;margin-top:16px;background:var(--pg2);border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:720px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 11px "IBM Plex Mono",monospace;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
+td:first-child{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink);white-space:nowrap}
+td{color:var(--ink2)}
+tr:last-child td{border-bottom:0}
+footer{margin-top:40px;color:var(--mut);font-size:13px}
+
+@media (max-width:1060px){
+  section.scr-sec{grid-template-columns:1fr;gap:22px}
+  .top{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .pair{grid-template-columns:1fr}
+  .ph{margin-inline:auto}
+  h1{font-size:28px}
+  .index{position:static}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-3-7z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-pluscirc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M21 16l-5-5-9 8"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+    <symbol id="i-dcheck" viewBox="0 0 24 24"><path d="M2 12.5l4.5 4.5L15 7.5M11.5 16l1 1L22 7.5"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></symbol>
+    <symbol id="i-wifioff" viewBox="0 0 24 24"><path d="M3 3l18 18M8.5 16.5a5 5 0 0 1 7 0M5 12.5a10 10 0 0 1 5-2.7M19 12.5a10 10 0 0 0-2.4-1.7M2 8.8A15 15 0 0 1 6.3 6M22 8.8A15 15 0 0 0 11 5"/><path d="M12 20v.01"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></symbol>
+    <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4h11l-2 4 2 4H5"/></symbol>
+    <symbol id="i-block" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M6 18L18 6"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8" r="1"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v7"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v11h14V9M10 13h4"/></symbol>
+    <symbol id="i-bubble" viewBox="0 0 24 24"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-5 4z"/><path d="M8 9h8M8 12h5"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+<header>
+  <h3>AdoDad · Phase 3 · Wireframes</h3>
+  <h1 style="margin-top:8px">AdoDad Chat Redesign</h1>
+  <p class="lede">Each screen puts what the app does today next to the proposed design. The "Today" phones are rebuilt from <code>chat_rooms_page.dart</code> and <code>chat_page.dart</code> on <code>dev_redesign</code>. The "Proposed" phones fix the findings in <code>chat_system_audit_phase1.md</code>. Colours, type and dark tokens come from <code>app_colors.dart</code>, so the mockups use the app's own palette.</p>
+  <div class="meta-line">
+    <span>Brand <b>#4F48EC</b></span><span>In-app type <b>Poppins</b></span><span>Screens <b>14</b></span><span>Updated <b>15 Sep 2026</b></span>
+  </div>
+</header>
+
+<div class="top">
+  <div class="panel">
+    <h3>Assumptions (Phase 2 not signed off)</h3>
+    <ul>
+      <li><b>Baseline:</b> <code>dev_redesign</code> + backend <code>develop</code>.</li>
+      <li><b>Writes over REST</b> with a <code>clientMessageId</code>. Delivery over socket. This is what makes the <em>sending → sent → failed/retry</em> states possible.</li>
+      <li><b>Phone number stays</b> behind the Call button, as <code>chat_backend_api_spec.md</code> asks. Email is removed from payloads.</li>
+      <li><b>Typing and online status</b> are drawn but tagged optional. They depend on Q4.</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h3>How to read the markers</h3>
+    <div class="legend">
+      <div><span class="mk o">1</span><span>A defect in today's build, with its audit ID (e.g. F-11).</span></div>
+      <div><span class="mk n">1</span><span>What the proposed design does about it.</span></div>
+      <div><span class="tag ok">exists</span><span>Backend already supports it.</span></div>
+      <div><span class="tag api">new API</span><span>Needs a Phase 4 backend change.</span></div>
+      <div><span class="tag q">Q4</span><span>Only if the open decision says yes.</span></div>
+    </div>
+  </div>
+</div>
+
+<nav class="index" aria-label="Screens">
+  <span>List</span>
+  <a href="#s1">Default</a><a href="#s2">Loading</a><a href="#s3">Empty</a><a href="#s4">Error</a><a href="#s5">Search</a>
+  <i></i><span>Thread</span>
+  <a href="#s6">Default</a><a href="#s7">Loading</a><a href="#s8">New chat</a><a href="#s9">Sending</a><a href="#s10">Failed</a><a href="#s11">Offline</a><a href="#s12">Attachments</a>
+  <i></i><span>Other</span>
+  <a href="#s13">Chat details</a><a href="#s14">Dark mode</a><a href="#components">Components</a>
+</nav>
+
+<!-- ========================= 1 LIST DEFAULT ========================= -->
+<section class="scr-sec" id="s1">
+  <div class="sec-head">
+    <div class="no">01 · Chat list</div>
+    <h2>Chat list — default</h2>
+    <p>Find the chat that needs a reply. Every chat on AdoDad is about a listing, so each row shows the person and the ad together.</p>
+    <dl class="spec">
+      <dt>Components</dt><dd>ChatListHeader, SearchField, FilterChips, ConversationTile, UnreadBadge, ListingThumb, AppNavBar (Chat badge)</dd>
+      <dt>Interactions</dt><dd>Tap row → thread. Pull to refresh. Scroll loads the next page. Long-press → Archive / Mark unread <span class="tag api">new API</span></dd>
+      <dt>Data</dt><dd>Room id, other user (name, avatar), ad (title, price, thumb, status), last message (text, type, sender, status, time), <code>unreadCount</code>, your role (buying/selling)</dd>
+      <dt>API</dt><dd><code>GET /chats/rooms?cursor&amp;filter</code> <span class="tag api">new API</span> (one aggregation, no N+1). Socket <code>conversation.updated</code> on the <code>user:{id}</code> room</dd>
+      <dt>State</dt><dd><code>loading · loaded · refreshing · loadingMore · empty · error</code>. Rendered from cache first</dd>
+      <dt>Navigation</dt><dd><code>/chat-rooms</code> (nav shell) → <code>/chat/:roomId</code>. Only the id goes in the URL</dd>
+      <dt>Failure</dt><dd>Refresh fails with cache → banner, list stays. Without cache → screen 04</dd>
+    </dl>
+  </div>
+  <div class="pair">
+    <div class="col">
+      <div class="cap"><span class="v old">TODAY</span>Messages</div>
+      <div class="ph"><div class="sc">
+        <div class="sb p"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="oab"><svg class="ic"><use href="#i-back"/></svg><span class="t grow">Messages</span><svg class="ic"><use href="#i-search"/></svg></div>
+        <div class="body" style="background:var(--a-bg)">
+          <div class="orow"><div class="av">A</div><div class="grow"><div class="row"><span class="nm grow ell">Anand K</span><span class="tm">2h ago <span class="mk o">1</span></span></div><div class="pv ell" style="margin-top:3px">Can you do 5 lakh?</div></div></div>
+          <div class="orow"><div class="av">F</div><div class="grow"><div class="row"><span class="nm grow ell">Fathima R</span><span class="tm">1d ago</span></div><div class="pv ell" style="margin-top:3px">Is it still available?</div></div></div>
+          <div class="orow"><div class="av">J</div><div class="grow"><div class="row"><span class="nm grow ell">Joseph Motors</span><span class="tm">Just now <span class="mk o">2</span></span></div><div class="pv ell" style="margin-top:3px">No messages yet</div></div></div>
+          <div class="orow"><div class="av">S</div><div class="grow"><div class="row"><span class="nm grow ell">Sreeja M</span><span class="tm">3d ago</span></div><div class="pv ell" style="margin-top:3px"><svg class="ic s" style="vertical-align:-2px"><use href="#i-mic"/></svg> Voice message</div></div></div>
+          <div class="orow"><div class="av">N</div><div class="grow"><div class="row"><span class="nm grow ell">Nikhil P</span><span class="tm">6d ago</span></div><div class="pv ell" style="margin-top:3px">Ok bro <span class="mk o">3</span></div></div></div>
+        </div>
+        <div class="nav"><div class="nv"><svg class="ic"><use href="#i-home"/></svg>Home</div><div class="nv"><svg class="ic"><use href="#i-activity"/></svg>Activity</div><div class="fab"><svg class="ic"><use href="#i-plus"/></svg></div><div class="nv on"><svg class="ic"><use href="#i-chat"/></svg>Chat <span class="mk o" style="position:absolute;top:-6px;right:0">4</span></div><div class="nv"><svg class="ic"><use href="#i-user"/></svg>Profile</div></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk o">1</span><span>No unread state anywhere. <code>unreadCount</code> is never sent and mark-read has no handler (F-06).</span></li>
+        <li><span class="mk o">2</span><span>A room with no messages sorts to the top as "Just now", because the time falls back to <code>DateTime.now()</code> (F-33).</span></li>
+        <li><span class="mk o">3</span><span>No clue which ad the chat is about, whether you are buying or selling, or who sent the last message.</span></li>
+        <li><span class="mk o">4</span><span>No Chat badge. The list is not live and there is no push notification, so new leads go unseen (F-07).</span></li>
+      </ol>
+    </div>
+    <div class="col">
+      <div class="cap"><span class="v new">PROPOSED</span>Chats</div>
+      <div class="ph"><div class="sc">
+        <div class="sb"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="nhead">
+          <div class="row"><span class="t grow">Chats</span></div>
+          <div class="srch"><svg class="ic s"><use href="#i-search"/></svg>Search people or ads</div>
+        </div>
+        <div class="chips"><span class="chip on">All</span><span class="chip">Unread <span class="c">2</span></span><span class="chip">Buying</span><span class="chip">Selling <span class="mk n">1</span></span></div>
+        <div class="body" style="background:var(--a-surface)">
+          <div class="nrow unread"><div class="av">A<i class="lt t1"></i></div><div class="grow"><div class="l1"><span class="nm ell">Anand K</span><span class="tm">09:32</span></div><div class="ad"><svg class="ic xs"><use href="#i-tag"/></svg><span class="ell">Maruti Swift VXI · ₹5,40,000</span></div><div class="l3"><span class="pv grow ell">Can you do 5 lakh?</span><span class="ub">2</span><span class="mk n">2</span></div></div></div>
+          <div class="nrow"><div class="av">F<i class="lt t2"></i></div><div class="grow"><div class="l1"><span class="nm ell">Fathima R</span><span class="tm">Yesterday</span></div><div class="ad"><svg class="ic xs"><use href="#i-tag"/></svg><span class="ell">Classic 350 · ₹1,35,000</span></div><div class="l3"><span class="pv grow ell"><span class="you"><svg class="ic xs" style="color:#4F48EC"><use href="#i-dcheck"/></svg>You:</span> Yes, still available <span class="mk n">3</span></span></div></div></div>
+          <div class="nrow unread"><div class="av">J<i class="lt t4"></i></div><div class="grow"><div class="l1"><span class="nm ell">Joseph Motors</span><span class="tm">Mon</span></div><div class="ad"><svg class="ic xs"><use href="#i-tag"/></svg><span class="ell">Tata Ace Gold · ₹3,85,000</span></div><div class="l3"><span class="pv grow ell"><svg class="ic xs" style="vertical-align:-1px"><use href="#i-image"/></svg> Photo</span><span class="ub">1</span></div></div></div>
+          <div class="nrow dim"><div class="av">S<i class="lt t3"></i></div><div class="grow"><div class="l1"><span class="nm ell">Sreeja M</span><span class="tm">12 Sep</span></div><div class="ad"><span class="pill sold">Ad sold</span><span class="ell">2BHK, Kakkanad <span class="mk n">4</span></span></div><div class="l3"><span class="pv grow ell"><svg class="ic xs" style="vertical-align:-1px"><use href="#i-mic"/></svg> Voice message · 0:24</span></div></div></div>
+        </div>
+        <div class="nav"><div class="nv"><svg class="ic"><use href="#i-home"/></svg>Home</div><div class="nv"><svg class="ic"><use href="#i-activity"/></svg>Activity</div><div class="fab"><svg class="ic"><use href="#i-plus"/></svg></div><div class="nv on"><svg class="ic"><use href="#i-chat"/></svg>Chat<span class="ub">3</span></div><div class="nv"><svg class="ic"><use href="#i-user"/></svg>Profile</div></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk n">1</span><span>Buying/Selling filters come from the room's <code>userRoles</code>, which <span class="tag ok">exists</span>. Unread is counted on the server.</span></li>
+        <li><span class="mk n">2</span><span>The listing thumb sits on the avatar and the ad line sits under the name. Unread rows get a weight change and a count, not a different colour.</span></li>
+        <li><span class="mk n">3</span><span>Your own last message shows "You:" with its status tick. Times are local: time today, weekday this week, date after that.</span></li>
+        <li><span class="mk n">4</span><span>Chats about sold or removed ads stay visible and read-only instead of disappearing (F-29).</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 2 LIST LOADING ========================= -->
+<section class="scr-sec" id="s2">
+  <div class="sec-head">
+    <div class="no">02 · Chat list</div>
+    <h2>Chat list — loading</h2>
+    <p>The first frame should never be blank or blocked by the socket.</p>
+    <dl class="spec">
+      <dt>Components</dt><dd>ChatSkeleton (same shape as ConversationTile), RefreshLine</dd>
+      <dt>Interactions</dt><dd>None while loading. Search and filters are enabled once rows exist</dd>
+      <dt>Data</dt><dd>Cached first page (<code>chat:rooms:{userId}</code>, 24 h), then the network page</dd>
+      <dt>API</dt><dd><code>GET /chats/rooms</code> starts immediately. The socket connects in parallel and never blocks the list</dd>
+      <dt>State</dt><dd><code>loading</code> (no cache) → <code>loaded</code>. With cache: <code>refreshing</code></dd>
+      <dt>Navigation</dt><dd>—</dd>
+      <dt>Failure</dt><dd>Timeout after 10 s → screen 04. Never an endless skeleton</dd>
+    </dl>
+  </div>
+  <div class="pair">
+    <div class="col">
+      <div class="cap"><span class="v old">TODAY</span>Skeleton, then "Connection Failed"</div>
+      <div class="ph"><div class="sc">
+        <div class="sb p"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="oab"><svg class="ic"><use href="#i-back"/></svg><span class="t grow">Messages</span><svg class="ic"><use href="#i-search"/></svg></div>
+        <div class="body" style="padding:12px 14px;gap:14px">
+          <div class="row" style="gap:8px;font-size:10px;color:var(--a-muted)"><span class="mk o">1</span>0.0 s → 5.0 s: waiting for socket</div>
+          <div class="sk shim" style="height:52px;border-radius:10px"></div>
+          <div class="sk shim" style="height:52px;border-radius:10px"></div>
+          <div class="sk shim" style="height:52px;border-radius:10px"></div>
+          <div class="sk shim" style="height:52px;border-radius:10px"></div>
+          <div class="sk shim" style="height:52px;border-radius:10px"></div>
+        </div>
+        <div class="snack">Connection timeout. Please check your internet connection and server status. <span class="mk o">2</span></div>
+        <div class="nav"><div class="nv"><svg class="ic"><use href="#i-home"/></svg>Home</div><div class="nv"><svg class="ic"><use href="#i-activity"/></svg>Activity</div><div class="fab"><svg class="ic"><use href="#i-plus"/></svg></div><div class="nv on"><svg class="ic"><use href="#i-chat"/></svg>Chat</div><div class="nv"><svg class="ic"><use href="#i-user"/></svg>Profile</div></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk o">1</span><span><code>InitializeChat</code> waits on <code>socket.connect()</code> (5 s timeout) before calling <code>GET /chats/rooms</code> (F-10). The skeleton is generic bars, not row-shaped.</span></li>
+        <li><span class="mk o">2</span><span>A socket timeout goes to the error stream and becomes <code>ChatErrorState</code>, even though the REST list is about to load. Shown here as a toast; in the app it replaces the whole screen.</span></li>
+      </ol>
+    </div>
+    <div class="col">
+      <div class="cap"><span class="v new">PROPOSED</span>Tile-shaped skeleton</div>
+      <div class="ph"><div class="sc">
+        <div class="sb"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="nhead">
+          <div class="row"><span class="t grow">Chats</span></div>
+          <div class="srch"><svg class="ic s"><use href="#i-search"/></svg>Search people or ads</div>
+        </div>
+        <div class="chips"><span class="chip on">All</span><span class="chip">Unread</span><span class="chip">Buying</span><span class="chip">Selling</span></div>
+        <div class="body" style="background:var(--a-surface)">
+          <div style="height:2px;background:linear-gradient(90deg,#4F48EC 0 38%,var(--a-div) 38%)"></div>
+          <div class="nrow"><div class="sk shim" style="width:40px;height:40px;border-radius:50%"></div><div class="grow" style="display:grid;gap:6px;padding-top:3px"><div class="row" style="gap:40px"><div class="sk shim" style="height:9px;width:44%"></div><div class="sk shim" style="height:7px;width:14%;margin-left:auto"></div></div><div class="sk shim" style="height:7px;width:62%"></div><div class="sk shim" style="height:8px;width:80%"></div></div></div>
+          <div class="nrow"><div class="sk shim" style="width:40px;height:40px;border-radius:50%"></div><div class="grow" style="display:grid;gap:6px;padding-top:3px"><div class="row"><div class="sk shim" style="height:9px;width:36%"></div><div class="sk shim" style="height:7px;width:14%;margin-left:auto"></div></div><div class="sk shim" style="height:7px;width:54%"></div><div class="sk shim" style="height:8px;width:70%"></div></div></div>
+          <div class="nrow"><div class="sk shim" style="width:40px;height:40px;border-radius:50%"></div><div class="grow" style="display:grid;gap:6px;padding-top:3px"><div class="row"><div class="sk shim" style="height:9px;width:50%"></div><div class="sk shim" style="height:7px;width:14%;margin-left:auto"></div></div><div class="sk shim" style="height:7px;width:58%"></div><div class="sk shim" style="height:8px;width:76%"></div></div></div>
+          <div class="nrow"><div class="sk shim" style="width:40px;height:40px;border-radius:50%"></div><div class="grow" style="display:grid;gap:6px;padding-top:3px"><div class="row"><div class="sk shim" style="height:9px;width:40%"></div><div class="sk shim" style="height:7px;width:14%;margin-left:auto"></div></div><div class="sk shim" style="height:7px;width:48%"></div><div class="sk shim" style="height:8px;width:66%"></div></div></div>
+          <div style="text-align:center;font-size:10px;color:var(--a-muted);padding:12px">First load only <span class="mk n">1</span></div>
+        </div>
+        <div class="nav"><div class="nv"><svg class="ic"><use href="#i-home"/></svg>Home</div><div class="nv"><svg class="ic"><use href="#i-activity"/></svg>Activity</div><div class="fab"><svg class="ic"><use href="#i-plus"/></svg></div><div class="nv on"><svg class="ic"><use href="#i-chat"/></svg>Chat</div><div class="nv"><svg class="ic"><use href="#i-user"/></svg>Profile</div></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk n">1</span><span>The skeleton appears only when there is no cache (fresh install or after logout). Otherwise the cached list shows instantly with a 2 px progress line while it refreshes.</span></li>
+        <li><span class="mk n">2</span><span>The header, search and filters render at once, so the screen has its final layout from frame one.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 3 LIST EMPTY ========================= -->
+<section class="scr-sec" id="s3">
+  <div class="sec-head">
+    <div class="no">03 · Chat list</div>
+    <h2>Chat list — empty</h2>
+    <p>A new user needs to know how chats start: from an ad, not from this screen.</p>
+    <dl class="spec">
+      <dt>Components</dt><dd>ChatEmptyState (two variants: no chats at all / no match for filter)</dd>
+      <dt>Interactions</dt><dd>"Browse listings" → <code>/home</code>. "Post an ad" → sell flow. Filter-empty: "Show all chats"</dd>
+      <dt>Data</dt><dd>Empty page + active filter</dd>
+      <dt>API</dt><dd>Same as 01</dd>
+      <dt>State</dt><dd><code>empty</code> (differs from a filter returning nothing)</dd>
+      <dt>Navigation</dt><dd>Home tab, Sell FAB</dd>
+      <dt>Failure</dt><dd>—</dd>
+    </dl>
+  </div>
+  <div class="pair">
+    <div class="col">
+      <div class="cap"><span class="v old">TODAY</span>No messages yet</div>
+      <div class="ph"><div class="sc">
+        <div class="sb p"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="oab"><svg class="ic"><use href="#i-back"/></svg><span class="t grow">Messages</span><svg class="ic"><use href="#i-search"/></svg></div>
+        <div class="body"><div class="center">
+          <svg class="ic" style="width:56px;height:56px;color:#959CA9;stroke-width:1.4"><use href="#i-chat"/></svg>
+          <div class="h" style="margin-top:8px">No messages yet</div>
+          <div class="s">Conversations with buyers and sellers appear here. <span class="mk o">1</span></div>
+        </div></div>
+        <div class="nav"><div class="nv"><svg class="ic"><use href="#i-home"/></svg>Home</div><div class="nv"><svg class="ic"><use href="#i-activity"/></svg>Activity</div><div class="fab"><svg class="ic"><use href="#i-plus"/></svg></div><div class="nv on"><svg class="ic"><use href="#i-chat"/></svg>Chat</div><div class="nv"><svg class="ic"><use href="#i-user"/></svg>Profile</div></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk o">1</span><span>A dead end: nothing tells the user how a chat starts or where to go next.</span></li>
+      </ol>
+    </div>
+    <div class="col">
+      <div class="cap"><span class="v new">PROPOSED</span>No chats yet</div>
+      <div class="ph"><div class="sc">
+        <div class="sb"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="nhead"><div class="row"><span class="t grow">Chats</span></div></div>
+        <div class="body" style="background:var(--a-surface)"><div class="center" style="gap:8px">
+          <div style="position:relative;width:132px;height:92px;margin-bottom:8px" aria-hidden="true">
+            <div style="position:absolute;left:0;top:8px;width:92px;height:74px;border-radius:12px;background:var(--a-surface);box-shadow:0 0 0 1px var(--a-div),0 8px 18px -10px rgba(40,36,110,.35);overflow:hidden"><div class="t1" style="height:44px"></div><div style="padding:5px 7px"><div class="sk" style="height:5px;width:70%"></div><div style="font-size:9px;font-weight:600;margin-top:4px;text-align:left">₹5,40,000</div></div></div>
+            <div style="position:absolute;right:0;top:0;background:#4F48EC;color:#fff;font-size:9px;padding:5px 8px;border-radius:12px;border-bottom-left-radius:3px">Still available?</div>
+            <div style="position:absolute;right:6px;bottom:4px;background:var(--a-chip);color:var(--a-text);font-size:9px;padding:5px 8px;border-radius:12px;border-bottom-right-radius:3px">Yes!</div>
+          </div>
+          <div class="h">No chats yet</div>
+          <div class="s">Tap <b style="color:var(--a-text)">Chat</b> on any ad to message the seller. When someone asks about your ad, it shows up here. <span class="mk n">1</span></div>
+          <div class="row" style="gap:8px;margin-top:8px"><span class="btn">Browse listings</span><span class="btn ghost">Post an ad</span></div>
+        </div></div>
+        <div class="nav"><div class="nv"><svg class="ic"><use href="#i-home"/></svg>Home</div><div class="nv"><svg class="ic"><use href="#i-activity"/></svg>Activity</div><div class="fab"><svg class="ic"><use href="#i-plus"/></svg></div><div class="nv on"><svg class="ic"><use href="#i-chat"/></svg>Chat</div><div class="nv"><svg class="ic"><use href="#i-user"/></svg>Profile</div></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk n">1</span><span>Says how chats start, with two ways forward. When a filter has no results: "No unread chats" plus a "Show all chats" link, not this screen.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 4 LIST ERROR ========================= -->
+<section class="scr-sec" id="s4">
+  <div class="sec-head">
+    <div class="no">04 · Chat list</div>
+    <h2>Chat list — error</h2>
+    <p>Only when there is nothing cached to show. Written for a person, not a stack trace.</p>
+    <dl class="spec">
+      <dt>Components</dt><dd>ChatErrorState, RetryButton</dd>
+      <dt>Interactions</dt><dd>Retry → <code>GET /chats/rooms</code> only. It never reconnects the socket or runs full init</dd>
+      <dt>Data</dt><dd>Error kind: <code>offline · timeout · server · session</code></dd>
+      <dt>API</dt><dd>Same as 01</dd>
+      <dt>State</dt><dd><code>error</code> (no cache). With cache it stays <code>loaded</code> + banner</dd>
+      <dt>Navigation</dt><dd>Session expired → login with a return route</dd>
+      <dt>Failure</dt><dd>Raw exception text is logged, never displayed</dd>
+    </dl>
+  </div>
+  <div class="pair">
+    <div class="col">
+      <div class="cap"><span class="v old">TODAY</span>Connection Failed</div>
+      <div class="ph"><div class="sc">
+        <div class="sb p"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="oab"><svg class="ic"><use href="#i-back"/></svg><span class="t grow">Messages</span><svg class="ic"><use href="#i-search"/></svg></div>
+        <div class="body"><div class="center">
+          <svg class="ic" style="width:52px;height:52px;color:#F09595;stroke-width:1.6"><use href="#i-wifioff"/></svg>
+          <div class="h" style="font-size:16px;font-weight:700;margin-top:8px">Connection Failed</div>
+          <div class="s mono" style="font-size:9.5px;max-width:230px">Failed to load chat rooms: Exception: Failed to fetch chat rooms: Unauthorized <span class="mk o">1</span></div>
+          <span class="btn" style="margin-top:12px"><svg class="ic s"><use href="#i-refresh"/></svg>Retry Connection <span class="mk o">2</span></span>
+        </div></div>
+        <div class="nav"><div class="nv"><svg class="ic"><use href="#i-home"/></svg>Home</div><div class="nv"><svg class="ic"><use href="#i-activity"/></svg>Activity</div><div class="fab"><svg class="ic"><use href="#i-plus"/></svg></div><div class="nv on"><svg class="ic"><use href="#i-chat"/></svg>Chat</div><div class="nv"><svg class="ic"><use href="#i-user"/></svg>Profile</div></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk o">1</span><span>Raw exception strings shown to users. Every failure reads "Connection Failed" with a Wi-Fi icon, including auth and server errors.</span></li>
+        <li><span class="mk o">2</span><span>Retry runs the whole <code>InitializeChat</code> again, so the 5 s socket wait is back.</span></li>
+      </ol>
+    </div>
+    <div class="col">
+      <div class="cap"><span class="v new">PROPOSED</span>Couldn't load chats</div>
+      <div class="ph"><div class="sc">
+        <div class="sb"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="nhead"><div class="row"><span class="t grow">Chats</span></div></div>
+        <div class="body" style="background:var(--a-surface)"><div class="center" style="gap:8px">
+          <div style="width:52px;height:52px;border-radius:50%;background:var(--a-chip);display:grid;place-items:center;color:var(--a-muted)"><svg class="ic" style="width:24px;height:24px"><use href="#i-wifioff"/></svg></div>
+          <div class="h">Couldn't load your chats</div>
+          <div class="s">You're offline. Check your mobile data or Wi-Fi, then try again. <span class="mk n">1</span></div>
+          <span class="btn" style="margin-top:6px"><svg class="ic s"><use href="#i-refresh"/></svg>Try again</span>
+          <div style="margin-top:22px;font-size:9.5px;color:var(--a-muted);border-top:.5px solid var(--a-div);padding-top:10px;width:100%;text-align:left">
+            Other kinds, same layout <span class="mk n">2</span><br>
+            <b style="color:var(--a-text2)">Server</b> · "Chats are having trouble right now. Try again in a minute."<br>
+            <b style="color:var(--a-text2)">Session</b> · "Log in again to see your chats." → Log in
+          </div>
+        </div></div>
+        <div class="nav"><div class="nv"><svg class="ic"><use href="#i-home"/></svg>Home</div><div class="nv"><svg class="ic"><use href="#i-activity"/></svg>Activity</div><div class="fab"><svg class="ic"><use href="#i-plus"/></svg></div><div class="nv on"><svg class="ic"><use href="#i-chat"/></svg>Chat</div><div class="nv"><svg class="ic"><use href="#i-user"/></svg>Profile</div></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk n">1</span><span>The message says what went wrong and what to do. The repository maps errors to one of four kinds.</span></li>
+        <li><span class="mk n">2</span><span>A session error sends the user to login and brings them back to <code>/chat-rooms</code> afterwards.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 5 LIST SEARCH ========================= -->
+<section class="scr-sec" id="s5">
+  <div class="sec-head">
+    <div class="no">05 · Chat list</div>
+    <h2>Chat list — search</h2>
+    <p>People search by the thing they're selling or buying ("swift"), not only by names.</p>
+    <dl class="spec">
+      <dt>Components</dt><dd>SearchField (focused), ConversationTile with match highlight, SearchEmpty</dd>
+      <dt>Interactions</dt><dd>Type → instant local filter, then a server query after 300 ms. ✕ clears. Back closes search</dd>
+      <dt>Data</dt><dd>Name, ad title, last message</dd>
+      <dt>API</dt><dd>Local over loaded pages + <code>GET /chats/rooms?q=</code> <span class="tag api">new API</span> for rooms not loaded yet</dd>
+      <dt>State</dt><dd><code>query</code>, <code>localResults</code>, <code>remoteStatus</code></dd>
+      <dt>Navigation</dt><dd>Tap result → thread. Back restores the query</dd>
+      <dt>Failure</dt><dd>Server search fails → local results stay, with a note "Showing chats on this device"</dd>
+    </dl>
+  </div>
+  <div class="pair">
+    <div class="col">
+      <div class="cap"><span class="v old">TODAY</span>Search in app bar</div>
+      <div class="ph"><div class="sc">
+        <div class="sb p"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="oab"><svg class="ic"><use href="#i-back"/></svg><span class="grow" style="font-size:13px">swift<span style="opacity:.6">|</span></span><svg class="ic"><use href="#i-x"/></svg></div>
+        <div class="body"><div class="center">
+          <svg class="ic" style="width:48px;height:48px;color:#959CA9;stroke-width:1.5"><use href="#i-search"/></svg>
+          <div class="h" style="margin-top:6px">No results</div>
+          <div class="s">No chats match "swift". <span class="mk o">1</span></div>
+        </div></div>
+        <div class="nav"><div class="nv"><svg class="ic"><use href="#i-home"/></svg>Home</div><div class="nv"><svg class="ic"><use href="#i-activity"/></svg>Activity</div><div class="fab"><svg class="ic"><use href="#i-plus"/></svg></div><div class="nv on"><svg class="ic"><use href="#i-chat"/></svg>Chat</div><div class="nv"><svg class="ic"><use href="#i-user"/></svg>Profile</div></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk o">1</span><span>The filter checks only the name and last message. The chat with Anand <em>about the Swift</em> exists but can't be found. The hint says "Search messages…", which it doesn't do.</span></li>
+      </ol>
+    </div>
+    <div class="col">
+      <div class="cap"><span class="v new">PROPOSED</span>Search people or ads</div>
+      <div class="ph"><div class="sc">
+        <div class="sb"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="nhead">
+          <div class="row" style="gap:8px"><svg class="ic" style="color:var(--a-text2)"><use href="#i-back"/></svg><div class="srch focus grow" style="margin-top:0"><svg class="ic s"><use href="#i-search"/></svg><span class="grow">swift</span><svg class="ic s" style="color:var(--a-muted)"><use href="#i-x"/></svg></div></div>
+        </div>
+        <div class="body" style="background:var(--a-surface)">
+          <div class="grp" style="background:var(--a-surface)">2 chats <span class="mk n">1</span></div>
+          <div class="nrow unread"><div class="av">A<i class="lt t1"></i></div><div class="grow"><div class="l1"><span class="nm ell">Anand K</span><span class="tm">09:32</span></div><div class="ad"><svg class="ic xs"><use href="#i-tag"/></svg><span class="ell">Maruti <span class="hl">Swift</span> VXI · ₹5,40,000</span></div><div class="l3"><span class="pv grow ell">Can you do 5 lakh?</span><span class="ub">2</span></div></div></div>
+          <div class="nrow"><div class="av">R<i class="lt t5"></i></div><div class="grow"><div class="l1"><span class="nm ell">Rahim V</span><span class="tm">4 Sep</span></div><div class="ad"><svg class="ic xs"><use href="#i-tag"/></svg><span class="ell">Baleno Zeta · ₹6,10,000</span></div><div class="l3"><span class="pv grow ell">…compared it with the <span class="hl">Swift</span>, the Baleno…</span></div></div></div>
+          <div style="padding:14px;font-size:10px;color:var(--a-muted);display:flex;gap:6px;align-items:center"><span class="sk shim" style="width:10px;height:10px;border-radius:50%"></span>Searching older chats… <span class="mk n">2</span></div>
+        </div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk n">1</span><span>Matches the name, <b>ad title</b> and last message. The matched text is highlighted so it's clear why a row appeared.</span></li>
+        <li><span class="mk n">2</span><span>Local results appear instantly. The server search covers chats that aren't loaded yet, once the list is paginated.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 6 THREAD DEFAULT ========================= -->
+<section class="scr-sec" id="s6">
+  <div class="sec-head">
+    <div class="no">06 · Thread</div>
+    <h2>Chat — default</h2>
+    <p>Read and reply without losing sight of the ad and its price.</p>
+    <dl class="spec">
+      <dt>Components</dt><dd>ChatHeader, ListingStrip, DateSeparator, MessageBubble (grouped), MessageStatus, TypingIndicator <span class="tag q">Q4</span>, MessageComposer</dd>
+      <dt>Interactions</dt><dd>Tap header → Chat details (13). Tap strip → ad detail (uses the cached ad, no blocking dialog). Scroll up → older messages. Long-press bubble → Copy / Reply / Report</dd>
+      <dt>Data</dt><dd>Room (from list cache), messages page (30), other user's read pointer, your role</dd>
+      <dt>API</dt><dd><code>GET /chats/rooms/:id/messages?cursor&amp;limit=30</code> <span class="tag ok">exists</span>, <code>POST …/read</code> <span class="tag api">new API</span>, socket <code>message.created</code> · <code>message.read</code></dd>
+      <dt>State</dt><dd><code>loading · loaded · loadingMore · sending · reconnecting · offline · error</code></dd>
+      <dt>Navigation</dt><dd><code>/chat/:roomId</code>. Push tap deep-links here</dd>
+      <dt>Failure</dt><dd>History fails with cache → banner. Older page fails → inline "Couldn't load older messages · Retry" at the top</dd>
+    </dl>
+  </div>
+  <div class="pair">
+    <div class="col">
+      <div class="cap"><span class="v old">TODAY</span>Thread</div>
+      <div class="ph"><div class="sc">
+        <div class="sb p"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="oab"><svg class="ic"><use href="#i-back"/></svg><div class="oav">A</div><span class="grow ell" style="font-size:13px;font-weight:600">Maruti Swift VXI 2019 <span class="mk o">1</span></span><svg class="ic"><use href="#i-phone"/></svg></div>
+        <div class="body" style="background:var(--a-bg)">
+          <div class="opin"><svg class="ic xs" style="color:#4F48EC"><use href="#i-pin"/></svg><span class="ell">Maruti Swift VXI 2019 · ₹5,40,000</span></div>
+          <div class="msgs" style="padding:8px 14px">
+            <div class="ods">Today</div>
+            <div class="ob in">Hi, is the Swift still available?<div class="mt">03:58 <span class="mk o">2</span></div></div>
+            <div class="ob out">Yes, available. You can come see it at Edappally.<div class="mt">04:01</div></div>
+            <div class="ob in">Can you do 5 lakh?<div class="mt">04:02</div></div>
+          </div>
+        </div>
+        <div class="qr" style="padding-bottom:8px"><span>Is it still available? <span class="mk o">3</span></span><span>Yes, available</span><span>Can we negotiate?</span></div>
+        <div class="ocp"><svg class="ic" style="color:#4F48EC;width:22px;height:22px"><use href="#i-pluscirc"/></svg><div class="fld">Type a message...</div><svg class="ic" style="color:#4F48EC;width:20px;height:20px"><use href="#i-mic"/></svg><div class="sendb"><svg class="ic s"><use href="#i-send"/></svg></div></div>
+        <div class="ogap"><span class="mk o" style="position:absolute;right:10px;top:16px">4</span></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk o">1</span><span>The header shows the ad title, not the person. There is no status line and no way to see who you're talking to.</span></li>
+        <li><span class="mk o">2</span><span>Times shown in UTC: 03:58 was actually 09:28 IST (F-11). No sent/read status. Only the latest 50 messages ever load (F-08).</span></li>
+        <li><span class="mk o">3</span><span>Buyer quick replies are always shown, even to the seller, and take a row forever (F-30).</span></li>
+        <li><span class="mk o">4</span><span><code>SafeArea(minimum: bottom 50)</code> leaves a 50 px dead band under the composer (F-28).</span></li>
+      </ol>
+    </div>
+    <div class="col">
+      <div class="cap"><span class="v new">PROPOSED</span>Thread</div>
+      <div class="ph"><div class="sc">
+        <div class="sb"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="nh"><div class="ib"><svg class="ic"><use href="#i-back"/></svg></div><div class="av sm">A<i class="on"></i></div><div class="grow"><div class="nm ell">Anand K <span class="mk n">1</span></div><div class="sub ok">Active now</div></div><div class="ib call"><svg class="ic"><use href="#i-phone"/></svg></div><div class="ib"><svg class="ic"><use href="#i-dots"/></svg></div></div>
+        <div class="ls"><div class="th t1"></div><div class="grow"><div class="ti ell">Maruti Swift VXI 2019 · Selling</div><div class="row" style="gap:6px"><span class="pr">₹5,40,000</span><span class="pill live">Live</span></div></div><span class="vw">View<svg class="ic xs"><use href="#i-chev"/></svg></span><span class="mk n">2</span></div>
+        <div class="msgs">
+          <div class="ds">Today</div>
+          <div class="b in">Hi, is the Swift still available?</div>
+          <div class="b in tail">Serviced recently?<div class="mt">09:28</div></div>
+          <div class="b out sw">Yes, available. Full service done in August.</div>
+          <div class="b out tail">You can see it at Edappally on Saturday<div class="mt">09:31 <svg class="ic xs rd"><use href="#i-dcheck"/></svg></div></div>
+          <div class="b in sw tail">Can you do 5 lakh?<div class="mt">09:32 <span class="mk n">3</span></div></div>
+          <div class="typing" aria-label="Anand is typing"><i></i><i></i><i></i></div>
+        </div>
+        <div class="cp"><div class="ib" style="color:#4F48EC"><svg class="ic"><use href="#i-plus"/></svg></div><div class="fld">Message</div><div class="ib" style="color:var(--a-text2)"><svg class="ic"><use href="#i-mic"/></svg></div><span class="mk n">4</span></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk n">1</span><span>Person first: avatar, name, status. "Active now" and the typing dots are <span class="tag q">Q4</span>; without them the line reads "Selling · Maruti Swift".</span></li>
+        <li><span class="mk n">2</span><span>A full-width listing strip with thumb, price, live/sold status and View replaces the floating pin. Data comes from the room payload, not a second fetch.</span></li>
+        <li><span class="mk n">3</span><span>Local times, grouped bubbles, one time per group. Double tick turns mint when read <span class="tag api">new API</span>. Reversed list, so it opens at the bottom with no scroll animation.</span></li>
+        <li><span class="mk n">4</span><span>The composer sits on the keyboard inset with no fixed gap. Mic turns into Send when text is present.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 7 THREAD LOADING ========================= -->
+<section class="scr-sec" id="s7">
+  <div class="sec-head">
+    <div class="no">07 · Thread</div>
+    <h2>Chat — loading</h2>
+    <p>Everything already known from the list renders immediately. Only the messages wait.</p>
+    <dl class="spec">
+      <dt>Components</dt><dd>ChatHeader, ListingStrip, BubbleSkeleton, MessageComposer (enabled)</dd>
+      <dt>Interactions</dt><dd>Typing and sending allowed. Messages queue until history arrives</dd>
+      <dt>Data</dt><dd>Room from list cache. Cached last 30 messages if any</dd>
+      <dt>API</dt><dd>Join (ack) → <code>GET …/messages</code>. One join, not two</dd>
+      <dt>State</dt><dd><code>loading</code> → <code>loaded</code>. With cache: <code>loaded</code> + silent sync</dd>
+      <dt>Navigation</dt><dd>—</dd>
+      <dt>Failure</dt><dd>10 s → inline "Couldn't load messages · Try again" in place of the skeleton</dd>
+    </dl>
+  </div>
+  <div class="pair">
+    <div class="col">
+      <div class="cap"><span class="v old">TODAY</span>Spinner</div>
+      <div class="ph"><div class="sc">
+        <div class="sb p"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="oab"><svg class="ic"><use href="#i-back"/></svg><div class="oav">A</div><span class="grow ell" style="font-size:13px;font-weight:600">Maruti Swift VXI 2019</span><svg class="ic"><use href="#i-phone"/></svg></div>
+        <div class="body"><div class="center">
+          <div style="width:30px;height:30px;border-radius:50%;border:3px solid #4F48EC;border-right-color:transparent"></div>
+          <div class="s" style="margin-top:10px">No pin, no composer <span class="mk o">1</span></div>
+        </div></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk o">1</span><span>The whole body is replaced by a spinner, including the composer. Opening from an ad first runs check, connect, create and join (up to 15 s behind a dialog) before this screen appears (F-23).</span></li>
+        <li><span class="mk o">2</span><span>Join and history run in parallel. A message that lands between the two is never shown (F-09).</span></li>
+      </ol>
+    </div>
+    <div class="col">
+      <div class="cap"><span class="v new">PROPOSED</span>Content-first loading</div>
+      <div class="ph"><div class="sc">
+        <div class="sb"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="nh"><div class="ib"><svg class="ic"><use href="#i-back"/></svg></div><div class="av sm">A</div><div class="grow"><div class="nm ell">Anand K</div><div class="sub">Selling · Maruti Swift</div></div><div class="ib call"><svg class="ic"><use href="#i-phone"/></svg></div><div class="ib"><svg class="ic"><use href="#i-dots"/></svg></div></div>
+        <div class="ls"><div class="th t1"></div><div class="grow"><div class="ti ell">Maruti Swift VXI 2019</div><div class="row" style="gap:6px"><span class="pr">₹5,40,000</span><span class="pill live">Live</span></div></div><span class="vw">View<svg class="ic xs"><use href="#i-chev"/></svg></span><span class="mk n">1</span></div>
+        <div class="msgs" style="gap:7px">
+          <div class="sk shim" style="align-self:center;width:46px;height:14px;border-radius:9px"></div>
+          <div class="sk shim" style="align-self:flex-start;width:62%;height:28px;border-radius:15px"></div>
+          <div class="sk shim" style="align-self:flex-start;width:40%;height:28px;border-radius:15px"></div>
+          <div class="sk shim" style="align-self:flex-end;width:58%;height:44px;border-radius:15px;background:#D9D7FB"></div>
+          <div class="sk shim" style="align-self:flex-start;width:36%;height:28px;border-radius:15px"></div>
+        </div>
+        <div class="cp"><div class="ib" style="color:#4F48EC"><svg class="ic"><use href="#i-plus"/></svg></div><div class="fld typed">Is Saturday 11am ok?<span style="color:#4F48EC">|</span></div><div class="sendb"><svg class="ic s"><use href="#i-send"/></svg></div><span class="mk n">2</span></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk n">1</span><span>The header and listing strip come from the room in the list cache. Opening from an ad calls one idempotent <code>POST /chats/rooms</code> and navigates with that payload.</span></li>
+        <li><span class="mk n">2</span><span>The composer works during load. Bubble skeletons alternate sides so the layout doesn't jump when history lands.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 8 NEW CHAT / EMPTY ========================= -->
+<section class="scr-sec" id="s8">
+  <div class="sec-head">
+    <div class="no">08 · Thread</div>
+    <h2>Chat — new conversation</h2>
+    <p>A buyer arriving from an ad should be one tap from a useful first message.</p>
+    <dl class="spec">
+      <dt>Components</dt><dd>ListingCard (large), StarterChips (role-aware), SafetyTip, MessageComposer</dd>
+      <dt>Interactions</dt><dd>Tap a starter → fills the composer (editable), doesn't send. Starters hide after the first message</dd>
+      <dt>Data</dt><dd>Room with <code>messageCount = 0</code>, your role, ad price</dd>
+      <dt>API</dt><dd><code>POST /chats/rooms {adId}</code> <span class="tag ok">exists</span> (idempotent)</dd>
+      <dt>State</dt><dd><code>loaded</code> + <code>isEmpty</code></dd>
+      <dt>Navigation</dt><dd>From ad detail "Chat" or "Make an offer"</dd>
+      <dt>Failure</dt><dd>Ad inactive → "This ad is no longer available" and the composer is disabled</dd>
+    </dl>
+  </div>
+  <div class="pair">
+    <div class="col">
+      <div class="cap"><span class="v old">TODAY</span>Start a conversation!</div>
+      <div class="ph"><div class="sc">
+        <div class="sb p"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="oab"><svg class="ic"><use href="#i-back"/></svg><div class="oav">A</div><span class="grow ell" style="font-size:13px;font-weight:600">Maruti Swift VXI 2019</span></div>
+        <div class="body">
+          <div class="opin"><svg class="ic xs" style="color:#4F48EC"><use href="#i-pin"/></svg><span class="ell">Maruti Swift VXI 2019 <span class="mk o">1</span></span></div>
+          <div class="center">
+            <svg class="ic" style="width:50px;height:50px;color:#959CA9;stroke-width:1.4"><use href="#i-chat"/></svg>
+            <div class="h" style="color:#959CA9;font-weight:500;font-size:15px">No messages yet</div>
+            <div class="s">Start a conversation!</div>
+          </div>
+        </div>
+        <div class="qr" style="padding-bottom:8px"><span>Is it still available?</span><span>Yes, available <span class="mk o">2</span></span><span>Price is firm</span></div>
+        <div class="ocp"><svg class="ic" style="color:#4F48EC;width:22px;height:22px"><use href="#i-pluscirc"/></svg><div class="fld">Type a message...</div><svg class="ic" style="color:#4F48EC;width:20px;height:20px"><use href="#i-mic"/></svg><div class="sendb"><svg class="ic s"><use href="#i-send"/></svg></div></div>
+        <div class="ogap"></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk o">1</span><span>No price when opened from an ad: it isn't passed in the route, so the page fetches the ad a second time.</span></li>
+        <li><span class="mk o">2</span><span>A buyer sees seller replies ("Yes, available", "Price is firm"). Tapping a chip sends it straight away, with no chance to edit.</span></li>
+      </ol>
+    </div>
+    <div class="col">
+      <div class="cap"><span class="v new">PROPOSED</span>First message</div>
+      <div class="ph"><div class="sc">
+        <div class="sb"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="nh"><div class="ib"><svg class="ic"><use href="#i-back"/></svg></div><div class="av sm">A</div><div class="grow"><div class="nm ell">Anand K</div><div class="sub">Seller · replies within a day</div></div><div class="ib call"><svg class="ic"><use href="#i-phone"/></svg></div></div>
+        <div class="body" style="padding:14px 12px;gap:12px">
+          <div style="background:var(--a-surface);border-radius:14px;overflow:hidden;box-shadow:0 0 0 .5px var(--a-div)">
+            <div class="t1" style="height:88px"></div>
+            <div style="padding:9px 11px"><div style="font-size:11px;color:var(--a-text2)">Maruti Swift VXI 2019 · 42,000 km · Petrol</div><div class="row" style="gap:6px;margin-top:2px"><span style="font-size:15px;font-weight:600">₹5,40,000</span><span class="pill live">Live</span><span class="mk n">1</span></div></div>
+          </div>
+          <div style="font-size:11px;color:var(--a-muted);text-align:center">Ask Anand about this car</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center"><span class="chip line">Is it still available?</span><span class="chip line">Best price?</span><span class="chip line">Can I see it this weekend?</span><span class="chip line">Any accident history? <span class="mk n">2</span></span></div>
+          <div class="safety" style="margin-top:auto"><svg class="ic s" style="color:#4F48EC;margin-top:1px"><use href="#i-shield"/></svg><span>Meet in a public place and check the RC before paying. Never pay in advance. <span class="mk n">3</span></span></div>
+        </div>
+        <div class="cp"><div class="ib" style="color:#4F48EC"><svg class="ic"><use href="#i-plus"/></svg></div><div class="fld">Message</div><div class="ib" style="color:var(--a-text2)"><svg class="ic"><use href="#i-mic"/></svg></div></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk n">1</span><span>The full listing card, with key specs and price, from the <code>POST /chats/rooms</code> response.</span></li>
+        <li><span class="mk n">2</span><span>Starters depend on role and category (car / bike / property / commercial). A tap fills the composer, it doesn't send.</span></li>
+        <li><span class="mk n">3</span><span>A safety tip using the existing <code>primarySoft</code> token. Shown only in new chats.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 9 SENDING ========================= -->
+<section class="scr-sec" id="s9">
+  <div class="sec-head">
+    <div class="no">09 · Thread</div>
+    <h2>Chat — sending</h2>
+    <p>A tapped message appears instantly and shows exactly where it is.</p>
+    <dl class="spec">
+      <dt>Components</dt><dd>MessageBubble (<code>pending</code>), MessageStatus: clock → ✓ → ✓✓ → mint ✓✓</dd>
+      <dt>Interactions</dt><dd>Send clears the field only after the message is stored locally. Rapid sends keep their order</dd>
+      <dt>Data</dt><dd>Local message <code>{clientMessageId, status:'sending', createdAt}</code></dd>
+      <dt>API</dt><dd><code>POST /chats/rooms/:id/messages {clientMessageId, type, content}</code> <span class="tag api">new API</span>. Socket echo is matched by <code>clientMessageId</code></dd>
+      <dt>State</dt><dd>Per message: <code>sending · sent · delivered · read · failed</code></dd>
+      <dt>Navigation</dt><dd>Leaving the page doesn't cancel the send (repository-owned queue)</dd>
+      <dt>Failure</dt><dd>No server ack in 15 s → <code>failed</code> (screen 10)</dd>
+    </dl>
+  </div>
+  <div class="pair">
+    <div class="col">
+      <div class="cap"><span class="v old">TODAY</span>After tapping Send</div>
+      <div class="ph"><div class="sc">
+        <div class="sb p"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="oab"><svg class="ic"><use href="#i-back"/></svg><div class="oav">A</div><span class="grow ell" style="font-size:13px;font-weight:600">Maruti Swift VXI 2019</span><svg class="ic"><use href="#i-phone"/></svg></div>
+        <div class="body" style="background:var(--a-bg)">
+          <div class="opin"><svg class="ic xs" style="color:#4F48EC"><use href="#i-pin"/></svg><span class="ell">Maruti Swift VXI 2019 · ₹5,40,000</span></div>
+          <div class="msgs" style="padding:8px 14px">
+            <div class="ob in">Can you do 5 lakh?<div class="mt">04:02</div></div>
+            <div style="align-self:flex-end;border:1.5px dashed #D63B3B;border-radius:14px;padding:10px 12px;font-size:10px;color:#D63B3B;max-width:78%;opacity:.8">"5,20,000 is my last price" — nothing appears until the server echoes it <span class="mk o">1</span></div>
+          </div>
+        </div>
+        <div class="ocp"><svg class="ic" style="color:#4F48EC;width:22px;height:22px"><use href="#i-pluscirc"/></svg><div class="fld">Type a message... <span class="mk o">2</span></div><svg class="ic" style="color:#4F48EC;width:20px;height:20px"><use href="#i-mic"/></svg><div class="sendb"><svg class="ic s"><use href="#i-send"/></svg></div></div>
+        <div class="ogap"></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk o">1</span><span>No optimistic bubble. The message shows only when the socket broadcast comes back. If the socket was half-dead, it never shows (F-01, F-02).</span></li>
+        <li><span class="mk o">2</span><span>The text is cleared before anything is confirmed, and it goes to <code>_currentRoomId</code>, which may be a different chat (F-04).</span></li>
+      </ol>
+    </div>
+    <div class="col">
+      <div class="cap"><span class="v new">PROPOSED</span>Optimistic with status</div>
+      <div class="ph"><div class="sc">
+        <div class="sb"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="nh"><div class="ib"><svg class="ic"><use href="#i-back"/></svg></div><div class="av sm">A</div><div class="grow"><div class="nm ell">Anand K</div><div class="sub">Buying · Maruti Swift</div></div><div class="ib call"><svg class="ic"><use href="#i-phone"/></svg></div><div class="ib"><svg class="ic"><use href="#i-dots"/></svg></div></div>
+        <div class="ls"><div class="th t1"></div><div class="grow"><div class="ti ell">Maruti Swift VXI 2019</div><div class="row" style="gap:6px"><span class="pr">₹5,40,000</span><span class="pill live">Live</span></div></div><span class="vw">View<svg class="ic xs"><use href="#i-chev"/></svg></span></div>
+        <div class="msgs">
+          <div class="b in tail">Can you do 5 lakh?<div class="mt">09:32</div></div>
+          <div class="b out sw">5,20,000 is my last price<div class="mt">09:33 <svg class="ic xs rd"><use href="#i-dcheck"/></svg></div></div>
+          <div class="b out">Tyres are new, so it's worth it</div>
+          <div class="b out tail pend">Come Saturday and decide<div class="mt">Sending <svg class="ic xs"><use href="#i-clock"/></svg> <span class="mk n">1</span></div></div>
+        </div>
+        <div class="cp"><div class="ib" style="color:#4F48EC"><svg class="ic"><use href="#i-plus"/></svg></div><div class="fld">Message</div><div class="ib" style="color:var(--a-text2)"><svg class="ic"><use href="#i-mic"/></svg></div><span class="mk n">2</span></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk n">1</span><span>The bubble is inserted immediately at lower opacity with a clock. It fills in and gets ✓ on server ack. The socket echo is matched by <code>clientMessageId</code>, so it never appears twice.</span></li>
+        <li><span class="mk n">2</span><span>Every send carries the page's own <code>roomId</code>. There is no global "current room".</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 10 FAILED ========================= -->
+<section class="scr-sec" id="s10">
+  <div class="sec-head">
+    <div class="no">10 · Thread</div>
+    <h2>Chat — failed message</h2>
+    <p>A message that didn't go through stays on screen with a way to fix it.</p>
+    <dl class="spec">
+      <dt>Components</dt><dd>MessageBubble (<code>failed</code>), FailNote with Retry / Edit / Delete</dd>
+      <dt>Interactions</dt><dd>Tap bubble or "Retry" → resend with the <em>same</em> <code>clientMessageId</code> (no duplicates). Long-press → Edit / Delete</dd>
+      <dt>Data</dt><dd><code>failure: network · rejected · roomClosed · tooLarge</code> + server reason code</dd>
+      <dt>API</dt><dd>Same POST. <code>422 {code:'CONTENT_BLOCKED'}</code> for moderation</dd>
+      <dt>State</dt><dd>Failed messages persist in the local queue across app restarts</dd>
+      <dt>Navigation</dt><dd>The list row shows "Not sent" in red</dd>
+      <dt>Failure</dt><dd>Retry fails again → same state, no loop. Network failures retry automatically on reconnect</dd>
+    </dl>
+  </div>
+  <div class="pair">
+    <div class="col">
+      <div class="cap"><span class="v old">TODAY</span>Moderation rejected it</div>
+      <div class="ph"><div class="sc">
+        <div class="sb p"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="oab"><svg class="ic"><use href="#i-back"/></svg><div class="oav">F</div><span class="grow ell" style="font-size:13px;font-weight:600">Royal Enfield Classic 350</span><svg class="ic"><use href="#i-phone"/></svg></div>
+        <div class="body" style="background:var(--a-bg)">
+          <div class="opin"><svg class="ic xs" style="color:#4F48EC"><use href="#i-pin"/></svg><span class="ell">Royal Enfield Classic 350 · ₹1,35,000</span></div>
+          <div class="msgs" style="padding:8px 14px">
+            <div class="ob out">Is it still available?<div class="mt">08:10</div></div>
+            <div class="ob in">Yes<div class="mt">08:14</div></div>
+            <div style="align-self:flex-end;border:1.5px dashed #D63B3B;border-radius:14px;padding:10px 12px;font-size:10px;color:#D63B3B;max-width:82%;opacity:.8">"I'd hate to miss this one, can I come today?" — rejected by moderation, gone without a trace <span class="mk o">1</span></div>
+          </div>
+        </div>
+        <div class="ocp"><svg class="ic" style="color:#4F48EC;width:22px;height:22px"><use href="#i-pluscirc"/></svg><div class="fld">Type a message...</div><svg class="ic" style="color:#4F48EC;width:20px;height:20px"><use href="#i-mic"/></svg><div class="sendb"><svg class="ic s"><use href="#i-send"/></svg></div></div>
+        <div class="ogap"></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk o">1</span><span>"hate" scores 70, which is an automatic reject (F-05). The error goes to a callback Nest never passes, so the client gets nothing (F-01). There is no failed state anywhere in the UI.</span></li>
+      </ol>
+    </div>
+    <div class="col">
+      <div class="cap"><span class="v new">PROPOSED</span>Not sent</div>
+      <div class="ph"><div class="sc">
+        <div class="sb"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="nh"><div class="ib"><svg class="ic"><use href="#i-back"/></svg></div><div class="av sm">F</div><div class="grow"><div class="nm ell">Fathima R</div><div class="sub">Selling · Classic 350</div></div><div class="ib call"><svg class="ic"><use href="#i-phone"/></svg></div><div class="ib"><svg class="ic"><use href="#i-dots"/></svg></div></div>
+        <div class="ls"><div class="th t2"></div><div class="grow"><div class="ti ell">Royal Enfield Classic 350</div><div class="row" style="gap:6px"><span class="pr">₹1,35,000</span><span class="pill live">Live</span></div></div><span class="vw">View<svg class="ic xs"><use href="#i-chev"/></svg></span></div>
+        <div class="msgs">
+          <div class="b out tail">Is it still available?<div class="mt">08:10 <svg class="ic xs rd"><use href="#i-dcheck"/></svg></div></div>
+          <div class="b in sw tail">Yes<div class="mt">08:14</div></div>
+          <div class="b out sw tail fail">Can I come today at 5?<div class="mt" style="color:var(--a-err);opacity:1"><svg class="ic xs"><use href="#i-alert"/></svg></div></div>
+          <div class="failnote"><span>Not sent · No connection</span> <u>Retry</u> <span class="mk n">1</span></div>
+          <div class="b out sw tail fail">My number is 98470 12345<div class="mt" style="color:var(--a-err);opacity:1"><svg class="ic xs"><use href="#i-alert"/></svg></div></div>
+          <div class="failnote"><span>Not sent · Share numbers with the Call button</span> <u>Edit</u> <span class="mk n">2</span></div>
+        </div>
+        <div class="cp"><div class="ib" style="color:#4F48EC"><svg class="ic"><use href="#i-plus"/></svg></div><div class="fld">Message</div><div class="ib" style="color:var(--a-text2)"><svg class="ic"><use href="#i-mic"/></svg></div></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk n">1</span><span>Network failure: red outline, alert icon and Retry. It also retries by itself when the connection returns.</span></li>
+        <li><span class="mk n">2</span><span>Policy block: a plain-language reason from a server code, with Edit instead of Retry (resending wouldn't help). The moderation word list is narrowed in Phase 4.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 11 OFFLINE ========================= -->
+<section class="scr-sec" id="s11">
+  <div class="sec-head">
+    <div class="no">11 · Thread</div>
+    <h2>Chat — offline / reconnecting</h2>
+    <p>The connection state is visible, and nothing typed while offline is lost.</p>
+    <dl class="spec">
+      <dt>Components</dt><dd>ConnectionBanner (<code>offline</code> amber, <code>reconnecting</code> neutral), queued bubbles</dd>
+      <dt>Interactions</dt><dd>Sending while offline queues the message. Banner "Retry now" forces a reconnect</dd>
+      <dt>Data</dt><dd>Connectivity + socket status from one <code>ChatConnection</code> service</dd>
+      <dt>API</dt><dd>On reconnect: refresh the token if needed, rejoin, <code>GET …/messages?after=lastId</code>, flush the queue</dd>
+      <dt>State</dt><dd><code>online · reconnecting · offline · authExpired</code></dd>
+      <dt>Navigation</dt><dd>—</dd>
+      <dt>Failure</dt><dd>Auth expired → silent refresh. If that fails → login prompt, queue kept</dd>
+    </dl>
+  </div>
+  <div class="pair">
+    <div class="col">
+      <div class="cap"><span class="v old">TODAY</span>Socket dead, UI looks normal</div>
+      <div class="ph"><div class="sc">
+        <div class="sb p"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="oab"><svg class="ic"><use href="#i-back"/></svg><div class="oav">J</div><span class="grow ell" style="font-size:13px;font-weight:600">Tata Ace Gold 2021</span><svg class="ic"><use href="#i-phone"/></svg></div>
+        <div class="body" style="background:var(--a-bg)">
+          <div class="opin"><svg class="ic xs" style="color:#4F48EC"><use href="#i-pin"/></svg><span class="ell">Tata Ace Gold 2021 · ₹3,85,000</span></div>
+          <div class="msgs" style="padding:8px 14px">
+            <div class="ob in">Sent the RC copy<div class="mt">06:40</div></div>
+            <div class="ob out">Thanks, checking now<div class="mt">06:42</div></div>
+            <div style="align-self:center;font-size:10px;color:#D63B3B;text-align:center;padding:8px;line-height:1.5">Token expired 20 min ago.<br>Nothing sent or received since. <span class="mk o">1</span></div>
+          </div>
+        </div>
+        <div class="ocp"><svg class="ic" style="color:#4F48EC;width:22px;height:22px"><use href="#i-pluscirc"/></svg><div class="fld">Type a message... <span class="mk o">2</span></div><svg class="ic" style="color:#4F48EC;width:20px;height:20px"><use href="#i-mic"/></svg><div class="sendb"><svg class="ic s"><use href="#i-send"/></svg></div></div>
+        <div class="ogap"></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk o">1</span><span>The handshake token never refreshes. After expiry every event is refused and the server-initiated disconnect doesn't auto-reconnect (F-02). No indicator at all.</span></li>
+        <li><span class="mk o">2</span><span>The composer looks active. Messages typed here disappear.</span></li>
+      </ol>
+    </div>
+    <div class="col">
+      <div class="cap"><span class="v new">PROPOSED</span>Offline, queued</div>
+      <div class="ph"><div class="sc">
+        <div class="sb"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="nh"><div class="ib"><svg class="ic"><use href="#i-back"/></svg></div><div class="av sm">J</div><div class="grow"><div class="nm ell">Joseph Motors</div><div class="sub">Selling · Tata Ace Gold</div></div><div class="ib call"><svg class="ic"><use href="#i-phone"/></svg></div><div class="ib"><svg class="ic"><use href="#i-dots"/></svg></div></div>
+        <div class="bn warn"><svg class="ic s"><use href="#i-wifioff"/></svg>You're offline. Messages send when you're back. <span class="mk n">1</span></div>
+        <div class="ls"><div class="th t4"></div><div class="grow"><div class="ti ell">Tata Ace Gold 2021</div><div class="row" style="gap:6px"><span class="pr">₹3,85,000</span><span class="pill live">Live</span></div></div><span class="vw">View<svg class="ic xs"><use href="#i-chev"/></svg></span></div>
+        <div class="msgs">
+          <div class="b in tail">Sent the RC copy<div class="mt">12:10</div></div>
+          <div class="b out sw tail">Thanks, checking now<div class="mt">12:12 <svg class="ic xs rd"><use href="#i-dcheck"/></svg></div></div>
+          <div class="b out sw pend">RC matches, all good</div>
+          <div class="b out tail pend">I'll transfer the token amount tomorrow<div class="mt">Waiting for network <svg class="ic xs"><use href="#i-clock"/></svg> <span class="mk n">2</span></div></div>
+        </div>
+        <div class="cp"><div class="ib" style="color:#4F48EC"><svg class="ic"><use href="#i-plus"/></svg></div><div class="fld">Message</div><div class="ib" style="color:var(--a-text2)"><svg class="ic"><use href="#i-mic"/></svg></div></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk n">1</span><span>Amber banner under the header. <em>Reconnecting…</em> uses the same slot in neutral grey and shows only after 3 s, so short blips don't flash it. Attachments are disabled offline.</span></li>
+        <li><span class="mk n">2</span><span>Queued text keeps its order and flushes on reconnect. The thread then fetches messages after the last known id, so nothing is missed.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 12 ATTACHMENTS ========================= -->
+<section class="scr-sec" id="s12">
+  <div class="sec-head">
+    <div class="no">12 · Thread</div>
+    <h2>Chat — attachment preview</h2>
+    <p>Photos and voice notes: review before sending, then see real upload progress.</p>
+    <dl class="spec">
+      <dt>Components</dt><dd>AttachmentTray, ImageBubble (upload progress), VoiceRecorderBar, VoiceNoteBubble</dd>
+      <dt>Interactions</dt><dd>+ → Camera / Gallery (max 6). ✕ removes. Optional caption. Hold mic to record, slide left to cancel, stops at 3:00</dd>
+      <dt>Data</dt><dd>Resized image (1600 px long edge, JPEG 80), thumb, duration (client-measured)</dd>
+      <dt>API</dt><dd><code>POST /chats/rooms/:id/uploads</code> → presigned for <code>chat/{roomId}/…</code> with type/size limits <span class="tag api">new API</span>, PUT, then message POST with the object key</dd>
+      <dt>State</dt><dd>Per attachment: <code>queued · uploading(%) · sent · failed</code></dd>
+      <dt>Navigation</dt><dd>Tap image → full-screen viewer (cached)</dd>
+      <dt>Failure</dt><dd>Upload fails → the bubble shows Retry. Over 15 MB or wrong type → blocked in the tray with a reason</dd>
+    </dl>
+  </div>
+  <div class="pair">
+    <div class="col">
+      <div class="cap"><span class="v old">TODAY</span>Staged photos</div>
+      <div class="ph"><div class="sc">
+        <div class="sb p"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="oab"><svg class="ic"><use href="#i-back"/></svg><div class="oav">A</div><span class="grow ell" style="font-size:13px;font-weight:600">Maruti Swift VXI 2019</span><svg class="ic"><use href="#i-phone"/></svg></div>
+        <div class="body" style="background:var(--a-bg)">
+          <div class="opin"><svg class="ic xs" style="color:#4F48EC"><use href="#i-pin"/></svg><span class="ell">Maruti Swift VXI 2019 · ₹5,40,000</span></div>
+          <div class="msgs" style="padding:8px 14px">
+            <div class="ob in">Can you send interior photos?<div class="mt">04:10</div></div>
+          </div>
+        </div>
+        <div style="background:var(--a-surface);border-top:1px solid var(--a-div);padding:10px 12px 0">
+          <div class="qr" style="padding:0 0 8px"><span>Is it still available?</span><span>Yes, available</span></div>
+          <div class="row" style="gap:8px;padding-bottom:8px"><div class="t1" style="width:50px;height:50px;border-radius:8px"></div><div class="t2" style="width:50px;height:50px;border-radius:8px"></div><div class="t3" style="width:50px;height:50px;border-radius:8px"></div><span class="mk o">1</span></div>
+        </div>
+        <div class="ocp" style="border-top:0"><svg class="ic" style="color:#4F48EC;width:22px;height:22px"><use href="#i-pluscirc"/></svg><div class="fld">Type a message...</div><div class="sendb"><svg class="ic s"><use href="#i-send"/></svg></div><span class="mk o">2</span></div>
+        <div class="ogap"></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk o">1</span><span>Photos upload at full resolution, one message each. Every send reloads the whole thread. There is no progress: the photo simply appears later or never.</span></li>
+        <li><span class="mk o">2</span><span>Each send first calls the missing REST route (404), then falls back to the socket (F-14). Voice notes likely fail the S3 signature (F-03) and aren't capped at 3:00 (F-26).</span></li>
+      </ol>
+    </div>
+    <div class="col">
+      <div class="cap"><span class="v new">PROPOSED</span>Tray + progress</div>
+      <div class="ph"><div class="sc">
+        <div class="sb"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="nh"><div class="ib"><svg class="ic"><use href="#i-back"/></svg></div><div class="av sm">A</div><div class="grow"><div class="nm ell">Anand K</div><div class="sub">Buying · Maruti Swift</div></div><div class="ib call"><svg class="ic"><use href="#i-phone"/></svg></div><div class="ib"><svg class="ic"><use href="#i-dots"/></svg></div></div>
+        <div class="msgs">
+          <div class="b in tail">Can you send interior photos?<div class="mt">09:40</div></div>
+          <div class="imgb t4"><div class="ring"><b><i>64%</i></b></div><span class="mk n" style="position:absolute;top:6px;left:6px">1</span></div>
+          <div class="b out sw tail" style="margin-top:6px"><div class="voice"><span class="pl"><svg class="ic xs"><use href="#i-play"/></svg></span><span class="wave" aria-hidden="true"><i style="height:6px"></i><i style="height:12px"></i><i style="height:16px"></i><i style="height:9px"></i><i style="height:14px"></i><i style="height:5px"></i><i style="height:11px"></i><i style="height:17px"></i><i style="height:8px"></i><i style="height:13px"></i><i style="height:6px"></i><i style="height:10px"></i><i style="height:15px"></i><i style="height:7px"></i></span><span style="font-size:9px">0:24</span></div><div class="mt">09:41 <svg class="ic xs"><use href="#i-check"/></svg></div></div>
+        </div>
+        <div class="tray"><div class="tt t1"><span class="x"><svg class="ic xs"><use href="#i-x"/></svg></span></div><div class="tt t3"><span class="x"><svg class="ic xs"><use href="#i-x"/></svg></span></div><div class="add"><svg class="ic"><use href="#i-plus"/></svg></div><span class="mk n">2</span></div>
+        <div class="cp" style="border-top:0"><div class="fld">Add a caption</div><div class="btn" style="padding:7px 11px;font-size:10.5px">Send 2 <svg class="ic xs"><use href="#i-send"/></svg></div></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk n">1</span><span>An image bubble appears immediately from the local file with a progress ring. It stays sharp later through <code>cached_network_image</code> with <code>memCacheWidth</code>.</span></li>
+        <li><span class="mk n">2</span><span>The tray replaces quick replies, with an explicit "Send 2". Voice note bubble: one shared player, waveform, duration sent by the client (the server no longer downloads the file).</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 13 DETAILS ========================= -->
+<section class="scr-sec" id="s13">
+  <div class="sec-head">
+    <div class="no">13 · Other</div>
+    <h2>Chat details</h2>
+    <p>Who is this, what's the deal, and how to get out of a bad conversation. Each item is tagged by whether the backend supports it today.</p>
+    <dl class="spec">
+      <dt>Components</dt><dd>DetailsSheet, ProfileBlock, QuickActions, ListingCard (small), SharedMediaGrid, SettingsRows</dd>
+      <dt>Interactions</dt><dd>Header tap or ⋮ → sheet. Call · View profile · View ad. Mute / Archive / Report / Block</dd>
+      <dt>Data</dt><dd>Other user (name, avatar, member since, active listings), room (created, ad), last 8 images</dd>
+      <dt>API</dt><dd>Seller profile <span class="tag ok">exists</span>, user report <span class="tag ok">exists</span>, <code>GET …/messages?type=image</code> <span class="tag api">new API</span>, per-user mute/archive/block <span class="tag api">new API</span></dd>
+      <dt>State</dt><dd>Sheet only. Reads the thread's controller, no separate fetch except media</dd>
+      <dt>Navigation</dt><dd>View profile → <code>seller_profile_page</code>. View ad → ad detail</dd>
+      <dt>Failure</dt><dd>Media fails → the section hides. Report fails → toast with Retry</dd>
+    </dl>
+  </div>
+  <div class="pair">
+    <div class="col">
+      <div class="cap"><span class="v old">TODAY</span>Tap on title</div>
+      <div class="ph"><div class="sc">
+        <div class="sb p"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="oab"><svg class="ic"><use href="#i-back"/></svg><div class="oav">A</div><span class="grow ell" style="font-size:13px;font-weight:600">Maruti Swift VXI 2019</span><svg class="ic"><use href="#i-phone"/></svg></div>
+        <div class="body" style="background:var(--a-bg)">
+          <div class="opin"><svg class="ic xs" style="color:#4F48EC"><use href="#i-pin"/></svg><span class="ell">Maruti Swift VXI 2019 · ₹5,40,000</span></div>
+          <div class="msgs" style="padding:8px 14px;opacity:.5">
+            <div class="ob in">Hi, is the Swift still available?<div class="mt">03:58</div></div>
+            <div class="ob out">Yes, available.<div class="mt">04:01</div></div>
+          </div>
+          <div class="scrim"></div>
+          <div style="position:absolute;inset:0;display:grid;place-items:center"><div style="width:60px;height:60px;border-radius:12px;background:var(--a-surface);display:grid;place-items:center"><div style="width:28px;height:28px;border-radius:50%;border:3px solid #4F48EC;border-right-color:transparent"></div></div></div>
+        </div>
+        <div class="ocp"><svg class="ic" style="color:#4F48EC;width:22px;height:22px"><use href="#i-pluscirc"/></svg><div class="fld">Type a message...</div><div class="sendb"><svg class="ic s"><use href="#i-send"/></svg></div></div>
+        <div class="ogap"><span class="mk o" style="position:absolute;right:10px;top:16px">1</span></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk o">1</span><span>There is no details view. Tapping the title shows a blocking spinner dialog while it re-fetches the ad, then opens ad detail. No way to report or block the person, see their profile or mute the chat.</span></li>
+      </ol>
+    </div>
+    <div class="col">
+      <div class="cap"><span class="v new">PROPOSED</span>Details sheet</div>
+      <div class="ph"><div class="sc">
+        <div class="sb"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="nh"><div class="ib"><svg class="ic"><use href="#i-back"/></svg></div><div class="av sm">A</div><div class="grow"><div class="nm ell">Anand K</div><div class="sub">Buying · Maruti Swift</div></div></div>
+        <div class="body"><div class="scrim"></div>
+          <div class="sheet" style="top:6px">
+            <div class="grab"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 16px 0"><div class="av lg">A</div><div style="font-size:14px;font-weight:600;margin-top:4px">Anand K</div><div style="font-size:9.5px;color:var(--a-muted)">On AdoDad since 2023 · 3 active ads</div></div>
+            <div class="acts"><div><b><svg class="ic s" style="color:#19A463"><use href="#i-phone"/></svg></b>Call</div><div><b><svg class="ic s"><use href="#i-user"/></svg></b>Profile</div><div><b><svg class="ic s"><use href="#i-tag"/></svg></b>View ad</div><span class="mk n" style="align-self:center">1</span></div>
+            <div class="subh"><span>Photos in this chat</span><span style="color:#4F48EC;text-transform:none;letter-spacing:0">See all</span></div>
+            <div class="media"><i class="t1"></i><i class="t4"></i><i class="t3"></i><i class="t2"></i></div>
+            <div class="lrow"><svg class="ic s" style="color:var(--a-muted)"><use href="#i-bell"/></svg><span class="grow">Mute notifications</span><span class="tag api" style="font-size:8.5px;padding:2px 4px">new API</span></div>
+            <div class="lrow"><svg class="ic s" style="color:var(--a-muted)"><use href="#i-archive"/></svg><span class="grow">Archive chat</span></div>
+            <div class="lrow danger"><svg class="ic s"><use href="#i-flag"/></svg><span class="grow">Report Anand</span><span class="mk n">2</span></div>
+            <div class="lrow danger"><svg class="ic s"><use href="#i-block"/></svg><span class="grow">Block</span></div>
+            <div class="lrow" style="font-size:9.5px;color:var(--a-muted)">Chat started 12 Sep 2026 about Maruti Swift VXI 2019</div>
+          </div>
+        </div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk n">1</span><span>Call (phone, as the spec asks), seller profile <span class="tag ok">exists</span> and the ad. No video/voice calling, since the backend has none.</span></li>
+        <li><span class="mk n">2</span><span>Report uses the existing user-report module <span class="tag ok">exists</span>. Mute, per-user archive and block need new endpoints <span class="tag api">new API</span>, so they can ship later.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 14 DARK ========================= -->
+<section class="scr-sec" id="s14">
+  <div class="sec-head">
+    <div class="no">14 · Other</div>
+    <h2>Dark mode</h2>
+    <p>Both proposed screens on the app's existing dark tokens (<code>darkBackground #0F1115</code>, <code>darkSurface #1B1F27</code>). Here the comparison is list against thread, not today against proposed.</p>
+    <dl class="spec">
+      <dt>Components</dt><dd>All, token-driven: no hard-coded <code>Colors.white</code> or <code>Colors.grey[300]</code> (today's chat page uses both)</dd>
+      <dt>Interactions</dt><dd>Follows <code>ThemeController</code> (system / light / dark)</dd>
+      <dt>Data</dt><dd>—</dd>
+      <dt>API</dt><dd>—</dd>
+      <dt>State</dt><dd>—</dd>
+      <dt>Navigation</dt><dd>—</dd>
+      <dt>Failure</dt><dd>Semantic banners keep contrast (amber and red get dark-specific fills)</dd>
+    </dl>
+  </div>
+  <div class="pair">
+    <div class="col">
+      <div class="cap"><span class="v new">PROPOSED</span>Chats · dark</div>
+      <div class="ph dark"><div class="sc">
+        <div class="sb"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="nhead">
+          <div class="row"><span class="t grow">Chats</span></div>
+          <div class="srch"><svg class="ic s"><use href="#i-search"/></svg>Search people or ads</div>
+        </div>
+        <div class="chips"><span class="chip on">All</span><span class="chip">Unread <span class="c">2</span></span><span class="chip">Buying</span><span class="chip">Selling</span></div>
+        <div class="body" style="background:var(--a-surface)">
+          <div class="nrow unread"><div class="av">A<i class="lt t1"></i></div><div class="grow"><div class="l1"><span class="nm ell">Anand K</span><span class="tm" style="color:#9C98FF">09:32</span></div><div class="ad"><svg class="ic xs"><use href="#i-tag"/></svg><span class="ell">Maruti Swift VXI · ₹5,40,000</span></div><div class="l3"><span class="pv grow ell">Can you do 5 lakh?</span><span class="ub">2</span></div></div></div>
+          <div class="nrow"><div class="av" style="color:#9C98FF">F<i class="lt t2"></i></div><div class="grow"><div class="l1"><span class="nm ell">Fathima R</span><span class="tm">Yesterday</span></div><div class="ad"><svg class="ic xs"><use href="#i-tag"/></svg><span class="ell">Classic 350 · ₹1,35,000</span></div><div class="l3"><span class="pv grow ell"><span class="you"><svg class="ic xs" style="color:#9C98FF"><use href="#i-dcheck"/></svg>You:</span> Yes, still available</span></div></div></div>
+          <div class="nrow unread"><div class="av" style="color:#9C98FF">J<i class="lt t4"></i></div><div class="grow"><div class="l1"><span class="nm ell">Joseph Motors</span><span class="tm" style="color:#9C98FF">Mon</span></div><div class="ad"><svg class="ic xs"><use href="#i-tag"/></svg><span class="ell">Tata Ace Gold · ₹3,85,000</span></div><div class="l3"><span class="pv grow ell">Photo</span><span class="ub">1</span></div></div></div>
+          <div class="nrow dim"><div class="av" style="color:#9C98FF">S<i class="lt t3"></i></div><div class="grow"><div class="l1"><span class="nm ell">Sreeja M</span><span class="tm">12 Sep</span></div><div class="ad"><span class="pill sold">Ad sold</span><span class="ell">2BHK, Kakkanad</span></div><div class="l3"><span class="pv grow ell">Voice message · 0:24</span></div></div></div>
+        </div>
+        <div class="nav"><div class="nv"><svg class="ic"><use href="#i-home"/></svg>Home</div><div class="nv"><svg class="ic"><use href="#i-activity"/></svg>Activity</div><div class="fab"><svg class="ic"><use href="#i-plus"/></svg></div><div class="nv on" style="color:#9C98FF"><svg class="ic"><use href="#i-chat"/></svg>Chat<span class="ub">3</span></div><div class="nv"><svg class="ic"><use href="#i-user"/></svg>Profile</div></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk n">1</span><span>Brand-coloured <em>text</em> uses a lighter tint (#9C98FF) on dark surfaces for contrast. Fills (badges, outgoing bubbles, send) stay #4F48EC.</span></li>
+      </ol>
+    </div>
+    <div class="col">
+      <div class="cap"><span class="v new">PROPOSED</span>Thread · dark</div>
+      <div class="ph dark"><div class="sc">
+        <div class="sb"><span>9:41</span><span class="dots"><i></i><i></i></span></div>
+        <div class="nh"><div class="ib"><svg class="ic"><use href="#i-back"/></svg></div><div class="av sm" style="color:#9C98FF">A<i class="on"></i></div><div class="grow"><div class="nm ell">Anand K</div><div class="sub ok">Active now</div></div><div class="ib call"><svg class="ic"><use href="#i-phone"/></svg></div><div class="ib"><svg class="ic"><use href="#i-dots"/></svg></div></div>
+        <div class="bn warn"><svg class="ic s"><use href="#i-refresh"/></svg>Reconnecting…</div>
+        <div class="ls"><div class="th t1"></div><div class="grow"><div class="ti ell">Maruti Swift VXI 2019 · Selling</div><div class="row" style="gap:6px"><span class="pr">₹5,40,000</span><span class="pill live">Live</span></div></div><span class="vw" style="color:#9C98FF">View<svg class="ic xs"><use href="#i-chev"/></svg></span></div>
+        <div class="msgs">
+          <div class="ds">Today</div>
+          <div class="b in tail">Serviced recently?<div class="mt">09:28</div></div>
+          <div class="b out sw tail">Full service done in August<div class="mt">09:31 <svg class="ic xs rd"><use href="#i-dcheck"/></svg></div></div>
+          <div class="b in sw tail">Can you do 5 lakh?<div class="mt">09:32</div></div>
+          <div class="b out sw tail fail">5,20,000 is my last price<div class="mt" style="color:var(--a-err);opacity:1"><svg class="ic xs"><use href="#i-alert"/></svg></div></div>
+          <div class="failnote"><span>Not sent · No connection</span> <u style="color:#9C98FF">Retry</u></div>
+        </div>
+        <div class="cp"><div class="ib" style="color:#9C98FF"><svg class="ic"><use href="#i-plus"/></svg></div><div class="fld">Message</div><div class="ib" style="color:var(--a-text2)"><svg class="ic"><use href="#i-mic"/></svg></div></div>
+      </div></div>
+      <ol class="notes">
+        <li><span class="mk n">1</span><span>Incoming bubbles use <code>darkSurface</code> with a <code>#2A2F3A</code> hairline. The failed state uses a dark red fill, not the light pink, so text keeps contrast.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= COMPONENTS ========================= -->
+<section class="comp" id="components">
+  <h3>Build list for Phases 5–7</h3>
+  <h2 style="margin-top:6px">Components</h2>
+  <p class="lede">What replaces today's two page files (<code>chat_page.dart</code> 1,681 lines, <code>chat_rooms_page.dart</code> 731 lines). Each widget takes plain view models and never touches the socket or the API.</p>
+  <div class="tblwrap">
+    <table>
+      <thead><tr><th>Widget</th><th>Screens</th><th>Replaces today</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>ConversationTile</td><td>01 05 14</td><td><code>_buildRoomCard</code></td><td>Avatar + listing thumb, ad line, status tick, unread weight, sold/dim variant</td></tr>
+        <tr><td>ChatAvatar</td><td>01 06 13</td><td>3 inline CircleAvatars</td><td>Initial fallback, cached image, optional online dot <span class="tag q">Q4</span></td></tr>
+        <tr><td>UnreadBadge</td><td>01 nav</td><td>inline pill</td><td>99+ cap. Also used on the nav Chat tab</td></tr>
+        <tr><td>FilterChips</td><td>01 02</td><td>—</td><td>All · Unread · Buying · Selling</td></tr>
+        <tr><td>ChatSkeleton</td><td>02 07</td><td><code>SkeletonList</code></td><td>Tile-shaped and bubble-shaped variants</td></tr>
+        <tr><td>ChatEmptyState / ChatErrorState</td><td>03 04</td><td><code>_buildEmptyState</code>, <code>_buildErrorState</code></td><td>Error kinds map to copy. No raw exceptions</td></tr>
+        <tr><td>ChatHeader</td><td>06–13</td><td>AppBar in <code>ChatPage</code></td><td>Person first, role/ad subline, Call, overflow</td></tr>
+        <tr><td>ListingStrip / ListingCard</td><td>06 08</td><td><code>_buildPinnedListingCard</code></td><td>Price, Live/Sold pill, tap to open ad from cache</td></tr>
+        <tr><td>MessageBubble</td><td>06 09 10</td><td><code>_buildMessageBubble</code></td><td>Grouping, tail, <code>sending/sent/read/failed</code></td></tr>
+        <tr><td>MessageStatus</td><td>06 09</td><td>—</td><td>clock · ✓ · ✓✓ · read ✓✓ · alert</td></tr>
+        <tr><td>DateSeparator</td><td>06</td><td><code>_buildDateSeparator</code></td><td>Local-time Today / Yesterday / 12 Sep</td></tr>
+        <tr><td>TypingIndicator</td><td>06</td><td>—</td><td><span class="tag q">Q4</span></td></tr>
+        <tr><td>StarterChips</td><td>08</td><td><code>_buildQuickReplies</code></td><td>Role- and category-aware. Fills the composer instead of sending</td></tr>
+        <tr><td>ConnectionBanner</td><td>11 14</td><td>—</td><td>offline / reconnecting / session. 3 s delay before reconnecting shows</td></tr>
+        <tr><td>MessageComposer</td><td>06–12</td><td><code>_buildMessageInput</code></td><td>Keyboard-inset, mic↔send, disabled when room closed</td></tr>
+        <tr><td>AttachmentTray / ImageBubble / VoiceNoteBubble</td><td>12</td><td>staging lists + <code>_AudioMessagePlayer</code></td><td>Progress, one shared audio player, 3:00 cap</td></tr>
+        <tr><td>ChatDetailsSheet</td><td>13</td><td>—</td><td>Profile, actions, media, report/block</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>AdoDad chat redesign · Phase 3 wireframes · sources: chat_system_audit_phase1.md, chat_backend_api_spec.md, app_colors.dart · review before Phase 4.</footer>
+</div>
+</body></html>

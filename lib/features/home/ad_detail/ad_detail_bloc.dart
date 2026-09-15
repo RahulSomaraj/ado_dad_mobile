@@ -37,9 +37,14 @@ class AdDetailBloc extends Bloc<AdDetailEvent, AdDetailState> {
             _lastLoaded = detail;
             emit(AdDetailState.loaded(detail));
           } catch (e) {
-            // A failed *revalidation* must not replace a page the user is
-            // already reading; only a cold load surfaces the error screen.
-            if (!hadSeed) emit(AdDetailState.error(e.toString()));
+            if (!hadSeed) {
+              emit(AdDetailState.error(e.toString()));
+            } else {
+              // A failed *revalidation* must not strand the user on an error
+              // screen — but it must not be silent either. Surface it (the page
+              // listener shows a SnackBar) and put the seeded ad straight back.
+              _emitActionError(emit, e);
+            }
           }
         },
         markAsSold: (adId) async {
