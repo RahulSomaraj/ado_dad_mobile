@@ -6,6 +6,8 @@ import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:ado_dad_user/services/filter_state_service.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/distance_filter_section.dart';
+import 'package:ado_dad_user/services/location_service.dart';
 import 'package:flutter/material.dart';
 
 class PropertyFiltersPage extends StatefulWidget {
@@ -57,10 +59,33 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
     'warehouse': 'Warehouse',
   };
 
+
+  /// Radius in km, null = Anywhere (audit 4.5).
+  double? _radiusKm;
+
+  void _initRadius() {
+    final current = widget.currentFilters;
+    if (current != null && current.containsKey(kMaxDistanceKmFilter)) {
+      _radiusKm = (current[kMaxDistanceKmFilter] as num?)?.toDouble();
+      return;
+    }
+    SearchRadiusPrefs.load(widget.categoryId).then((km) {
+      if (!mounted || km == null) return;
+      setState(() => _radiusKm = km);
+      _refreshCount();
+    });
+  }
+
+  void _setRadius(double? km) {
+    setState(() => _radiusKm = km);
+    _refreshCount();
+  }
+
   @override
   void initState() {
     super.initState();
     _loadSavedFilterState();
+    _initRadius();
     _refreshCount();
   }
 
@@ -137,6 +162,9 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
           maxArea: int.tryParse(_maxAreaCtrl.text),
           isFurnished: _isFurnished,
           hasParking: _hasParking,
+          latitude: LocationService().place.value?.lat,
+          longitude: LocationService().place.value?.lng,
+          maxDistance: _radiusKm,
         );
         if (mounted) {
           setState(() => _resultCount = count);
@@ -162,6 +190,7 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
       _isFurnished = null;
       _hasParking = null;
       propertyTypeQuery = '';
+      _radiusKm = null;
     });
     // Clear saved state
     if (widget.categoryId != null) {
@@ -221,8 +250,10 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
 
     // Save current filter state before returning
     _saveFilterState();
+    SearchRadiusPrefs.save(widget.categoryId, _radiusKm);
 
     Navigator.pop<Map<String, dynamic>>(context, {
+      kMaxDistanceKmFilter: _radiusKm,
       'propertyTypes': _selectedPropertyTypes.toList(),
       'minBedrooms': minBedrooms,
       'maxBedrooms': maxBedrooms,
@@ -289,6 +320,9 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          DistanceFilterSection(radiusKm: _radiusKm, onChanged: _setRadius),
+          const SizedBox(height: 20),
+
           // 1. Property type
           _sectionLabel('Property type'),
           const SizedBox(height: 10),

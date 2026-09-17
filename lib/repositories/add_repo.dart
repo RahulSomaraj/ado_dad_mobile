@@ -350,11 +350,19 @@ class AddRepository {
     int? maxArea,
     bool? isFurnished,
     bool? hasParking,
+    // Radius filter (audit 4.5); ignored unless both coordinates are set.
+    double? latitude,
+    double? longitude,
+    double? maxDistance,
   }) async {
     try {
+      final withRadius = latitude != null && longitude != null && maxDistance != null;
       final body = <String, dynamic>{
         'page': 1,
         'limit': 1,
+        if (withRadius) 'latitude': latitude,
+        if (withRadius) 'longitude': longitude,
+        if (withRadius) 'maxDistance': maxDistance,
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         if (category != null) 'category': category,
         if (commercialVehicleTypes != null && commercialVehicleTypes.isNotEmpty)

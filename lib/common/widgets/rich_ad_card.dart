@@ -1,3 +1,4 @@
+import 'package:ado_dad_user/common/ad_format.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/auth_guard.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
@@ -26,19 +27,8 @@ class RichAdCard extends StatelessWidget {
   });
 
   // ---- formatting helpers ----
-  static String inr(int n) {
-    final str = n.abs().toString();
-    if (str.length <= 3) return n.toString();
-    final last3 = str.substring(str.length - 3);
-    String rest = str.substring(0, str.length - 3);
-    final parts = <String>[];
-    while (rest.length > 2) {
-      parts.insert(0, rest.substring(rest.length - 2));
-      rest = rest.substring(0, rest.length - 2);
-    }
-    if (rest.isNotEmpty) parts.insert(0, rest);
-    return '${n < 0 ? '-' : ''}${parts.join(',')},$last3';
-  }
+  /// Same grouping as every other price in the app (see [AdFormat]).
+  static String inr(int n) => AdFormat.groupIndian(n);
 
   bool get _isProperty => ad.category.toLowerCase().contains('propert');
   bool get _isRent => (ad.listingType ?? '').toLowerCase() == 'rent';
@@ -386,12 +376,16 @@ class RichAdCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          Text(
-                            _relTime(ad.postedAt),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontSize: 10, color: AppColors.greyColor),
+                          // Flexible: at large font sizes on a 320 dp phone the
+                          // time alone is wider than the tile (audit 4.4).
+                          Flexible(
+                            child: Text(
+                              _relTime(ad.postedAt),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontSize: 10, color: AppColors.greyColor),
+                            ),
                           ),
                         ],
                       ),
@@ -425,5 +419,9 @@ double richAdCardMainAxisExtent(
   final imageHeight = cardWidth / aspectRatio;
   // price + title + chips + footer (now two lines: place, then distance/time).
   const textBlockHeight = 15 + 18 + 3 + 16 + 6 + 22 + 14 + 18 + 6 + 10;
-  return imageHeight + textBlockHeight;
+  // The text block grows with the system font size; a fixed height clipped
+  // the footer at 1.3x and above (audit 4.4).
+  final textScale =
+      (MediaQuery.textScalerOf(context).scale(14) / 14).clamp(1.0, 3.0);
+  return imageHeight + textBlockHeight * textScale;
 }

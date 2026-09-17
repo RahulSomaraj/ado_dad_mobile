@@ -13,6 +13,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../data/chat_models.dart';
 import '../data/chat_repository.dart';
+import 'package:ado_dad_user/services/review_prompt_service.dart';
 
 enum ChatThreadStatus { loading, loaded, error }
 
@@ -286,8 +287,26 @@ class ChatThreadCubit extends Cubit<ChatThreadState> {
     emit(state.copyWith(
         status: ChatThreadStatus.loaded,
         messages: mergeMessages(state.messages, [m])));
-    if (!m.isMine(state.myUserId)) _scheduleMarkRead();
+    if (!m.isMine(state.myUserId)) {
+      _scheduleMarkRead();
+      _maybeAskForReview();
+    }
     unawaited(_repo.saveThreadSnapshot(roomId, state.messages));
+  }
+
+  bool _reviewChecked = false;
+
+  /// A thread where the other side has replied 3 times and we have written
+  /// back is a real conversation: a good moment for a review prompt (3.3).
+  void _maybeAskForReview() {
+    if (_reviewChecked) return;
+    final me = state.myUserId;
+    final theirs = state.messages.where((x) => !x.isMine(me)).length;
+    final mine = state.messages.where((x) => x.isMine(me)).length;
+    if (theirs >= 3 && mine >= 1) {
+      _reviewChecked = true;
+      unawaited(ReviewPromptService.instance.maybeAsk(ReviewTrigger.chatReplies));
+    }
   }
 
   void _onOutbox(ChatMessage m) {

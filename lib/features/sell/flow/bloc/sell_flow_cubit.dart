@@ -9,6 +9,7 @@ import '../domain/sell_config.dart';
 import '../domain/sell_format.dart';
 import '../domain/sell_models.dart';
 import '../domain/sell_rules.dart';
+import 'package:ado_dad_user/services/review_prompt_service.dart';
 
 enum SubmissionStatus { idle, submitting, slow, failed, succeeded }
 
@@ -370,6 +371,8 @@ class SellFlowCubit extends Cubit<SellFlowState> {
     }
 
     final f = failure ?? const ServerFailure('Something went wrong on our side.');
+    // No review prompt on a day posting failed (audit 3.3).
+    unawaited(ReviewPromptService.instance.noteProblem());
     if (f is ServerFailure && f.keyReused) {
       // The body changed after an ambiguous attempt; the next Post needs a new key.
       emit(state.copyWith(idempotencyKey: SellFormat.uuidV4()));

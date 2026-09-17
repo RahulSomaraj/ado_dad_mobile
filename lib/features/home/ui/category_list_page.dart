@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
+import 'package:ado_dad_user/common/ad_category.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/widgets/rich_ad_card.dart';
 import 'package:ado_dad_user/common/widgets/skeleton.dart';
@@ -8,6 +9,7 @@ import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/api_service.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/distance_filter_section.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:ado_dad_user/services/filter_state_service.dart';
@@ -47,9 +49,22 @@ class _CategoryListPageState extends State<CategoryListPage> {
     return widget.categoryTitle.toLowerCase().contains('premium');
   }
 
-  // Helper method to get categoryId - returns null for Premium Vehicles to fetch all categories
-  String? get _effectiveCategoryId {
-    return _isPremiumVehiclesCategory ? null : widget.categoryId;
+  /// Always the page's own category. Premium Vehicles used to send no
+  /// category and keep any ad whose manufacturer is premium, so premium
+  /// bikes and trucks showed up under a car tile (audit 4.3). It now asks for
+  /// `private_vehicle` and narrows to premium brands on top of that.
+  String? get _effectiveCategoryId => widget.categoryId;
+
+  /// Drops ads the server returned for another category (a stale cache entry
+  /// or a filter the backend ignored). Ads with an unrecognised category are
+  /// kept rather than hiding the whole list on a format change.
+  List<AddModel> _onlyThisCategory(List<AddModel> items) {
+    final wanted = AdCategory.fromApi(widget.categoryId);
+    if (wanted == AdCategory.unknown) return items;
+    return items.where((ad) {
+      final got = AdCategory.fromApi(ad.category);
+      return got == AdCategory.unknown || got == wanted;
+    }).toList();
   }
 
   @override
@@ -96,7 +111,16 @@ class _CategoryListPageState extends State<CategoryListPage> {
     _lat = seed?.latitude;
     _lng = seed?.longitude;
 
-    // For Premium Vehicles, pass null to fetch all ads (will filter by isPremium client-side)
+    // Last radius picked for this category (audit 4.5), when there is a place
+    // to measure from.
+    final savedKm = await SearchRadiusPrefs.load(widget.categoryId);
+    if (!mounted) return;
+    if (savedKm != null && _lat != null) {
+      _filters = {..._filters, kMaxDistanceKmFilter: savedKm};
+      bloc.setSearchRadius(savedKm);
+    }
+
+    // Premium Vehicles: private_vehicle from the server, premium brands kept client-side.
     bloc.add(
       AdvertisementEvent.applyFilters(
         categoryId: _effectiveCategoryId,
@@ -179,6 +203,123 @@ class _CategoryListPageState extends State<CategoryListPage> {
     }
 
     return ad;
+  }
+
+
+  // ---------------------------------------------------------------- radius
+  // Audit 4.5: a distance filter on top of the category list.
+
+  double? get _radiusKm => (_filters[kMaxDistanceKmFilter] as num?)?.toDouble();
+
+  /// Takes the radius from a filter-sheet result and the place the sheet may
+  /// have changed, before the list is re-queried.
+  void _takeRadiusFrom(Map<String, dynamic> result) {
+    final place = LocationService().place.value;
+    if (place != null) {
+      _lat = place.lat;
+      _lng = place.lng;
+    }
+    final km = (result[kMaxDistanceKmFilter] as num?)?.toDouble();
+    context.read<AdvertisementBloc>().setSearchRadius(_lat != null ? km : null);
+  }
+
+  /// Changes only the radius and re-runs the current filters.
+  void _applyRadius(double? km) {
+    setState(() => _filters = {..._filters, kMaxDistanceKmFilter: km});
+    unawaited(SearchRadiusPrefs.save(widget.categoryId, km));
+    _takeRadiusFrom(_filters);
+    _dispatchCurrentFilters();
+  }
+
+  void _dispatchCurrentFilters() {
+    final f = _filters;
+    List<String>? ids(String k) => (f[k] as List?)?.cast<String>();
+    final bloc = context.read<AdvertisementBloc>();
+    if (widget.categoryId == 'property') {
+      bloc.add(AdvertisementEvent.applyFilters(
+        categoryId: widget.categoryId,
+        latitude: _lat,
+        longitude: _lng,
+        propertyTypes: ids('propertyTypes'),
+        minBedrooms: f['minBedrooms'] as int?,
+        maxBedrooms: f['maxBedrooms'] as int?,
+        minPrice: f['minPrice'] as int?,
+        maxPrice: f['maxPrice'] as int?,
+        minArea: f['minArea'] as int?,
+        maxArea: f['maxArea'] as int?,
+        isFurnished: f['isFurnished'] as bool?,
+        hasParking: f['hasParking'] as bool?,
+      ));
+    } else {
+      bloc.add(AdvertisementEvent.applyFilters(
+        categoryId: _effectiveCategoryId,
+        latitude: _lat,
+        longitude: _lng,
+        commercialVehicleTypes: ids('commercialVehicleTypes'),
+        minYear: f['minYear'] as int?,
+        maxYear: f['maxYear'] as int?,
+        manufacturerIds: ids('manufacturerIds'),
+        modelIds: ids('modelIds'),
+        fuelTypeIds: ids('fuelTypeIds'),
+        transmissionTypeIds: ids('transmissionTypeIds'),
+        minPrice: f['minPrice'] as int?,
+        maxPrice: f['maxPrice'] as int?,
+      ));
+    }
+  }
+
+  String get _placeName => LocationService().place.value?.label ?? 'you';
+
+  Widget _buildRadiusChip(BuildContext context) {
+    final km = _radiusKm;
+    if (km == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: InputChip(
+          avatar: Icon(Icons.place_outlined, size: 16, color: AppColors.primaryColor),
+          label: Text(
+            'Within ${radiusLabel(km)} of $_placeName',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          onDeleted: () => _applyRadius(null),
+          deleteButtonTooltipMessage: 'Show ads from anywhere',
+        ),
+      ),
+    );
+  }
+
+  /// "No ads within 10 km" → [25 km] [Anywhere].
+  List<Widget> _widenActions() {
+    final km = _radiusKm;
+    if (km == null) return const [];
+    final bigger = kSearchRadiiKm.whereType<double>().where((r) => r > km);
+    return [
+      Text(
+        'Nothing within ${radiusLabel(km)} of $_placeName.',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+      ),
+      const SizedBox(height: 10),
+      Wrap(
+        spacing: 8,
+        alignment: WrapAlignment.center,
+        children: [
+          if (bigger.isNotEmpty)
+            FilledButton(
+              onPressed: () => _applyRadius(bigger.first),
+              child: Text('Widen to ${radiusLabel(bigger.first)}'),
+            ),
+          OutlinedButton(
+            onPressed: () => _applyRadius(null),
+            child: const Text('Anywhere'),
+          ),
+        ],
+      ),
+      const SizedBox(height: 14),
+    ];
   }
 
   @override
@@ -278,6 +419,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                     if (!context.mounted) return;
                     if (result is Map<String, dynamic>) {
                       _filters = result;
+                      _takeRadiusFrom(result);
                       context.read<AdvertisementBloc>().add(
                             AdvertisementEvent.applyFilters(
                               categoryId: widget.categoryId,
@@ -304,9 +446,10 @@ class _CategoryListPageState extends State<CategoryListPage> {
                     if (!context.mounted) return;
                     if (result is Map<String, dynamic>) {
                       _filters = result;
+                      _takeRadiusFrom(result);
                       context.read<AdvertisementBloc>().add(
                             AdvertisementEvent.applyFilters(
-                              // For Premium Vehicles, pass null to fetch all categories
+                              // Premium Vehicles also sends private_vehicle (see _effectiveCategoryId)
                               categoryId: _effectiveCategoryId,
                               latitude: _lat,
                               longitude: _lng,
@@ -453,26 +596,15 @@ class _CategoryListPageState extends State<CategoryListPage> {
               }
               if (state is ListingsLoaded) {
                 // Get the listings (this accumulates all pages)
-                List<AddModel> items = state.listings;
+                List<AddModel> items = _onlyThisCategory(state.listings);
                 final isPremiumCategory =
                     widget.categoryTitle.toLowerCase().contains('premium');
 
-                // For Premium Vehicles: Apply all filters client-side since we fetch all categories
-                // (categoryId is null), so server-side filters may not work correctly
+                // Premium Vehicles: the server already scoped this to private_vehicle and
+                // applied the filters; narrow to premium brands and re-apply locally.
                 if (isPremiumCategory) {
-                  // Debug: Show total items from all pages
-
                   // Enrich ads with manufacturer isPremium data from cache
                   items = items.map((ad) => _enrichAdWithPremium(ad)).toList();
-
-                  // Debug: Check what's in the manufacturer objects
-
-                  // Check for specific ad ID
-                  final specificAdId = '690325a2fb5f59e577b0208c';
-                  final specificAd =
-                      items.where((ad) => ad.id == specificAdId).firstOrNull;
-                  if (specificAd != null) {
-                  } else {}
 
                   // First filter by isPremium
                   items = items.where((ad) {
@@ -591,6 +723,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _buildRadiusChip(context),
                     _buildSortChips(context),
                     Expanded(
                       child: _buildListingsGrid(context, state, items),
@@ -681,6 +814,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
               ),
             ),
             const SizedBox(height: 4),
+            ..._widenActions(),
             Text(
               'Try clearing a filter or widening your price range.',
               textAlign: TextAlign.center,
@@ -723,6 +857,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
       _filters = {};
       _sort = 'newest';
     });
+    context.read<AdvertisementBloc>().setSearchRadius(null);
+    unawaited(SearchRadiusPrefs.save(widget.categoryId, null));
     context.read<AdvertisementBloc>().add(
           AdvertisementEvent.applyFilters(
             categoryId: widget.categoryId == 'property'
@@ -763,7 +899,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
               );
         } else {
           // Vehicle filters
-          // For Premium Vehicles, pass null to fetch all categories
+          // Premium Vehicles also sends private_vehicle (see _effectiveCategoryId)
           context.read<AdvertisementBloc>().add(
                 AdvertisementEvent.applyFilters(
                   categoryId: _effectiveCategoryId,

@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../data/sell_repository.dart';
 import 'widgets/sell_ui.dart';
+import 'package:ado_dad_user/services/review_prompt_service.dart';
 
 /// What the success page shows before (or without) a network round trip.
 class SubmittedInfo {
@@ -39,6 +42,14 @@ class SubmittedPage extends StatefulWidget {
 class _SubmittedPageState extends State<SubmittedPage> with SingleTickerProviderStateMixin {
   late final AnimationController _check = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
   bool _opening = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.info?.status == 'approved') {
+      unawaited(ReviewPromptService.instance.maybeAsk(ReviewTrigger.adLive));
+    }
+  }
 
   @override
   void didChangeDependencies() {

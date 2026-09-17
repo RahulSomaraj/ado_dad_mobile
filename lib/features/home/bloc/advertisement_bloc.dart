@@ -67,6 +67,9 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _locationQueryHasNext = false;
     _locationLatitude = null;
     _locationLongitude = null;
+    _filterMode = false;
+    _userRadiusKm = null;
+    _filterMaxDistance = null;
     // Deliberately outside an event handler: this runs on logout for every live
     // feed, and the state classes are freezed (adding an event needs codegen).
     // Safe because isClosed was checked above.
@@ -112,6 +115,25 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
   bool _locationFallbackToAll = false;
   bool _locationQueryHasNext = false;
   int _allAdsPage = 1;
+
+  /// True while this bloc serves a category/filter list (applyFilters or
+  /// fetchByCategory). Paging then always repeats the same filtered query.
+  /// Before this flag, page 2 of a category list fell into the location
+  /// recommendation branches, which carry no category, so scrolling a Cars
+  /// list pulled in bikes and property (audit 4.3).
+  bool _filterMode = false;
+
+  /// Radius the user picked in a filter sheet (km). Null = Anywhere, which
+  /// keeps the automatic widening below. Set before dispatching applyFilters.
+  double? _userRadiusKm;
+
+  /// The maxDistance page 1 of the current filtered list actually used, so
+  /// later pages ask the same question.
+  double? _filterMaxDistance;
+
+  double? get searchRadiusKm => _userRadiusKm;
+
+  void setSearchRadius(double? km) => _userRadiusKm = km;
 
   // Active filters remembered by the bloc
   String? _categoryId;
@@ -202,6 +224,8 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
       FetchAllListingsEvent event, Emitter<AdvertisementState> emit) async {
     emit(const AdvertisementState.loading());
     _currentPage = 1;
+    _filterMode = false;
+    _filterMaxDistance = null;
 
     // clear filters
     _categoryId = null;
@@ -245,8 +269,9 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     final currentState = state;
     if (currentState is ListingsLoaded && currentState.hasMore) {
       try {
-        final bool inLocationMode =
-            _locationLatitude != null && !_locationFallbackToAll;
+        final bool inLocationMode = !_filterMode &&
+            _locationLatitude != null &&
+            !_locationFallbackToAll;
 
         if (inLocationMode && _locationQueryHasNext) {
           // (a) More pages within the location radius. $geoNear sorts
@@ -272,7 +297,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
             listings: _mergeDedupe(currentState.listings, result.data),
             hasMore: result.hasNext,
           ));
-        } else if (_locationFallbackToAll) {
+        } else if (!_filterMode && _locationFallbackToAll) {
           // (d) Continue the all-ads fallback feed.
           _allAdsPage += 1;
           final result = await _fetchWideFeed(_allAdsPage);
@@ -281,29 +306,14 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
             hasMore: result.hasNext,
           ));
         } else {
-          // (e) Normal all-ads / filtered pagination (unchanged behaviour).
+          // (e) Filtered / category / plain all-ads pagination: the same query
+          // as page 1, every filter included (isFurnished/hasParking and the
+          // radius used to be dropped from page 2 onward).
           _currentPage += 1;
-          final result = await repository.fetchAllAds(
-              page: _currentPage,
-              category: _categoryId,
-              latitude: _locationLatitude,
-              longitude: _locationLongitude,
-              commercialVehicleTypes: _commercialVehicleTypes,
-              minYear: _minYear,
-              maxYear: _maxYear,
-              manufacturerIds: _manufacturerIds,
-              modelIds: _modelIds,
-              fuelTypeIds: _fuelTypeIds,
-              transmissionTypeIds: _transmissionTypeIds,
-              minPrice: _minPrice,
-              maxPrice: _maxPrice,
-              propertyTypes: _propertyTypes,
-              minBedrooms: _minBedrooms,
-              maxBedrooms: _maxBedrooms,
-              minArea: _minArea,
-              maxArea: _maxArea);
+          final result = await _fetchFilteredPage(_currentPage,
+              maxDistance: _filterMaxDistance);
           emit(ListingsLoaded(
-            listings: [...currentState.listings, ...result.data],
+            listings: _mergeDedupe(currentState.listings, result.data),
             hasMore: result.hasNext,
           ));
         }
@@ -322,6 +332,9 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     Emitter<AdvertisementState> emit,
   ) async {
     emit(const AdvertisementState.loading());
+    _filterMode = true;
+    _filterMaxDistance = null;
+    _locationFallbackToAll = false;
 
     _categoryId = event.categoryId;
     _minYear = null;
@@ -386,8 +399,22 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     _isFurnished = event.isFurnished;
     _hasParking = event.hasParking;
     _currentPage = 1;
+    _filterMode = true;
+    _locationFallbackToAll = false;
+    final radius = _locationLatitude != null ? _userRadiusKm : null;
+    _filterMaxDistance = radius;
 
     try {
+      if (radius != null) {
+        // The user chose a radius: honour it exactly. An empty result is shown
+        // as "nothing within N km" with widen options, never silently widened.
+        final result = await _fetchFilteredPage(_currentPage, maxDistance: radius);
+        emit(AdvertisementState.listingsLoaded(
+          listings: result.data,
+          hasMore: result.hasNext,
+        ));
+        return;
+      }
       final result = await repository.fetchAllAds(
           page: _currentPage,
           category: _categoryId,
@@ -417,6 +444,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
         // which is what made the "x km away" line vanish from these screens.
         var wide =
             await _fetchFilteredPage(_currentPage, maxDistance: _wideRadiusKm);
+        _filterMaxDistance = _wideRadiusKm;
 
         if (wide.data.length < _minNearbyResults) {
           // Still thin at 5000 km, so the location really is the constraint.
@@ -424,6 +452,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
           // which at this range would not be meaningful anyway.
           _locationLatitude = null;
           _locationLongitude = null;
+          _filterMaxDistance = null;
           wide = await _fetchFilteredPage(_currentPage, withLocation: false);
         }
 
@@ -473,6 +502,8 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
       SearchByLocationEvent event, Emitter<AdvertisementState> emit) async {
     emit(const AdvertisementState.loading());
     _currentPage = 1;
+    _filterMode = false;
+    _filterMaxDistance = null;
 
     // Clear other filters when searching by location
     _categoryId = null;
@@ -587,6 +618,8 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
       FetchByUserIdEvent event, Emitter<AdvertisementState> emit) async {
     emit(const AdvertisementState.loading());
     _currentPage = 1;
+    _filterMode = false;
+    _filterMaxDistance = null;
 
     // clear filters
     _categoryId = null;

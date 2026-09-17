@@ -1,3 +1,4 @@
+import 'package:ado_dad_user/common/ad_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -100,20 +101,7 @@ class _OfferSheetState extends State<_OfferSheet> {
     });
   }
 
-  String _formatPrice(int price) {
-    final s = price.toString();
-    // Simple Indian-style grouping (e.g. 5,40,000).
-    if (s.length <= 3) return s;
-    final last3 = s.substring(s.length - 3);
-    var rest = s.substring(0, s.length - 3);
-    final parts = <String>[];
-    while (rest.length > 2) {
-      parts.insert(0, rest.substring(rest.length - 2));
-      rest = rest.substring(0, rest.length - 2);
-    }
-    if (rest.isNotEmpty) parts.insert(0, rest);
-    return '${parts.join(',')},$last3';
-  }
+  String _formatPrice(int price) => AdFormat.groupIndian(price);
 
   @override
   void dispose() {

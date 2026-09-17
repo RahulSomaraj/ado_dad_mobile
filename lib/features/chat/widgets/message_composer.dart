@@ -294,7 +294,7 @@ class _MessageComposerState extends State<MessageComposer> {
             if (_staged.isNotEmpty) _tray(c),
             Padding(
               padding: ChatSize.composerPadding,
-              child: _recording ? _recordingBar(c) : _inputRow(c),
+              child: _inputRow(c),
             ),
           ],
         ),
@@ -363,12 +363,18 @@ class _MessageComposerState extends State<MessageComposer> {
   }
 
   Widget _inputRow(ChatColors c) {
-    final showSendPill = _staged.isNotEmpty;
-    final canSend = _hasText || showSendPill;
+    final showSendPill = _staged.isNotEmpty && !_recording;
+    final canSend = (_hasText || showSendPill) && !_recording;
+    // The mic GestureDetector must stay in the tree for the whole press: if it
+    // were swapped out when recording starts, its long-press recogniser would be
+    // disposed and onLongPressMoveUpdate / onLongPressEnd would never fire (no
+    // slide-to-cancel, and release wouldn't send). Keyed so the Row keeps the
+    // same element even though the leading children change.
+    final showMic = _recording || (!showSendPill && !canSend);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        if (!showSendPill)
+        if (!showSendPill && !_recording)
           _RoundIcon(
             icon: Icons.add_rounded,
             color: widget.attachmentsEnabled ? c.brandText : c.muted,
@@ -376,6 +382,9 @@ class _MessageComposerState extends State<MessageComposer> {
             tooltip: 'Add photos',
           ),
         const SizedBox(width: 4),
+        if (_recording)
+          Expanded(child: _recordingBar(c))
+        else
         Expanded(
           child: Container(
             constraints: const BoxConstraints(minHeight: ChatSize.sendButton),
@@ -427,8 +436,10 @@ class _MessageComposerState extends State<MessageComposer> {
           )
         else if (canSend)
           _SendButton(onTap: _send)
-        else
+        else if (showMic)
           GestureDetector(
+            key: const ValueKey('chat-mic'),
+            behavior: HitTestBehavior.opaque,
             onLongPressStart: widget.attachmentsEnabled
                 ? (_) {
                     _pressActive = true;
@@ -444,17 +455,29 @@ class _MessageComposerState extends State<MessageComposer> {
               _pressActive = false;
               _finishRecording(send: !_cancelArmed);
             },
-            onTap: () => _toast('Hold to record a voice message.'),
-            child: SizedBox(
-              width: ChatSize.sendButton,
-              height: ChatSize.sendButton,
-              child: Icon(
-                Icons.mic_none_rounded,
-                size: ChatSize.composerIcon,
-                color: widget.attachmentsEnabled ? c.text2 : c.muted,
-                semanticLabel: 'Hold to record',
-              ),
-            ),
+            onLongPressCancel: () {
+              _pressActive = false;
+              _finishRecording(send: false);
+            },
+            onTap: _recording ? null : () => _toast('Hold to record a voice message.'),
+            child: _recording
+                ? Container(
+                    width: ChatSize.sendButton,
+                    height: ChatSize.sendButton,
+                    decoration: BoxDecoration(color: _cancelArmed ? c.err : c.recording, shape: BoxShape.circle),
+                    child: Icon(_cancelArmed ? Icons.delete_outline_rounded : Icons.mic_rounded,
+                        color: Colors.white, size: 22),
+                  )
+                : SizedBox(
+                    width: ChatSize.sendButton,
+                    height: ChatSize.sendButton,
+                    child: Icon(
+                      Icons.mic_none_rounded,
+                      size: ChatSize.composerIcon,
+                      color: widget.attachmentsEnabled ? c.text2 : c.muted,
+                      semanticLabel: 'Hold to record',
+                    ),
+                  ),
           ),
       ],
     );
@@ -481,13 +504,6 @@ class _MessageComposerState extends State<MessageComposer> {
             ),
           ),
           Text('max 3:00', style: TextStyle(fontSize: 12, color: c.muted)),
-          const SizedBox(width: 8),
-          Container(
-            width: ChatSize.sendButton,
-            height: ChatSize.sendButton,
-            decoration: BoxDecoration(color: _cancelArmed ? c.err : c.recording, shape: BoxShape.circle),
-            child: Icon(_cancelArmed ? Icons.delete_outline_rounded : Icons.mic_rounded, color: Colors.white, size: 22),
-          ),
         ],
       ),
     );

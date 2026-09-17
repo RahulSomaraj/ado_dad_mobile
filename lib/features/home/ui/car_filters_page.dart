@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/distance_filter_section.dart';
+import 'package:ado_dad_user/services/location_service.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/app_textstyle.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
@@ -79,10 +81,33 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
   int? _resultCount;
   Timer? _countTimer;
 
+
+  /// Radius in km, null = Anywhere (audit 4.5).
+  double? _radiusKm;
+
+  void _initRadius() {
+    final current = widget.currentFilters;
+    if (current != null && current.containsKey(kMaxDistanceKmFilter)) {
+      _radiusKm = (current[kMaxDistanceKmFilter] as num?)?.toDouble();
+      return;
+    }
+    SearchRadiusPrefs.load(widget.categoryId).then((km) {
+      if (!mounted || km == null) return;
+      setState(() => _radiusKm = km);
+      _refreshCount();
+    });
+  }
+
+  void _setRadius(double? km) {
+    setState(() => _radiusKm = km);
+    _refreshCount();
+  }
+
   @override
   void initState() {
     super.initState();
     _loadSavedFilterState();
+    _initRadius();
     // Load manufacturers with appropriate vehicleCategory on init
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -221,6 +246,9 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
           maxYear: int.tryParse(_maxYearCtrl.text),
           minPrice: int.tryParse(_minPriceCtrl.text),
           maxPrice: int.tryParse(_maxPriceCtrl.text),
+          latitude: LocationService().place.value?.lat,
+          longitude: LocationService().place.value?.lng,
+          maxDistance: _radiusKm,
         );
         if (mounted) {
           setState(() => _resultCount = count);
@@ -253,6 +281,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
       transmissionQuery = '';
       commercialTypeQuery = '';
       _commercialTypeSearchCtrl.clear();
+      _radiusKm = null;
     });
     // Clear saved state
     if (widget.categoryId != null) {
@@ -293,8 +322,10 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
 
     // Save current filter state before returning
     _saveFilterState();
+    SearchRadiusPrefs.save(widget.categoryId, _radiusKm);
 
     Navigator.pop<Map<String, dynamic>>(context, {
+      kMaxDistanceKmFilter: _radiusKm,
       'commercialVehicleTypes':
           _selectedCommercialVehicleTypes.toList(growable: false),
       'manufacturerIds': _selectedManufacturerIds.toList(),
@@ -382,6 +413,9 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          DistanceFilterSection(radiusKm: _radiusKm, onChanged: _setRadius),
+          const SizedBox(height: 20),
+
           // 1. Brand
           _selectorRow(
             label: 'Brand',

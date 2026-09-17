@@ -91,6 +91,8 @@ class _PricePlaceStepState extends State<PricePlaceStep> {
 
     return ListView(
       controller: _keys.controller,
+      // Builds off-screen fields so "Fix ›" can scroll to them.
+      // ignore: deprecated_member_use
       cacheExtent: 4000,
       padding: const EdgeInsets.fromLTRB(SellTokens.gutter, 4, SellTokens.gutter, 32),
       children: [

@@ -26,18 +26,56 @@ class AppVersionResponse {
   }
 }
 
-/// Inner "data" object: { versions, forceUpdate, storeUrls }.
+/// Build-number policy for one platform (`data.builds.<platform>`).
+///
+/// Build number = Android versionCode / iOS CFBundleVersion = the `+N` in
+/// pubspec `version: 1.3.0+N`.
+class PlatformBuildPolicy {
+  /// Newest build live in the store. Below this → optional prompt.
+  final int? latest;
+
+  /// Oldest build still allowed. Below this → forced update.
+  final int? minSupported;
+
+  const PlatformBuildPolicy({this.latest, this.minSupported});
+
+  bool get isConfigured => latest != null || minSupported != null;
+
+  factory PlatformBuildPolicy.fromJson(dynamic json) {
+    if (json is! Map) return const PlatformBuildPolicy();
+    return PlatformBuildPolicy(
+      latest: _toInt(json['latest']),
+      minSupported: _toInt(json['minSupported']),
+    );
+  }
+
+  static int? _toInt(dynamic v) {
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    if (v is String) return int.tryParse(v);
+    return null;
+  }
+}
+
+/// Inner "data" object: { versions, forceUpdate, storeUrls, builds, releaseNotes }.
 class AppVersionData {
-  /// Latest versions per platform: { "ios": "1.1.4", "android": "1.1.0" }.
+  /// Latest version names per platform: { "ios": "1.1.4", "android": "1.1.0" }.
   final String iosVersion;
   final String androidVersion;
 
-  /// When true, show update as mandatory (no "Later").
+  /// Legacy global switch, only used when no build policy is configured.
   final bool forceUpdate;
 
   /// Store URLs: { "ios": "...", "android": "..." }.
   final String? iosStoreUrl;
   final String? androidStoreUrl;
+
+  /// Build-number policy per platform (preferred over version names).
+  final PlatformBuildPolicy iosBuilds;
+  final PlatformBuildPolicy androidBuilds;
+
+  /// Optional "what's new" text shown in the dialog.
+  final String? releaseNotes;
 
   /// Optional message (from top-level API "message").
   final String? message;
@@ -48,6 +86,9 @@ class AppVersionData {
     required this.forceUpdate,
     this.iosStoreUrl,
     this.androidStoreUrl,
+    this.iosBuilds = const PlatformBuildPolicy(),
+    this.androidBuilds = const PlatformBuildPolicy(),
+    this.releaseNotes,
     this.message,
   });
 
@@ -57,9 +98,13 @@ class AppVersionData {
   }) {
     final versions = json['versions'];
     final storeUrls = json['storeUrls'];
+    final builds = json['builds'];
 
     final versionsMap = versions is Map ? versions : null;
     final storeUrlsMap = storeUrls is Map ? storeUrls : null;
+    final buildsMap = builds is Map ? builds : null;
+
+    final notes = json['releaseNotes']?.toString().trim();
 
     return AppVersionData(
       iosVersion: (versionsMap?['ios'] ?? '0.0.0').toString(),
@@ -67,6 +112,9 @@ class AppVersionData {
       forceUpdate: json['forceUpdate'] == true,
       iosStoreUrl: storeUrlsMap?['ios']?.toString(),
       androidStoreUrl: storeUrlsMap?['android']?.toString(),
+      iosBuilds: PlatformBuildPolicy.fromJson(buildsMap?['ios']),
+      androidBuilds: PlatformBuildPolicy.fromJson(buildsMap?['android']),
+      releaseNotes: (notes == null || notes.isEmpty) ? null : notes,
       message: message ?? json['message']?.toString(),
     );
   }

@@ -763,26 +763,9 @@ class _HomePageState extends State<HomePage> {
     return 2; // phones unchanged
   }
 
-  double _cardMainAxisExtent(BuildContext context, int columns) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    const horizontalPagePadding = 15.0;
-    const spacing = 15.0;
-
-    final available =
-        screenWidth - (horizontalPagePadding * 2) - (spacing * (columns - 1));
-    final cardWidth = available / columns;
-
-    final aspectRatio =
-        GetResponsiveSize.isTablet(context) ? (16 / 9) : (16 / 10);
-    final imageHeight = cardWidth / aspectRatio;
-
-    // Matches RichAdCard: padding + price + title + chips + footer, where the
-    // footer is now two lines (place, then distance/time). Includes a small
-    // safety buffer so font-metric rounding can't overflow.
-    const textBlockHeight = 15 + 18 + 3 + 16 + 6 + 22 + 14 + 18 + 6 + 10;
-
-    return imageHeight + textBlockHeight;
-  }
+  /// Same cell height as every other RichAdCard grid (scales with font size).
+  double _cardMainAxisExtent(BuildContext context, int columns) =>
+      richAdCardMainAxisExtent(context, columns: columns);
 
   /// The ad grid as a **sliver**, so only on-screen cards are built.
   ///

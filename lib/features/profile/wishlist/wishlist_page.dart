@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
+import 'package:ado_dad_user/common/ad_format.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/widgets/rich_ad_card.dart';
 import 'package:ado_dad_user/common/widgets/skeleton.dart';
@@ -464,8 +465,11 @@ class _WishlistPageState extends State<WishlistPage> {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            '₹ ${favorite.price.toString()}',
+                          Flexible(
+                           child: Text(
+                            AdFormat.inr(favorite.price),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: GetResponsiveSize.getResponsiveFontSize(
@@ -476,7 +480,7 @@ class _WishlistPageState extends State<WishlistPage> {
                                 desktop: 34,
                               ),
                             ),
-                          ),
+                          )),
                           const Spacer(),
                           BlocBuilder<FavoriteBloc, FavoriteState>(
                             builder: (context, state) {

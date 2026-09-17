@@ -76,39 +76,15 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app needs microphone access to record and send voice notes in chat.</string>
 	
-	<!-- Network Security Configuration -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<!-- Allow cleartext traffic for development -->
+		<!-- HTTPS only (production api.adodad.com, UAT uatapi.ado-dad.com).
+		     Local networking stays allowed so a debug build can reach a
+		     backend on localhost / the LAN. -->
 		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSAllowsLocalNetworking</key>
 		<true/>
-		
-		<!-- Specific domain exceptions for production -->
-		<key>NSExceptionDomains</key>
-		<dict>
-			<key>ado-dad.com</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<false/>
-				<key>NSExceptionMinimumTLSVersion</key>
-				<string>TLSv1.2</string>
-				<key>NSExceptionRequiresForwardSecrecy</key>
-				<true/>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-			</dict>
-			<key>www.ado-dad.com</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<false/>
-				<key>NSExceptionMinimumTLSVersion</key>
-				<string>TLSv1.2</string>
-				<key>NSExceptionRequiresForwardSecrecy</key>
-				<true/>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-			</dict>
-		</dict>
 	</dict>
 </dict>
 </plist>

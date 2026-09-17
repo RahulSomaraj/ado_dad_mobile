@@ -79,6 +79,11 @@ dependencies:
   record: ^6.0.0
   path_provider: ^2.1.5
   package_info_plus: ^8.0.0
+  # Play In-App Review / SKStoreReviewController (audit 3.3).
+  in_app_review: ^2.0.10
+  # Google Play in-app updates (immediate / flexible). Android only; no-op
+  # elsewhere. Used by common/version_check_wrapper.dart.
+  in_app_update: ^4.2.3
   firebase_core: ^3.8.1
   firebase_messaging: ^15.1.5
   flutter_local_notifications: ^17.2.3

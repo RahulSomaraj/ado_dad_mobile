@@ -22,8 +22,8 @@
     
     <!-- Production configuration - only HTTPS allowed -->
     <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">ado-dad.com</domain>
-        <domain includeSubdomains="true">www.ado-dad.com</domain>
+        <domain includeSubdomains="true">adodad.com</domain>
+        <domain includeSubdomains="true">api.adodad.com</domain>
     </domain-config>
     
     <!-- Default configuration - only HTTPS allowed -->

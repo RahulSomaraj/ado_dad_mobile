@@ -49,47 +49,13 @@
 	<!-- Production Network Security Configuration -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<!-- Disable arbitrary loads for production -->
+		<!-- HTTPS only (production api.adodad.com, UAT uatapi.ado-dad.com).
+		     Local networking stays allowed so a debug build can reach a
+		     backend on localhost / the LAN. -->
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
-		
-		<!-- Specific domain exceptions for production -->
-		<key>NSExceptionDomains</key>
-		<dict>
-			<key>ado-dad.com</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<false/>
-				<key>NSExceptionMinimumTLSVersion</key>
-				<string>TLSv1.2</string>
-				<key>NSExceptionRequiresForwardSecrecy</key>
-				<true/>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-			</dict>
-			<key>www.ado-dad.com</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<false/>
-				<key>NSExceptionMinimumTLSVersion</key>
-				<string>TLSv1.2</string>
-				<key>NSExceptionRequiresForwardSecrecy</key>
-				<true/>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-			</dict>
-			<key>api.ado-dad.com</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<false/>
-				<key>NSExceptionMinimumTLSVersion</key>
-				<string>TLSv1.2</string>
-				<key>NSExceptionRequiresForwardSecrecy</key>
-				<true/>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-			</dict>
-		</dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
 	</dict>
 </dict>
 </plist>

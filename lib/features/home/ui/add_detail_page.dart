@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ado_dad_user/common/ad_category.dart';
 import 'package:ado_dad_user/common/ad_format.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
@@ -25,6 +27,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:ado_dad_user/services/review_prompt_service.dart';
 
 /// Ad detail screen.
 ///
@@ -276,12 +279,17 @@ class _AdDetailPageState extends State<AdDetailPage> {
         state.when(
           initial: () {},
           loading: () {},
-          loaded: (ad) {},
+          loaded: (ad) {
+            if (_isOwner(ad) == true && ad.status == 'approved') {
+              unawaited(ReviewPromptService.instance.maybeAsk(ReviewTrigger.adLive));
+            }
+          },
           error: (e) {
             _snack(_friendlyError(e));
           },
           markingAsSold: () {},
           markedAsSold: (ad) {
+            unawaited(ReviewPromptService.instance.maybeAsk(ReviewTrigger.adSold));
             _snack('Marked as sold.');
             _leaveAfterChange();
           },

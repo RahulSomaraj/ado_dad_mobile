@@ -10,6 +10,7 @@ import 'package:ado_dad_user/common/notification_badge_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:ado_dad_user/common/connectivity_checker.dart';
+import 'package:ado_dad_user/common/version_check_wrapper.dart';
 import 'package:ado_dad_user/common/secure_token_store.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/config/app_config.dart';
@@ -20,7 +21,6 @@ import 'package:ado_dad_user/features/home/report_ad_bloc/report_ad_bloc.dart';
 import 'package:ado_dad_user/features/login/bloc/login_bloc.dart';
 import 'package:ado_dad_user/features/login/bloc/otp_bloc.dart';
 import 'package:ado_dad_user/features/profile/bloc/profile_bloc.dart';
-import 'package:ado_dad_user/features/sell/bloc/bloc/add_post_bloc.dart';
 import 'package:ado_dad_user/features/signup/bloc/signup_bloc.dart';
 import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
 import 'package:ado_dad_user/features/home/notification_bloc/bloc/notification_bloc.dart';
@@ -42,6 +42,7 @@ import 'package:ado_dad_user/services/location_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ado_dad_user/services/review_prompt_service.dart';
 
 /// When user opens app by tapping a notification from the scroll shade:
 /// - If logged in → go to notifications page.
@@ -146,6 +147,7 @@ void main() async {
 
   // Initialize environment configuration
   await AppConfig.load();
+  unawaited(ReviewPromptService.instance.markSeen());
 
   // Configure iOS scrolling behavior
   SystemChrome.setSystemUIOverlayStyle(
@@ -244,8 +246,6 @@ class MyApp extends StatelessWidget {
         // BlocProvider<SellerBloc>(
         //     create: (context) =>
         //         SellerBloc(repository: AdvertisementRepository())),
-        BlocProvider<AddPostBloc>(
-            create: (context) => AddPostBloc(repository: AddRepository())),
         BlocProvider<AdEditBloc>(
           create: (context) => AdEditBloc(repo: AddRepository()),
         ),
@@ -290,7 +290,11 @@ class MyApp extends StatelessWidget {
             // is actually applied (covers light, dark and system modes).
             AppColors.brightness = Theme.of(context).brightness;
             return StartupConnectivityGate(
-              child: child ?? const SizedBox.shrink(),
+              // Store update prompt (optional / forced). Inside the gate so it
+              // only runs once the device is online.
+              child: VersionCheckWrapper(
+                child: child ?? const SizedBox.shrink(),
+              ),
               onBackOnline: () {
                 // Optional warm-ups once online (before login UI proceeds)
                 // context.read<BannerBloc>().add(BannerEvent.fetchBanners());
