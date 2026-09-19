@@ -1,4 +1,3 @@
-import 'package:ado_dad_user/models/advertisement_post_model/vehicle_variant_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,11 +8,20 @@ import '../../domain/sell_category.dart';
 import '../../domain/sell_config.dart';
 import '../../domain/sell_format.dart';
 import '../../domain/sell_models.dart';
+import '../../domain/sell_variant.dart';
+import '../widgets/sell_color_field.dart';
 import '../widgets/sell_pickers.dart';
+import '../widgets/sell_section.dart';
 import '../widgets/sell_ui.dart';
+import '../widgets/variant_sheet.dart';
 import 'step_scroll.dart';
 
 /// W04 · W05 · W15 — Step 2, rendered per category from the same controls.
+///
+/// CAR-2/3/4: the car branch is three labelled sections that narrow — identify
+/// the car, then its trim (which answers fuel and transmission for the
+/// seller), then colour and condition. Bike, commercial and property keep the
+/// original flat layout in [_legacyVehicle] and [_property].
 class DetailsStep extends StatefulWidget {
   const DetailsStep({super.key, required this.repository});
   final SellRepository repository;
@@ -27,12 +35,23 @@ class _DetailsStepState extends State<DetailsStep> {
   late final TextEditingController _payload;
   late final TextEditingController _built;
   late final TextEditingController _land;
+  late final TextEditingController _color;
+  final FocusNode _colorFocus = FocusNode();
   final StepScrollKeys _keys = StepScrollKeys();
 
-  List<VehicleVariant>? _variants;
+  List<SellVariant>? _variants;
   bool _variantsFailed = false;
   String? _variantsFor;
   bool _showMore = false;
+
+  /// Manufacturer colours for the chosen variant, empty when none are known.
+  List<String> _variantColors = const [];
+
+  /// "The car" shows a one-line summary once brand, model, year and km are in.
+  bool _carCollapsed = false;
+
+  /// Tapping Edit keeps it open for the rest of the step.
+  bool _carPinnedOpen = false;
 
   SellFlowCubit get _flow => context.read<SellFlowCubit>();
 
@@ -50,11 +69,16 @@ class _DetailsStepState extends State<DetailsStep> {
     _payload = TextEditingController(text: n(SellKeys.payloadCapacity));
     _built = TextEditingController(text: n(SellKeys.builtArea));
     _land = TextEditingController(text: n(SellKeys.landArea));
+    _color = TextEditingController(text: '${v[SellKeys.color] ?? ''}');
     _showMore = [SellKeys.hasInsurance, SellKeys.hasRcBook, SellKeys.hasFitness, SellKeys.hasPermit]
             .any((k) => v[k] != null) ||
         ((v[SellKeys.features] as List?)?.isNotEmpty ?? false);
+    // A resumed draft opens with the identity block already summarised.
+    _carCollapsed = _flow.state.category == SellCategory.car && _carComplete(v);
     final modelId = v[SellKeys.modelId] as String?;
-    if (modelId != null && _flow.state.category != SellCategory.bike) _loadVariants(modelId, fromInit: true);
+    if (modelId != null && _flow.state.category != SellCategory.bike) {
+      _loadVariants(modelId, fromInit: true);
+    }
   }
 
   @override
@@ -63,8 +87,12 @@ class _DetailsStepState extends State<DetailsStep> {
     _payload.dispose();
     _built.dispose();
     _land.dispose();
+    _color.dispose();
+    _colorFocus.dispose();
     super.dispose();
   }
+
+  // ------------------------------------------------------------- lookups
 
   Future<void> _loadVariants(String modelId, {bool fromInit = false}) async {
     void reset() {
@@ -78,11 +106,31 @@ class _DetailsStepState extends State<DetailsStep> {
       final list = await widget.repository.variants(modelId);
       if (!mounted || _variantsFor != modelId) return;
       setState(() => _variants = list);
+      await _syncVariantColors(_flow.state.values[SellKeys.variantId] as String?);
     } catch (_) {
       if (!mounted || _variantsFor != modelId) return;
       setState(() => _variantsFailed = true);
     }
   }
+
+  /// Colours come from the list response when the server projects them, and
+  /// from the variant detail endpoint when it does not.
+  Future<void> _syncVariantColors(String? variantId) async {
+    if (variantId == null || variantId.isEmpty) {
+      if (mounted && _variantColors.isNotEmpty) setState(() => _variantColors = const []);
+      return;
+    }
+    final known = _variants?.where((x) => x.id == variantId).toList() ?? const <SellVariant>[];
+    if (known.isNotEmpty && known.first.colors.isNotEmpty) {
+      if (mounted) setState(() => _variantColors = known.first.colors);
+      return;
+    }
+    final fetched = await widget.repository.variantColors(variantId);
+    if (!mounted) return;
+    setState(() => _variantColors = fetched);
+  }
+
+  // ------------------------------------------------------------- pickers
 
   Future<void> _pickBrandModel() async {
     final result = await showBrandModelSheet(context, config: _flow.state.config, repository: widget.repository);
@@ -94,15 +142,95 @@ class _DetailsStepState extends State<DetailsStep> {
       SellKeys.modelName: result.model.displayName,
       SellKeys.variantId: null,
       SellKeys.variantName: null,
+      SellKeys.fuelFromVariant: null,
+      SellKeys.transmissionFromVariant: null,
     });
+    setState(() => _variantColors = const []);
     if (_flow.state.category != SellCategory.bike) _loadVariants(result.model.id);
+    _maybeCollapseCar();
   }
 
   Future<void> _pickYear() async {
     final l = _flow.state.config.limits;
     final picked = await showYearSheet(context, min: l.yearMin, max: l.yearMax, selected: _flow.state.values[SellKeys.year] as int?);
     if (picked != null) _flow.setValue(SellKeys.year, picked);
+    _maybeCollapseCar();
   }
+
+  /// CAR-3: the sheet, then fill fuel and transmission from the trim.
+  Future<void> _pickVariant() async {
+    final list = _variants;
+    if (list == null || list.isEmpty) return;
+    final v = _flow.state.values;
+    final choice = await showVariantSheet(
+      context,
+      modelName: '${v[SellKeys.brandName] ?? ''} ${v[SellKeys.modelName] ?? ''}'.trim(),
+      variants: list,
+      selectedId: v[SellKeys.variantId] as String?,
+    );
+    if (choice == null || !mounted) return;
+
+    final picked = choice.variant;
+    if (picked == null) {
+      // "I'm not sure" — '' keeps the answer, and buildPayload omits the key.
+      _flow.setValues({
+        SellKeys.variantId: '',
+        SellKeys.variantName: null,
+        SellKeys.fuelFromVariant: null,
+        SellKeys.transmissionFromVariant: null,
+      });
+      setState(() => _variantColors = const []);
+      return;
+    }
+
+    final cfg = _flow.state.config;
+    final changes = <String, dynamic>{
+      SellKeys.variantId: picked.id,
+      SellKeys.variantName: picked.displayName,
+    };
+
+    // Only fill a slot that is empty or was itself variant-derived, and only
+    // with an id this category's config actually offers — an id the chip row
+    // cannot show would also fail the server's reference check.
+    void adopt(String valueKey, String flagKey, String? id, List<SellOption> options) {
+      if (id == null || !options.any((o) => o.id == id)) return;
+      final current = _flow.state.values;
+      final free = current[valueKey] == null || current[flagKey] == true;
+      if (!free) return;
+      changes[valueKey] = id;
+      changes[flagKey] = true;
+    }
+
+    adopt(SellKeys.fuelTypeId, SellKeys.fuelFromVariant, picked.fuelTypeId, cfg.fuelTypes);
+    adopt(SellKeys.transmissionTypeId, SellKeys.transmissionFromVariant, picked.transmissionTypeId, cfg.transmissionTypes);
+
+    _flow.setValues(changes);
+    await _syncVariantColors(picked.id);
+  }
+
+  // ------------------------------------------------------- collapse logic
+
+  bool _carComplete(Map<String, dynamic> v) =>
+      v[SellKeys.brandId] != null &&
+      v[SellKeys.modelId] != null &&
+      v[SellKeys.year] is num &&
+      v[SellKeys.mileage] is num;
+
+  bool _carHasError(Map<String, String> e) =>
+      e.containsKey(SellKeys.brandId) || e.containsKey(SellKeys.year) || e.containsKey(SellKeys.mileage);
+
+  /// Collapsing is driven by blur and by the pickers closing, never by typing,
+  /// so the km field is never pulled away mid-keystroke.
+  void _maybeCollapseCar() {
+    if (!mounted || _carPinnedOpen || _carCollapsed) return;
+    if (_flow.state.category != SellCategory.car) return;
+    final s = _flow.state;
+    if (_carComplete(s.values) && !_carHasError(s.errors)) {
+      setState(() => _carCollapsed = true);
+    }
+  }
+
+  // --------------------------------------------------------------- build
 
   @override
   Widget build(BuildContext context) {
@@ -111,19 +239,325 @@ class _DetailsStepState extends State<DetailsStep> {
     final c = state.category;
     return ListView(
       controller: _keys.controller,
-      // Builds off-screen fields so "Fix ›" can scroll to them.
+      // Builds off-screen fields so "Fix ›" can scroll to them. The sections
+      // roughly halved the car form, so this no longer needs 4000.
       // ignore: deprecated_member_use
-      cacheExtent: 4000,
+      cacheExtent: 2000,
       padding: const EdgeInsets.fromLTRB(SellTokens.gutter, 4, SellTokens.gutter, 32),
       children: [
-        if (c == SellCategory.property) ..._property(state) else ..._vehicle(state),
+        if (c == SellCategory.property)
+          ..._property(state)
+        else if (c == SellCategory.car)
+          ..._car(state)
+        else
+          ..._legacyVehicle(state),
       ],
     );
   }
 
-  // ------------------------------------------------------------- vehicles
+  // ------------------------------------------------------------------ car
 
-  List<Widget> _vehicle(SellFlowState s) {
+  List<Widget> _car(SellFlowState s) {
+    final cfg = s.config;
+    final v = s.values;
+    final e = s.errors;
+    const gap = SizedBox(height: 18);
+
+    final brand = v[SellKeys.brandName] as String?;
+    final model = v[SellKeys.modelName] as String?;
+    final km = v[SellKeys.mileage];
+    final hasModel = v[SellKeys.modelId] != null;
+    final collapsed = _carCollapsed && !_carHasError(e) && _carComplete(v);
+
+    return [
+      SellSection(
+        first: true,
+        label: 'The car',
+        collapsed: collapsed,
+        summaryTitle: collapsed ? _carHeadline(v) : null,
+        summarySubtitle: km is num ? '${SellFormat.indianGroup(km)} km' : null,
+        onExpand: () => setState(() {
+          _carCollapsed = false;
+          _carPinnedOpen = true;
+        }),
+        children: [
+          _keys.wrap(SellKeys.brandId, Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SellLabel('Brand & model'),
+              SellPickerField(
+                onTap: _pickBrandModel,
+                placeholder: 'Choose brand and model',
+                action: brand != null ? 'Change' : null,
+                error: e[SellKeys.brandId],
+                value: brand == null
+                    ? null
+                    : Text.rich(
+                        TextSpan(children: [
+                          TextSpan(text: brand, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          if (model != null) TextSpan(text: ' · $model'),
+                        ]),
+                        style: SellTokens.body,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+              ),
+            ],
+          )),
+          gap,
+          _yearAndKm(v, e),
+        ],
+      ),
+      if (!hasModel) ...[
+        const SizedBox(height: 18),
+        Divider(height: 1, thickness: 1, color: SellTokens.line),
+        const SizedBox(height: 14),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: Icon(Icons.circle_outlined, size: 15, color: SellTokens.muted),
+            ),
+            const SizedBox(width: 9),
+            Expanded(
+              child: Text(
+                'Trim, fuel, transmission and colour appear once you’ve picked the model — most of them fill themselves in.',
+                style: SellTokens.caption.copyWith(height: 1.45),
+              ),
+            ),
+          ],
+        ),
+      ],
+      if (hasModel) ...[
+        SellSection(
+          label: 'Trim & drivetrain',
+          children: [
+            ..._variantField(v),
+            _keys.wrap(SellKeys.fuelTypeId, Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _fieldLabel('Fuel', fromVariant: v[SellKeys.fuelFromVariant] == true ? v[SellKeys.variantName] as String? : null),
+                cfg.fuelTypes.isEmpty
+                    ? (cfg.isFallback ? const _LookupPending() : Text('No fuel options for this category.', style: SellTokens.caption))
+                    : cfg.fuelTypes.length <= 3
+                        ? SellSegmented<String>(
+                            options: [for (final f in cfg.fuelTypes) SellOptionItem(f.id, f.label)],
+                            selected: v[SellKeys.fuelTypeId] as String?,
+                            onChanged: (x) => _flow.setValues({SellKeys.fuelTypeId: x, SellKeys.fuelFromVariant: null}),
+                            error: e[SellKeys.fuelTypeId],
+                          )
+                        : SellChips<String>(
+                            options: [for (final f in cfg.fuelTypes) SellOptionItem(f.id, f.label)],
+                            isSelected: (x) => v[SellKeys.fuelTypeId] == x,
+                            onTap: (x) => _flow.setValues({SellKeys.fuelTypeId: x, SellKeys.fuelFromVariant: null}),
+                            error: e[SellKeys.fuelTypeId],
+                          ),
+              ],
+            )),
+            gap,
+            _keys.wrap(SellKeys.transmissionTypeId, Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _fieldLabel('Transmission',
+                    fromVariant: v[SellKeys.transmissionFromVariant] == true ? v[SellKeys.variantName] as String? : null),
+                cfg.transmissionTypes.isEmpty
+                    ? (cfg.isFallback ? const _LookupPending() : Text('No transmission options for this category.', style: SellTokens.caption))
+                    : cfg.transmissionTypes.length <= 3
+                        ? SellSegmented<String>(
+                            options: [for (final t in cfg.transmissionTypes) SellOptionItem(t.id, t.label)],
+                            selected: v[SellKeys.transmissionTypeId] as String?,
+                            onChanged: (x) => _flow.setValues({SellKeys.transmissionTypeId: x, SellKeys.transmissionFromVariant: null}),
+                            error: e[SellKeys.transmissionTypeId],
+                          )
+                        : SellChips<String>(
+                            options: [for (final t in cfg.transmissionTypes) SellOptionItem(t.id, t.label)],
+                            isSelected: (x) => v[SellKeys.transmissionTypeId] == x,
+                            onTap: (x) => _flow.setValues({SellKeys.transmissionTypeId: x, SellKeys.transmissionFromVariant: null}),
+                            error: e[SellKeys.transmissionTypeId],
+                          ),
+              ],
+            )),
+          ],
+        ),
+        SellSection(
+          label: 'Colour & condition',
+          children: [
+            _keys.wrap(SellKeys.color, SellColorField(
+              controller: _color,
+              focusNode: _colorFocus,
+              palette: cfg.colors,
+              variantColors: _variantColors,
+              variantName: v[SellKeys.variantName] as String?,
+              error: e[SellKeys.color],
+              onChanged: (t) => _flow.setValue(SellKeys.color, t.trim().isEmpty ? null : t),
+              onBlur: () => _flow.validateField(SellKeys.color),
+            )),
+            gap,
+            _fieldLabel('Previous owners', trailing: 'optional'),
+            SellChips<int>(
+              options: const [
+                SellOptionItem(1, '1st'),
+                SellOptionItem(2, '2nd'),
+                SellOptionItem(3, '3rd'),
+                SellOptionItem(4, '4 or more'),
+              ],
+              isSelected: (x) => v[SellKeys.ownerCount] == x,
+              onTap: (x) => _flow.setValue(SellKeys.ownerCount, v[SellKeys.ownerCount] == x ? null : x),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        _moreDetailsToggle(open: 'Hide papers & features', closed: 'Papers & features'),
+        if (_showMore) ...[
+          const SizedBox(height: 8),
+          _yesNo('Insurance valid', SellKeys.hasInsurance, v),
+          const SizedBox(height: 14),
+          _yesNo('RC book available', SellKeys.hasRcBook, v),
+          const SizedBox(height: 18),
+          const SellLabel('Features', trailing: 'optional'),
+          _features(cfg, v),
+        ],
+      ],
+    ];
+  }
+
+  String _carHeadline(Map<String, dynamic> v) {
+    final parts = [
+      if (v[SellKeys.year] != null) '${v[SellKeys.year]}',
+      if (v[SellKeys.brandName] != null) '${v[SellKeys.brandName]}',
+      if (v[SellKeys.modelName] != null) '${v[SellKeys.modelName]}',
+    ];
+    return parts.isEmpty ? 'Your car' : parts.join(' ');
+  }
+
+  Widget _yearAndKm(Map<String, dynamic> v, Map<String, String> e) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _keys.wrap(SellKeys.year, Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SellLabel('Year'),
+              SellPickerField(
+                onTap: _pickYear,
+                placeholder: 'Year',
+                error: e[SellKeys.year],
+                value: v[SellKeys.year] == null ? null : Text('${v[SellKeys.year]}', style: SellTokens.body),
+              ),
+            ],
+          )),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _keys.wrap(SellKeys.mileage, Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SellLabel('KM driven'),
+              SellInput(
+                controller: _km,
+                hint: 'e.g. 42,500',
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly, _IndianGroupingFormatter()],
+                error: e[SellKeys.mileage],
+                textInputAction: TextInputAction.done,
+                onChanged: (t) => _flow.setValue(SellKeys.mileage, SellFormat.parseDigits(t)),
+                onBlur: () {
+                  _flow.validateField(SellKeys.mileage);
+                  _maybeCollapseCar();
+                },
+              ),
+            ],
+          )),
+        ),
+      ],
+    );
+  }
+
+  /// Hidden when the catalogue has no variants for this model, so the section
+  /// never shows an empty control.
+  List<Widget> _variantField(Map<String, dynamic> v) {
+    const gap = SizedBox(height: 18);
+    final modelId = v[SellKeys.modelId] as String?;
+    if (_variantsFailed) {
+      return [
+        _fieldLabel('Variant', trailing: 'optional'),
+        Row(children: [
+          Expanded(child: Text('Couldn’t load variants.', style: SellTokens.caption)),
+          SellButton(
+            label: 'Retry',
+            kind: SellButtonKind.ghost,
+            expand: false,
+            onPressed: modelId == null ? null : () => _loadVariants(modelId),
+          ),
+        ]),
+        gap,
+      ];
+    }
+    if (_variants == null) {
+      return [_fieldLabel('Variant', trailing: 'optional'), const _LookupPending(), gap];
+    }
+    if (_variants!.isEmpty) return const [];
+
+    final id = v[SellKeys.variantId] as String?;
+    final chosen = (id != null && id.isNotEmpty) ? _variants!.where((x) => x.id == id).toList() : const <SellVariant>[];
+    final notSure = id != null && id.isEmpty;
+
+    Widget? value;
+    if (chosen.isNotEmpty) {
+      final x = chosen.first;
+      value = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(x.displayName, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: SellTokens.body.copyWith(fontWeight: FontWeight.w600)),
+          if (x.summary != x.displayName) ...[
+            const SizedBox(height: 1),
+            Text(
+              [if (x.fuelLabel != null) x.fuelLabel!, x.spec].where((s) => s.isNotEmpty).join(' · '),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: SellTokens.caption,
+            ),
+          ],
+        ],
+      );
+    } else if (notSure) {
+      value = Text('Not sure', style: SellTokens.body.copyWith(color: SellTokens.ink2));
+    }
+
+    return [
+      _fieldLabel('Variant', trailing: 'optional'),
+      SellPickerField(
+        onTap: _pickVariant,
+        placeholder: 'Choose a variant',
+        action: value != null ? 'Change' : null,
+        value: value,
+      ),
+      gap,
+    ];
+  }
+
+  /// Label row that can carry either a hint ("optional") or the variant tag.
+  Widget _fieldLabel(String text, {String? trailing, String? fromVariant}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          Expanded(child: Text(text, style: SellTokens.label)),
+          if (fromVariant != null && fromVariant.isNotEmpty)
+            SellFromVariantTag(variantName: fromVariant)
+          else if (trailing != null)
+            Text(trailing, style: SellTokens.caption),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------- bike & commercial (as-is)
+
+  List<Widget> _legacyVehicle(SellFlowState s) {
     final c = s.category;
     final cfg = s.config;
     final v = s.values;
@@ -185,55 +619,18 @@ class _DetailsStepState extends State<DetailsStep> {
         else
           SellChips<String>(
             options: [
-              for (final x in _variants!) SellOptionItem(x.id, x.name),
+              for (final x in _variants!) SellOptionItem(x.id, x.displayName),
               const SellOptionItem('', 'Not sure'),
             ],
             isSelected: (id) => v[SellKeys.variantId] == id,
             onTap: (id) => _flow.setValues({
               SellKeys.variantId: id,
-              SellKeys.variantName: id.isEmpty ? null : _variants!.firstWhere((x) => x.id == id).name,
+              SellKeys.variantName: id.isEmpty ? null : _variants!.firstWhere((x) => x.id == id).displayName,
             }),
           ),
       ],
       gap,
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: _keys.wrap(SellKeys.year, Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SellLabel('Year'),
-                SellPickerField(
-                  onTap: _pickYear,
-                  placeholder: 'Year',
-                  error: e[SellKeys.year],
-                  value: v[SellKeys.year] == null ? null : Text('${v[SellKeys.year]}', style: SellTokens.body),
-                ),
-              ],
-            )),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _keys.wrap(SellKeys.mileage, Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SellLabel('KM driven'),
-                SellInput(
-                  controller: _km,
-                  hint: 'e.g. 42,500',
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly, _IndianGroupingFormatter()],
-                  error: e[SellKeys.mileage],
-                  textInputAction: TextInputAction.done,
-                  onChanged: (t) => _flow.setValue(SellKeys.mileage, SellFormat.parseDigits(t)),
-                  onBlur: () => _flow.validateField(SellKeys.mileage),
-                ),
-              ],
-            )),
-          ),
-        ],
-      ),
+      _yearAndKm(v, e),
       gap,
       _keys.wrap(SellKeys.fuelTypeId, Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -382,7 +779,13 @@ class _DetailsStepState extends State<DetailsStep> {
     ];
   }
 
-  Widget _moreDetailsToggle() {
+  Widget _moreDetailsToggle({String? open, String? closed}) {
+    final label = _showMore
+        ? (open ?? 'Hide extra details')
+        : (closed ??
+            (_flow.state.category == SellCategory.property
+                ? 'Add more details (parking, amenities)'
+                : 'Add more details (insurance, RC, features)'));
     return Align(
       alignment: Alignment.centerLeft,
       child: TextButton.icon(
@@ -390,11 +793,7 @@ class _DetailsStepState extends State<DetailsStep> {
         style: TextButton.styleFrom(foregroundColor: SellTokens.accentText, padding: EdgeInsets.zero, minimumSize: const Size(48, 44)),
         icon: Icon(_showMore ? Icons.remove_rounded : Icons.add_rounded, size: 18),
         label: Text(
-          _showMore
-              ? 'Hide extra details'
-              : _flow.state.category == SellCategory.property
-                  ? 'Add more details (parking, amenities)'
-                  : 'Add more details (insurance, RC, features)',
+          label,
           style: SellTokens.label.copyWith(color: SellTokens.accentText, fontWeight: FontWeight.w500),
         ),
       ),

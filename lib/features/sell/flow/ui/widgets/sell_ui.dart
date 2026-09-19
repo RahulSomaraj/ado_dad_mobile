@@ -125,6 +125,7 @@ class SellInput extends StatefulWidget {
   const SellInput({
     super.key,
     this.controller,
+    this.focusNode,
     this.hint,
     this.error,
     this.helper,
@@ -145,6 +146,10 @@ class SellInput extends StatefulWidget {
   });
 
   final TextEditingController? controller;
+
+  /// Pass one when the caller needs to know about focus (the colour field
+  /// opens its suggestions on focus). Owned by the caller when supplied.
+  final FocusNode? focusNode;
   final String? hint;
   final String? error;
   final String? helper;
@@ -168,22 +173,36 @@ class SellInput extends StatefulWidget {
 }
 
 class _SellInputState extends State<SellInput> {
-  final FocusNode _focus = FocusNode();
+  FocusNode? _owned;
   bool _focused = false;
+
+  FocusNode get _focus => widget.focusNode ?? (_owned ??= FocusNode());
 
   @override
   void initState() {
     super.initState();
-    _focus.addListener(() {
-      if (_focused == _focus.hasFocus) return;
-      setState(() => _focused = _focus.hasFocus);
-      if (!_focus.hasFocus) widget.onBlur?.call();
-    });
+    _focus.addListener(_onFocusChanged);
+  }
+
+  void _onFocusChanged() {
+    if (!mounted || _focused == _focus.hasFocus) return;
+    setState(() => _focused = _focus.hasFocus);
+    if (!_focus.hasFocus) widget.onBlur?.call();
+  }
+
+  @override
+  void didUpdateWidget(SellInput old) {
+    super.didUpdateWidget(old);
+    if (old.focusNode != widget.focusNode) {
+      (old.focusNode ?? _owned)?.removeListener(_onFocusChanged);
+      _focus.addListener(_onFocusChanged);
+    }
   }
 
   @override
   void dispose() {
-    _focus.dispose();
+    _focus.removeListener(_onFocusChanged);
+    _owned?.dispose();
     super.dispose();
   }
 

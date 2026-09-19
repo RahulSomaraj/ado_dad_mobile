@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:ado_dad_user/common/api_service.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehicle_manufacturer_model.dart';
-import 'package:ado_dad_user/models/advertisement_post_model/vehicle_variant_model.dart';
 import 'package:ado_dad_user/models/advertisement_post_model/vehilce_model.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:dio/dio.dart';
@@ -13,6 +12,7 @@ import '../domain/sell_category.dart';
 import '../domain/sell_config.dart';
 import '../domain/sell_models.dart';
 import '../domain/sell_rules.dart';
+import '../domain/sell_variant.dart';
 
 /// Network side of the sell flow: config, brand/model lookups, create.
 class SellRepository {
@@ -100,7 +100,70 @@ class SellRepository {
   Future<List<VehicleModel>> models(String manufacturerId) =>
       _legacy.fetchModelsByManufacturer(manufacturerId);
 
-  Future<List<VehicleVariant>> variants(String modelId) => _legacy.fetchVariantsByModel(modelId);
+  /// Active variants for a model, cheapest first.
+  ///
+  /// Three query parameters the app never sent, all already supported by
+  /// `FilterVehicleVariantDto`:
+  ///  * `limit` — `PaginationDto.limit` defaults to **10**, so a Swift with 18
+  ///    trims silently returned 10 of them.
+  ///  * `isActive` — the list `$match` does not exclude inactive rows, but
+  ///    create-time `findVehicleVariantById` requires `isActive: true`, so a
+  ///    listed-but-inactive variant came back as a 422 on Post.
+  ///  * `sortBy` / `sortOrder` — the default is `createdAt DESC`, i.e. no
+  ///    meaningful order at all.
+  Future<List<SellVariant>> variants(String modelId) async {
+    final res = await _dio.get(
+      '/vehicle-inventory/variants',
+      queryParameters: {
+        'modelId': modelId,
+        'page': 1,
+        'limit': 100,
+        'isActive': true,
+        'sortBy': 'price',
+        'sortOrder': 'ASC',
+      },
+    );
+    final data = res.data;
+    final list = data is Map ? (data['data'] as List? ?? const []) : (data as List? ?? const []);
+    return list
+        .whereType<Map>()
+        .map((e) => SellVariant.fromJson(Map<String, dynamic>.from(e)))
+        .where((v) => v.id.isNotEmpty && v.displayName.isNotEmpty)
+        .toList();
+  }
+
+  static final Map<String, List<String>> _variantColorMemo = {};
+
+  /// The manufacturer's colour names for one variant.
+  ///
+  /// The list endpoint projects `colors` only on servers carrying the Sep 2026
+  /// change; this fills the gap from the detail endpoint, which has always
+  /// returned the whole document. Never throws — no colours just means the
+  /// seller sees the standard palette.
+  Future<List<String>> variantColors(String variantId) async {
+    if (variantId.isEmpty) return const [];
+    final memo = _variantColorMemo[variantId];
+    if (memo != null) return memo;
+    try {
+      final res = await _dio.get('/vehicle-inventory/variants/$variantId');
+      final body = res.data;
+      final map = body is Map<String, dynamic>
+          ? (body['data'] is Map<String, dynamic>
+              ? body['data'] as Map<String, dynamic>
+              : body)
+          : const <String, dynamic>{};
+      final colors = (map['colors'] is List)
+          ? (map['colors'] as List)
+              .map((e) => '$e'.trim())
+              .where((s) => s.isNotEmpty)
+              .toList()
+          : <String>[];
+      _variantColorMemo[variantId] = colors;
+      return colors;
+    } catch (_) {
+      return const [];
+    }
+  }
 
   Future<AddModel> fetchAd(String id) => _legacy.fetchAdDetail(id);
 

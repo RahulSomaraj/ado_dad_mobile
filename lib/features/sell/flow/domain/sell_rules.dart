@@ -90,7 +90,15 @@ class SellRules {
     if (c != SellCategory.bike && _empty(v[SellKeys.transmissionTypeId])) {
       e[SellKeys.transmissionTypeId] = 'Choose the transmission';
     }
-    if (_empty(v[SellKeys.color])) e[SellKeys.color] = 'Choose a colour';
+    // Colour is a free string server-side (1–40 chars, no enum). Since the
+    // field became typeable, the 40-char ceiling is reachable from the app, so
+    // it is checked here rather than coming back as a 422.
+    final colour = '${v[SellKeys.color] ?? ''}'.trim();
+    if (colour.isEmpty) {
+      e[SellKeys.color] = 'Choose a colour';
+    } else if (colour.length > 40) {
+      e[SellKeys.color] = 'Keep the colour under 40 characters';
+    }
   }
 
   static void _commercial(Map<String, dynamic> v, Map<String, String> e) {
@@ -177,7 +185,7 @@ class SellRules {
       SellKeys.fuelTypeId: 'Fuel',
       SellKeys.transmissionTypeId: 'Transmission',
       SellKeys.color: 'Colour',
-      SellKeys.ownerCount: 'Owner',
+      SellKeys.ownerCount: 'Previous owners',
       SellKeys.commercialType: 'Vehicle type',
       SellKeys.bodyType: 'Body type',
       SellKeys.payloadCapacity: 'Payload',
@@ -258,7 +266,7 @@ class SellRules {
         'fuelTypeId': v[SellKeys.fuelTypeId],
         if (!_empty(v[SellKeys.transmissionTypeId]))
           'transmissionTypeId': v[SellKeys.transmissionTypeId],
-        'color': v[SellKeys.color],
+        'color': '${v[SellKeys.color] ?? ''}'.trim(),
         if (owner != null) 'ownerCount': owner,
         if (owner != null) 'isFirstOwner': owner == 1,
         if (_bool(v[SellKeys.hasInsurance]) != null) 'hasInsurance': v[SellKeys.hasInsurance],

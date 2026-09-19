@@ -20,6 +20,13 @@ class SellKeys {
   static const hasInsurance = 'hasInsurance';
   static const hasRcBook = 'hasRcBook';
   static const features = 'features';
+
+  /// Local only — never sent. Marks a field the chosen variant answered, so
+  /// the UI can show "FROM VXi ✓" and re-fill it when the variant changes.
+  /// Cleared the moment the seller edits the field by hand. Kept in `values`
+  /// so a resumed draft still knows which answers were the seller's own.
+  static const fuelFromVariant = 'fuelFromVariant';
+  static const transmissionFromVariant = 'transmissionFromVariant';
   // commercial
   static const commercialType = 'commercialType';
   static const bodyType = 'bodyType';
