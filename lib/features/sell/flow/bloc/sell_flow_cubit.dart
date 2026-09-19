@@ -154,7 +154,6 @@ class SellFlowCubit extends Cubit<SellFlowState> {
         final cfg = await _repo.refreshConfig(state.category);
         if (isClosed) return;
         emit(state.copyWith(config: cfg));
-        _applyInferredDefaults();
         if (!cfg.isFallback) return;
         await Future<void>.delayed(Duration(seconds: 3 << attempt));
         if (isClosed) return;
@@ -164,13 +163,13 @@ class SellFlowCubit extends Cubit<SellFlowState> {
     }
   }
 
-  /// Fill defaults that depend on server lookups (two-wheeler transmission).
-  void _applyInferredDefaults() {
-    if (state.category != SellCategory.bike) return;
-    if (state.v(SellKeys.transmissionTypeId) != null) return;
-    final manual = state.config.transmissionTypes.where((t) => t.name.toLowerCase().contains('manual'));
-    if (manual.isNotEmpty) setValue(SellKeys.transmissionTypeId, manual.first.id, save: false);
-  }
+  // Bikes used to have their transmission silently defaulted to Manual here
+  // (BIKE-1). That was the client half of the July FE-02/03 fix, from when the
+  // server still required `transmissionTypeId` for two-wheelers. Since
+  // validateVehicle made it optional for TWO_WHEELER the default only produced
+  // wrong data — every scooter was recorded as Manual without being asked.
+  // A bike now posts no transmission unless the seller or the variant supplies
+  // one.
 
   // ---------------------------------------------------------------- editing
 
@@ -399,9 +398,13 @@ class SellFlowCubit extends Cubit<SellFlowState> {
 
   // ----------------------------------------------------------------- drafts
 
+  /// `transmissionTypeId` used to be excluded here because the bike default
+  /// above wrote it before the seller touched anything, which would have made
+  /// an untouched draft look like content. Now that nothing writes it on the
+  /// seller's behalf, its presence means a real answer and counts.
   bool get hasContent =>
       mediaSnapshot().isNotEmpty ||
-      state.values.keys.any((k) => !_defaults(state.category).containsKey(k) && k != SellKeys.transmissionTypeId);
+      state.values.keys.any((k) => !_defaults(state.category).containsKey(k));
 
   void scheduleSave() {
     if (_discarded) return;

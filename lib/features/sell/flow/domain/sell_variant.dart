@@ -51,6 +51,29 @@ class SellVariant {
   /// Groups the sheet. Variants with no fuel fall into "Other".
   String get fuelGroup => fuelLabel ?? 'Other';
 
+  static String _flat(String s) =>
+      s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), ' ').trim();
+
+  /// True when this row carries no trim information of its own.
+  ///
+  /// `safe-seed-vehicle-variants.ts` creates a variant for every model as
+  /// `"<Model> <Fuel> <Transmission>"` — "Activa 6G Petrol Manual". Those are
+  /// catalogue scaffolding, not trims: offering them as a choice is worse than
+  /// offering nothing, because the seller cannot tell them apart from the
+  /// model they already picked. A variant whose display name is entirely
+  /// accounted for by the model plus its own fuel and transmission labels is
+  /// treated as noise and hidden.
+  bool isGenericFor(String? modelName) {
+    var rest = ' ${_flat(displayName)} ';
+    for (final part in [modelName, fuelLabel, transmissionLabel]) {
+      if (part == null || part.trim().isEmpty) continue;
+      final needle = _flat(part);
+      if (needle.isEmpty) continue;
+      rest = rest.replaceAll(needle, ' ');
+    }
+    return rest.trim().isEmpty;
+  }
+
   static String? _text(dynamic raw) {
     final s = raw?.toString().trim();
     return (s == null || s.isEmpty) ? null : s;

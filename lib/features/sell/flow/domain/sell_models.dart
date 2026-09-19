@@ -21,12 +21,20 @@ class SellKeys {
   static const hasRcBook = 'hasRcBook';
   static const features = 'features';
 
-  /// Local only — never sent. Marks a field the chosen variant answered, so
-  /// the UI can show "FROM VXi ✓" and re-fill it when the variant changes.
-  /// Cleared the moment the seller edits the field by hand. Kept in `values`
-  /// so a resumed draft still knows which answers were the seller's own.
-  static const fuelFromVariant = 'fuelFromVariant';
-  static const transmissionFromVariant = 'transmissionFromVariant';
+  /// Local only — never sent. Names what answered this field for the seller:
+  /// a variant ("VXi") or the model itself ("Activa 6G"), so the UI can show
+  /// "FROM ACTIVA 6G ✓". Null means the seller chose it, and it is cleared the
+  /// moment they edit the field by hand. Kept in `values` so a resumed draft
+  /// still knows which answers were its own.
+  static const fuelSource = 'fuelSource';
+  static const transmissionSource = 'transmissionSource';
+
+  /// Local only — never sent. `VehicleModel.fuelTypes` /
+  /// `transmissionTypes` for the chosen model, as display names. Stored with
+  /// the draft so a resumed ad can still state the model's facts without
+  /// re-opening the brand picker.
+  static const modelFuelNames = 'modelFuelNames';
+  static const modelTransmissionNames = 'modelTransmissionNames';
   // commercial
   static const commercialType = 'commercialType';
   static const bodyType = 'bodyType';
