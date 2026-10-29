@@ -52,15 +52,15 @@ class SellTokens {
   static TextStyle _p(double size, FontWeight w, Color c, {double? height}) =>
       appFont(fontSize: size, fontWeight: w, color: c, height: height);
 
-  static TextStyle get display => _p(24, FontWeight.w600, ink, height: 32 / 24);
-  static TextStyle get heading => _p(18, FontWeight.w600, ink, height: 26 / 18);
-  static TextStyle get title => _p(16, FontWeight.w600, ink, height: 24 / 16)
+  static TextStyle get display => _p(24, FontWeight.w700, ink, height: 32 / 24);
+  static TextStyle get heading => _p(18, FontWeight.w700, ink, height: 26 / 18);
+  static TextStyle get title => _p(16, FontWeight.w700, ink, height: 24 / 16)
       .copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
-  static TextStyle get body => _p(15, FontWeight.w400, ink, height: 22 / 15);
-  static TextStyle get label => _p(13, FontWeight.w500, ink2, height: 18 / 13);
-  static TextStyle get caption => _p(12, FontWeight.w400, muted, height: 16 / 12);
-  static TextStyle get button => _p(15, FontWeight.w600, Colors.white);
-  static TextStyle get money => _p(22, FontWeight.w600, ink)
+  static TextStyle get body => _p(15, FontWeight.w500, ink, height: 22 / 15);
+  static TextStyle get label => _p(13, FontWeight.w600, ink2, height: 18 / 13);
+  static TextStyle get caption => _p(12, FontWeight.w500, muted, height: 16 / 12);
+  static TextStyle get button => _p(15, FontWeight.w700, Colors.white);
+  static TextStyle get money => _p(22, FontWeight.w700, ink)
       .copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
 
   static bool reduceMotion(BuildContext context) =>
@@ -112,7 +112,7 @@ class SellFieldNote extends StatelessWidget {
                       : ok != null
                           ? SellTokens.okText
                           : SellTokens.muted,
-                  fontWeight: error != null || ok != null ? FontWeight.w500 : FontWeight.w400,
+                  fontWeight: error != null || ok != null ? FontWeight.w600 : FontWeight.w500,
                 ),
               ),
             ),
@@ -320,7 +320,7 @@ class SellPickerField extends StatelessWidget {
                           Text(placeholder, style: SellTokens.body.copyWith(color: SellTokens.muted)),
                     ),
                     if (action != null)
-                      Text(action!, style: SellTokens.label.copyWith(color: SellTokens.accentText, fontWeight: FontWeight.w600))
+                      Text(action!, style: SellTokens.label.copyWith(color: SellTokens.accentText, fontWeight: FontWeight.w700))
                     else
                       Icon(Icons.keyboard_arrow_down_rounded, color: SellTokens.muted),
                   ],
@@ -439,7 +439,7 @@ class _SellChipState extends State<SellChip> {
                   widget.label,
                   style: SellTokens.label.copyWith(
                     color: sel ? SellTokens.accentText : SellTokens.ink,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -514,7 +514,7 @@ class SellSegmented<T> extends StatelessWidget {
             overflow: TextOverflow.fade,
             style: SellTokens.label.copyWith(
               color: on ? SellTokens.ink : SellTokens.muted,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),
@@ -684,10 +684,10 @@ class SellBanner extends StatelessWidget {
                     Text.rich(
                       TextSpan(children: [
                         if (title != null)
-                          TextSpan(text: body != null ? '$title ' : title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          TextSpan(text: body != null ? '$title ' : title, style: const TextStyle(fontWeight: FontWeight.w700)),
                         if (body != null) TextSpan(text: body),
                       ]),
-                      style: SellTokens.label.copyWith(color: fg, fontWeight: FontWeight.w400),
+                      style: SellTokens.label.copyWith(color: fg, fontWeight: FontWeight.w500),
                     ),
                   if (child != null) ...[
                     if (title != null || body != null) const SizedBox(height: 8),
@@ -937,7 +937,7 @@ class SellPreviewCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(color: SellTokens.warnBg, borderRadius: BorderRadius.circular(999)),
-                    child: Text(pill!, style: SellTokens.caption.copyWith(color: SellTokens.warnFg, fontWeight: FontWeight.w600)),
+                    child: Text(pill!, style: SellTokens.caption.copyWith(color: SellTokens.warnFg, fontWeight: FontWeight.w700)),
                   ),
                   const SizedBox(height: 6),
                 ],
@@ -978,12 +978,12 @@ class SellSectionCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text(title, style: SellTokens.label.copyWith(color: SellTokens.ink, fontWeight: FontWeight.w600, fontSize: 14))),
+              Expanded(child: Text(title, style: SellTokens.label.copyWith(color: SellTokens.ink, fontWeight: FontWeight.w700, fontSize: 14))),
               if (onEdit != null)
                 TextButton(
                   onPressed: onEdit,
                   style: TextButton.styleFrom(foregroundColor: SellTokens.accentText, minimumSize: const Size(48, 40)),
-                  child: Text('Edit', style: SellTokens.label.copyWith(color: SellTokens.accentText, fontWeight: FontWeight.w600)),
+                  child: Text('Edit', style: SellTokens.label.copyWith(color: SellTokens.accentText, fontWeight: FontWeight.w700)),
                 ),
             ],
           ),
@@ -1010,11 +1010,11 @@ class SellKeyValue extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(flex: 2, child: Text(label, style: SellTokens.label.copyWith(color: SellTokens.muted, fontWeight: FontWeight.w400))),
+          Expanded(flex: 2, child: Text(label, style: SellTokens.label.copyWith(color: SellTokens.muted, fontWeight: FontWeight.w500))),
           const SizedBox(width: 12),
           Expanded(
             flex: 3,
-            child: Text(value, textAlign: TextAlign.right, style: SellTokens.label.copyWith(color: SellTokens.ink, fontWeight: FontWeight.w500)),
+            child: Text(value, textAlign: TextAlign.right, style: SellTokens.label.copyWith(color: SellTokens.ink, fontWeight: FontWeight.w600)),
           ),
         ],
       ),

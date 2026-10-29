@@ -21,7 +21,7 @@ class UnreadBadge extends StatelessWidget {
       decoration: BoxDecoration(color: c.brand, borderRadius: BorderRadius.circular(ChatSize.badgeHeight / 2)),
       child: Text(
         count > 99 ? '99+' : '$count',
-        style: TextStyle(color: c.onBrand, fontSize: ChatSize.badgeFont, fontWeight: FontWeight.w600, height: 1),
+        style: TextStyle(color: c.onBrand, fontSize: ChatSize.badgeFont, fontWeight: FontWeight.w700, height: 1),
       ),
     );
   }
@@ -44,7 +44,7 @@ class AdStatusPill extends StatelessWidget {
     return Container(
       padding: ChatSize.pillPadding,
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(ChatSize.pillRadius)),
-      child: Text(label, style: TextStyle(color: fg, fontSize: ChatSize.pillFont, fontWeight: FontWeight.w600, height: 1.2)),
+      child: Text(label, style: TextStyle(color: fg, fontSize: ChatSize.pillFont, fontWeight: FontWeight.w700, height: 1.2)),
     );
   }
 }

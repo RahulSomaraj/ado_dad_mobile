@@ -195,7 +195,7 @@ class VideoPickerWidget extends StatelessWidget {
                               largeTablet: 22,
                               desktop: 26,
                             ),
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],

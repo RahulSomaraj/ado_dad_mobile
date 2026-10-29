@@ -203,7 +203,7 @@ class ChatListingStrip extends StatelessWidget {
                               formatInr(ad.price!),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: ChatSize.stripPrice, fontWeight: FontWeight.w600, color: c.text),
+                              style: TextStyle(fontSize: ChatSize.stripPrice, fontWeight: FontWeight.w700, color: c.text),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -218,7 +218,7 @@ class ChatListingStrip extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('View', style: TextStyle(fontSize: ChatSize.stripView, color: c.brandText, fontWeight: FontWeight.w500)),
+                  Text('View', style: TextStyle(fontSize: ChatSize.stripView, color: c.brandText, fontWeight: FontWeight.w600)),
                   Icon(Icons.chevron_right_rounded, size: 17, color: c.brandText),
                 ],
               ),

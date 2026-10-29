@@ -225,7 +225,7 @@ class DialogUtil {
               "Login Required",
               style: TextStyle(
                 fontSize: 17,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
             content: Text(
@@ -245,7 +245,7 @@ class DialogUtil {
                   "Cancel",
                   style: TextStyle(
                     color: CupertinoColors.destructiveRed,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -264,7 +264,7 @@ class DialogUtil {
                 child: const Text(
                   "Login",
                   style: TextStyle(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -317,7 +317,7 @@ class DialogUtil {
                   "Cancel",
                   style: TextStyle(
                     color: Colors.grey,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),

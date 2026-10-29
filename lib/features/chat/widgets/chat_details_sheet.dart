@@ -39,7 +39,7 @@ Future<void> showChatDetailsSheet(
           children: [
             ChatAvatar(name: room.title, imageUrl: room.otherUser?.avatarUrl, size: ChatSize.avatarLg),
             const SizedBox(height: 10),
-            Text(room.title, style: TextStyle(fontSize: ChatSize.sheetName, fontWeight: FontWeight.w600, color: c.text)),
+            Text(room.title, style: TextStyle(fontSize: ChatSize.sheetName, fontWeight: FontWeight.w700, color: c.text)),
             const SizedBox(height: 2),
             Text(
               room.myRole == ChatRole.buying ? 'Seller' : 'Interested buyer',

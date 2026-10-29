@@ -451,7 +451,7 @@ class _ErrorView extends StatelessWidget {
               style: TextStyle(
                 fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                     mobile: 18, tablet: 22, largeTablet: 26, desktop: 30),
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: Colors.grey.shade700,
               ),
             ),

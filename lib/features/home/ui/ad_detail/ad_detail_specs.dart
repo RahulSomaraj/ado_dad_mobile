@@ -311,7 +311,7 @@ class _FactCell extends StatelessWidget {
             Text(
               fact.value,
               style: AppTextstyle.specValue
-                  .copyWith(fontSize: 13.5, fontWeight: FontWeight.w600),
+                  .copyWith(fontSize: 13.5, fontWeight: FontWeight.w700),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,

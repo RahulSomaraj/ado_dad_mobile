@@ -50,9 +50,9 @@ class AppTheme {
       onSurface: textPrimary,
     );
 
-    final TextTheme baseText = appFontTextTheme(
+    final TextTheme baseText = _heavier(appFontTextTheme(
             isDark ? ThemeData.dark().textTheme : ThemeData.light().textTheme)
-        .apply(bodyColor: textPrimary, displayColor: textPrimary);
+        .apply(bodyColor: textPrimary, displayColor: textPrimary));
 
     OutlineInputBorder inputBorder(Color c, [double w = 1]) =>
         OutlineInputBorder(
@@ -127,7 +127,7 @@ class AppTheme {
           elevation: 0,
           minimumSize: const Size.fromHeight(50),
           textStyle:
-              appFont(fontSize: 15, fontWeight: FontWeight.w600),
+              appFont(fontSize: 15, fontWeight: FontWeight.w700),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -137,7 +137,7 @@ class AppTheme {
           backgroundColor: cta,
           foregroundColor: onCta,
           minimumSize: const Size.fromHeight(50),
-          textStyle: appFont(fontSize: 15, fontWeight: FontWeight.w600),
+          textStyle: appFont(fontSize: 15, fontWeight: FontWeight.w700),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -150,7 +150,7 @@ class AppTheme {
           minimumSize: const Size.fromHeight(50),
           side: BorderSide(color: cta, width: 1.4),
           textStyle:
-              appFont(fontSize: 15, fontWeight: FontWeight.w600),
+              appFont(fontSize: 15, fontWeight: FontWeight.w700),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -194,6 +194,36 @@ class AppTheme {
       scrollbarTheme: ScrollbarThemeData(
         thumbVisibility: WidgetStateProperty.all(true),
       ),
+    );
+  }
+
+  /// One weight step heavier for every text style in the theme (regular →
+  /// medium, medium → semi-bold …) so plain text reads bolder and darker.
+  static TextTheme _heavier(TextTheme t) {
+    FontWeight up(FontWeight? w) {
+      final v = (w ?? FontWeight.w400).value;
+      if (v >= 700) return w!;
+      return FontWeight.values[((v ~/ 100) - 1 + 1).clamp(0, 8)];
+    }
+
+    TextStyle? h(TextStyle? s) =>
+        s?.copyWith(fontWeight: up(s.fontWeight));
+    return t.copyWith(
+      displayLarge: h(t.displayLarge),
+      displayMedium: h(t.displayMedium),
+      displaySmall: h(t.displaySmall),
+      headlineLarge: h(t.headlineLarge),
+      headlineMedium: h(t.headlineMedium),
+      headlineSmall: h(t.headlineSmall),
+      titleLarge: h(t.titleLarge),
+      titleMedium: h(t.titleMedium),
+      titleSmall: h(t.titleSmall),
+      bodyLarge: h(t.bodyLarge),
+      bodyMedium: h(t.bodyMedium),
+      bodySmall: h(t.bodySmall),
+      labelLarge: h(t.labelLarge),
+      labelMedium: h(t.labelMedium),
+      labelSmall: h(t.labelSmall),
     );
   }
 }

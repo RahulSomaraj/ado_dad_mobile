@@ -141,7 +141,7 @@ class _VariantPickerState extends State<_VariantPicker> {
                           entry.key.toUpperCase(),
                           style: SellTokens.caption.copyWith(
                             fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                             letterSpacing: 1.2,
                           ),
                         ),
@@ -198,7 +198,7 @@ class _VariantPickerState extends State<_VariantPicker> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: SellTokens.body.copyWith(
-                            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                           ),
                         ),
                         if (spec.isNotEmpty) ...[

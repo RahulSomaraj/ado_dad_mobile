@@ -427,7 +427,7 @@ class _MessageComposerState extends State<MessageComposer> {
                 alignment: Alignment.center,
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   Text('Send ${_staged.length}',
-                      style: TextStyle(color: c.onAction, fontSize: ChatSize.fieldFont, fontWeight: FontWeight.w500)),
+                      style: TextStyle(color: c.onAction, fontSize: ChatSize.fieldFont, fontWeight: FontWeight.w600)),
                   const SizedBox(width: 6),
                   Icon(Icons.send_rounded, size: 16, color: c.onAction),
                 ]),

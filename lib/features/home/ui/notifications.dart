@@ -272,7 +272,7 @@ class _NotificationsState extends State<Notifications> {
               style: TextStyle(
                   color: Colors.white,
                   fontSize: 13,
-                  fontWeight: FontWeight.w600)),
+                  fontWeight: FontWeight.w700)),
         ],
       ),
     );
@@ -390,7 +390,7 @@ class _SectionHeader extends StatelessWidget {
             label,
             style: AppTextstyle.categoryLabelTextStyle.copyWith(
               fontSize: 12.5,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               color: AppColors.blackColor1,
             ),
           ),
@@ -408,7 +408,7 @@ class _SectionHeader extends StatelessWidget {
                 '$newCount new',
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.brandText,
                 ),
               ),
@@ -532,7 +532,7 @@ class _NotificationTile extends StatelessWidget {
                           style: AppTextstyle.sectionTitleTextStyle.copyWith(
                             fontSize: 14.5,
                             fontWeight:
-                                isRead ? FontWeight.w500 : FontWeight.w600,
+                                isRead ? FontWeight.w600 : FontWeight.w700,
                           ),
                         ),
                       ),
@@ -577,7 +577,7 @@ class _NotificationTile extends StatelessWidget {
                           kind.label,
                           style: TextStyle(
                             fontSize: 10.5,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                             color: kind.color,
                           ),
                         ),

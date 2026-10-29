@@ -72,7 +72,7 @@ class DistanceFilterSection extends StatelessWidget {
               'Distance',
               style: TextStyle(
                 fontSize: 15,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: AppColors.blackColor,
               ),
             ),
@@ -109,7 +109,7 @@ class DistanceFilterSection extends StatelessWidget {
                     selectedColor: AppColors.primaryColor,
                     labelStyle: TextStyle(
                       color: radiusKm == km ? Colors.white : AppColors.blackColor,
-                      fontWeight: radiusKm == km ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight: radiusKm == km ? FontWeight.w700 : FontWeight.w600,
                     ),
                     showCheckmark: false,
                   ),

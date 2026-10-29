@@ -102,7 +102,7 @@ class PasswordFieldBuilders {
                 largeTablet: 17,
                 desktop: 19,
               ),
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
               color: CupertinoColors.label,
             ),
           ),

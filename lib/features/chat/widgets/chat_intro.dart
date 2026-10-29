@@ -65,7 +65,7 @@ class ChatIntro extends StatelessWidget {
                                     child: Text(formatInr(ad.price!),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(fontSize: ChatSize.introPrice, fontWeight: FontWeight.w600, color: c.text)),
+                                        style: TextStyle(fontSize: ChatSize.introPrice, fontWeight: FontWeight.w700, color: c.text)),
                                   ),
                                   const SizedBox(width: 8),
                                 ],

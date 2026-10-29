@@ -263,7 +263,7 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
                               _sendToHint!,
                               style: TextStyle(
                                 fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
                                 color: Colors.green.shade700,
                               ),
                             ),
@@ -291,7 +291,7 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
                             largeTablet: 25.0,
                             desktop: 30.0,
                           ),
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.blackColor1),
                     ),
                   ),
@@ -313,7 +313,7 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
                               largeTablet: 25.0,
                               desktop: 30.0,
                             ),
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.blackColor)),
                     GestureDetector(
                       onTap: () {
@@ -328,7 +328,7 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
                                 largeTablet: 25.0,
                                 desktop: 30.0,
                               ),
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w600,
                               color: AppColors.brandText)),
                     )
                   ],

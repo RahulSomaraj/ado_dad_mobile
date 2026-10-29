@@ -52,7 +52,7 @@ Future<ChatRoomAction?> showChatRoomActions(BuildContext context, ChatRoom room)
                     Text(room.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: ChatSize.headerName, fontWeight: FontWeight.w600, color: c.text)),
+                        style: TextStyle(fontSize: ChatSize.headerName, fontWeight: FontWeight.w700, color: c.text)),
                     if (ad != null)
                       Text(
                         ad.price != null && ad.availability == AdAvailability.live

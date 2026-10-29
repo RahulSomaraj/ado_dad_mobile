@@ -164,7 +164,7 @@ class _SearchPageState extends State<SearchPage> {
                     style: TextStyle(
                       color: selected ? Colors.white : AppColors.blackColor,
                       fontSize: 13,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                     ),
                   ),
                 ),
@@ -323,7 +323,7 @@ class _SearchPageState extends State<SearchPage> {
                         'Show ${_previewCount(category: tempCat, minPrice: int.tryParse(minCtrl.text.trim()), maxPrice: int.tryParse(maxCtrl.text.trim()), fuels: tempFuels)} results',
                         style: TextStyle(
                             color: AppColors.onCta,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                             fontSize: 15),
                       ),
                     ),
@@ -689,7 +689,7 @@ class _SearchPageState extends State<SearchPage> {
               title,
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: AppColors.greyColor,
                 letterSpacing: 0.5,
               ),
@@ -1262,7 +1262,7 @@ class _SearchPageState extends State<SearchPage> {
               style: TextStyle(
                   fontSize: 12.5,
                   color: AppColors.blackColor,
-                  fontWeight: FontWeight.w500),
+                  fontWeight: FontWeight.w600),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -1273,7 +1273,7 @@ class _SearchPageState extends State<SearchPage> {
                 style: TextStyle(
                     fontSize: 12.5,
                     color: AppColors.brandText,
-                    fontWeight: FontWeight.w600)),
+                    fontWeight: FontWeight.w700)),
           ),
         ],
       ),

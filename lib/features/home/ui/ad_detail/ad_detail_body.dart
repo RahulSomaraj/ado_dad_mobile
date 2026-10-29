@@ -61,7 +61,7 @@ class _AdDetailExpandableTextState extends State<AdDetailExpandableText> {
                       _expanded ? 'Show less' : 'Read more',
                       style: AppTextstyle.caption.copyWith(
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.brandText,
                       ),
                     ),

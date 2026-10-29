@@ -84,7 +84,7 @@ class ReviewStep extends StatelessWidget {
               onEdit: () => flow.editStep(SellStep.photos),
               child: Text(
                 SellMediaCubit.summary(media) + (media.video != null ? ' · video added' : ''),
-                style: SellTokens.label.copyWith(color: SellTokens.ink2, fontWeight: FontWeight.w400),
+                style: SellTokens.label.copyWith(color: SellTokens.ink2, fontWeight: FontWeight.w500),
               ),
             ),
             const SizedBox(height: 10),
@@ -110,7 +110,7 @@ class ReviewStep extends StatelessWidget {
                 '${v[SellKeys.description] ?? ''}'.trim().isEmpty ? '—' : '${v[SellKeys.description]}'.trim(),
                 maxLines: 4,
                 overflow: TextOverflow.ellipsis,
-                style: SellTokens.label.copyWith(color: SellTokens.ink2, fontWeight: FontWeight.w400),
+                style: SellTokens.label.copyWith(color: SellTokens.ink2, fontWeight: FontWeight.w500),
               ),
             ),
             const SizedBox(height: 12),
@@ -217,9 +217,9 @@ class _FailureBanner extends StatelessWidget {
                                 children: [
                                   Expanded(
                                     child: Text('${SellRules.labelFor(e.key)} · ${e.value}',
-                                        style: SellTokens.label.copyWith(color: SellTokens.errFg, fontWeight: FontWeight.w400)),
+                                        style: SellTokens.label.copyWith(color: SellTokens.errFg, fontWeight: FontWeight.w500)),
                                   ),
-                                  Text('Fix ›', style: SellTokens.label.copyWith(color: SellTokens.accentText, fontWeight: FontWeight.w600)),
+                                  Text('Fix ›', style: SellTokens.label.copyWith(color: SellTokens.accentText, fontWeight: FontWeight.w700)),
                                 ],
                               ),
                             ),

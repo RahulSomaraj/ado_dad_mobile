@@ -124,7 +124,7 @@ class _AdDetailSellerCardState extends State<AdDetailSellerCard> {
                               name.characters.first.toUpperCase(),
                               style: TextStyle(
                                 color: AppColors.brandText,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
                                 fontSize: 18,
                               ),
                             ),
@@ -141,7 +141,7 @@ class _AdDetailSellerCardState extends State<AdDetailSellerCard> {
                                 child: Text(
                                   name,
                                   style: AppTextstyle.titleMedium
-                                      .copyWith(fontWeight: FontWeight.w600),
+                                      .copyWith(fontWeight: FontWeight.w700),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -214,7 +214,7 @@ class _TileRow extends StatelessWidget {
                         Text(
                           items[i].$1,
                           style: AppTextstyle.specValue.copyWith(
-                              fontSize: 13.5, fontWeight: FontWeight.w600),
+                              fontSize: 13.5, fontWeight: FontWeight.w700),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),

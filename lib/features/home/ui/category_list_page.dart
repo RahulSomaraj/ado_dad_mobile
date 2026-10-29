@@ -809,7 +809,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                   largeTablet: 30.0,
                   desktop: 35.0,
                 ),
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: AppColors.blackColor,
               ),
             ),
@@ -839,7 +839,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
               child: Text(
                 'Reset filters',
                 style: TextStyle(
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.blackColor,
                   fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                       mobile: 13, tablet: 16, largeTablet: 18, desktop: 20),

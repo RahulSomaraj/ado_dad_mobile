@@ -92,7 +92,7 @@ class ProfileMenuItem extends StatelessWidget {
                   child: Text(
                     title,
                     style: TextStyle(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: isLogout ? AppColors.redColor : AppColors.blackColor,
                       fontSize: GetResponsiveSize.getResponsiveFontSize(
                         context,

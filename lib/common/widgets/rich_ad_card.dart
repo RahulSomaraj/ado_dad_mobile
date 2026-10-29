@@ -82,14 +82,17 @@ class RichAdCard extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.max,
         children: [
-          Icon(icon, size: 10, color: AppColors.greyColor),
+          Icon(icon, size: 10, color: AppColors.textMeta),
           const SizedBox(width: 2),
           Flexible(
             child: Text(
               display,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 9, color: AppColors.blackColor1),
+              style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.blackColor1),
             ),
           ),
         ],
@@ -149,7 +152,7 @@ class RichAdCard extends StatelessWidget {
           BoxDecoration(color: color, borderRadius: BorderRadius.circular(5)),
       child: Text(text,
           style: TextStyle(
-              color: textColor, fontSize: 8.5, fontWeight: FontWeight.w600)),
+              color: textColor, fontSize: 8.5, fontWeight: FontWeight.w700)),
     );
   }
 
@@ -327,7 +330,7 @@ class RichAdCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                   fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w700,
                                   color: AppColors.blackColor),
                             ),
                           ),
@@ -346,7 +349,7 @@ class RichAdCard extends StatelessWidget {
                       Row(
                         children: [
                           Icon(Icons.location_on_outlined,
-                              size: 12, color: AppColors.greyColor),
+                              size: 12, color: AppColors.textMeta),
                           const SizedBox(width: 2),
                           Expanded(
                             child: Text(
@@ -354,7 +357,9 @@ class RichAdCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                  fontSize: 10, color: AppColors.greyColor),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textMeta),
                             ),
                           ),
                         ],
@@ -374,7 +379,9 @@ class RichAdCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                  fontSize: 10, color: AppColors.greyColor),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textMeta),
                             ),
                           ),
                           const SizedBox(width: 6),
@@ -386,7 +393,9 @@ class RichAdCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                  fontSize: 10, color: AppColors.greyColor),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textMeta),
                             ),
                           ),
                         ],

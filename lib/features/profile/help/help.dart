@@ -194,7 +194,7 @@ class _HelpState extends State<Help> {
               largeTablet: 26,
               desktop: 28,
             ),
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
             color: Colors.white,
           ),
         ),
@@ -299,7 +299,7 @@ class _HelpState extends State<Help> {
                           largeTablet: 18,
                           desktop: 20,
                         ),
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                         color: AppColors.blackColor,
                       ),
                     ),
@@ -361,7 +361,7 @@ class _HelpState extends State<Help> {
               'Contact support',
               style: appFont(
                 color: AppColors.blackColor,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 fontSize: GetResponsiveSize.getResponsiveFontSize(
                   context,
                   mobile: 13.5,

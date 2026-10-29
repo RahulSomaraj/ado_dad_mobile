@@ -332,7 +332,7 @@ class _HomePageState extends State<HomePage> {
                     'See all',
                     style: TextStyle(
                       color: AppColors.brandText,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       fontSize: tab ? 17 : 14,
                     ),
                   ),
@@ -572,7 +572,7 @@ class BottomNavBar extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 color: color,
-                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ],

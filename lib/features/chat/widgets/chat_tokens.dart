@@ -37,7 +37,7 @@ class ChatColors {
   // Text
   Color get text => isDark ? AppColors.darkText : AppColors.lightBlack; // --a-text
   Color get text2 => isDark ? AppColors.darkText1 : AppColors.lightBlack1; // --a-text2
-  Color get muted => AppColors.textMuted; // --a-muted
+  Color get muted => AppColors.textMeta; // --a-muted (darker: small chat meta must read clearly)
 
   // Semantic
   Color get okBg => isDark ? const Color(0xFF15372A) : const Color(0xFFE3F5EC);

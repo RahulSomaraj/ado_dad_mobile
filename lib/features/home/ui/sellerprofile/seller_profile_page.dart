@@ -308,7 +308,7 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                                     : Text(
                                         'Load more products',
                                         style: TextStyle(
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w700,
                                           fontSize: GetResponsiveSize
                                               .getResponsiveFontSize(context,
                                                   mobile: 14,
@@ -456,7 +456,7 @@ class _SellerCard extends StatelessWidget {
                   Text(
                     seller.email!,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: const Color(0xFF111827),
                       fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                           mobile: theme.textTheme.bodyMedium?.fontSize ?? 14.0,
@@ -476,7 +476,7 @@ class _SellerCard extends StatelessWidget {
                       _maskPhoneNumber(seller.phone!),
                     ),
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: const Color(0xFF111827),
                       fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                           mobile: theme.textTheme.bodyMedium?.fontSize ?? 14.0,
@@ -510,7 +510,7 @@ class _SellerCard extends StatelessWidget {
                       label: Text(
                         'Call',
                         style: TextStyle(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                           fontSize: GetResponsiveSize.getResponsiveFontSize(
                               context,
                               mobile: 13,

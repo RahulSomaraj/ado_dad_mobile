@@ -564,7 +564,7 @@ class _SearchableDialogState<T> extends State<_SearchableDialog<T>> {
                                           ),
                                           fontWeight: isSelected
                                               ? FontWeight.bold
-                                              : FontWeight.normal,
+                                              : FontWeight.w500,
                                           color: isSelected
                                               ? Colors.blue
                                               : Colors.black,

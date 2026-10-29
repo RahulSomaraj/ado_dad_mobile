@@ -52,7 +52,7 @@ class SellSection extends StatelessWidget {
             label.toUpperCase(),
             style: SellTokens.caption.copyWith(
               fontSize: 11,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               letterSpacing: 1.2,
               color: SellTokens.muted,
             ),
@@ -113,7 +113,7 @@ class _SummaryRow extends StatelessWidget {
                           title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: SellTokens.body.copyWith(fontWeight: FontWeight.w600),
+                          style: SellTokens.body.copyWith(fontWeight: FontWeight.w700),
                         ),
                         if (subtitle != null) ...[
                           const SizedBox(height: 2),
@@ -132,7 +132,7 @@ class _SummaryRow extends StatelessWidget {
                     'Edit',
                     style: SellTokens.label.copyWith(
                       color: SellTokens.accentText,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
@@ -167,7 +167,7 @@ class SellSourceTag extends StatelessWidget {
           style: SellTokens.caption.copyWith(
             fontSize: 10,
             height: 1.2,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
             color: SellTokens.okFg,
           ),
         ),
@@ -221,7 +221,7 @@ class SellFactRow extends StatelessWidget {
                     value,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: SellTokens.body.copyWith(fontWeight: FontWeight.w600),
+                    style: SellTokens.body.copyWith(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 1),
                   Text(
@@ -251,7 +251,7 @@ class SellFactRow extends StatelessWidget {
                       overrideLabel,
                       style: SellTokens.caption.copyWith(
                         color: SellTokens.accentText,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),

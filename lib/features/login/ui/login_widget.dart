@@ -76,7 +76,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                 'Or',
                 style: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.blackColor1),
               )),
               Center(
@@ -87,7 +87,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                     style: TextStyle(
                         decoration: TextDecoration.underline,
                         fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                         color: AppColors.blackColor1),
                   ),
                 ),
@@ -99,13 +99,13 @@ class _LoginWidgetState extends State<LoginWidget> {
                   Text('New User?',
                       style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.blackColor)),
                   GestureDetector(
                     child: Text('Signup',
                         style: TextStyle(
                             fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.brandText)),
                   )
                 ],
@@ -116,7 +116,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                   child: Text(
                     'Terms & Conditions',
                     style: TextStyle(
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                         fontSize: 12,
                         color: AppColors.brandText),
                   ),

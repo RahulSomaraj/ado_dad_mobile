@@ -797,7 +797,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                       color: isEditing
                                           ? AppColors.onCta
                                           : Colors.white,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w700,
                                       fontSize: GetResponsiveSize
                                           .getResponsiveFontSize(
                                         context,
@@ -898,7 +898,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         largeTablet: 26,
                                         desktop: 30,
                                       ),
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
                                   content: Text(
@@ -949,7 +949,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                             largeTablet: 20,
                                             desktop: 22,
                                           ),
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       ),
                                     ),
@@ -1290,7 +1290,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                             largeTablet: 26,
                                             desktop: 30,
                                           ),
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       ),
                                       content: Container(
@@ -1345,7 +1345,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                   largeTablet: 17,
                                                   desktop: 19,
                                                 ),
-                                                fontWeight: FontWeight.w500,
+                                                fontWeight: FontWeight.w600,
                                               ),
                                             ),
                                             SizedBox(
@@ -1476,7 +1476,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                 largeTablet: 20,
                                                 desktop: 22,
                                               ),
-                                              fontWeight: FontWeight.w600,
+                                              fontWeight: FontWeight.w700,
                                             ),
                                           ),
                                         ),
@@ -2025,7 +2025,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                             largeTablet: 26,
                                             desktop: 30,
                                           ),
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       ),
                                       content: Container(
@@ -2080,7 +2080,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                   largeTablet: 17,
                                                   desktop: 19,
                                                 ),
-                                                fontWeight: FontWeight.w500,
+                                                fontWeight: FontWeight.w600,
                                               ),
                                             ),
                                             SizedBox(
@@ -2211,7 +2211,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                 largeTablet: 20,
                                                 desktop: 22,
                                               ),
-                                              fontWeight: FontWeight.w600,
+                                              fontWeight: FontWeight.w700,
                                             ),
                                           ),
                                         ),

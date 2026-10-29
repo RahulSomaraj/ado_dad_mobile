@@ -42,7 +42,7 @@ class ChatPrimaryButton extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: ChatSize.buttonFont,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                     color: ghost ? c.brandText : c.onBrand,
                   ),
                 ),
@@ -76,7 +76,7 @@ class _Centered extends StatelessWidget {
       );
 }
 
-TextStyle _title(ChatColors c) => TextStyle(fontSize: ChatSize.stateTitle, fontWeight: FontWeight.w600, color: c.text);
+TextStyle _title(ChatColors c) => TextStyle(fontSize: ChatSize.stateTitle, fontWeight: FontWeight.w700, color: c.text);
 TextStyle _body(ChatColors c) => TextStyle(fontSize: ChatSize.stateBody, color: c.muted, height: 1.45);
 
 /// Screen 03 — no chats at all.
@@ -99,7 +99,7 @@ class ChatListEmptyView extends StatelessWidget {
         child: Text.rich(
           TextSpan(style: _body(c), children: [
             const TextSpan(text: 'Tap '),
-            TextSpan(text: 'Chat', style: TextStyle(color: c.text, fontWeight: FontWeight.w600)),
+            TextSpan(text: 'Chat', style: TextStyle(color: c.text, fontWeight: FontWeight.w700)),
             const TextSpan(text: ' on any ad to message the seller. When someone asks about your ad, it shows up here.'),
           ]),
           textAlign: TextAlign.center,
@@ -165,7 +165,7 @@ class _EmptyIllustration extends StatelessWidget {
                   Text('₹5,40,000',
                       maxLines: 1,
                       overflow: TextOverflow.clip,
-                      style: TextStyle(fontSize: 11.5, height: 1.2, fontWeight: FontWeight.w600, color: c.text)),
+                      style: TextStyle(fontSize: 11.5, height: 1.2, fontWeight: FontWeight.w700, color: c.text)),
                 ]),
               ),
             ]),
@@ -232,7 +232,7 @@ class ChatListNoResultsView extends StatelessWidget {
         const SizedBox(height: 10),
         TextButton(
           onPressed: onAction,
-          child: Text(actionLabel!, style: TextStyle(color: c.brandText, fontSize: ChatSize.buttonFont, fontWeight: FontWeight.w600)),
+          child: Text(actionLabel!, style: TextStyle(color: c.brandText, fontSize: ChatSize.buttonFont, fontWeight: FontWeight.w700)),
         ),
       ],
     ]);
@@ -309,7 +309,7 @@ class ChatBanner extends StatelessWidget {
             Icon(icon, size: ChatSize.bannerIcon, color: fg),
             const SizedBox(width: 9),
             Expanded(
-              child: Text(text, style: TextStyle(fontSize: ChatSize.bannerFont, color: fg, fontWeight: FontWeight.w500)),
+              child: Text(text, style: TextStyle(fontSize: ChatSize.bannerFont, color: fg, fontWeight: FontWeight.w600)),
             ),
             if (actionLabel != null && onAction != null)
               GestureDetector(
@@ -317,7 +317,7 @@ class ChatBanner extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.only(left: 10),
                   child: Text(actionLabel!,
-                      style: TextStyle(fontSize: ChatSize.bannerFont, color: c.brandText, fontWeight: FontWeight.w600)),
+                      style: TextStyle(fontSize: ChatSize.bannerFont, color: c.brandText, fontWeight: FontWeight.w700)),
                 ),
               ),
           ],

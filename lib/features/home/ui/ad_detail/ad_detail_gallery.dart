@@ -398,7 +398,7 @@ class _CounterPill extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white,
               fontSize: 11.5,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
               fontFeatures: [FontFeature.tabularFigures()],
             ),
           ),
@@ -429,7 +429,7 @@ class _Tag extends StatelessWidget {
         style: TextStyle(
           color: textColor,
           fontSize: 11,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           letterSpacing: 0.4,
         ),
       ),
@@ -494,7 +494,7 @@ class _ThumbStrip extends StatelessWidget {
                     '+${items.length - shown}',
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: AppColors.blackColor1,
                     ),
                   ),

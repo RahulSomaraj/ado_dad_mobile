@@ -114,7 +114,7 @@ class AdDetailTextAction extends StatelessWidget {
                 label,
                 style: AppTextstyle.caption.copyWith(
                   fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.brandText,
                 ),
               ),

@@ -120,7 +120,7 @@ class _CategoryCell extends StatelessWidget {
                 style: appFont(
                   fontSize: tab ? 14 : 11.5,
                   height: 1.2,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.blackColor,
                 ),
               ),

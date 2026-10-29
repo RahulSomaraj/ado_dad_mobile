@@ -250,7 +250,7 @@ class _BrandModelPickerState extends State<_BrandModelPicker> {
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
           child: Text(
             _brand == null ? 'My brand isn’t listed' : 'My model isn’t listed',
-            style: SellTokens.label.copyWith(color: SellTokens.accentText, fontWeight: FontWeight.w600),
+            style: SellTokens.label.copyWith(color: SellTokens.accentText, fontWeight: FontWeight.w700),
           ),
         ),
       );

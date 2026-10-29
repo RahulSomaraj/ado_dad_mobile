@@ -61,7 +61,7 @@ Future<UpdateDialogOutcome> showUpdateAppDialog(
                 const SizedBox(height: 12),
                 const Text(
                   "What's new",
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                  style: TextStyle(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 Text(result.releaseNotes!),

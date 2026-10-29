@@ -84,7 +84,7 @@ class _MyActivityPageState extends State<MyActivityPage> {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: selected ? Colors.white : AppColors.greyColor,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
               fontSize: 13,
             ),
           ),

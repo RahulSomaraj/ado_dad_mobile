@@ -99,7 +99,7 @@ class AdDetailHeader extends StatelessWidget {
                   child: Text(
                     _priceDrop!,
                     style: AppTextstyle.caption.copyWith(
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.positiveText,
                     ),
                     maxLines: 1,
@@ -114,7 +114,7 @@ class AdDetailHeader extends StatelessWidget {
             title,
             style: AppTextstyle.titleMedium.copyWith(
               fontSize: AppSpacing.s(context, 15),
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -217,7 +217,7 @@ class AdDetailOwnerBlock extends StatelessWidget {
                     status.label,
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: status.color,
                     ),
                   ),
@@ -295,7 +295,7 @@ class _StatsStrip extends StatelessWidget {
                             : AdFormat.groupIndian(cells[i].$2!),
                         style: AppTextstyle.specValue.copyWith(
                           fontSize: 17,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                           color:
                               cells[i].$2 == null ? AppColors.textMuted : null,
                         ),

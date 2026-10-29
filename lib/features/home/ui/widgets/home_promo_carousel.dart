@@ -235,7 +235,7 @@ class _FallbackSlide extends StatelessWidget {
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: tab ? 15 : 13,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                           const SizedBox(width: 6),

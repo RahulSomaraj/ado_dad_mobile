@@ -352,7 +352,7 @@ class _TopBar extends StatelessWidget {
                 child: Text(
                   state.online ? '✓ Saved' : '✓ Saved on phone',
                   style: SellTokens.caption.copyWith(
-                      color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
+                      color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600),
                 ),
               ),
           ],
@@ -383,7 +383,7 @@ class _StepHeader extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Step ${i + 1} of 4 · ${state.step.titleFor(state.category)}',
-                    style: SellTokens.label.copyWith(color: SellTokens.accentText, fontWeight: FontWeight.w600, fontSize: 12),
+                    style: SellTokens.label.copyWith(color: SellTokens.accentText, fontWeight: FontWeight.w700, fontSize: 12),
                   ),
                 ),
                 BlocBuilder<SellMediaCubit, SellMediaState>(
@@ -391,7 +391,7 @@ class _StepHeader extends StatelessWidget {
                     i == 0 || m.photoCount == 0
                         ? state.category.label
                         : '${m.photoCount} photo${m.photoCount == 1 ? '' : 's'}${m.allDone ? ' ✓' : ''}',
-                    style: SellTokens.caption.copyWith(fontWeight: FontWeight.w500),
+                    style: SellTokens.caption.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -470,7 +470,7 @@ class _ActionBar extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       child: Text(
                         count == 1 ? '1 field needs attention ↑' : '$count fields need attention ↑',
-                        style: SellTokens.label.copyWith(color: SellTokens.errorText, fontWeight: FontWeight.w500),
+                        style: SellTokens.label.copyWith(color: SellTokens.errorText, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),

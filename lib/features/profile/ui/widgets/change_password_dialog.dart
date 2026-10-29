@@ -39,7 +39,7 @@ class ChangePasswordDialog {
                       largeTablet: 26,
                       desktop: 30,
                     ),
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 content: Container(
@@ -170,7 +170,7 @@ class ChangePasswordDialog {
                           largeTablet: 20,
                           desktop: 22,
                         ),
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),

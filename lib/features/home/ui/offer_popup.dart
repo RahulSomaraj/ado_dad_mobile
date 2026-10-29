@@ -113,7 +113,7 @@ class _OfferSheetState extends State<_OfferSheet> {
   TextStyle _sectionLabelStyle(BuildContext context) => appFont(
         fontSize: GetResponsiveSize.getResponsiveFontSize(context,
             mobile: 11, tablet: 13, largeTablet: 14, desktop: 15),
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         letterSpacing: 0.6,
         color: AppColors.greyColor,
       );
@@ -170,7 +170,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                             tablet: 20,
                             largeTablet: 22,
                             desktop: 24),
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.blackColor,
                       ),
                     ),
@@ -224,7 +224,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                                           tablet: 16,
                                           largeTablet: 18,
                                           desktop: 20),
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w700,
                                   color: AppColors.blackColor,
                                 ),
                                 children: [
@@ -232,7 +232,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                                     text: 'asking',
                                     style: appFont(
                                       fontSize: 11,
-                                      fontWeight: FontWeight.w400,
+                                      fontWeight: FontWeight.w500,
                                       color: AppColors.greyColor,
                                     ),
                                   ),
@@ -281,7 +281,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                 style: appFont(
                   fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                       mobile: 18, tablet: 22, largeTablet: 24, desktop: 26),
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.blackColor,
                 ),
                 decoration: InputDecoration(
@@ -289,14 +289,14 @@ class _OfferSheetState extends State<_OfferSheet> {
                   hintStyle: appFont(
                     fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                         mobile: 14, tablet: 17, largeTablet: 19, desktop: 21),
-                    fontWeight: FontWeight.w400,
+                    fontWeight: FontWeight.w500,
                     color: AppColors.greyColor,
                   ),
                   prefixText: '₹ ',
                   prefixStyle: appFont(
                     fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                         mobile: 18, tablet: 22, largeTablet: 24, desktop: 26),
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.blackColor,
                   ),
                   contentPadding:
@@ -426,7 +426,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                         'Cancel',
                         style: appFont(
                           color: AppColors.blackColor,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                           fontSize: GetResponsiveSize.getResponsiveFontSize(
                               context,
                               mobile: 13.5,
@@ -463,7 +463,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                       label: Text(
                         'Send offer',
                         style: appFont(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                           fontSize: GetResponsiveSize.getResponsiveFontSize(
                               context,
                               mobile: 13.5,

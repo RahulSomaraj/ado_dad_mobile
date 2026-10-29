@@ -28,7 +28,7 @@ class ThemeModeTile extends StatelessWidget {
                     style: TextStyle(
                         color: AppColors.blackColor,
                         fontWeight:
-                            selected ? FontWeight.w600 : FontWeight.w400)),
+                            selected ? FontWeight.w700 : FontWeight.w500)),
                 trailing: selected
                     ? Icon(Icons.check, color: AppColors.brandText)
                     : null,
@@ -50,7 +50,7 @@ class ThemeModeTile extends StatelessWidget {
                       child: Text('Appearance',
                           style: TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                               color: AppColors.blackColor)),
                     ),
                   ),
@@ -116,7 +116,7 @@ class ThemeModeTile extends StatelessWidget {
                           Text(
                             'Dark mode',
                             style: TextStyle(
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
                                 fontSize: 14.5,
                                 color: AppColors.blackColor),
                           ),

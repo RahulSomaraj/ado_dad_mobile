@@ -371,7 +371,7 @@ class _LoginPageState extends State<LoginPage> {
                         largeTablet: 25.0,
                         desktop: 30.0,
                       ),
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.blackColor1),
                 )),
                 Center(
@@ -396,7 +396,7 @@ class _LoginPageState extends State<LoginPage> {
                             largeTablet: 25.0,
                             desktop: 30.0,
                           ),
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.blackColor1),
                     ),
                   ),
@@ -414,7 +414,7 @@ class _LoginPageState extends State<LoginPage> {
                               largeTablet: 25.0,
                               desktop: 30.0,
                             ),
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.blackColor)),
                     GestureDetector(
                       onTap: () {
@@ -429,7 +429,7 @@ class _LoginPageState extends State<LoginPage> {
                                 largeTablet: 25.0,
                                 desktop: 30.0,
                               ),
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w600,
                               color: AppColors.brandText)),
                     )
                   ],
@@ -445,7 +445,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: Text(
                           'Terms & Conditions',
                           style: TextStyle(
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w600,
                               fontSize: GetResponsiveSize.getResponsiveFontSize(
                                 context,
                                 mobile: 12.0, // Keep mobile unchanged
@@ -463,7 +463,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: Text(
                           'Privacy Policy',
                           style: TextStyle(
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w600,
                               fontSize: GetResponsiveSize.getResponsiveFontSize(
                                 context,
                                 mobile: 12.0, // Keep mobile unchanged
@@ -632,7 +632,7 @@ class _LoginPageState extends State<LoginPage> {
               largeTablet: 25.0,
               desktop: 30.0,
             ),
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
             color: AppColors.ctaColor,
             decoration: TextDecoration.underline,
           ),

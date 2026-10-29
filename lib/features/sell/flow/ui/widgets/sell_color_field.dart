@@ -366,7 +366,7 @@ class _SuggestionList extends StatelessWidget {
                       style: SellTokens.caption.copyWith(
                         fontSize: 10,
                         height: 1.2,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: SellTokens.okFg,
                       ),
                     ),
@@ -430,7 +430,7 @@ class _QuickPicks extends StatelessWidget {
                       const SizedBox(width: 7),
                       Text(
                         s.label,
-                        style: SellTokens.label.copyWith(color: SellTokens.ink, fontWeight: FontWeight.w400),
+                        style: SellTokens.label.copyWith(color: SellTokens.ink, fontWeight: FontWeight.w500),
                       ),
                     ],
                   ),

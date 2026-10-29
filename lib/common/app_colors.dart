@@ -42,15 +42,15 @@ class AppColors {
   // ---- Light-mode tokens (kept for reference / direct use) ----
   static const Color lightSurface = Colors.white;
   static const Color lightBlack = Color(0xFF0B1F44);
-  static const Color lightBlack1 = Color(0xFF2E3D5C);
-  static const Color lightGrey = Color(0xFF8A93A6);
+  static const Color lightBlack1 = Color(0xFF1E2A44);
+  static const Color lightGrey = Color(0xFF5B6478);
 
   // ---- Dark-mode tokens ----
   static const Color darkBackground = Color(0xFF0B1220);
   static const Color darkSurface = Color(0xFF151D30);
   static const Color darkText = Color(0xFFE8EDF7);
-  static const Color darkText1 = Color(0xFFC3CCE0);
-  static const Color darkGrey = Color(0xFF9AA6BD);
+  static const Color darkText1 = Color(0xFFD6DDEB);
+  static const Color darkGrey = Color(0xFFC2CBDB);
 
   // ---- Brightness-aware semantic getters (names preserved for back-compat) ----
 
@@ -92,8 +92,13 @@ class AppColors {
   /// Text on [highlight].
   static Color get onHighlight => isDark ? const Color(0xFF121212) : navy;
 
+  /// Small meta text (place, "12 km away", "3w ago", chat times) — darker
+  /// than [textMuted] so tiny text stays clearly readable. 9.8:1 on white.
+  static Color get textMeta =>
+      isDark ? const Color(0xFFD0D7E5) : const Color(0xFF334061);
+
   /// Muted text that passes WCAG AA on the card in both themes.
-  static Color get textMuted => isDark ? darkGrey : const Color(0xFF5B6478);
+  static Color get textMuted => isDark ? darkGrey : const Color(0xFF3F4A63);
 
   /// Green for positive *text* (document checks, price drop).
   static Color get positiveText =>

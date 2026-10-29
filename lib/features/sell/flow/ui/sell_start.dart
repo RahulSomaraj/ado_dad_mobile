@@ -159,7 +159,7 @@ class _DraftTile extends StatelessWidget {
                     children: [
                       Text('Continue: ${draft.headline}',
                           maxLines: 1, overflow: TextOverflow.ellipsis,
-                          style: SellTokens.label.copyWith(color: SellTokens.ink, fontWeight: FontWeight.w600, fontSize: 14)),
+                          style: SellTokens.label.copyWith(color: SellTokens.ink, fontWeight: FontWeight.w700, fontSize: 14)),
                       const SizedBox(height: 2),
                       Text(
                         'Step $stepNo of 4 · saved ${SellFormat.ago(draft.updatedAt)}${photos.isEmpty ? '' : ' · ${photos.length} photo${photos.length == 1 ? '' : 's'}'}',
@@ -217,7 +217,7 @@ class _CategoryTile extends StatelessWidget {
                   child: Icon(category.icon, color: SellTokens.accent, size: 20),
                 ),
                 const SizedBox(height: 8),
-                Text(category.label, style: SellTokens.label.copyWith(color: SellTokens.ink, fontWeight: FontWeight.w600, fontSize: 14)),
+                Text(category.label, style: SellTokens.label.copyWith(color: SellTokens.ink, fontWeight: FontWeight.w700, fontSize: 14)),
                 Text(category.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: SellTokens.caption),
               ],
             ),

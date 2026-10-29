@@ -112,7 +112,7 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
                         Text(
                           'No Products Available',
                           style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                             color: Colors.grey[600],
                           ),
                         ),
@@ -310,7 +310,7 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
                           child: Text(
                             'Load more products',
                             style: TextStyle(
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                               fontSize: GetResponsiveSize.getResponsiveFontSize(
                                 context,
                                 mobile: 16,

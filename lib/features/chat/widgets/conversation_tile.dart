@@ -42,14 +42,14 @@ class ConversationTile extends StatelessWidget {
 
     final nameStyle = TextStyle(
       fontSize: ChatSize.nameFont,
-      fontWeight: unread ? FontWeight.w600 : FontWeight.w500,
+      fontWeight: unread ? FontWeight.w700 : FontWeight.w600,
       color: c.text,
       height: 1.25,
     );
     final previewStyle = TextStyle(
       fontSize: ChatSize.previewFont,
       color: unread ? c.text : c.muted,
-      fontWeight: unread ? FontWeight.w500 : FontWeight.w400,
+      fontWeight: unread ? FontWeight.w600 : FontWeight.w500,
       height: 1.3,
     );
 
@@ -89,7 +89,7 @@ class ConversationTile extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: ChatSize.timeFont,
                                 color: unread ? c.brandText : c.muted,
-                                fontWeight: unread ? FontWeight.w600 : FontWeight.w400,
+                                fontWeight: unread ? FontWeight.w700 : FontWeight.w500,
                                 fontFeatures: const [FontFeature.tabularFigures()],
                               ),
                             ),
@@ -127,12 +127,12 @@ class ConversationTile extends StatelessWidget {
         const SizedBox(width: 4),
         Flexible(
           child: Text('Not sent',
-              maxLines: 1, overflow: TextOverflow.ellipsis, style: style.copyWith(color: c.err, fontWeight: FontWeight.w500)),
+              maxLines: 1, overflow: TextOverflow.ellipsis, style: style.copyWith(color: c.err, fontWeight: FontWeight.w600)),
         ),
       ]);
     }
     if (last == null) {
-      return Text('No messages yet', style: style.copyWith(color: c.muted, fontWeight: FontWeight.w400), maxLines: 1);
+      return Text('No messages yet', style: style.copyWith(color: c.muted, fontWeight: FontWeight.w500), maxLines: 1);
     }
     final mine = myUserId != null && last.senderId == myUserId;
     final icon = switch (last.type) {
@@ -150,7 +150,7 @@ class ConversationTile extends StatelessWidget {
           else
             Icon(Icons.done_rounded, size: ChatSize.adLineIcon + 1, color: c.muted),
           const SizedBox(width: 3),
-          Text('You: ', style: style.copyWith(color: c.muted, fontWeight: FontWeight.w400)),
+          Text('You: ', style: style.copyWith(color: c.muted, fontWeight: FontWeight.w500)),
         ],
         if (icon != null) ...[
           Icon(icon, size: ChatSize.adLineIcon + 1, color: style.color),

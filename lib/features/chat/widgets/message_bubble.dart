@@ -24,7 +24,7 @@ class ChatDateSeparator extends StatelessWidget {
         decoration: BoxDecoration(color: c.chip, borderRadius: BorderRadius.circular(ChatSize.dateRadius)),
         child: Text(
           formatDateLabel(date),
-          style: TextStyle(fontSize: ChatSize.dateFont, color: c.muted, fontWeight: FontWeight.w500),
+          style: TextStyle(fontSize: ChatSize.dateFont, color: c.muted, fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -277,7 +277,7 @@ class _FailNote extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.end,
-              style: TextStyle(fontSize: ChatSize.failFont, color: c.err, fontWeight: FontWeight.w500),
+              style: TextStyle(fontSize: ChatSize.failFont, color: c.err, fontWeight: FontWeight.w600),
             ),
           ),
           if (action != null) ...[
@@ -286,7 +286,7 @@ class _FailNote extends StatelessWidget {
               onTap: action,
               child: Text(
                 retry ? 'Retry' : 'Edit',
-                style: TextStyle(fontSize: ChatSize.failFont, color: c.brandText, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: ChatSize.failFont, color: c.brandText, fontWeight: FontWeight.w700),
               ),
             ),
           ],
@@ -358,7 +358,7 @@ class _ImageContent extends StatelessWidget {
                         ),
                         Text(
                           '${((message.uploadProgress ?? 0) * 100).round()}%',
-                          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
                         ),
                       ],
                     ),

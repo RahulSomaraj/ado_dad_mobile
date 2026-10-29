@@ -277,7 +277,7 @@ class _VideoPlayerWidgetState extends State<AdDetailVideoPlayer> {
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 if (_errorMessage != null) ...[
@@ -431,7 +431,7 @@ class _ImageGalleryViewerState extends State<AdDetailImageGallery> {
           style: const TextStyle(
             color: Colors.white,
             fontSize: 18,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
         centerTitle: true,
@@ -653,7 +653,7 @@ class _VideoFullScreenViewerState extends State<AdDetailVideoFullScreen> {
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       if (_errorMessage != null) ...[

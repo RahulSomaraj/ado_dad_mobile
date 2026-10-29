@@ -95,7 +95,7 @@ class _StartupConnectivityGateState extends State<StartupConnectivityGate> {
                 const SizedBox(height: 16),
                 const Text(
                   'No Internet Connection',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),

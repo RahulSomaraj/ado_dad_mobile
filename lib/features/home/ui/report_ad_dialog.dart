@@ -107,7 +107,7 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
   TextStyle _sectionLabelStyle(BuildContext context) => appFont(
         fontSize: GetResponsiveSize.getResponsiveFontSize(context,
             mobile: 11, tablet: 13, largeTablet: 14, desktop: 15),
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         letterSpacing: 0.6,
         color: AppColors.greyColor,
       );
@@ -195,7 +195,7 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                               tablet: 20,
                               largeTablet: 22,
                               desktop: 24),
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                           color: AppColors.blackColor,
                         ),
                       ),
@@ -326,7 +326,7 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                               'Cancel',
                               style: appFont(
                                 color: AppColors.blackColor,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.w600,
                                 fontSize:
                                     GetResponsiveSize.getResponsiveFontSize(
                                         context,
@@ -364,7 +364,7 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                                     'Submit report',
                                     style: appFont(
                                       color: Colors.white,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w700,
                                       fontSize: GetResponsiveSize
                                           .getResponsiveFontSize(context,
                                               mobile: 13.5,

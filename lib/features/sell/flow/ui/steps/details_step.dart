@@ -395,7 +395,7 @@ class _DetailsStepState extends State<DetailsStep> {
                     ? null
                     : Text.rich(
                         TextSpan(children: [
-                          TextSpan(text: brand, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          TextSpan(text: brand, style: const TextStyle(fontWeight: FontWeight.w700)),
                           if (model != null) TextSpan(text: ' · $model'),
                         ]),
                         style: SellTokens.body,
@@ -614,7 +614,7 @@ class _DetailsStepState extends State<DetailsStep> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(x.displayName, maxLines: 1, overflow: TextOverflow.ellipsis,
-              style: SellTokens.body.copyWith(fontWeight: FontWeight.w600)),
+              style: SellTokens.body.copyWith(fontWeight: FontWeight.w700)),
           if (x.summary != x.displayName) ...[
             const SizedBox(height: 1),
             Text(
@@ -786,7 +786,7 @@ class _DetailsStepState extends State<DetailsStep> {
                     ? null
                     : Text.rich(
                         TextSpan(children: [
-                          TextSpan(text: brand, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          TextSpan(text: brand, style: const TextStyle(fontWeight: FontWeight.w700)),
                           if (model != null) TextSpan(text: ' · $model'),
                         ]),
                         style: SellTokens.body,
@@ -948,7 +948,7 @@ class _DetailsStepState extends State<DetailsStep> {
                 ? null
                 : Text.rich(
                     TextSpan(children: [
-                      TextSpan(text: brand, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      TextSpan(text: brand, style: const TextStyle(fontWeight: FontWeight.w700)),
                       if (model != null) TextSpan(text: ' · $model'),
                     ]),
                     style: SellTokens.body,
@@ -1145,7 +1145,7 @@ class _DetailsStepState extends State<DetailsStep> {
         icon: Icon(_showMore ? Icons.remove_rounded : Icons.add_rounded, size: 18),
         label: Text(
           label,
-          style: SellTokens.label.copyWith(color: SellTokens.accentText, fontWeight: FontWeight.w500),
+          style: SellTokens.label.copyWith(color: SellTokens.accentText, fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -1205,7 +1205,7 @@ class _DetailsStepState extends State<DetailsStep> {
             hint: unit == 'cent' ? 'e.g. 6.5' : 'e.g. 1,650',
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
-            textStyle: SellTokens.body.copyWith(fontWeight: FontWeight.w600),
+            textStyle: SellTokens.body.copyWith(fontWeight: FontWeight.w700),
             error: e[valueKey],
             helper: hint,
             onChanged: (t) => _flow.setValue(valueKey, SellFormat.parseDecimal(t)),

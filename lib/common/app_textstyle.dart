@@ -9,26 +9,26 @@ class AppTextstyle {
   static TextStyle get title1 => appFont(
       textStyle: TextStyle(
           fontSize: 20.0,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: AppColors.blackColor));
 
   static TextStyle get buttonText => appFont(
-      textStyle: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w600));
+      textStyle: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w700));
 
   static TextStyle get sectionTitleTextStyle => appFont(
-      fontWeight: FontWeight.w600, fontSize: 15, color: AppColors.blackColor);
+      fontWeight: FontWeight.w700, fontSize: 15, color: AppColors.blackColor);
 
   static TextStyle get categoryLabelTextStyle => appFont(
-      fontWeight: FontWeight.w500, fontSize: 12, color: AppColors.blackColor);
+      fontWeight: FontWeight.w600, fontSize: 12, color: AppColors.blackColor);
 
   static TextStyle get appbarText => appFont(
-      fontWeight: FontWeight.w600, fontSize: 18, color: AppColors.blackColor);
+      fontWeight: FontWeight.w700, fontSize: 18, color: AppColors.blackColor);
 
   static TextStyle get sellCategoryText => appFont(
-      fontWeight: FontWeight.w600, fontSize: 16, color: AppColors.blackColor);
+      fontWeight: FontWeight.w700, fontSize: 16, color: AppColors.blackColor);
 
   static TextStyle get changeCategoryButtonTextStyle => appFont(
-      fontWeight: FontWeight.w500, fontSize: 12, color: AppColors.brandText);
+      fontWeight: FontWeight.w600, fontSize: 12, color: AppColors.brandText);
 
   // ---- Detail-screen scale (sizes are phone sp; see AppSpacing.s for tablet) ----
   static const List<FontFeature> _tabular = [FontFeature.tabularFigures()];
@@ -54,28 +54,28 @@ class AppTextstyle {
   static TextStyle get sectionTitle => appFont(
       fontSize: 16,
       height: 24 / 16,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w700,
       color: AppColors.blackColor);
 
   /// Ad title under the price — 15/22 w500.
   static TextStyle get titleMedium => appFont(
       fontSize: 15,
       height: 22 / 15,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w600,
       color: AppColors.blackColor);
 
   /// Running text — 14/22 w400.
   static TextStyle get bodyText => appFont(
       fontSize: 14,
       height: 22 / 14,
-      fontWeight: FontWeight.w400,
+      fontWeight: FontWeight.w500,
       color: AppColors.blackColor1);
 
   /// Table value — 14 w500, tabular.
   static TextStyle get specValue => appFont(
       fontSize: 14,
       height: 20 / 14,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w600,
       color: AppColors.blackColor,
       fontFeatures: _tabular);
 
@@ -83,24 +83,24 @@ class AppTextstyle {
   static TextStyle get specLabel => appFont(
       fontSize: 13,
       height: 18 / 13,
-      fontWeight: FontWeight.w400,
+      fontWeight: FontWeight.w500,
       color: AppColors.textMuted);
 
   /// Meta line / captions — 12.5 w400 muted.
   static TextStyle get caption => appFont(
       fontSize: 12.5,
       height: 18 / 12.5,
-      fontWeight: FontWeight.w400,
+      fontWeight: FontWeight.w500,
       color: AppColors.textMuted);
 
   /// Smallest allowed text — 11 w400 muted.
   static TextStyle get micro => appFont(
       fontSize: 11,
       height: 14 / 11,
-      fontWeight: FontWeight.w400,
+      fontWeight: FontWeight.w500,
       color: AppColors.textMuted);
 
   /// Button label — 14.5 w600.
   static TextStyle get button => appFont(
-      fontSize: 14.5, height: 20 / 14.5, fontWeight: FontWeight.w600);
+      fontSize: 14.5, height: 20 / 14.5, fontWeight: FontWeight.w700);
 }

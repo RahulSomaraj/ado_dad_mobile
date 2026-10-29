@@ -52,7 +52,7 @@ class LocationChip extends StatelessWidget {
               style: TextStyle(
                 color: textColor,
                 fontSize: fontSize,
-                fontWeight: color != null ? FontWeight.w600 : null,
+                fontWeight: color != null ? FontWeight.w700 : null,
                 decoration:
                     named ? TextDecoration.none : TextDecoration.underline,
                 decorationColor: textColor,

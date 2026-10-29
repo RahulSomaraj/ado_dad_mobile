@@ -161,7 +161,7 @@ class _Chip extends StatelessWidget {
               Text(label, style: TextStyle(fontSize: ChatSize.chipFont, color: fg, height: 1.3)),
               if (count != null) ...[
                 const SizedBox(width: 6),
-                Text('$count', style: TextStyle(fontSize: ChatSize.chipCountFont, color: fg, fontWeight: FontWeight.w600)),
+                Text('$count', style: TextStyle(fontSize: ChatSize.chipCountFont, color: fg, fontWeight: FontWeight.w700)),
               ],
             ],
           ),

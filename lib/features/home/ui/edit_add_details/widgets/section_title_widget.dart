@@ -24,7 +24,7 @@ class SectionTitleWidget extends StatelessWidget {
           largeTablet: 16,
           desktop: 18,
         ),
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         letterSpacing: 0.6,
         color: AppColors.greyColor,
       ),

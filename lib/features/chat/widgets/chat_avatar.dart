@@ -44,7 +44,7 @@ class ChatAvatar extends StatelessWidget {
               style: TextStyle(
                 color: c.brandText,
                 fontSize: size * (ChatSize.avatarInitialFont / ChatSize.avatar),
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 height: 1,
               ),
             ),

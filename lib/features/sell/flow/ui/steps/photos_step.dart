@@ -232,7 +232,7 @@ class _UploadCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(items.length == 1 ? 'Uploading 1 photo' : 'Uploading ${items.length} photos',
-              style: SellTokens.label.copyWith(color: SellTokens.ink, fontWeight: FontWeight.w600)),
+              style: SellTokens.label.copyWith(color: SellTokens.ink, fontWeight: FontWeight.w700)),
           const SizedBox(height: 2),
           Text('${SellMediaCubit.bytesLabel(sent.round())} of ${SellMediaCubit.bytesLabel(total)} · resized to 1600 px to save data',
               style: SellTokens.caption),
@@ -339,7 +339,7 @@ class _PhotoTile extends StatelessWidget {
                             ),
                           ),
                           Text('${(item.progress * 100).round()}%',
-                              style: SellTokens.caption.copyWith(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600)),
+                              style: SellTokens.caption.copyWith(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700)),
                         ],
                       ),
                     ),
@@ -358,7 +358,7 @@ class _PhotoTile extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.refresh_rounded, color: Colors.white),
-                        Text('Retry', style: SellTokens.caption.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
+                        Text('Retry', style: SellTokens.caption.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
                       ],
                     ),
                   ),
@@ -462,7 +462,7 @@ class _AddTile extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.add_rounded, color: SellTokens.accent),
-              Text('Add', style: SellTokens.caption.copyWith(color: SellTokens.accentText, fontWeight: FontWeight.w500)),
+              Text('Add', style: SellTokens.caption.copyWith(color: SellTokens.accentText, fontWeight: FontWeight.w600)),
             ],
           ),
         ),
@@ -505,7 +505,7 @@ class _VideoRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Video', style: SellTokens.label.copyWith(color: SellTokens.ink, fontWeight: FontWeight.w600)),
+                Text('Video', style: SellTokens.label.copyWith(color: SellTokens.ink, fontWeight: FontWeight.w700)),
                 Text(subtitle, style: SellTokens.caption.copyWith(color: item.isFailed ? SellTokens.errorText : SellTokens.muted)),
               ],
             ),

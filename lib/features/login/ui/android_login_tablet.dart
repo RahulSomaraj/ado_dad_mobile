@@ -26,7 +26,7 @@ class _AndroidLoginTabletState extends State<AndroidLoginTablet> {
     //               'Login to your Account',
     //               style: appFont(
     //                   fontSize: 40,
-    //                   fontWeight: FontWeight.w600,
+    //                   fontWeight: FontWeight.w700,
     //                   color: Colors.black),
     //             ),
     //             Text(
@@ -52,7 +52,7 @@ class _AndroidLoginTabletState extends State<AndroidLoginTablet> {
     //               'Or',
     //               style: TextStyle(
     //                   fontSize: 20,
-    //                   fontWeight: FontWeight.w500,
+    //                   fontWeight: FontWeight.w600,
     //                   color: AppColors.blackColor1),
     //             )),
     //             Center(
@@ -63,7 +63,7 @@ class _AndroidLoginTabletState extends State<AndroidLoginTablet> {
     //                   style: TextStyle(
     //                       decoration: TextDecoration.underline,
     //                       fontSize: 25,
-    //                       fontWeight: FontWeight.w500,
+    //                       fontWeight: FontWeight.w600,
     //                       color: AppColors.blackColor1),
     //                 ),
     //               ),
@@ -75,7 +75,7 @@ class _AndroidLoginTabletState extends State<AndroidLoginTablet> {
     //                 Text('New User?',
     //                     style: TextStyle(
     //                         fontSize: 20,
-    //                         fontWeight: FontWeight.w500,
+    //                         fontWeight: FontWeight.w600,
     //                         color: AppColors.blackColor)),
     //                 GestureDetector(
     //                   onTap: () {
@@ -84,7 +84,7 @@ class _AndroidLoginTabletState extends State<AndroidLoginTablet> {
     //                   child: Text('Signup',
     //                       style: TextStyle(
     //                           fontSize: 20,
-    //                           fontWeight: FontWeight.w500,
+    //                           fontWeight: FontWeight.w600,
     //                           color: AppColors.primaryColor)),
     //                 )
     //               ],
@@ -95,7 +95,7 @@ class _AndroidLoginTabletState extends State<AndroidLoginTablet> {
     //                 child: Text(
     //                   'Terms & Conditions',
     //                   style: TextStyle(
-    //                       fontWeight: FontWeight.w500,
+    //                       fontWeight: FontWeight.w600,
     //                       fontSize: 16,
     //                       color: AppColors.primaryColor),
     //                 ),
