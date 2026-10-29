@@ -205,7 +205,7 @@ class ImagePickerWidget extends StatelessWidget {
             ),
             child: Icon(
               Icons.add,
-              color: AppColors.primaryColor,
+              color: AppColors.brandText,
               size: GetResponsiveSize.getResponsiveSize(
                 context,
                 mobile: 24,

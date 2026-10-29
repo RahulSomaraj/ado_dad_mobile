@@ -348,26 +348,29 @@ class _NotifKind {
     final type = (n.data.data?.type ?? n.data.targetType).toUpperCase();
 
     if (priority == 'HIGH' || priority == 'URGENT' || type.contains('ALERT')) {
-      return _NotifKind(Icons.error_outline, AppColors.redColor,
-          const Color(0xFFFDECEC), 'Alert');
+      return _NotifKind(Icons.error_outline,
+          AppColors.isDark ? const Color(0xFFFF6B6B) : AppColors.redColor,
+          AppColors.isDark ? const Color(0xFF3D1B1E) : const Color(0xFFFCE8E8),
+          'Alert');
     }
     if (type.contains('ORDER') ||
         type.contains('DELIVER') ||
         type.contains('SUCCESS') ||
         type.contains('PAYMENT')) {
-      return const _NotifKind(Icons.check_circle_outline, Color(0xFF28A745),
-          Color(0xFFE7F6EB), 'Update');
+      return _NotifKind(Icons.check_circle_outline, AppColors.positiveText,
+          AppColors.isDark ? const Color(0xFF15372A) : const Color(0xFFDFF3E8),
+          'Update');
     }
     if (type.contains('PROMO') ||
         type.contains('OFFER') ||
         type.contains('DEAL') ||
         type.contains('DISCOUNT')) {
-      return _NotifKind(Icons.local_offer_outlined, AppColors.primaryColor,
-          const Color(0xFFECEBFD), 'Promo');
+      return _NotifKind(Icons.local_offer_outlined, AppColors.brandText,
+          AppColors.primarySoft, 'Promo');
     }
     // default / informational
-    return _NotifKind(Icons.notifications_none, const Color(0xFFF0A93B),
-        const Color(0xFFFCF1E1), 'Info');
+    return _NotifKind(Icons.notifications_none, AppColors.brandText,
+        AppColors.primarySoft, 'Info');
   }
 }
 
@@ -407,7 +410,7 @@ class _SectionHeader extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.primaryColor,
+                  color: AppColors.brandText,
                 ),
               ),
             ),
@@ -438,7 +441,7 @@ class _EmptyState extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(Icons.notifications_none,
-                  size: 40, color: AppColors.primaryColor),
+                  size: 40, color: AppColors.brandText),
             ),
             const SizedBox(height: 18),
             Text(

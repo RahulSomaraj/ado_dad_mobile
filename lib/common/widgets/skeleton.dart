@@ -36,7 +36,7 @@ class _SkeletonBoxState extends State<SkeletonBox>
   @override
   Widget build(BuildContext context) {
     final Color base =
-        AppColors.isDark ? const Color(0xFF222A36) : const Color(0xFFE9ECF2);
+        AppColors.isDark ? const Color(0xFF1C2538) : const Color(0xFFE3E7F0);
     final animation = Tween<double>(begin: 0.45, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );

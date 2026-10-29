@@ -181,7 +181,7 @@ class _SignupPageState extends State<SignupPage> {
                         largeTablet: 60,
                         desktop: 72,
                       ),
-                      color: AppColors.primaryColor,
+                      color: AppColors.brandText,
                     ),
                   ),
                   const SizedBox(height: 30),
@@ -460,8 +460,8 @@ class _SignupPageState extends State<SignupPage> {
           ),
         ),
         suffixIcon: _phoneInput.length >= 10
-            ? const Icon(Icons.check_circle,
-                color: AppColors.primaryColor, size: 20)
+            ? Icon(Icons.check_circle,
+                color: AppColors.brandText, size: 20)
             : null,
       ),
       validator: (value) {
@@ -615,7 +615,7 @@ class _SignupPageState extends State<SignupPage> {
                     desktop: 30.0,
                   ),
                   fontWeight: FontWeight.w500,
-                  color: AppColors.primaryColor,
+                  color: AppColors.brandText,
                 ),
               ),
             ),

@@ -241,7 +241,7 @@ class AdDetailOwnerBlock extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(Icons.lightbulb_outline,
-                    size: 18, color: AppColors.primaryColor),
+                    size: 18, color: AppColors.brandText),
                 const SizedBox(width: AppSpacing.sm8),
                 Expanded(
                   child: Text(tip,

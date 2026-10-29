@@ -122,8 +122,8 @@ class _AdDetailSellerCardState extends State<AdDetailSellerCard> {
                           ? null
                           : Text(
                               name.characters.first.toUpperCase(),
-                              style: const TextStyle(
-                                color: AppColors.primaryColor,
+                              style: TextStyle(
+                                color: AppColors.brandText,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 18,
                               ),
@@ -148,8 +148,8 @@ class _AdDetailSellerCardState extends State<AdDetailSellerCard> {
                               ),
                               if (verified) ...[
                                 const SizedBox(width: AppSpacing.xs4),
-                                const Icon(Icons.verified,
-                                    size: 16, color: AppColors.primaryColor),
+                                Icon(Icons.verified,
+                                    size: 16, color: AppColors.brandText),
                               ],
                             ],
                           ),

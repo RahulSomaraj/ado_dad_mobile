@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
-/// App color palette.
+/// App color palette — Theme 1 "Trust Blue · Action Orange".
 ///
-/// The brand colors (primary / red) are unchanged from the original palette.
-/// The neutral "surface" and "text" colors are now *brightness-aware*: they
-/// return the original light-mode values in light mode and dark equivalents in
-/// dark mode. Because every existing screen already reads these via
-/// `AppColors.whiteColor`, `AppColors.blackColor`, etc., the whole app gains
-/// light/dark theming without touching individual widgets.
+/// Roles (see docs/theme1_colour_checklist.md):
+/// * brand blue — identity, fills of primary controls, selected states;
+/// * action orange ([ctaColor]) — ONLY the Sell button, Call / Call seller and
+///   Post ad, so the money actions are the one warm colour on screen;
+/// * highlight amber ([highlight]) — Premium / Featured / Price-drop tags.
+///
+/// Surface and text colors are *brightness-aware*: they return light values in
+/// light mode and dark equivalents in dark mode. Every screen already reads
+/// them via `AppColors.whiteColor`, `AppColors.blackColor`, etc., so the whole
+/// app follows the theme without touching individual widgets.
 ///
 /// The active brightness is set once per frame by `MaterialApp.builder`
 /// (see main.dart) from `Theme.of(context).brightness`, so these getters always
@@ -19,62 +23,88 @@ class AppColors {
   static Brightness brightness = Brightness.light;
   static bool get isDark => brightness == Brightness.dark;
 
-  // ---- Brand colors (constant in both themes — existing palette) ----
-  static const Color primaryColor = Color(0xFF4F48EC);
-  static const Color redColor = Color(0xFFF05555);
+  // ---- Brand colors (constant in both themes) ----
+  /// Brand blue used as a FILL (buttons, selected chips, badges) with white
+  /// content on top — 6.7:1, passes AA in both themes. For brand-coloured
+  /// text or icons on a surface use [brandText], which lightens on dark.
+  static const Color primaryColor = Color(0xFF1D4ED8);
+  static const Color redColor = Color(0xFFC62828);
   static const Color greyColor2 = Colors.black26;
 
-  // ---- Original light-mode tokens (kept for reference / direct use) ----
-  static const Color lightSurface = Colors.white;
-  static const Color lightBlack = Color(0xFF0A0A0A);
-  static const Color lightBlack1 = Color(0xFF424242);
-  static const Color lightGrey = Color(0xFF959CA9);
+  // ---- Theme 1 raw tokens (light / dark) ----
+  static const Color brandTextDark = Color(0xFF9DBBFF);
+  static const Color ctaLight = Color(0xFFCC4409);
+  static const Color ctaDark = Color(0xFFFF7A3D);
+  static const Color highlightLight = Color(0xFFFFC53D);
+  static const Color highlightDark = Color(0xFFFFD166);
+  static const Color navy = Color(0xFF0B1F44);
 
-  // ---- Dark-mode tokens (derived from the same palette, just darker) ----
-  static const Color darkBackground = Color(0xFF0F1115);
-  static const Color darkSurface = Color(0xFF1B1F27);
-  static const Color darkText = Color(0xFFECEEF3);
-  static const Color darkText1 = Color(0xFFC2C7D0);
-  static const Color darkGrey = Color(0xFF9AA1AF);
+  // ---- Light-mode tokens (kept for reference / direct use) ----
+  static const Color lightSurface = Colors.white;
+  static const Color lightBlack = Color(0xFF0B1F44);
+  static const Color lightBlack1 = Color(0xFF2E3D5C);
+  static const Color lightGrey = Color(0xFF8A93A6);
+
+  // ---- Dark-mode tokens ----
+  static const Color darkBackground = Color(0xFF0B1220);
+  static const Color darkSurface = Color(0xFF151D30);
+  static const Color darkText = Color(0xFFE8EDF7);
+  static const Color darkText1 = Color(0xFFC3CCE0);
+  static const Color darkGrey = Color(0xFF9AA6BD);
 
   // ---- Brightness-aware semantic getters (names preserved for back-compat) ----
 
   /// Surfaces / cards / scaffolds (was a const `Colors.white`).
   static Color get whiteColor => isDark ? darkSurface : lightSurface;
 
-  /// Primary text / strong foreground (was a const near-black).
+  /// Primary text / strong foreground — navy ink in light mode.
   static Color get blackColor => isDark ? darkText : lightBlack;
 
-  /// Secondary text (was `0xFF424242`).
+  /// Secondary text.
   static Color get blackColor1 => isDark ? darkText1 : lightBlack1;
 
-  /// Muted text / borders (was `0xFF959CA9`).
+  /// Borders / icons / de-emphasised text.
   static Color get greyColor => isDark ? darkGrey : lightGrey;
 
   // ---- Helpers for new code ----
   static Color get scaffoldBackground =>
-      isDark ? darkBackground : const Color(0xFFF6F7FB);
+      isDark ? darkBackground : const Color(0xFFF5F7FB);
   static Color get cardColor => whiteColor;
   static Color get dividerColor =>
-      isDark ? const Color(0xFF2A2F3A) : const Color(0xFFE6E8EE);
-  static Color get onPrimary => Colors.white; // text/icons on the purple brand
+      isDark ? const Color(0xFF263049) : const Color(0xFFE3E7F0);
+  static Color get onPrimary => Colors.white; // text/icons on the blue brand
 
-  /// Muted text that still passes WCAG AA on white (4.9:1). `greyColor`
-  /// (#959CA9) is only 2.8:1 — keep it for borders/icons, not 12–13 sp text.
-  static Color get textMuted => isDark ? darkGrey : const Color(0xFF6B7080);
+  /// Brand-coloured TEXT and ICONS on a surface: #1D4ED8 in light (6.7:1 on
+  /// white), #9DBBFF in dark (8.8:1 on the dark card).
+  static Color get brandText => isDark ? brandTextDark : primaryColor;
 
-  /// Green for positive *text* (document checks, price drop): 4.9:1 on white.
+  /// Action orange — use ONLY for Sell, Call / Call seller and Post ad.
+  static Color get ctaColor => isDark ? ctaDark : ctaLight;
+
+  /// Content on [ctaColor]: white in light (4.8:1), near-black in dark (7.2:1).
+  static Color get onCta => isDark ? const Color(0xFF121212) : Colors.white;
+
+  /// Amber for Premium / Featured / Price-drop tags.
+  static Color get highlight => isDark ? highlightDark : highlightLight;
+
+  /// Text on [highlight].
+  static Color get onHighlight => isDark ? const Color(0xFF121212) : navy;
+
+  /// Muted text that passes WCAG AA on the card in both themes.
+  static Color get textMuted => isDark ? darkGrey : const Color(0xFF5B6478);
+
+  /// Green for positive *text* (document checks, price drop).
   static Color get positiveText =>
-      isDark ? const Color(0xFF5FD3A2) : const Color(0xFF12805A);
+      isDark ? const Color(0xFF4ADE9A) : const Color(0xFF12805A);
 
   /// Soft chip / tile fill on a section surface.
   static Color get chipFill =>
-      isDark ? const Color(0xFF232833) : const Color(0xFFF4F5F9);
+      isDark ? const Color(0xFF1C2538) : const Color(0xFFEEF2F8);
 
   /// Tint behind brand-coloured notes (safety tip, avatar initial).
   static Color get primarySoft =>
-      isDark ? const Color(0xFF26244A) : const Color(0xFFEDEBFF);
+      isDark ? const Color(0xFF1C2A4A) : const Color(0xFFE3ECFB);
 
   /// Status green (Live pill, call icon).
-  static const Color successColor = Color(0xFF19A463);
+  static const Color successColor = Color(0xFF12805A);
 }

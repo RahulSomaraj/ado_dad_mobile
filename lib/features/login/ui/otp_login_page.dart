@@ -218,7 +218,7 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
                       largeTablet: 60,
                       desktop: 72,
                     ),
-                    color: AppColors.primaryColor,
+                    color: AppColors.brandText,
                   ),
                 ),
                 const SizedBox(height: 30),
@@ -330,7 +330,7 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
                                 desktop: 30.0,
                               ),
                               fontWeight: FontWeight.w500,
-                              color: AppColors.primaryColor)),
+                              color: AppColors.brandText)),
                     )
                   ],
                 ),

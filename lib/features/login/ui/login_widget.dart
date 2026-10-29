@@ -106,7 +106,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                         style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: AppColors.primaryColor)),
+                            color: AppColors.brandText)),
                   )
                 ],
               ),
@@ -118,7 +118,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                     style: TextStyle(
                         fontWeight: FontWeight.w500,
                         fontSize: 12,
-                        color: AppColors.primaryColor),
+                        color: AppColors.brandText),
                   ),
                 ),
               )

@@ -376,7 +376,7 @@ class _ShowroomUsersPageState extends State<ShowroomUsersPage> {
                           largeTablet: 55,
                           desktop: 65,
                         ),
-                        color: AppColors.primaryColor,
+                        color: AppColors.brandText,
                       )
                     : null,
               ),

@@ -289,7 +289,7 @@ class _HelpState extends State<Help> {
                   data: Theme.of(context)
                       .copyWith(dividerColor: Colors.transparent),
                   child: ExpansionTile(
-                    leading: Icon(topic.icon, color: AppColors.primaryColor),
+                    leading: Icon(topic.icon, color: AppColors.brandText),
                     title: Text(
                       topic.title,
                       style: GoogleFonts.poppins(
@@ -348,8 +348,8 @@ class _HelpState extends State<Help> {
           // Contact support
           OutlinedButton.icon(
             onPressed: _contactSupport,
-            icon: const Icon(Icons.mail_outline,
-                size: 17, color: AppColors.primaryColor),
+            icon: Icon(Icons.mail_outline,
+                size: 17, color: AppColors.brandText),
             style: OutlinedButton.styleFrom(
               side:
                   BorderSide(color: AppColors.greyColor.withValues(alpha: 0.6)),

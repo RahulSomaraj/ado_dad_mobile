@@ -277,7 +277,7 @@ class _HomePageState extends State<HomePage> {
                                   child: Text(
                                     "See all",
                                     style: TextStyle(
-                                      color: AppColors.primaryColor,
+                                      color: AppColors.brandText,
                                       fontWeight: FontWeight.w500,
                                       fontSize: GetResponsiveSize
                                           .getResponsiveFontSize(
@@ -1013,7 +1013,7 @@ class BottomNavBar extends StatelessWidget {
     required String route,
   }) {
     final bool active = _isActive(current, route);
-    final Color color = active ? AppColors.primaryColor : AppColors.greyColor;
+    final Color color = active ? AppColors.brandText : AppColors.greyColor;
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -1050,18 +1050,19 @@ class BottomNavBar extends StatelessWidget {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: AppColors.primaryColor,
+                // Theme 1: Sell is an action control, the only orange in the nav.
+                color: AppColors.ctaColor,
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.whiteColor, width: 4),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryColor.withValues(alpha: 0.4),
+                    color: AppColors.ctaColor.withValues(alpha: 0.4),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: const Icon(Icons.add, color: Colors.white, size: 26),
+              child: Icon(Icons.add, color: AppColors.onCta, size: 26),
             ),
           ),
         ),

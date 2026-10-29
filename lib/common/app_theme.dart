@@ -2,8 +2,8 @@ import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Centralized light & dark themes built from the existing brand palette
-/// (primary #4F48EC, red #F05555) plus Poppins type. Component themes here give
+/// Centralized light & dark themes built from Theme 1 "Trust Blue · Action
+/// Orange" (brand #1D4ED8, CTA #CC4409, danger #C62828) plus Poppins type. Component themes here give
 /// every screen a consistent, less "awkward" look: rounded cards, soft inputs,
 /// pill buttons, themed app bar and bottom navigation — in both modes.
 class AppTheme {
@@ -19,15 +19,19 @@ class AppTheme {
     final bool isDark = brightness == Brightness.dark;
 
     final Color scaffold =
-        isDark ? AppColors.darkBackground : const Color(0xFFF6F7FB);
+        isDark ? AppColors.darkBackground : const Color(0xFFF5F7FB);
     final Color surface = isDark ? AppColors.darkSurface : Colors.white;
     final Color textPrimary =
         isDark ? AppColors.darkText : AppColors.lightBlack;
     final Color textSecondary =
         isDark ? AppColors.darkText1 : AppColors.lightBlack1;
     final Color border =
-        isDark ? const Color(0xFF2A2F3A) : const Color(0xFFE6E8EE);
+        isDark ? const Color(0xFF263049) : const Color(0xFFE3E7F0);
     final Color muted = isDark ? AppColors.darkGrey : AppColors.lightGrey;
+    // Brand-coloured text/icons/focus rings lighten on dark so they stay readable.
+    final Color brandText = isDark ? AppColors.brandTextDark : _primary;
+    final Color cta = isDark ? AppColors.ctaDark : AppColors.ctaLight;
+    final Color onCta = isDark ? const Color(0xFF121212) : Colors.white;
 
     final ColorScheme scheme = ColorScheme.fromSeed(
       seedColor: _primary,
@@ -92,7 +96,7 @@ class AppTheme {
         hintStyle: TextStyle(color: muted),
         labelStyle: TextStyle(color: textSecondary),
         enabledBorder: inputBorder(border),
-        focusedBorder: inputBorder(_primary, 1.5),
+        focusedBorder: inputBorder(brandText, 1.5),
         errorBorder: inputBorder(_danger),
         focusedErrorBorder: inputBorder(_danger, 1.5),
       ),
@@ -120,7 +124,7 @@ class AppTheme {
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: _primary),
+        style: TextButton.styleFrom(foregroundColor: brandText),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: surface,
@@ -133,7 +137,7 @@ class AppTheme {
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: surface,
-        selectedItemColor: _primary,
+        selectedItemColor: brandText,
         unselectedItemColor: muted,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
@@ -148,9 +152,10 @@ class AppTheme {
         backgroundColor: surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: _primary,
-        foregroundColor: Colors.white,
+      // The only FAB is Sell, which is an action (orange) control.
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: cta,
+        foregroundColor: onCta,
       ),
       dividerTheme: DividerThemeData(color: border, thickness: 1),
       scrollbarTheme: ScrollbarThemeData(

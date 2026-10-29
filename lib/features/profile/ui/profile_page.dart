@@ -732,7 +732,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         ),
                                         const SizedBox(width: 4),
                                         Icon(Icons.verified,
-                                            color: AppColors.primaryColor,
+                                            color: AppColors.brandText,
                                             size: GetResponsiveSize
                                                 .getResponsiveSize(
                                               context,
@@ -2810,10 +2810,10 @@ class _ProfileStatsStripState extends State<_ProfileStatsStrip> {
           children: [
             Text(
               count == null ? '—' : '$count',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppColors.primaryColor,
+                color: AppColors.brandText,
               ),
             ),
             const SizedBox(height: 2),

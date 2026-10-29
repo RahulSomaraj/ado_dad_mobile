@@ -51,7 +51,7 @@ class FeaturesSelectionWidget extends StatelessWidget {
           shape: StadiumBorder(
             side: BorderSide(
               color: isSelected
-                  ? AppColors.primaryColor
+                  ? AppColors.brandText
                   : AppColors.greyColor.withValues(alpha: 0.4),
             ),
           ),

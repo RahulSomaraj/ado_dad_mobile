@@ -36,7 +36,7 @@ class PasswordFieldBuilders {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: AppColors.primaryColor),
+            borderSide: BorderSide(color: AppColors.brandText),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),

@@ -47,7 +47,7 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1EEFF), // Soft lavender background
+      backgroundColor: AppColors.scaffoldBackground, // Theme 1 surface
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 16),
@@ -103,7 +103,7 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                       mobile: 20, tablet: 24, largeTablet: 28, desktop: 32),
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1EEFF), // soft lavender bg
+                  color: AppColors.primarySoft, // Theme 1 soft brand tint
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(
                       GetResponsiveSize.getResponsiveBorderRadius(context,
@@ -414,7 +414,7 @@ class _SellerCard extends StatelessWidget {
                 : Text(
                     _initials(seller.name),
                     style: TextStyle(
-                      color: AppColors.primaryColor,
+                      color: AppColors.brandText,
                       fontWeight: FontWeight.w700,
                       fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                           mobile: 20, tablet: 26, largeTablet: 32, desktop: 38),
@@ -491,8 +491,8 @@ class _SellerCard extends StatelessWidget {
                       onPressed: () => _callSeller(seller.phone!),
                       icon: const Icon(Icons.phone, size: 16),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryColor,
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppColors.ctaColor,
+                        foregroundColor: AppColors.onCta,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         shape: RoundedRectangleBorder(
