@@ -1,7 +1,10 @@
 // Screen 06 header + listing strip.
 
+import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/brand_header.dart';
 import 'package:ado_dad_user/common/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../data/chat_models.dart';
 import 'chat_avatar.dart';
@@ -37,17 +40,18 @@ class ChatThreadHeader extends StatelessWidget {
             if (r.ad != null) r.ad!.title,
           ].join(' · ');
 
-    return Material(
-      color: c.surface,
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: ChatSize.headerPadding,
-          child: Row(
-            children: [
-              _HeaderIcon(icon: Icons.arrow_back_rounded, color: c.text2, onTap: onBack, label: 'Back'),
-              const SizedBox(width: 2),
-              Expanded(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent),
+      child: BrandHeader(
+        radius: 22,
+        padding: const EdgeInsets.fromLTRB(6, 8, 10, 12),
+        child: Row(
+          children: [
+            _HeaderIcon(icon: Icons.arrow_back_rounded, color: Colors.white, onTap: onBack, label: 'Back'),
+            const SizedBox(width: 2),
+            Expanded(
+              child: Material(
+                type: MaterialType.transparency,
                 child: InkWell(
                   onTap: r == null ? null : onOpenDetails,
                   borderRadius: BorderRadius.circular(12),
@@ -55,7 +59,14 @@ class ChatThreadHeader extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
                     child: Row(
                       children: [
-                        ChatAvatar(name: name, imageUrl: r?.otherUser?.avatarUrl, size: ChatSize.avatarSm),
+                        Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.7), width: 1.5),
+                          ),
+                          child: ChatAvatar(name: name, imageUrl: r?.otherUser?.avatarUrl, size: ChatSize.avatarSm - 4),
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -66,10 +77,10 @@ class ChatThreadHeader extends StatelessWidget {
                                 name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: ChatSize.headerName,
-                                  fontWeight: FontWeight.w600,
-                                  color: c.text,
+                                style: const TextStyle(
+                                  fontSize: ChatSize.headerName + 1,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
                                   height: 1.2,
                                 ),
                               ),
@@ -78,7 +89,11 @@ class ChatThreadHeader extends StatelessWidget {
                                   sub,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontSize: ChatSize.headerSub, color: c.muted, height: 1.3),
+                                  style: TextStyle(
+                                    fontSize: ChatSize.headerSub,
+                                    color: HomeHeroPalette.soft,
+                                    height: 1.3,
+                                  ),
                                 ),
                             ],
                           ),
@@ -88,11 +103,22 @@ class ChatThreadHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              if (onCall != null) _HeaderIcon(icon: Icons.call_outlined, color: c.call, onTap: onCall!, label: 'Call'),
-              if (r != null)
-                _HeaderIcon(icon: Icons.more_vert_rounded, color: c.text2, onTap: onOpenDetails, label: 'Chat details'),
+            ),
+            if (onCall != null) ...[
+              // Call is an action: action-orange round button.
+              BrandHeaderIconButton(
+                icon: Icons.call_rounded,
+                tooltip: 'Call',
+                size: 40,
+                color: AppColors.onCta,
+                background: c.call,
+                onTap: onCall,
+              ),
+              const SizedBox(width: 4),
             ],
-          ),
+            if (r != null)
+              _HeaderIcon(icon: Icons.more_vert_rounded, color: Colors.white, onTap: onOpenDetails, label: 'Chat details'),
+          ],
         ),
       ),
     );
@@ -130,14 +156,20 @@ class ChatListingStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = ChatColors.of(context);
-    return Material(
+    // Floating card under the blue header (Home card style).
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 2),
+      child: Material(
       color: c.surface,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Container(
           padding: ChatSize.stripPadding,
           decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: c.divider, width: 0.7), bottom: BorderSide(color: c.divider, width: 0.7)),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: c.divider, width: 0.8),
           ),
           child: Row(
             children: [
@@ -194,6 +226,7 @@ class ChatListingStrip extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

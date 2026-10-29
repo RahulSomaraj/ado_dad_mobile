@@ -14,6 +14,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:ado_dad_user/common/brand_header.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:go_router/go_router.dart';
@@ -340,8 +341,13 @@ class _ProfilePageState extends State<ProfilePage> {
           context.go('/home');
         }
       },
-      child: Scaffold(
-        backgroundColor: AppColors.whiteColor,
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        // Blue brand header at the top → light status-bar icons.
+        value: SystemUiOverlayStyle.light.copyWith(
+          statusBarColor: Colors.transparent,
+        ),
+        child: Scaffold(
+        backgroundColor: AppColors.scaffoldBackground,
         body: Stack(
           children: [
             SingleChildScrollView(
@@ -555,20 +561,23 @@ class _ProfilePageState extends State<ProfilePage> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // 🔷 BRAND HEADER (Home style): title + settings,
+                        // avatar, name/email, Edit/Save — with the stats card
+                        // floating over its bottom edge.
+                        _ProfileHeaderShell(
+                          header: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
                         // Flat app bar — wireframe: "Profile" + settings gear
                         Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            16,
-                            MediaQuery.of(context).padding.top + 8,
-                            8,
-                            8,
-                          ),
+                          padding: const EdgeInsets.fromLTRB(16, 4, 12, 4),
                           child: Row(
                             children: [
                               Text(
                                 "Profile",
                                 style: TextStyle(
-                                  color: AppColors.blackColor,
+                                  color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                   fontSize:
                                       GetResponsiveSize.getResponsiveFontSize(
@@ -602,13 +611,14 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(10),
-                                    color: AppColors.isDark
-                                        ? Colors.white10
-                                        : const Color(0xFFF1F2F6),
+                                    color: Colors.white.withValues(alpha: 0.14),
+                                    border: Border.all(
+                                        color: Colors.white
+                                            .withValues(alpha: 0.26)),
                                   ),
                                   child: Icon(
                                     Icons.settings_outlined,
-                                    color: AppColors.blackColor,
+                                    color: Colors.white,
                                     size: GetResponsiveSize.getResponsiveSize(
                                       context,
                                       mobile: 22,
@@ -622,14 +632,10 @@ class _ProfilePageState extends State<ProfilePage> {
                             ],
                           ),
                         ),
-                        Divider(
-                            height: 1,
-                            thickness: 1,
-                            color: AppColors.dividerColor),
 
                         // Compact hero — avatar + name/email + Edit (wireframe)
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                          padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
                           child: Row(
                             children: [
                               // Avatar
@@ -646,7 +652,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         largeTablet: 52,
                                         desktop: 58,
                                       ),
-                                      backgroundColor: AppColors.greyColor,
+                                      backgroundColor: Colors.white24,
                                       backgroundImage: _pickedImageBytes != null
                                           ? MemoryImage(_pickedImageBytes!)
                                           : (_currentProfilePicUrl != null &&
@@ -688,7 +694,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                           padding: const EdgeInsets.all(4),
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
-                                            color: AppColors.primaryColor,
+                                            color: AppColors.ctaColor,
                                             border: Border.all(
                                                 color: Colors.white,
                                                 width: 1.5),
@@ -718,7 +724,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                             overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
                                               fontWeight: FontWeight.w700,
-                                              color: AppColors.blackColor,
+                                              color: Colors.white,
                                               fontSize: GetResponsiveSize
                                                   .getResponsiveFontSize(
                                                 context,
@@ -732,7 +738,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         ),
                                         const SizedBox(width: 4),
                                         Icon(Icons.verified,
-                                            color: AppColors.brandText,
+                                            color: HomeHeroPalette.soft,
                                             size: GetResponsiveSize
                                                 .getResponsiveSize(
                                               context,
@@ -749,7 +755,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
-                                        color: AppColors.greyColor,
+                                        color: Colors.white
+                                            .withValues(alpha: 0.85),
                                         fontSize: GetResponsiveSize
                                             .getResponsiveFontSize(
                                           context,
@@ -774,19 +781,22 @@ class _ProfilePageState extends State<ProfilePage> {
                                       horizontal: 16, vertical: 7),
                                   decoration: BoxDecoration(
                                     color: isEditing
-                                        ? AppColors.primaryColor
-                                        : Colors.transparent,
+                                        ? AppColors.ctaColor
+                                        : Colors.white.withValues(alpha: 0.14),
                                     borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
-                                        color: AppColors.primaryColor,
+                                        color: isEditing
+                                            ? AppColors.ctaColor
+                                            : Colors.white
+                                                .withValues(alpha: 0.6),
                                         width: 1),
                                   ),
                                   child: Text(
                                     isEditing ? 'Save' : 'Edit',
                                     style: TextStyle(
                                       color: isEditing
-                                          ? Colors.white
-                                          : AppColors.primaryColor,
+                                          ? AppColors.onCta
+                                          : Colors.white,
                                       fontWeight: FontWeight.w600,
                                       fontSize: GetResponsiveSize
                                           .getResponsiveFontSize(
@@ -804,6 +814,11 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
 
+                            ],
+                          ),
+                          stats: const _ProfileStatsStrip(),
+                        ),
+                        const SizedBox(height: 14),
                         // Editable fields appear inline only while editing
                         if (isEditing)
                           Padding(
@@ -846,15 +861,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ),
 
-                        // Stats (kpis) — My ads / Wishlist / Chats
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 6, 16, 14),
-                          child: const _ProfileStatsStrip(),
-                        ),
-                        Divider(
-                            height: 1,
-                            thickness: 1,
-                            color: AppColors.dividerColor),
+                        if (isEditing) const SizedBox(height: 10),
                         // Menu list — flat full-width rows (all menus kept)
                         ProfileMenuItem(
                             image: 'assets/images/add-profile-icon.png',
@@ -2745,6 +2752,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         // Bottom navigation is now provided by the persistent shell.
       ),
+      )
     );
   }
 }
@@ -2775,55 +2783,120 @@ class _ProfileStatsStripState extends State<_ProfileStatsStrip> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _kpi(_stats?['ads'], 'My ads', () => context.push('/my-ads')),
+    // One white card with three KPIs split by hairlines (Home category-card
+    // style). It floats over the bottom of the blue profile header.
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: HomeHeroPalette.shadowInk
+                .withValues(alpha: AppColors.isDark ? 0.55 : 0.18),
+            blurRadius: 26,
+            offset: const Offset(0, 12),
+            spreadRadius: -10,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Material(
+          type: MaterialType.transparency,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                    child: _kpi(_stats?['ads'], 'My ads',
+                        Icons.sell_outlined, () => context.push('/my-ads'))),
+                VerticalDivider(
+                    width: 1, thickness: 1, color: AppColors.dividerColor),
+                Expanded(
+                    child: _kpi(_stats?['wishlist'], 'Wishlist',
+                        Icons.favorite_border_rounded,
+                        () => context.push('/wishlist'))),
+                VerticalDivider(
+                    width: 1, thickness: 1, color: AppColors.dividerColor),
+                Expanded(
+                    child: _kpi(_stats?['chats'], 'Chats',
+                        Icons.chat_bubble_outline_rounded,
+                        () => context.go('/chat-rooms'))),
+              ],
+            ),
+          ),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _kpi(
-              _stats?['wishlist'], 'Wishlist', () => context.push('/wishlist')),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child:
-              _kpi(_stats?['chats'], 'Chats', () => context.go('/chat-rooms')),
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _kpi(int? count, String label, VoidCallback onTap) {
+  Widget _kpi(int? count, String label, IconData icon, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        decoration: BoxDecoration(
-          color: AppColors.whiteColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.dividerColor),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              count == null ? '—' : '$count',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.brandText,
+      child: Semantics(
+        button: true,
+        label: '$label: ${count ?? 'loading'}',
+        excludeSemantics: true,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: AppColors.brandText),
+              const SizedBox(height: 4),
+              Text(
+                count == null ? '—' : '$count',
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.blackColor,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(fontSize: 11, color: AppColors.greyColor),
-            ),
-          ],
+              const SizedBox(height: 1),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+}
+
+
+/// Blue brand header with a card floating over its bottom edge.
+class _ProfileHeaderShell extends StatelessWidget {
+  const _ProfileHeaderShell({required this.header, required this.stats});
+
+  final Widget header;
+  final Widget stats;
+
+  /// How far the stats card hangs below the header.
+  static const double _hang = 44;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: _hang),
+          child: BrandHeader(
+            padding: const EdgeInsets.fromLTRB(0, 8, 0, _hang + 26),
+            child: header,
+          ),
+        ),
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: 0,
+          child: stats,
+        ),
+      ],
     );
   }
 }

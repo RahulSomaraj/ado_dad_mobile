@@ -326,7 +326,9 @@ class RichAdCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                  fontSize: 12.5, color: AppColors.blackColor),
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.blackColor),
                             ),
                           ),
                           if (ad.user?.isVerified == true) ...[

@@ -245,8 +245,8 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                                             );
                                       },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primaryColor,
-                                  foregroundColor: Colors.white,
+                                  backgroundColor: AppColors.ctaColor,
+                                  foregroundColor: AppColors.onCta,
                                   padding: EdgeInsets.symmetric(
                                     horizontal:
                                         GetResponsiveSize.getResponsivePadding(

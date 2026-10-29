@@ -1,9 +1,9 @@
+import 'package:ado_dad_user/common/app_fonts.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Centralized light & dark themes built from Theme 1 "Trust Blue · Action
-/// Orange" (brand #1D4ED8, CTA #CC4409, danger #C62828) plus Poppins type. Component themes here give
+/// Orange" (brand #1D4ED8, CTA #CC4409, danger #C62828) plus Plus Jakarta Sans type (see app_fonts.dart). Component themes here give
 /// every screen a consistent, less "awkward" look: rounded cards, soft inputs,
 /// pill buttons, themed app bar and bottom navigation — in both modes.
 class AppTheme {
@@ -47,7 +47,7 @@ class AppTheme {
       onSurface: textPrimary,
     );
 
-    final TextTheme baseText = GoogleFonts.poppinsTextTheme(
+    final TextTheme baseText = appFontTextTheme(
             isDark ? ThemeData.dark().textTheme : ThemeData.light().textTheme)
         .apply(bodyColor: textPrimary, displayColor: textPrimary);
 
@@ -65,6 +65,7 @@ class AppTheme {
       canvasColor: surface,
       dividerColor: border,
       primaryColor: _primary,
+      fontFamily: appFont().fontFamily,
       textTheme: baseText,
       iconTheme: IconThemeData(color: textSecondary),
       splashColor: _primary.withValues(alpha: 0.08),
@@ -75,7 +76,7 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0.5,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.poppins(
+        titleTextStyle: appFont(
             fontSize: 18, fontWeight: FontWeight.w600, color: textPrimary),
         iconTheme: IconThemeData(color: textPrimary),
       ),
@@ -100,31 +101,49 @@ class AppTheme {
         errorBorder: inputBorder(_danger),
         focusedErrorBorder: inputBorder(_danger, 1.5),
       ),
+      // Every filled action button (Login, Save, Apply, Post, Retry…) uses the
+      // action orange so actions stand apart from the blue brand surfaces.
+      // Outlined = secondary, text buttons = links (brand blue).
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: _primary,
-          foregroundColor: Colors.white,
+          backgroundColor: cta,
+          foregroundColor: onCta,
+          disabledBackgroundColor: border,
+          disabledForegroundColor: muted,
           elevation: 0,
           minimumSize: const Size.fromHeight(50),
           textStyle:
-              GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600),
+              appFont(fontSize: 15, fontWeight: FontWeight.w600),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: cta,
+          foregroundColor: onCta,
+          minimumSize: const Size.fromHeight(50),
+          textStyle: appFont(fontSize: 15, fontWeight: FontWeight.w600),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
+        // Secondary actions: action-orange outline + label. (Cancel /
+        // dismiss buttons that set a grey border keep it.)
         style: OutlinedButton.styleFrom(
-          foregroundColor: textPrimary,
+          foregroundColor: cta,
           minimumSize: const Size.fromHeight(50),
-          side: BorderSide(color: border),
+          side: BorderSide(color: cta, width: 1.4),
           textStyle:
-              GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600),
+              appFont(fontSize: 15, fontWeight: FontWeight.w600),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: brandText),
+        // Text buttons (dialog actions, "Retry", "Clear"…) in action orange.
+        style: TextButton.styleFrom(foregroundColor: cta),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: surface,

@@ -1,57 +1,14 @@
+import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/brand_header.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/common/notification_badge_service.dart';
 import 'package:ado_dad_user/common/shared_pref.dart';
 import 'package:ado_dad_user/common/widgets/ado_dad_logo.dart';
 import 'package:ado_dad_user/features/home/ui/widgets/location_chip.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-/// Colours of the home header — design "Option C · Indigo night".
-///
-/// The header is indigo in light and dark theme alike, so these are
-/// constants rather than brightness-aware getters.
-class HomeHeroPalette {
-  HomeHeroPalette._();
-
-  static const Color indigoDeep = Color(0xFF141238);
-  static const Color indigoMid = Color(0xFF221E5C);
-  static const Color indigoBright = Color(0xFF3B32A0);
-
-  /// Lavender for the name, the location line and accents on the indigo.
-  static const Color lavender = Color(0xFFC7D2FE);
-
-  /// Accent for links / active dots on light surfaces (7.3:1 on white).
-  static const Color accent = Color(0xFF4338CA);
-
-  /// Unread dot on the bell.
-  static const Color dot = Color(0xFFFB923C);
-
-  static Color glass([double a = 0.1]) => Colors.white.withValues(alpha: a);
-  static Color glassBorder([double a = 0.2]) =>
-      Colors.white.withValues(alpha: a);
-
-  static const LinearGradient gradient = LinearGradient(
-    begin: Alignment(-0.35, -1),
-    end: Alignment(0.35, 1),
-    colors: [indigoDeep, indigoMid, indigoBright],
-    stops: [0, 0.55, 1],
-  );
-
-  /// Serif display face for the greeting and section titles.
-  static TextStyle display({
-    required double size,
-    Color color = Colors.white,
-    FontStyle style = FontStyle.normal,
-    double height = 1.12,
-  }) =>
-      GoogleFonts.playfairDisplay(
-        fontSize: size,
-        fontWeight: FontWeight.w700,
-        fontStyle: style,
-        height: height,
-        color: color,
-      );
-}
+// The palette lives in common so Profile and Chat share the Home header look.
+export 'package:ado_dad_user/common/brand_header.dart';
 
 /// "Good afternoon, Rahul" for a signed-in user; "Good afternoon" signed out.
 /// Returns the greeting and the first name separately so the name can be
@@ -68,8 +25,8 @@ class HomeHeroPalette {
   return (greeting: greeting, firstName: first.isEmpty ? null : first);
 }
 
-/// Full-bleed indigo header at the top of Home: logo + bell, location line,
-/// serif greeting with the user's first name, prompt and glass search.
+/// Full-bleed blue header at the top of Home: logo + bell, location line,
+/// greeting with the user's first name, prompt and glass search.
 ///
 /// [bottomInset] leaves room at the bottom for the floating category card,
 /// which the page overlaps onto the header.
@@ -95,23 +52,33 @@ class HomeHero extends StatelessWidget {
     final double hPad = tab ? 32 : 20;
 
     return DecoratedBox(
-      decoration: const BoxDecoration(gradient: HomeHeroPalette.gradient),
+      decoration: BoxDecoration(gradient: HomeHeroPalette.gradient),
       child: Padding(
         padding: EdgeInsets.fromLTRB(hPad, topPad + 14, hPad, bottomInset),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Logo left; location pill + notifications top right.
             Row(
               children: [
                 AdoDadLogo(height: tab ? 40 : 28),
-                const Spacer(),
-                HomeBellButton(onTap: onNotificationsTap),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: _LocationLine(
+                      onTap: onLocationTap,
+                      fontSize: tab ? 15 : 13,
+                      pillHeight: tab ? 44 : 38,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                HomeBellButton(onTap: onNotificationsTap, size: tab ? 44 : 38),
               ],
             ),
-            const SizedBox(height: 18),
-            _LocationLine(onTap: onLocationTap, fontSize: tab ? 15 : 13),
-            const SizedBox(height: 6),
+            const SizedBox(height: 22),
             // Rebuilds on login, logout and profile-name edits.
             ValueListenableBuilder<String?>(
               valueListenable: currentUserName,
@@ -130,8 +97,7 @@ class HomeHero extends StatelessWidget {
                           text: g.firstName,
                           style: HomeHeroPalette.display(
                             size: headline,
-                            style: FontStyle.italic,
-                            color: HomeHeroPalette.lavender,
+                            color: HomeHeroPalette.soft,
                           ),
                         ),
                     ],
@@ -145,7 +111,7 @@ class HomeHero extends StatelessWidget {
             Text(
               'What are you looking for today?',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.72),
+                color: Colors.white.withValues(alpha: 0.88),
                 fontSize: tab ? 16 : 14,
               ),
             ),
@@ -158,39 +124,74 @@ class HomeHero extends StatelessWidget {
   }
 }
 
-/// Pin + place name + chevron in lavender. Opens the location picker.
+/// Pin + place name + chevron in pale blue. Opens the location picker.
 class _LocationLine extends StatelessWidget {
-  const _LocationLine({required this.onTap, required this.fontSize});
+  const _LocationLine({
+    required this.onTap,
+    required this.fontSize,
+    this.pillHeight,
+  });
 
   final VoidCallback onTap;
   final double fontSize;
 
+  /// When set, the line is drawn as a glass pill of this height (top right
+  /// of the header, beside the bell).
+  final double? pillHeight;
+
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.location_on_outlined,
-                size: fontSize + 2, color: HomeHeroPalette.lavender),
-            const SizedBox(width: 4),
-            Flexible(
-              child: LocationChip(
-                fontSize: fontSize,
-                onTap: onTap,
-                color: HomeHeroPalette.lavender,
-                textAlign: TextAlign.start,
-                maxLines: 1,
-              ),
-            ),
-            const SizedBox(width: 2),
-            Icon(Icons.keyboard_arrow_down_rounded,
-                size: fontSize + 4, color: HomeHeroPalette.lavender),
-          ],
+    final bool pill = pillHeight != null;
+    final Color fg = pill ? Colors.white : HomeHeroPalette.soft;
+    final row = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.location_on_outlined,
+            size: fontSize + 2, color: HomeHeroPalette.soft),
+        const SizedBox(width: 4),
+        Flexible(
+          child: LocationChip(
+            fontSize: fontSize,
+            onTap: onTap,
+            color: fg,
+            textAlign: TextAlign.start,
+            maxLines: 1,
+          ),
+        ),
+        const SizedBox(width: 2),
+        Icon(Icons.keyboard_arrow_down_rounded,
+            size: fontSize + 4, color: fg),
+      ],
+    );
+
+    if (!pill) {
+      return Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: row,
+          ),
+        ),
+      );
+    }
+
+    return Material(
+      color: HomeHeroPalette.glass(0.12),
+      shape: StadiumBorder(
+          side: BorderSide(color: HomeHeroPalette.glassBorder())),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          height: pillHeight,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            // widthFactor 1: hug the place name instead of filling the row.
+            child: Center(widthFactor: 1, child: row),
+          ),
         ),
       ),
     );
@@ -238,7 +239,7 @@ class HomeBellButton extends StatelessWidget {
                             color: HomeHeroPalette.dot,
                             shape: BoxShape.circle,
                             border: Border.all(
-                                color: HomeHeroPalette.indigoMid, width: 1.5),
+                                color: HomeHeroPalette.mid, width: 1.5),
                           ),
                         ),
                       ),
@@ -253,7 +254,7 @@ class HomeBellButton extends StatelessWidget {
   }
 }
 
-/// Glass search field on the indigo. Tapping opens the full search screen.
+/// Glass search field on the blue header. Tapping opens the full search screen.
 class HomeGlassSearch extends StatelessWidget {
   const HomeGlassSearch({super.key, required this.onTap, this.height = 50});
 
@@ -288,7 +289,7 @@ class HomeGlassSearch extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.75),
+                        color: Colors.white.withValues(alpha: 0.88),
                         fontSize: 15,
                       ),
                     ),
@@ -299,12 +300,14 @@ class HomeGlassSearch extends StatelessWidget {
                   child: Container(
                     width: height - 12,
                     height: height - 12,
+                    // Filter is an action: action orange, like every other
+                    // primary action button in the app.
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.ctaColor,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.tune_rounded,
-                        color: HomeHeroPalette.indigoMid, size: 19),
+                    child: Icon(Icons.tune_rounded,
+                        color: AppColors.onCta, size: 19),
                   ),
                 ),
               ],
@@ -316,7 +319,7 @@ class HomeGlassSearch extends StatelessWidget {
   }
 }
 
-/// Pinned indigo header that slides in once the main header scrolls away:
+/// Pinned blue header that slides in once the main header scrolls away:
 /// logo, location, bell and search.
 class HomeCompactHeader extends StatelessWidget {
   const HomeCompactHeader({
@@ -342,7 +345,7 @@ class HomeCompactHeader extends StatelessWidget {
         borderRadius: radius,
         boxShadow: [
           BoxShadow(
-            color: HomeHeroPalette.indigoDeep.withValues(alpha: 0.35),
+            color: HomeHeroPalette.shadowInk.withValues(alpha: 0.35),
             blurRadius: 22,
             offset: const Offset(0, 8),
           ),
@@ -360,7 +363,10 @@ class HomeCompactHeader extends StatelessWidget {
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: _LocationLine(
-                      onTap: onLocationTap, fontSize: tab ? 14 : 12.5),
+                    onTap: onLocationTap,
+                    fontSize: tab ? 14 : 12.5,
+                    pillHeight: 36,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),

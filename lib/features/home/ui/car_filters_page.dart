@@ -516,7 +516,7 @@ class _CarFiltersPageState extends State<CarFiltersPage> {
             ),
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryColor,
+                backgroundColor: AppColors.ctaColor,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(
                     GetResponsiveSize.getResponsiveBorderRadius(

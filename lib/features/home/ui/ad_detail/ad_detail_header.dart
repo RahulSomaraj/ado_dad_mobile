@@ -112,8 +112,10 @@ class AdDetailHeader extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs4),
           Text(
             title,
-            style: AppTextstyle.titleMedium
-                .copyWith(fontSize: AppSpacing.s(context, 15)),
+            style: AppTextstyle.titleMedium.copyWith(
+              fontSize: AppSpacing.s(context, 15),
+              fontWeight: FontWeight.w600,
+            ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),

@@ -1,12 +1,12 @@
+import 'package:ado_dad_user/common/app_fonts.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/features/home/ui/widgets/home_hero.dart';
 import 'package:ado_dad_user/models/cayegory_model.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// One white card holding every category in a 3-column grid split by
-/// hairlines. It floats over the bottom edge of the indigo header.
+/// hairlines. It floats over the bottom edge of the blue header.
 /// Navigation stays in [HomePage] via [onTap].
 class HomeCategoryCard extends StatelessWidget {
   const HomeCategoryCard({
@@ -39,7 +39,7 @@ class HomeCategoryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: HomeHeroPalette.indigoDeep
+            color: HomeHeroPalette.shadowInk
                 .withValues(alpha: AppColors.isDark ? 0.6 : 0.22),
             blurRadius: 30,
             offset: const Offset(0, 14),
@@ -117,7 +117,7 @@ class _CategoryCell extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.poppins(
+                style: appFont(
                   fontSize: tab ? 14 : 11.5,
                   height: 1.2,
                   fontWeight: FontWeight.w600,

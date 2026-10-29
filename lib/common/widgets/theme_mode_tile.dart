@@ -72,60 +72,58 @@ class ThemeModeTile extends StatelessWidget {
     return AnimatedBuilder(
       animation: ThemeController.instance,
       builder: (context, _) {
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _openPicker(context),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: AppColors.isDark
-                              ? Colors.white10
-                              : const Color(0xFFF1F2F6),
-                        ),
-                        child: Icon(Icons.brightness_6_outlined,
-                            size: 20, color: AppColors.brandText),
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+          child: Material(
+            color: AppColors.whiteColor,
+            borderRadius: BorderRadius.circular(16),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => _openPicker(context),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.dividerColor),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primarySoft),
+                      child: Icon(Icons.brightness_6_outlined,
+                          size: 20, color: AppColors.brandText),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Appearance',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14.5,
+                                color: AppColors.blackColor),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            ThemeController.instance.label(),
+                            style: TextStyle(
+                                color: AppColors.textMuted, fontSize: 12),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Appearance',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                  color: AppColors.blackColor),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              ThemeController.instance.label(),
-                              style: TextStyle(
-                                  color: AppColors.greyColor, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(Icons.chevron_right,
-                          size: 22, color: AppColors.greyColor),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 9),
-                    child: Divider(
-                        height: 1, thickness: 1, color: AppColors.dividerColor),
-                  ),
-                ],
+                    ),
+                    Icon(Icons.chevron_right_rounded,
+                        size: 22, color: AppColors.greyColor),
+                  ],
+                ),
               ),
             ),
           ),

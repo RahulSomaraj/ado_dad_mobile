@@ -222,8 +222,8 @@ class _LoginWidgetState extends State<LoginWidget> {
       width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryColor,
-            foregroundColor: AppColors.whiteColor,
+            backgroundColor: AppColors.ctaColor,
+            foregroundColor: AppColors.onCta,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10))),
         onPressed: () {},

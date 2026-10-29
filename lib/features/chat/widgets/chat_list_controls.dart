@@ -12,12 +12,16 @@ class ChatSearchField extends StatelessWidget {
     required this.focusNode,
     required this.onChanged,
     required this.onClear,
+    this.onBrand = false,
   });
 
   final TextEditingController controller;
   final FocusNode focusNode;
   final ValueChanged<String> onChanged;
   final VoidCallback onClear;
+
+  /// Glass style for use on the blue brand header.
+  final bool onBrand;
 
   @override
   Widget build(BuildContext context) {
@@ -26,17 +30,24 @@ class ChatSearchField extends StatelessWidget {
       animation: Listenable.merge([controller, focusNode]),
       builder: (context, _) {
         final focused = focusNode.hasFocus;
+        final Color fg = onBrand ? Colors.white : c.text;
+        final Color hint = onBrand ? Colors.white.withValues(alpha: 0.82) : c.muted;
         return AnimatedContainer(
           duration: ChatMotion.fast,
           decoration: BoxDecoration(
-            color: c.chip,
+            color: onBrand ? Colors.white.withValues(alpha: focused ? 0.2 : 0.14) : c.chip,
             borderRadius: BorderRadius.circular(ChatSize.searchRadius),
-            border: Border.all(color: focused ? c.brand : Colors.transparent, width: 1.5),
+            border: Border.all(
+              color: onBrand
+                  ? Colors.white.withValues(alpha: focused ? 0.7 : 0.26)
+                  : (focused ? c.brand : Colors.transparent),
+              width: onBrand ? 1 : 1.5,
+            ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 13),
           child: Row(
             children: [
-              Icon(Icons.search_rounded, size: ChatSize.searchIcon + 2, color: c.muted),
+              Icon(Icons.search_rounded, size: ChatSize.searchIcon + 2, color: hint),
               const SizedBox(width: 9),
               Expanded(
                 child: TextField(
@@ -45,8 +56,8 @@ class ChatSearchField extends StatelessWidget {
                   focusNode: focusNode,
                   onChanged: onChanged,
                   textInputAction: TextInputAction.search,
-                  style: TextStyle(fontSize: ChatSize.searchFont, color: c.text),
-                  cursorColor: c.brand,
+                  style: TextStyle(fontSize: ChatSize.searchFont, color: fg),
+                  cursorColor: onBrand ? Colors.white : c.brand,
                   decoration: InputDecoration(
                     isDense: true,
                     filled: false,
@@ -56,7 +67,7 @@ class ChatSearchField extends StatelessWidget {
                     // 7 px wireframe padding → 9 dp; the 1.5 dp focus ring adds the rest.
                     contentPadding: EdgeInsets.symmetric(vertical: ChatSize.searchPadding.vertical / 2),
                     hintText: 'Search people or ads',
-                    hintStyle: TextStyle(fontSize: ChatSize.searchFont, color: c.muted),
+                    hintStyle: TextStyle(fontSize: ChatSize.searchFont, color: hint),
                   ),
                 ),
               ),
@@ -66,7 +77,7 @@ class ChatSearchField extends StatelessWidget {
                   behavior: HitTestBehavior.opaque,
                   child: Padding(
                     padding: const EdgeInsets.all(4),
-                    child: Icon(Icons.close_rounded, size: ChatSize.searchIcon + 2, color: c.muted),
+                    child: Icon(Icons.close_rounded, size: ChatSize.searchIcon + 2, color: hint),
                   ),
                 ),
             ],

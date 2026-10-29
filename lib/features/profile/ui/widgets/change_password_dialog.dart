@@ -351,8 +351,8 @@ class ChangePasswordDialog {
                         ),
                         child: TextButton(
                           style: ButtonStyle(
-                            backgroundColor: const WidgetStatePropertyAll(
-                                AppColors.primaryColor),
+                            backgroundColor: WidgetStatePropertyAll(
+                                AppColors.ctaColor),
                             shape: const WidgetStatePropertyAll(
                                 RoundedRectangleBorder(
                                     borderRadius:
@@ -374,7 +374,7 @@ class ChangePasswordDialog {
                           child: Text(
                             "OK",
                             style: TextStyle(
-                              color: AppColors.whiteColor,
+                              color: AppColors.onCta,
                               fontSize: GetResponsiveSize.getResponsiveFontSize(
                                 context,
                                 mobile: 14,

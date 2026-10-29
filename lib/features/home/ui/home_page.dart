@@ -74,7 +74,7 @@ class _HomePageState extends State<HomePage> {
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
-    final bool compact = _scrollController.position.pixels > 200;
+    final bool compact = _scrollController.position.pixels > 240;
     if (compact != _showCompactHeader.value) {
       _showCompactHeader.value = compact;
     }
@@ -278,7 +278,7 @@ class _HomePageState extends State<HomePage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // 🔷 INDIGO HEADER + floating category card over its bottom edge
+        // 🔷 BLUE HEADER + floating category card over its bottom edge
         Stack(
           clipBehavior: Clip.none,
           children: [
@@ -331,9 +331,7 @@ class _HomePageState extends State<HomePage> {
                   child: Text(
                     'See all',
                     style: TextStyle(
-                      color: AppColors.isDark
-                          ? HomeHeroPalette.lavender
-                          : HomeHeroPalette.accent,
+                      color: AppColors.brandText,
                       fontWeight: FontWeight.w600,
                       fontSize: tab ? 17 : 14,
                     ),

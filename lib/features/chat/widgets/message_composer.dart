@@ -416,7 +416,7 @@ class _MessageComposerState extends State<MessageComposer> {
         const SizedBox(width: 8),
         if (showSendPill)
           Material(
-            color: c.brand,
+            color: c.action,
             borderRadius: BorderRadius.circular(ChatSize.buttonRadius),
             child: InkWell(
               onTap: _send,
@@ -427,9 +427,9 @@ class _MessageComposerState extends State<MessageComposer> {
                 alignment: Alignment.center,
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   Text('Send ${_staged.length}',
-                      style: TextStyle(color: c.onBrand, fontSize: ChatSize.fieldFont, fontWeight: FontWeight.w500)),
+                      style: TextStyle(color: c.onAction, fontSize: ChatSize.fieldFont, fontWeight: FontWeight.w500)),
                   const SizedBox(width: 6),
-                  Icon(Icons.send_rounded, size: 16, color: c.onBrand),
+                  Icon(Icons.send_rounded, size: 16, color: c.onAction),
                 ]),
               ),
             ),
@@ -540,7 +540,7 @@ class _SendButton extends StatelessWidget {
       button: true,
       label: 'Send',
       child: Material(
-        color: c.brand,
+        color: c.action,
         shape: const CircleBorder(),
         child: InkWell(
           customBorder: const CircleBorder(),
@@ -548,7 +548,7 @@ class _SendButton extends StatelessWidget {
           child: SizedBox(
             width: ChatSize.sendButton,
             height: ChatSize.sendButton,
-            child: Icon(Icons.send_rounded, size: 19, color: c.onBrand),
+            child: Icon(Icons.send_rounded, size: 19, color: c.onAction),
           ),
         ),
       ),

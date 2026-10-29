@@ -2,7 +2,9 @@
 // The page (chat_list_page.dart) wires it to ChatListCubit; the preview harness
 // renders it with fixtures for design QA.
 
+import 'package:ado_dad_user/common/brand_header.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../data/chat_models.dart';
 import '../state/chat_list_cubit.dart';
@@ -73,7 +75,7 @@ class ChatListView extends StatelessWidget {
           ),
           if (!_searching)
             Container(
-              padding: const EdgeInsets.only(bottom: 13),
+              padding: const EdgeInsets.only(top: 14, bottom: 13),
               decoration: BoxDecoration(
                 color: c.surface,
                 border: Border(bottom: BorderSide(color: c.divider, width: 0.7)),
@@ -241,51 +243,54 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = ChatColors.of(context);
-    return Material(
-      color: c.surface,
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(ChatSize.gutter, 8, ChatSize.gutter, 13),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!searching) ...[
-                Text(
-                  'Chats',
-                  style: TextStyle(
-                    fontSize: ChatSize.listTitle,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -0.25,
-                    color: c.text,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent),
+      child: BrandHeader(
+        padding: const EdgeInsets.fromLTRB(ChatSize.gutter, 12, ChatSize.gutter, 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!searching) ...[
+              Text(
+                'Chats',
+                style: HomeHeroPalette.display(size: 28),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Buyers and sellers you\'re talking to',
+                style: TextStyle(fontSize: 13.5, color: Colors.white.withValues(alpha: 0.88)),
+              ),
+              const SizedBox(height: 14),
+            ],
+            Row(
+              children: [
+                if (searching)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: BrandHeaderIconButton(
+                      icon: Icons.arrow_back_rounded,
+                      tooltip: 'Close search',
+                      size: 40,
+                      onTap: () {
+                        focus.unfocus();
+                        onClear();
+                        onBack?.call();
+                      },
+                    ),
+                  ),
+                Expanded(
+                  child: ChatSearchField(
+                    controller: controller,
+                    focusNode: focus,
+                    onChanged: onQuery,
+                    onClear: onClear,
+                    onBrand: true,
                   ),
                 ),
-                const SizedBox(height: 10),
               ],
-              Row(
-                children: [
-                  if (searching)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: IconButton(
-                        tooltip: 'Close search',
-                        visualDensity: VisualDensity.compact,
-                        onPressed: () {
-                          focus.unfocus();
-                          onClear();
-                          onBack?.call();
-                        },
-                        icon: Icon(Icons.arrow_back_rounded, color: c.text2, size: ChatSize.headerIcon),
-                      ),
-                    ),
-                  Expanded(
-                    child: ChatSearchField(controller: controller, focusNode: focus, onChanged: onQuery, onClear: onClear),
-                  ),
-                ],
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

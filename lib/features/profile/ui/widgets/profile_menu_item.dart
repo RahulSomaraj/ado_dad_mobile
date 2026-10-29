@@ -2,8 +2,9 @@ import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:flutter/material.dart';
 
-/// A single account-menu row styled to the wireframe: a rounded square icon
-/// box, a label, and a chevron, with a hairline divider beneath.
+/// A single account-menu row in the Home card style: white rounded card, a
+/// tinted round icon, a label and a chevron. [showDivider] is kept for
+/// compatibility; cards are separated by spacing instead of hairlines.
 class ProfileMenuItem extends StatelessWidget {
   final String image;
   final String title;
@@ -43,71 +44,69 @@ class ProfileMenuItem extends StatelessWidget {
       largeTablet: 18,
       desktop: 20,
     );
-    final Color accent = isLogout ? AppColors.redColor : AppColors.primaryColor;
+    final Color accent = isLogout ? AppColors.redColor : AppColors.brandText;
+    final Color tint = isLogout
+        ? AppColors.redColor.withValues(alpha: 0.10)
+        : AppColors.primarySoft;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: GetResponsiveSize.getResponsiveSize(
-              context,
-              mobile: 9,
-              tablet: 16,
-              largeTablet: 20,
-              desktop: 22,
+    // Home-style card row: white rounded card, tinted round icon, chevron.
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      child: Material(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.dividerColor),
             ),
-          ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: boxSize,
-                    height: boxSize,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: isLogout
-                          ? AppColors.redColor.withValues(alpha: 0.10)
-                          : (AppColors.isDark
-                              ? Colors.white10
-                              : const Color(0xFFF1F2F6)),
+            padding: EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: GetResponsiveSize.getResponsiveSize(
+                context,
+                mobile: 11,
+                tablet: 16,
+                largeTablet: 18,
+                desktop: 20,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: boxSize,
+                  height: boxSize,
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: tint),
+                  child: Center(
+                    child: SizedBox(
+                      width: iconSize,
+                      height: iconSize,
+                      child: Image.asset(image, color: accent, fit: BoxFit.contain),
                     ),
-                    child: Center(
-                      child: SizedBox(
-                        width: iconSize,
-                        height: iconSize,
-                        child: Image.asset(
-                          image,
-                          color: accent,
-                          fit: BoxFit.contain,
-                        ),
+                  ),
+                ),
+                SizedBox(width: gap),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: isLogout ? AppColors.redColor : AppColors.blackColor,
+                      fontSize: GetResponsiveSize.getResponsiveFontSize(
+                        context,
+                        mobile: 14.5,
+                        tablet: 20,
+                        largeTablet: 24,
+                        desktop: 26,
                       ),
                     ),
                   ),
-                  SizedBox(width: gap),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: isLogout
-                            ? AppColors.redColor
-                            : AppColors.blackColor,
-                        fontSize: GetResponsiveSize.getResponsiveFontSize(
-                          context,
-                          mobile: 14,
-                          tablet: 20,
-                          largeTablet: 24,
-                          desktop: 26,
-                        ),
-                      ),
-                    ),
-                  ),
+                ),
+                if (!isLogout)
                   Icon(
-                    Icons.chevron_right,
+                    Icons.chevron_right_rounded,
                     size: GetResponsiveSize.getResponsiveSize(
                       context,
                       mobile: 22,
@@ -117,26 +116,8 @@ class ProfileMenuItem extends StatelessWidget {
                     ),
                     color: AppColors.greyColor,
                   ),
-                ],
-              ),
-              if (showDivider)
-                Padding(
-                  padding: EdgeInsets.only(
-                    top: GetResponsiveSize.getResponsiveSize(
-                      context,
-                      mobile: 9,
-                      tablet: 16,
-                      largeTablet: 20,
-                      desktop: 22,
-                    ),
-                  ),
-                  child: Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: AppColors.dividerColor,
-                  ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

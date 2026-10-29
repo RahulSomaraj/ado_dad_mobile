@@ -287,8 +287,8 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
                                 );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryColor,
-                            foregroundColor: Colors.white,
+                            backgroundColor: AppColors.ctaColor,
+                            foregroundColor: AppColors.onCta,
                             padding: EdgeInsets.symmetric(
                               vertical: GetResponsiveSize.getResponsivePadding(
                                   context,

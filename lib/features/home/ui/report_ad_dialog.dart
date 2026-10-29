@@ -1,6 +1,6 @@
+import 'package:ado_dad_user/common/app_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 import 'package:ado_dad_user/features/home/report_ad_bloc/report_ad_bloc.dart';
@@ -104,7 +104,7 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
         );
   }
 
-  TextStyle _sectionLabelStyle(BuildContext context) => GoogleFonts.poppins(
+  TextStyle _sectionLabelStyle(BuildContext context) => appFont(
         fontSize: GetResponsiveSize.getResponsiveFontSize(context,
             mobile: 11, tablet: 13, largeTablet: 14, desktop: 15),
         fontWeight: FontWeight.w600,
@@ -188,7 +188,7 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                     Expanded(
                       child: Text(
                         'Report this ad',
-                        style: GoogleFonts.poppins(
+                        style: appFont(
                           fontSize: GetResponsiveSize.getResponsiveFontSize(
                               context,
                               mobile: 16,
@@ -230,7 +230,7 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                           activeColor: AppColors.primaryColor,
                           title: Text(
                             _reasonLabels[reason] ?? reason,
-                            style: GoogleFonts.poppins(
+                            style: appFont(
                               fontSize: GetResponsiveSize.getResponsiveFontSize(
                                   context,
                                   mobile: 13.5,
@@ -257,14 +257,14 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                       setState(() => _errorText = null);
                     }
                   },
-                  style: GoogleFonts.poppins(
+                  style: appFont(
                     fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                         mobile: 13.5, tablet: 16, largeTablet: 18, desktop: 20),
                     color: AppColors.blackColor,
                   ),
                   decoration: InputDecoration(
                     hintText: "Tell us what's wrong (min 10 characters)…",
-                    hintStyle: GoogleFonts.poppins(
+                    hintStyle: appFont(
                       fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                           mobile: 13.5,
                           tablet: 16,
@@ -291,7 +291,7 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       _errorText!,
-                      style: GoogleFonts.poppins(
+                      style: appFont(
                         fontSize: 12,
                         color: AppColors.redColor,
                       ),
@@ -324,7 +324,7 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                             ),
                             child: Text(
                               'Cancel',
-                              style: GoogleFonts.poppins(
+                              style: appFont(
                                 color: AppColors.blackColor,
                                 fontWeight: FontWeight.w500,
                                 fontSize:
@@ -362,7 +362,7 @@ class _ReportAdDialogState extends State<ReportAdDialog> {
                                   )
                                 : Text(
                                     'Submit report',
-                                    style: GoogleFonts.poppins(
+                                    style: appFont(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w600,
                                       fontSize: GetResponsiveSize

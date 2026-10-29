@@ -308,8 +308,8 @@ class _VideoPlayerWidgetState extends State<AdDetailVideoPlayer> {
                       icon: const Icon(Icons.refresh, size: 18),
                       label: const Text('Retry'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryColor,
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppColors.ctaColor,
+                        foregroundColor: AppColors.onCta,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -679,8 +679,8 @@ class _VideoFullScreenViewerState extends State<AdDetailVideoFullScreen> {
                         icon: const Icon(Icons.refresh, size: 18),
                         label: const Text('Retry'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryColor,
-                          foregroundColor: Colors.white,
+                          backgroundColor: AppColors.ctaColor,
+                          foregroundColor: AppColors.onCta,
                         ),
                       ),
                     ],

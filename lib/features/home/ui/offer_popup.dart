@@ -1,7 +1,7 @@
+import 'package:ado_dad_user/common/app_fonts.dart';
 import 'package:ado_dad_user/common/ad_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 
@@ -110,7 +110,7 @@ class _OfferSheetState extends State<_OfferSheet> {
     super.dispose();
   }
 
-  TextStyle _sectionLabelStyle(BuildContext context) => GoogleFonts.poppins(
+  TextStyle _sectionLabelStyle(BuildContext context) => appFont(
         fontSize: GetResponsiveSize.getResponsiveFontSize(context,
             mobile: 11, tablet: 13, largeTablet: 14, desktop: 15),
         fontWeight: FontWeight.w600,
@@ -163,7 +163,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                   Expanded(
                     child: Text(
                       'Make an offer',
-                      style: GoogleFonts.poppins(
+                      style: appFont(
                         fontSize: GetResponsiveSize.getResponsiveFontSize(
                             context,
                             mobile: 16,
@@ -216,7 +216,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                             Text.rich(
                               TextSpan(
                                 text: '₹ ${_formatPrice(widget.adPrice!)} ',
-                                style: GoogleFonts.poppins(
+                                style: appFont(
                                   fontSize:
                                       GetResponsiveSize.getResponsiveFontSize(
                                           context,
@@ -230,7 +230,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                                 children: [
                                   TextSpan(
                                     text: 'asking',
-                                    style: GoogleFonts.poppins(
+                                    style: appFont(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w400,
                                       color: AppColors.greyColor,
@@ -243,7 +243,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                             widget.adTitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.poppins(
+                            style: appFont(
                               fontSize: GetResponsiveSize.getResponsiveFontSize(
                                   context,
                                   mobile: 12.5,
@@ -255,7 +255,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                           ),
                           Text(
                             'Seller: ${widget.adPosterName}',
-                            style: GoogleFonts.poppins(
+                            style: appFont(
                               fontSize: 10.5,
                               color: AppColors.greyColor,
                             ),
@@ -278,7 +278,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
                 ],
-                style: GoogleFonts.poppins(
+                style: appFont(
                   fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                       mobile: 18, tablet: 22, largeTablet: 24, desktop: 26),
                   fontWeight: FontWeight.w600,
@@ -286,14 +286,14 @@ class _OfferSheetState extends State<_OfferSheet> {
                 ),
                 decoration: InputDecoration(
                   hintText: 'Enter amount (e.g., 15000)',
-                  hintStyle: GoogleFonts.poppins(
+                  hintStyle: appFont(
                     fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                         mobile: 14, tablet: 17, largeTablet: 19, desktop: 21),
                     fontWeight: FontWeight.w400,
                     color: AppColors.greyColor,
                   ),
                   prefixText: '₹ ',
-                  prefixStyle: GoogleFonts.poppins(
+                  prefixStyle: appFont(
                     fontSize: GetResponsiveSize.getResponsiveFontSize(context,
                         mobile: 18, tablet: 22, largeTablet: 24, desktop: 26),
                     fontWeight: FontWeight.w600,
@@ -322,7 +322,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     errorText!,
-                    style: GoogleFonts.poppins(
+                    style: appFont(
                       fontSize: 12,
                       color: AppColors.redColor,
                     ),
@@ -342,7 +342,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                         selected: selected,
                         onSelected: (_) => _applyPercent(p),
                         selectedColor: AppColors.primaryColor,
-                        labelStyle: GoogleFonts.poppins(
+                        labelStyle: appFont(
                           fontSize: 12,
                           color: selected ? Colors.white : AppColors.blackColor,
                         ),
@@ -367,7 +367,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                         amountFocusNode.requestFocus();
                       },
                       selectedColor: AppColors.primaryColor,
-                      labelStyle: GoogleFonts.poppins(
+                      labelStyle: appFont(
                         fontSize: 12,
                         color: _selectedPercent == null &&
                                 amountController.text.isNotEmpty
@@ -399,7 +399,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                   ),
                   child: Text(
                     'I will make an offer for an amount ₹${amount!.toStringAsFixed(0)}',
-                    style: GoogleFonts.poppins(
+                    style: appFont(
                       fontSize: 12,
                       color: AppColors.blackColor1,
                     ),
@@ -424,7 +424,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                       ),
                       child: Text(
                         'Cancel',
-                        style: GoogleFonts.poppins(
+                        style: appFont(
                           color: AppColors.blackColor,
                           fontWeight: FontWeight.w500,
                           fontSize: GetResponsiveSize.getResponsiveFontSize(
@@ -450,10 +450,10 @@ class _OfferSheetState extends State<_OfferSheet> {
                           : null,
                       icon: const Icon(Icons.send, size: 16),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryColor,
+                        backgroundColor: AppColors.ctaColor,
                         disabledBackgroundColor:
                             AppColors.greyColor.withValues(alpha: 0.4),
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppColors.onCta,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(11),
@@ -462,7 +462,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                       ),
                       label: Text(
                         'Send offer',
-                        style: GoogleFonts.poppins(
+                        style: appFont(
                           fontWeight: FontWeight.w600,
                           fontSize: GetResponsiveSize.getResponsiveFontSize(
                               context,

@@ -1,8 +1,8 @@
+import 'package:ado_dad_user/common/app_fonts.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
@@ -187,7 +187,7 @@ class _HelpState extends State<Help> {
         ),
         title: Text(
           'Help & Support',
-          style: GoogleFonts.poppins(
+          style: appFont(
             fontSize: GetResponsiveSize.getResponsiveFontSize(
               context,
               mobile: 20,
@@ -208,7 +208,7 @@ class _HelpState extends State<Help> {
           TextField(
             controller: _searchController,
             onChanged: (value) => setState(() => _query = value),
-            style: GoogleFonts.poppins(
+            style: appFont(
               fontSize: GetResponsiveSize.getResponsiveFontSize(
                 context,
                 mobile: 13.5,
@@ -220,7 +220,7 @@ class _HelpState extends State<Help> {
             ),
             decoration: InputDecoration(
               hintText: 'Search help topics…',
-              hintStyle: GoogleFonts.poppins(
+              hintStyle: appFont(
                 fontSize: GetResponsiveSize.getResponsiveFontSize(
                   context,
                   mobile: 13.5,
@@ -266,7 +266,7 @@ class _HelpState extends State<Help> {
                   const SizedBox(height: 8),
                   Text(
                     'No topics match "$_query"',
-                    style: GoogleFonts.poppins(
+                    style: appFont(
                       fontSize: 13,
                       color: AppColors.blackColor1,
                     ),
@@ -292,7 +292,7 @@ class _HelpState extends State<Help> {
                     leading: Icon(topic.icon, color: AppColors.brandText),
                     title: Text(
                       topic.title,
-                      style: GoogleFonts.poppins(
+                      style: appFont(
                         fontSize: GetResponsiveSize.getResponsiveFontSize(
                           context,
                           mobile: 13.5,
@@ -306,7 +306,7 @@ class _HelpState extends State<Help> {
                     ),
                     subtitle: Text(
                       topic.subtitle,
-                      style: GoogleFonts.poppins(
+                      style: appFont(
                         fontSize: GetResponsiveSize.getResponsiveFontSize(
                           context,
                           mobile: 11,
@@ -325,7 +325,7 @@ class _HelpState extends State<Help> {
                         alignment: Alignment.centerLeft,
                         child: SelectableText(
                           topic.body,
-                          style: GoogleFonts.poppins(
+                          style: appFont(
                             fontSize: GetResponsiveSize.getResponsiveFontSize(
                               context,
                               mobile: 12,
@@ -349,7 +349,7 @@ class _HelpState extends State<Help> {
           OutlinedButton.icon(
             onPressed: _contactSupport,
             icon: Icon(Icons.mail_outline,
-                size: 17, color: AppColors.brandText),
+                size: 17, color: AppColors.ctaColor),
             style: OutlinedButton.styleFrom(
               side:
                   BorderSide(color: AppColors.greyColor.withValues(alpha: 0.6)),
@@ -360,7 +360,7 @@ class _HelpState extends State<Help> {
             ),
             label: Text(
               'Contact support',
-              style: GoogleFonts.poppins(
+              style: appFont(
                 color: AppColors.blackColor,
                 fontWeight: FontWeight.w500,
                 fontSize: GetResponsiveSize.getResponsiveFontSize(

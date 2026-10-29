@@ -350,7 +350,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                               largeTablet: 20.0,
                               desktop: 24.0,
                             ),
-                            color: AppColors.brandText,
+                            color: AppColors.ctaColor,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -521,8 +521,8 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
           width: double.infinity,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryColor,
-                foregroundColor: AppColors.whiteColor,
+                backgroundColor: AppColors.ctaColor,
+                foregroundColor: AppColors.onCta,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10))),
             onPressed: isLoading ? null : _handleConfirmOtp,
@@ -662,7 +662,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                                 desktop: 30.0,
                               ),
                               fontWeight: FontWeight.w500,
-                              color: AppColors.brandText,
+                              color: AppColors.ctaColor,
                               decoration: TextDecoration.underline,
                             ),
                           ),

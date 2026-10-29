@@ -199,11 +199,11 @@ class AdDetailBarButton extends StatelessWidget {
         return ElevatedButton(
           onPressed: onPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryColor,
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.ctaColor,
+            foregroundColor: AppColors.onCta,
             disabledBackgroundColor:
-                AppColors.primaryColor.withValues(alpha: 0.5),
-            disabledForegroundColor: Colors.white,
+                AppColors.ctaColor.withValues(alpha: 0.45),
+            disabledForegroundColor: AppColors.onCta,
             elevation: 0,
             minimumSize: size,
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -215,8 +215,8 @@ class AdDetailBarButton extends StatelessWidget {
         return OutlinedButton(
           onPressed: onPressed,
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.brandText,
-            side: BorderSide(color: AppColors.brandText, width: 1.5),
+            foregroundColor: AppColors.ctaColor,
+            side: BorderSide(color: AppColors.ctaColor, width: 1.5),
             minimumSize: size,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             shape: shape,

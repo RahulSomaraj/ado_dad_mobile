@@ -33,8 +33,8 @@ class SaveButtonWidget extends StatelessWidget {
             child: ElevatedButton(
               onPressed: isSaving ? null : onSave,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryColor,
-                foregroundColor: AppColors.whiteColor,
+                backgroundColor: AppColors.ctaColor,
+                foregroundColor: AppColors.onCta,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(
                     GetResponsiveSize.getResponsiveBorderRadius(

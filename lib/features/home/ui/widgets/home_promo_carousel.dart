@@ -14,7 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 /// time, full width (no neighbouring slides peeking in), with dots below.
 ///
 /// Loading shows a skeleton of the same size; with no banners (or an error)
-/// a built-in indigo "Explore bikes" slide keeps the section from collapsing.
+/// a built-in blue "Explore bikes" slide keeps the section from collapsing.
 class HomePromoCarousel extends StatefulWidget {
   const HomePromoCarousel({super.key, required this.onExploreBikes});
 
@@ -121,9 +121,7 @@ class _HomePromoCarouselState extends State<HomePromoCarousel> {
                           margin: const EdgeInsets.symmetric(horizontal: 3),
                           decoration: BoxDecoration(
                             color: on
-                                ? (AppColors.isDark
-                                    ? HomeHeroPalette.lavender
-                                    : HomeHeroPalette.accent)
+                                ? AppColors.brandText
                                 : AppColors.dividerColor,
                             borderRadius: BorderRadius.circular(3),
                           ),
@@ -152,7 +150,7 @@ class _SlideFrame extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: HomeHeroPalette.indigoDeep
+            color: HomeHeroPalette.shadowInk
                 .withValues(alpha: AppColors.isDark ? 0.5 : 0.25),
             blurRadius: 22,
             offset: const Offset(0, 10),
@@ -195,7 +193,7 @@ class _FallbackSlide extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool tab = GetResponsiveSize.isTablet(context);
     return DecoratedBox(
-      decoration: const BoxDecoration(gradient: HomeHeroPalette.gradient),
+      decoration: BoxDecoration(gradient: HomeHeroPalette.gradient),
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(
@@ -220,8 +218,7 @@ class _FallbackSlide extends StatelessWidget {
                               text: 'nearby.',
                               style: HomeHeroPalette.display(
                                 size: tab ? 30 : 21,
-                                style: FontStyle.italic,
-                                color: HomeHeroPalette.lavender,
+                                color: HomeHeroPalette.soft,
                               ),
                             ),
                           ],

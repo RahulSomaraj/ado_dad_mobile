@@ -237,8 +237,8 @@ class _LoginPageState extends State<LoginPage> {
                                   }
                                 },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryColor,
-                            foregroundColor: AppColors.whiteColor,
+                            backgroundColor: AppColors.ctaColor,
+                            foregroundColor: AppColors.onCta,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -472,7 +472,7 @@ class _LoginPageState extends State<LoginPage> {
                                 largeTablet: 25.0,
                                 desktop: 30.0,
                               ),
-                              color: AppColors.brandText),
+                              color: AppColors.ctaColor),
                         ),
                       ),
                     ],
@@ -634,7 +634,7 @@ class _LoginPageState extends State<LoginPage> {
               desktop: 30.0,
             ),
             fontWeight: FontWeight.w500,
-            color: AppColors.brandText,
+            color: AppColors.ctaColor,
             decoration: TextDecoration.underline,
           ),
         ),
@@ -693,8 +693,8 @@ class _LoginPageState extends State<LoginPage> {
           width: double.infinity,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryColor,
-                foregroundColor: AppColors.whiteColor,
+                backgroundColor: AppColors.ctaColor,
+                foregroundColor: AppColors.onCta,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10))),
             onPressed: () {

@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 ///
 /// Roles (see docs/theme1_colour_checklist.md):
 /// * brand blue — identity, fills of primary controls, selected states;
-/// * action orange ([ctaColor]) — ONLY the Sell button, Call / Call seller and
-///   Post ad, so the money actions are the one warm colour on screen;
+/// * action orange ([ctaColor]) — every primary action button, so actions
+///   always stand apart from the blue brand surfaces;
 /// * highlight amber ([highlight]) — Premium / Featured / Price-drop tags.
 ///
 /// Surface and text colors are *brightness-aware*: they return light values in
@@ -78,7 +78,9 @@ class AppColors {
   /// white), #9DBBFF in dark (8.8:1 on the dark card).
   static Color get brandText => isDark ? brandTextDark : primaryColor;
 
-  /// Action orange — use ONLY for Sell, Call / Call seller and Post ad.
+  /// Action orange — the fill of every primary action button (Sell, Call,
+  /// Post ad, Login, Save, Apply filters, Retry…). Brand blue stays for
+  /// identity surfaces, selection and links.
   static Color get ctaColor => isDark ? ctaDark : ctaLight;
 
   /// Content on [ctaColor]: white in light (4.8:1), near-black in dark (7.2:1).

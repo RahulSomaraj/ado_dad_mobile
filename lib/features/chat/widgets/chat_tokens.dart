@@ -43,6 +43,9 @@ class ChatColors {
   Color get okBg => isDark ? const Color(0xFF15372A) : const Color(0xFFE3F5EC);
   Color get ok => AppColors.positiveText;
   Color get call => AppColors.ctaColor; // Theme 1: Call is the orange action
+  /// Action orange for Send / Call fills, and the content on it.
+  Color get action => AppColors.ctaColor;
+  Color get onAction => AppColors.onCta;
   Color get warnBg => isDark ? const Color(0xFF3A2F12) : const Color(0xFFFFF3D6);
   Color get warn => isDark ? const Color(0xFFF2C66D) : const Color(0xFF7A5200);
   Color get errBg => isDark ? const Color(0xFF3D1B1E) : const Color(0xFFFDECEC);

@@ -144,12 +144,12 @@ class DialogUtil {
               Navigator.of(context).pop();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryColor,
+              backgroundColor: AppColors.ctaColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text("OK", style: TextStyle(color: Colors.white)),
+            child: Text("OK", style: TextStyle(color: AppColors.onCta)),
           ),
         ],
       ),
@@ -333,14 +333,14 @@ class DialogUtil {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryColor,
+                  backgroundColor: AppColors.ctaColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   "Login",
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: AppColors.onCta),
                 ),
               ),
             ],

@@ -73,13 +73,13 @@ class ProfileCard extends StatelessWidget {
                             desktop: 14,
                           ),
                         ),
-                        decoration: const BoxDecoration(
-                          color: AppColors.primaryColor,
+                        decoration: BoxDecoration(
+                          color: AppColors.ctaColor,
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.check,
-                          color: Colors.white,
+                          color: AppColors.onCta,
                           size: GetResponsiveSize.getResponsiveSize(
                             context,
                             mobile: 20,

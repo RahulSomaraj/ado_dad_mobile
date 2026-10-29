@@ -407,7 +407,7 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
             ),
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryColor,
+                backgroundColor: AppColors.ctaColor,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(
                     GetResponsiveSize.getResponsiveBorderRadius(

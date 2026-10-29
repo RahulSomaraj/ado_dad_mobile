@@ -1,9 +1,9 @@
+import 'package:ado_dad_user/common/app_fonts.dart';
 import 'dart:io';
 
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Sell-flow tokens (CREATE-05). Built on AppColors so light/dark follow the
 /// app theme; only the states AppColors lacks are defined here.
@@ -50,7 +50,7 @@ class SellTokens {
   static const Duration step = Duration(milliseconds: 250);
 
   static TextStyle _p(double size, FontWeight w, Color c, {double? height}) =>
-      GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: height);
+      appFont(fontSize: size, fontWeight: w, color: c, height: height);
 
   static TextStyle get display => _p(24, FontWeight.w600, ink, height: 32 / 24);
   static TextStyle get heading => _p(18, FontWeight.w600, ink, height: 26 / 18);

@@ -302,7 +302,7 @@ class _SearchPageState extends State<SearchPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryColor,
+                        backgroundColor: AppColors.ctaColor,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
@@ -321,8 +321,8 @@ class _SearchPageState extends State<SearchPage> {
                       },
                       child: Text(
                         'Show ${_previewCount(category: tempCat, minPrice: int.tryParse(minCtrl.text.trim()), maxPrice: int.tryParse(maxCtrl.text.trim()), fuels: tempFuels)} results',
-                        style: const TextStyle(
-                            color: Colors.white,
+                        style: TextStyle(
+                            color: AppColors.onCta,
                             fontWeight: FontWeight.w600,
                             fontSize: 15),
                       ),

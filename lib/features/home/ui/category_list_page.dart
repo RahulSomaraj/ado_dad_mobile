@@ -573,8 +573,8 @@ class _CategoryListPageState extends State<CategoryListPage> {
                                 );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryColor,
-                            foregroundColor: AppColors.whiteColor,
+                            backgroundColor: AppColors.ctaColor,
+                            foregroundColor: AppColors.onCta,
                           ),
                           child: Text(
                             'Retry',

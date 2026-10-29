@@ -1,40 +1,40 @@
+import 'package:ado_dad_user/common/app_fonts.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Shared text styles. These are getters (not `final` fields) so that the
 /// brightness-aware `AppColors` values are re-evaluated every time a style is
 /// used — that's what lets text flip correctly between light and dark themes.
 class AppTextstyle {
-  static TextStyle get title1 => GoogleFonts.poppins(
+  static TextStyle get title1 => appFont(
       textStyle: TextStyle(
           fontSize: 20.0,
           fontWeight: FontWeight.w600,
           color: AppColors.blackColor));
 
-  static TextStyle get buttonText => GoogleFonts.poppins(
+  static TextStyle get buttonText => appFont(
       textStyle: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w600));
 
-  static TextStyle get sectionTitleTextStyle => GoogleFonts.poppins(
+  static TextStyle get sectionTitleTextStyle => appFont(
       fontWeight: FontWeight.w600, fontSize: 15, color: AppColors.blackColor);
 
-  static TextStyle get categoryLabelTextStyle => GoogleFonts.poppins(
+  static TextStyle get categoryLabelTextStyle => appFont(
       fontWeight: FontWeight.w500, fontSize: 12, color: AppColors.blackColor);
 
-  static TextStyle get appbarText => GoogleFonts.poppins(
+  static TextStyle get appbarText => appFont(
       fontWeight: FontWeight.w600, fontSize: 18, color: AppColors.blackColor);
 
-  static TextStyle get sellCategoryText => GoogleFonts.poppins(
+  static TextStyle get sellCategoryText => appFont(
       fontWeight: FontWeight.w600, fontSize: 16, color: AppColors.blackColor);
 
-  static TextStyle get changeCategoryButtonTextStyle => GoogleFonts.poppins(
+  static TextStyle get changeCategoryButtonTextStyle => appFont(
       fontWeight: FontWeight.w500, fontSize: 12, color: AppColors.brandText);
 
   // ---- Detail-screen scale (sizes are phone sp; see AppSpacing.s for tablet) ----
   static const List<FontFeature> _tabular = [FontFeature.tabularFigures()];
 
   /// ₹4,85,000 — 26/32 w700, tabular digits.
-  static TextStyle get priceLarge => GoogleFonts.poppins(
+  static TextStyle get priceLarge => appFont(
       fontSize: 26,
       height: 32 / 26,
       fontWeight: FontWeight.w700,
@@ -43,7 +43,7 @@ class AppTextstyle {
       fontFeatures: _tabular);
 
   /// Card price — 14 w700.
-  static TextStyle get priceSmall => GoogleFonts.poppins(
+  static TextStyle get priceSmall => appFont(
       fontSize: 14,
       height: 18 / 14,
       fontWeight: FontWeight.w700,
@@ -51,28 +51,28 @@ class AppTextstyle {
       fontFeatures: _tabular);
 
   /// Section heading — 16/24 w600.
-  static TextStyle get sectionTitle => GoogleFonts.poppins(
+  static TextStyle get sectionTitle => appFont(
       fontSize: 16,
       height: 24 / 16,
       fontWeight: FontWeight.w600,
       color: AppColors.blackColor);
 
   /// Ad title under the price — 15/22 w500.
-  static TextStyle get titleMedium => GoogleFonts.poppins(
+  static TextStyle get titleMedium => appFont(
       fontSize: 15,
       height: 22 / 15,
       fontWeight: FontWeight.w500,
       color: AppColors.blackColor);
 
   /// Running text — 14/22 w400.
-  static TextStyle get bodyText => GoogleFonts.poppins(
+  static TextStyle get bodyText => appFont(
       fontSize: 14,
       height: 22 / 14,
       fontWeight: FontWeight.w400,
       color: AppColors.blackColor1);
 
   /// Table value — 14 w500, tabular.
-  static TextStyle get specValue => GoogleFonts.poppins(
+  static TextStyle get specValue => appFont(
       fontSize: 14,
       height: 20 / 14,
       fontWeight: FontWeight.w500,
@@ -80,27 +80,27 @@ class AppTextstyle {
       fontFeatures: _tabular);
 
   /// Table label — 13 w400 muted.
-  static TextStyle get specLabel => GoogleFonts.poppins(
+  static TextStyle get specLabel => appFont(
       fontSize: 13,
       height: 18 / 13,
       fontWeight: FontWeight.w400,
       color: AppColors.textMuted);
 
   /// Meta line / captions — 12.5 w400 muted.
-  static TextStyle get caption => GoogleFonts.poppins(
+  static TextStyle get caption => appFont(
       fontSize: 12.5,
       height: 18 / 12.5,
       fontWeight: FontWeight.w400,
       color: AppColors.textMuted);
 
   /// Smallest allowed text — 11 w400 muted.
-  static TextStyle get micro => GoogleFonts.poppins(
+  static TextStyle get micro => appFont(
       fontSize: 11,
       height: 14 / 11,
       fontWeight: FontWeight.w400,
       color: AppColors.textMuted);
 
   /// Button label — 14.5 w600.
-  static TextStyle get button => GoogleFonts.poppins(
+  static TextStyle get button => appFont(
       fontSize: 14.5, height: 20 / 14.5, fontWeight: FontWeight.w600);
 }

@@ -74,9 +74,9 @@ Future<UpdateDialogOutcome> showUpdateAppDialog(
             TextButton(
               onPressed: () =>
                   Navigator.of(dialogContext).pop(UpdateDialogOutcome.later),
-              child: const Text(
+              child: Text(
                 'Later',
-                style: TextStyle(color: AppColors.primaryColor),
+                style: TextStyle(color: AppColors.ctaColor),
               ),
             ),
           FilledButton(

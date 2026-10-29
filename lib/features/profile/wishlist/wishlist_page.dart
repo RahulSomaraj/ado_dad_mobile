@@ -216,8 +216,8 @@ class _WishlistPageState extends State<WishlistPage> {
                               .add(const FavoriteEvent.refreshFavorites());
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryColor,
-                          foregroundColor: Colors.white,
+                          backgroundColor: AppColors.ctaColor,
+                          foregroundColor: AppColors.onCta,
                           padding: EdgeInsets.symmetric(
                             horizontal: GetResponsiveSize.getResponsivePadding(
                               context,

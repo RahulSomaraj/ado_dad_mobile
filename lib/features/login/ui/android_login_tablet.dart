@@ -1,3 +1,4 @@
+import 'package:ado_dad_user/common/app_fonts.dart';
 import 'package:ado_dad_user/features/login/ui/login_page.dart';
 import 'package:flutter/material.dart';
 
@@ -23,14 +24,14 @@ class _AndroidLoginTabletState extends State<AndroidLoginTablet> {
     //             const SizedBox(height: 30),
     //             Text(
     //               'Login to your Account',
-    //               style: GoogleFonts.poppins(
+    //               style: appFont(
     //                   fontSize: 40,
     //                   fontWeight: FontWeight.w600,
     //                   color: Colors.black),
     //             ),
     //             Text(
     //               'Securely log in and enjoy a seamless experience\nwith us!',
-    //               style: GoogleFonts.poppins(fontSize: 20, color: Colors.black),
+    //               style: appFont(fontSize: 20, color: Colors.black),
     //             ),
     //             const SizedBox(height: 30),
     //             Form(

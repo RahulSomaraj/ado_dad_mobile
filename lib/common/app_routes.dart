@@ -453,8 +453,8 @@ class _RouteErrorScreen extends StatelessWidget {
                 icon: const Icon(Icons.home_outlined),
                 label: const Text('Go home'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryColor,
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppColors.ctaColor,
+                  foregroundColor: AppColors.onCta,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
