@@ -1,6 +1,7 @@
 import 'package:ado_dad_user/common/app_fonts.dart';
 import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Centralized light & dark themes built from Theme 1 "Trust Blue · Action
 /// Orange" (brand #1D4ED8, CTA #CC4409, danger #C62828) plus Plus Jakarta Sans type (see app_fonts.dart). Component themes here give
@@ -32,6 +33,8 @@ class AppTheme {
     final Color brandText = isDark ? AppColors.brandTextDark : _primary;
     final Color cta = isDark ? AppColors.ctaDark : AppColors.ctaLight;
     final Color onCta = isDark ? const Color(0xFF121212) : Colors.white;
+    // Header blue — same as the Home header's mid tone.
+    final Color headerBlue = isDark ? const Color(0xFF12306E) : _primary;
 
     final ColorScheme scheme = ColorScheme.fromSeed(
       seedColor: _primary,
@@ -70,15 +73,26 @@ class AppTheme {
       iconTheme: IconThemeData(color: textSecondary),
       splashColor: _primary.withValues(alpha: 0.08),
       highlightColor: _primary.withValues(alpha: 0.05),
+      // Every page gets the same minimal brand header: brand blue (deeper
+      // navy-blue in dark mode), white title and icons, rounded bottom
+      // corners, light status-bar icons — matching the Home header.
       appBarTheme: AppBarTheme(
-        backgroundColor: surface,
-        foregroundColor: textPrimary,
+        backgroundColor: headerBlue,
+        foregroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        scrolledUnderElevation: 0.5,
+        scrolledUnderElevation: 0,
         centerTitle: false,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
+        systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+          statusBarColor: Colors.transparent,
+        ),
         titleTextStyle: appFont(
-            fontSize: 18, fontWeight: FontWeight.w600, color: textPrimary),
-        iconTheme: IconThemeData(color: textPrimary),
+            fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white),
+        actionsIconTheme: const IconThemeData(color: Colors.white),
       ),
       cardTheme: CardThemeData(
         color: surface,

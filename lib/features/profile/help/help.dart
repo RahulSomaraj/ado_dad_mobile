@@ -162,7 +162,6 @@ class _HelpState extends State<Help> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppColors.primaryColor,
         leading: IconButton(
           onPressed: () {
             if (context.canPop()) {

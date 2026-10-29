@@ -247,7 +247,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
               context.pop();
             },
           ),
-          backgroundColor: Colors.transparent,
           elevation: 0,
         ),
         body: Padding(

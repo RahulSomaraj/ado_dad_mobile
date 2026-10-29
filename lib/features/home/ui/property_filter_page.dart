@@ -288,7 +288,7 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
         ),
         title: Text(
           'Filters',
-          style: AppTextstyle.appbarText.copyWith(
+          style: AppTextstyle.appbarText.copyWith(color: Colors.white, 
             fontSize: GetResponsiveSize.getResponsiveFontSize(
               context,
               mobile: 18.0,
@@ -301,6 +301,7 @@ class _PropertyFiltersPageState extends State<PropertyFiltersPage> {
         elevation: 0.5,
         actions: [
           TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.white),
             onPressed: _clearAll,
             child: Text(
               'Reset',

@@ -30,12 +30,10 @@ class SellStartPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: SellTokens.surface,
       appBar: AppBar(
-        backgroundColor: SellTokens.surface,
-        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           tooltip: 'Close',
-          icon: Icon(Icons.close_rounded, color: SellTokens.ink),
+          icon: Icon(Icons.close_rounded, color: Colors.white),
           onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
         ),
       ),

@@ -311,7 +311,7 @@ class _PropertyFormEditState extends State<PropertyFormEdit> {
       appBar: AppBar(
         title: Text(
           'Edit ad',
-          style: AppTextstyle.appbarText.copyWith(
+          style: AppTextstyle.appbarText.copyWith(color: Colors.white, 
             fontSize: GetResponsiveSize.getResponsiveFontSize(
               context,
               mobile: AppTextstyle.appbarText.fontSize ?? 20,

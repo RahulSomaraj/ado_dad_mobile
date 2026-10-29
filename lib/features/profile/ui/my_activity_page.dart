@@ -22,14 +22,13 @@ class _MyActivityPageState extends State<MyActivityPage> {
       backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: AppColors.scaffoldBackground,
         automaticallyImplyLeading: false,
         title: Text(
           'My Activity',
           style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 20,
-            color: AppColors.blackColor,
+            color: Colors.white,
           ),
         ),
       ),

@@ -198,7 +198,6 @@ class _OtpLoginPageState extends State<OtpLoginPage> {
                   onPressed: () => context.pop(),
                 )
               : null,
-          backgroundColor: Colors.transparent,
           elevation: 0,
         ),
         body: Padding(

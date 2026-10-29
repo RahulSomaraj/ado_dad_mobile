@@ -62,8 +62,6 @@ class _NotificationsState extends State<Notifications> {
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryColor,
-        foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           onPressed: () {
@@ -116,6 +114,7 @@ class _NotificationsState extends State<Notifications> {
                   );
                   if (!hasUnread) return const SizedBox.shrink();
                   return TextButton.icon(
+            style: TextButton.styleFrom(foregroundColor: Colors.white),
                     onPressed: () =>
                         NotificationBadgeService.markAllNotificationsAsRead(
                       items.map((n) => n.id),

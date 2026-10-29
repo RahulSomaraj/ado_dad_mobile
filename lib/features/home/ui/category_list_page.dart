@@ -368,7 +368,6 @@ class _CategoryListPageState extends State<CategoryListPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: AppColors.whiteColor,
           leading: IconButton(
               // onPressed: () => context.go('/home'),
               onPressed: () => context.pop(true),
@@ -386,7 +385,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
               )),
           title: Text(
             widget.categoryTitle,
-            style: AppTextstyle.appbarText.copyWith(
+            style: AppTextstyle.appbarText.copyWith(color: Colors.white, 
               fontSize: GetResponsiveSize.getResponsiveFontSize(
                 context,
                 mobile: AppTextstyle.appbarText.fontSize ??
@@ -493,6 +492,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                     desktop: 40.0,
                   ),
                   child: Image.asset(
+                    color: Colors.white,
                     'assets/images/filter.png',
                     fit: BoxFit.contain,
                   ),

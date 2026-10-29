@@ -77,7 +77,7 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
         ),
         title: Text(
           widget.userName ?? 'Showroom',
-          style: AppTextstyle.appbarText.copyWith(
+          style: AppTextstyle.appbarText.copyWith(color: Colors.white, 
             fontSize: GetResponsiveSize.getResponsiveFontSize(
               context,
               mobile: AppTextstyle.appbarText.fontSize ?? 20,
@@ -87,7 +87,6 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
             ),
           ),
         ),
-        backgroundColor: AppColors.whiteColor,
         elevation: 0,
       ),
       body: BlocBuilder<ShowroomBloc, ShowroomState>(

@@ -293,7 +293,6 @@ class _MyAdsPageState extends State<MyAdsPage> {
           ? null
           : AppBar(
               elevation: 0,
-              backgroundColor: AppColors.scaffoldBackground,
               leading: IconButton(
                 icon: Icon(
                   (!kIsWeb && Platform.isIOS)

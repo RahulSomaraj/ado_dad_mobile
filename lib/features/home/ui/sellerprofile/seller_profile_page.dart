@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
+import 'package:ado_dad_user/common/brand_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ado_dad_user/models/advertisement_model/add_model.dart';
@@ -49,18 +50,23 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground, // Theme 1 surface
       body: SafeArea(
+        top: false, // the blue header pads under the status bar
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+              // Minimal brand header (same as every other page).
+              BrandHeader(
+                radius: 20,
+                padding: const EdgeInsets.fromLTRB(0, 6, 0, 8),
+                child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Row(
                   children: [
                     IconButton(
                       onPressed: () => Navigator.maybePop(context),
+                      color: Colors.white,
                       icon: Icon(
                         (!kIsWeb && Platform.isIOS)
                             ? Icons.arrow_back_ios
@@ -75,7 +81,8 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                     Text(
                       'Seller',
                       style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
                         fontSize: GetResponsiveSize.getResponsiveFontSize(
                             context,
                             mobile: 16,
@@ -86,6 +93,7 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                     ),
                   ],
                 ),
+              ),
               ),
 
               // Seller section

@@ -281,7 +281,6 @@ class _LoginPageState extends State<LoginPage> {
       // back. '/logout' style root entries have nothing to pop, so no bar.
       appBar: context.canPop()
           ? AppBar(
-              backgroundColor: Colors.transparent,
               elevation: 0,
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),

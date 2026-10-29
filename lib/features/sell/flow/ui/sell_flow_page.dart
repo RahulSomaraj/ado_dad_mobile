@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:animations/animations.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:ado_dad_user/common/brand_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -246,6 +247,7 @@ class _SellFlowPageState extends State<SellFlowPage> {
                 backgroundColor: SellTokens.bg,
                 resizeToAvoidBottomInset: true,
                 body: SafeArea(
+                  top: false, // _TopBar (blue header) pads under the status bar
                   bottom: false,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -318,33 +320,43 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final first = state.stepIndex == 0 && !state.returnToReview;
+    // Minimal brand header (same as every other page).
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 4, SellTokens.gutter, 4),
-      child: Row(
-        children: [
-          Opacity(
-            opacity: state.isPosting ? 0.4 : 1,
-            child: IconButton(
-              tooltip: first ? 'Close' : 'Back',
-              onPressed: state.isPosting ? null : onBack,
-              style: IconButton.styleFrom(
-                backgroundColor: SellTokens.surface,
-                side: BorderSide(color: SellTokens.line),
-                minimumSize: const Size(40, 40),
+      padding: const EdgeInsets.only(bottom: 8),
+      child: BrandHeader(
+        radius: 20,
+        padding: const EdgeInsets.fromLTRB(8, 6, SellTokens.gutter, 8),
+        child: Row(
+          children: [
+            Opacity(
+              opacity: state.isPosting ? 0.4 : 1,
+              child: BrandHeaderIconButton(
+                icon: first ? Icons.close_rounded : Icons.arrow_back_rounded,
+                tooltip: first ? 'Close' : 'Back',
+                onTap: state.isPosting ? null : onBack,
               ),
-              icon: Icon(first ? Icons.close_rounded : Icons.arrow_back_rounded, size: 20, color: SellTokens.ink),
             ),
-          ),
-          const Spacer(),
-          if (state.savedAt != null)
-            Semantics(
-              liveRegion: true,
+            const SizedBox(width: 12),
+            Expanded(
               child: Text(
-                state.online ? '✓ Saved' : '✓ Saved on phone',
-                style: SellTokens.caption.copyWith(color: SellTokens.okText, fontWeight: FontWeight.w500),
+                'Post an ad',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: SellTokens.label.copyWith(
+                    color: Colors.white, fontWeight: FontWeight.w700, fontSize: 17),
               ),
             ),
-        ],
+            if (state.savedAt != null)
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  state.online ? '✓ Saved' : '✓ Saved on phone',
+                  style: SellTokens.caption.copyWith(
+                      color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -419,8 +419,6 @@ class _RouteErrorScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryColor,
-        foregroundColor: Colors.white,
         title: const Text('Something went wrong'),
       ),
       body: Center(

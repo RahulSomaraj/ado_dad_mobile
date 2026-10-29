@@ -104,7 +104,6 @@ class _WishlistPageState extends State<WishlistPage> {
         appBar: widget.embedded
             ? null
             : AppBar(
-                backgroundColor: AppColors.primaryColor,
                 elevation: 0,
                 leading: IconButton(
                   icon: Icon(
