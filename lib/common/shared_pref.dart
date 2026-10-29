@@ -4,7 +4,17 @@ import 'package:ado_dad_user/common/secure_token_store.dart';
 import 'package:ado_dad_user/models/login_response_model.dart';
 import 'package:ado_dad_user/models/profile_model.dart';
 import 'package:ado_dad_user/services/auth_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// Signed-in user's display name, or null when signed out.
+///
+/// Kept in step with the stored 'userName' on login, profile save and logout,
+/// so UI such as the Home greeting updates without a restart.
+final ValueNotifier<String?> currentUserName = ValueNotifier<String?>(null);
+
+String? _nonEmptyName(String? v) =>
+    (v == null || v.trim().isEmpty) ? null : v.trim();
 
 class SharedPrefs {
   static final SharedPrefs _instance = SharedPrefs._internal();
@@ -16,6 +26,7 @@ class SharedPrefs {
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+    currentUserName.value = _nonEmptyName(_prefs?.getString('userName'));
   }
 
   /// Generic getter for Strings
@@ -50,6 +61,12 @@ class SharedPrefs {
   /// 🔹 Save user profile in SharedPreferences
   Future<void> saveUserProfile(UserProfile profile) async {
     await _prefs?.setString("user_profile", jsonEncode(profile.toJson()));
+    // An edited name should show everywhere (Home greeting) straight away.
+    final name = _nonEmptyName(profile.name);
+    if (name != null) {
+      await _prefs?.setString('userName', name);
+      currentUserName.value = name;
+    }
   }
 
   /// 🔹 Retrieve stored user profile
@@ -102,6 +119,7 @@ Future<void> saveLoginResponse(LoginResponse loginResponse) async {
   await SecureTokenStore().setRefreshToken(cleanRefreshToken);
 
   await sharedPrefs.setString('userName', loginResponse.name);
+  currentUserName.value = _nonEmptyName(loginResponse.name);
   await sharedPrefs.setString('userType', loginResponse.userType);
   await sharedPrefs.setString('email', loginResponse.email);
   await sharedPrefs.setString('user_id', loginResponse.id);
@@ -165,4 +183,5 @@ Future<void> clearUserData() async {
   await sharedPrefs.remove('profilePicture');
   await sharedPrefs.remove('user_id');
   await sharedPrefs.remove("user_profile");
+  currentUserName.value = null;
 }

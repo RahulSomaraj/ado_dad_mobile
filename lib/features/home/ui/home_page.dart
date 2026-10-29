@@ -1,27 +1,23 @@
 import 'dart:async';
 
 import 'package:ado_dad_user/common/app_colors.dart';
-import 'package:ado_dad_user/common/widgets/ado_dad_logo.dart';
-import 'package:ado_dad_user/common/widgets/app_network_image.dart';
 import 'package:ado_dad_user/common/widgets/rich_ad_card.dart';
 import 'package:ado_dad_user/common/widgets/skeleton.dart';
-import 'package:ado_dad_user/common/notification_badge_service.dart';
-import 'package:ado_dad_user/common/app_textstyle.dart';
-import 'package:ado_dad_user/features/home/banner_bloc/banner_bloc.dart';
 import 'package:ado_dad_user/features/home/bloc/advertisement_bloc.dart';
 import 'package:ado_dad_user/features/home/favorite/bloc/favorite_bloc.dart';
-import 'package:ado_dad_user/features/home/ui/widgets/location_chip.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/home_category_strip.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/home_hero.dart';
+import 'package:ado_dad_user/features/home/ui/widgets/home_promo_carousel.dart';
 import 'package:ado_dad_user/features/home/ui/widgets/location_picker_dialog.dart';
 import 'package:ado_dad_user/models/cayegory_model.dart';
 import 'package:ado_dad_user/repositories/add_repo.dart';
 import 'package:ado_dad_user/services/location_service.dart';
 import 'package:ado_dad_user/common/auth_guard.dart';
 import 'package:ado_dad_user/common/widgets/dialog_util.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:ado_dad_user/common/get_responsive_size.dart';
 
 class HomePage extends StatefulWidget {
@@ -34,8 +30,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final CarouselSliderController _carouselController =
-      CarouselSliderController();
+  /// True once the hero has scrolled away and the compact header shows.
+  final ValueNotifier<bool> _showCompactHeader = ValueNotifier<bool>(false);
 
   final ScrollController _scrollController = ScrollController();
   late final AdvertisementBloc _adBloc;
@@ -78,6 +74,10 @@ class _HomePageState extends State<HomePage> {
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
+    final bool compact = _scrollController.position.pixels > 200;
+    if (compact != _showCompactHeader.value) {
+      _showCompactHeader.value = compact;
+    }
     final nearBottom = _scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 300;
 
@@ -110,6 +110,7 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     LocationService().place.removeListener(_onPlaceChanged);
     _scrollController.dispose();
+    _showCompactHeader.dispose();
     super.dispose();
   }
 
@@ -187,34 +188,16 @@ class _HomePageState extends State<HomePage> {
           }
         }
       },
-      child: Scaffold(
-        body: Column(
-          children: [
-            // 🔷 STICKY HEADER — logo, location, notifications + search bar
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: AppColors.primaryColor,
-                borderRadius:
-                    BorderRadius.vertical(bottom: Radius.circular(24)),
-              ),
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 8,
-                bottom: 12,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  buildTopBar(),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-                    child: _buildHomeSearchBar(context),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: RefreshIndicator(
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        // The hero is always navy, so the status bar icons stay light.
+        value: SystemUiOverlayStyle.light.copyWith(
+          statusBarColor: Colors.transparent,
+        ),
+        child: Scaffold(
+          backgroundColor: AppColors.scaffoldBackground,
+          body: Stack(
+            children: [
+              RefreshIndicator(
                 onRefresh: () async {
                   // Pull-to-refresh must reach the network: drop the cached
                   // pages so the repository can't answer from memory.
@@ -222,81 +205,18 @@ class _HomePageState extends State<HomePage> {
                   // Reuse the coordinates already held — no geocoding call.
                   _dispatchFeed(LocationService().place.value);
                 },
+                edgeOffset: MediaQuery.of(context).padding.top,
                 color: AppColors.primaryColor,
                 backgroundColor: Colors.white,
                 // CustomScrollView (not SingleChildScrollView + shrinkWrap
-                // GridView): shrinkWrap forced the grid to build *every* card
-                // to compute its intrinsic height, so all loaded cards fired
-                // their image download at once. Slivers restore real laziness —
-                // only visible cards (plus cacheExtent) are built.
+                // GridView): slivers keep the ad grid lazy — only visible
+                // cards (plus cacheExtent) are built.
                 child: CustomScrollView(
                   controller: _scrollController,
                   physics: const BouncingScrollPhysics(),
                   slivers: [
-                    SliverToBoxAdapter(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // 🔷 PROMO BANNER
-                          Padding(
-                            padding: const EdgeInsets.only(top: 14),
-                            child: _buildPromoBanner(),
-                          ),
-                          const SizedBox(height: 8),
-
-                          // 🔷 CATEGORIES
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: buildSectionTitle("Categories"),
-                          ),
-                          const SizedBox(height: 5),
-                          buildCategories(context),
-
-                          // extra space above Recommendations on larger devices
-                          SizedBox(
-                            height: GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 0, // unchanged for phones
-                              tablet: 25,
-                              largeTablet: 30,
-                              desktop: 30,
-                            ),
-                          ),
-
-                          // 🔷 RECOMMENDATIONS TITLE
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Flexible(
-                                    child: buildSectionTitle("Fresh near you")),
-                                GestureDetector(
-                                  onTap: () =>
-                                      context.push('/search?from=/home'),
-                                  child: Text(
-                                    "See all",
-                                    style: TextStyle(
-                                      color: AppColors.brandText,
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: GetResponsiveSize
-                                          .getResponsiveFontSize(
-                                        context,
-                                        mobile: 12,
-                                        tablet: 16,
-                                        largeTablet: 18,
-                                        desktop: 18,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                        ],
-                      ),
-                    ),
+                    // 🔷 HEADER + CATEGORIES + BANNERS + "Fresh near you" title
+                    SliverToBoxAdapter(child: _buildTop(context)),
 
                     // 🔷 MAIN AD GRID — a real sliver, so it builds lazily.
                     SliverPadding(
@@ -310,451 +230,161 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
-            ),
-          ],
-        ),
-        // Bottom navigation is now provided by the persistent shell.
-      ),
-    );
-  }
 
-  Widget _buildPromoBanner() {
-    return BlocBuilder<BannerBloc, BannerState>(
-      builder: (context, state) {
-        return state.when(
-          initial: () => const SizedBox(),
-          loading: () => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: SkeletonBox(
-              height: GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 140,
-                tablet: 250,
-                largeTablet: 320,
-                desktop: 360,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          error: (message) => const SizedBox(),
-          loaded: (banners) => Column(
-            children: [
-              CarouselSlider(
-                carouselController: _carouselController,
-                options: CarouselOptions(
-                  height: GetResponsiveSize.getResponsiveSize(
-                    context,
-                    mobile: 140,
-                    tablet: 250,
-                    largeTablet: 320,
-                    desktop: 360,
+              // 🔷 COMPACT HEADER — slides in once the hero scrolls away.
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: _showCompactHeader,
+                  builder: (context, show, child) => IgnorePointer(
+                    ignoring: !show,
+                    child: AnimatedSlide(
+                      offset: show ? Offset.zero : const Offset(0, -1),
+                      duration: const Duration(milliseconds: 240),
+                      curve: Curves.easeOutCubic,
+                      child: AnimatedOpacity(
+                        opacity: show ? 1 : 0,
+                        duration: const Duration(milliseconds: 200),
+                        child: child,
+                      ),
+                    ),
                   ),
-                  autoPlay: true,
-                  enlargeCenterPage: true,
-                  viewportFraction: 0.9,
-                  onPageChanged: (index, _) {
-                    setState(() {
-                      BuildIndicator.currentIndex = index;
-                    });
-                  },
+                  child: HomeCompactHeader(
+                    onLocationTap: _openLocationPicker,
+                    onNotificationsTap: _onNotificationsTap,
+                    onSearchTap: _openSearch,
+                  ),
                 ),
-                items: banners.map((banner) {
-                  return buildPromoCard(banner.phoneImage, banner.link);
-                }).toList(),
-              ),
-              SizedBox(
-                height: GetResponsiveSize.getResponsiveSize(
-                  context,
-                  mobile: 10,
-                  tablet: 24,
-                  largeTablet: 30,
-                  desktop: 30,
-                ),
-              ),
-              BuildIndicator(
-                controller: _carouselController,
-                itemCount: banners.length,
               ),
             ],
           ),
-        );
-      },
-    );
-  }
-
-  Widget buildTopBar() {
-    final double locationFont = GetResponsiveSize.getResponsiveFontSize(
-      context,
-      mobile: 12,
-      tablet: 22,
-      largeTablet: 25,
-      desktop: 25,
-    );
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // White mark + wordmark sized by height so it is clearly visible on
-          // the purple header.
-          AdoDadLogo(
-            height: GetResponsiveSize.getResponsiveSize(
-              context,
-              mobile: 28,
-              tablet: 44,
-              largeTablet: 52,
-              desktop: 56,
-            ),
-          ),
-          Expanded(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerRight,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      ValueListenableBuilder<bool>(
-                        valueListenable: NotificationBadgeService.hasUnread,
-                        builder: (context, hasUnread, _) {
-                          final bool isTab =
-                              GetResponsiveSize.isTablet(context);
-                          final double iconSize =
-                              GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 22,
-                            tablet: 28,
-                            largeTablet: 30,
-                            desktop: 30,
-                          );
-                          return GestureDetector(
-                            onTap: () async {
-                              // Do not clear badge here – clear only when user opens the notifications page
-                              final isAuthenticated =
-                                  await AuthGuard.isAuthenticated();
-                              if (!context.mounted) return;
-                              if (isAuthenticated) {
-                                context.push('/notifications');
-                              } else {
-                                DialogUtil.showLoginPromptDialog(
-                                  context,
-                                  message:
-                                      'Please login to view notifications.',
-                                  redirectPath: '/notifications',
-                                );
-                              }
-                            },
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                Icon(
-                                  Icons.notifications_outlined,
-                                  color: AppColors.whiteColor,
-                                  size: isTab ? iconSize : 22,
-                                ),
-                                if (hasUnread)
-                                  Positioned(
-                                    top: -2,
-                                    right: -2,
-                                    child: Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: const BoxDecoration(
-                                        color: Colors.red,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                      SizedBox(width: 12),
-                      GestureDetector(
-                        onTap: _openLocationPicker,
-                        child: Builder(
-                          builder: (context) {
-                            final bool isTab =
-                                GetResponsiveSize.isTablet(context);
-                            final double iconSize =
-                                GetResponsiveSize.getResponsiveSize(
-                              context,
-                              mobile: 22,
-                              tablet: 28,
-                              largeTablet: 30,
-                              desktop: 30,
-                            );
-                            return Image.asset(
-                              'assets/images/Frame.png',
-                              width: isTab ? iconSize : 22,
-                              height: isTab ? iconSize : 22,
-                              fit: BoxFit.contain,
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Always rendered, never blank — see LocationChip.
-                  SizedBox(height: 4),
-                  LocationChip(
-                    fontSize: locationFont,
-                    onTap: _openLocationPicker,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildPromoCard(String imagePath, String link) {
-    return GestureDetector(
-      onTap: () {
-        _launchURL(link);
-      },
-      child: Padding(
-        // padding: const EdgeInsets.symmetric(horizontal: 12),
-        padding: EdgeInsets.zero,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: SizedBox(
-            height: 150,
-            width: double.infinity,
-            // color: Colors.red,
-            // alignment: Alignment.center,
-            child: AppNetworkImage(
-              url: imagePath,
-              fit: BoxFit.fill,
-              height: 150,
-              width: double.infinity,
-            ),
-          ),
+          // Bottom navigation is now provided by the persistent shell.
         ),
       ),
     );
   }
 
-  void _launchURL(String url) async {
-    final Uri uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {}
-  }
+  /// Hero with the category tiles overlapping its bottom edge, the promo
+  /// carousel and the "Fresh near you" heading.
+  Widget _buildTop(BuildContext context) {
+    final bool tab = GetResponsiveSize.isTablet(context);
+    final double side = tab ? 28 : 16;
+    final double card = HomeCategoryCard.heightOf(context, categories.length);
+    final double overlap = tab ? 80 : 66;
 
-  Widget buildSectionTitle(String title) {
-    final baseSize = AppTextstyle.sectionTitleTextStyle.fontSize ?? 16;
-    final responsiveSize = GetResponsiveSize.getResponsiveFontSize(
-      context,
-      mobile: baseSize, // keep phone unchanged
-      tablet: baseSize + 15,
-      largeTablet: baseSize + 18,
-      desktop: baseSize + 18,
-    );
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        title,
-        style: AppTextstyle.sectionTitleTextStyle
-            .copyWith(fontSize: responsiveSize),
-      ),
-    );
-  }
-
-  // Tappable search pill on Home; opens the full search screen in one tap.
-  Widget _buildHomeSearchBar(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push('/search?from=/home'),
-      child: Container(
-        height: 48,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: AppColors.whiteColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.dividerColor),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 🔷 INDIGO HEADER + floating category card over its bottom edge
+        Stack(
+          clipBehavior: Clip.none,
           children: [
-            Icon(Icons.search, color: AppColors.greyColor),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Search cars, bikes, property…',
-                style: TextStyle(color: AppColors.greyColor, fontSize: 14),
+            Padding(
+              padding: EdgeInsets.only(bottom: card - overlap),
+              child: HomeHero(
+                bottomInset: overlap + 20,
+                onLocationTap: _openLocationPicker,
+                onNotificationsTap: _onNotificationsTap,
+                onSearchTap: _openSearch,
+              ),
+            ),
+            Positioned(
+              left: side,
+              right: side,
+              bottom: 0,
+              child: HomeCategoryCard(
+                items: categories,
+                onTap: _openCategory,
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
+        SizedBox(height: tab ? 24 : 18),
 
-  Widget buildCategories(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+        // 🔷 BANNERS — one at a time, full width
+        HomePromoCarousel(onExploreBikes: _exploreBikes),
+        SizedBox(height: tab ? 28 : 20),
 
-    // Calculate item width to show multiple items per row
-    // Increased mobile width to prevent word breaking (especially for "Commercial")
-    // With reduced padding and spacing, we can use more width
-    final itemWidth = GetResponsiveSize.isTablet(context)
-        ? GetResponsiveSize.getResponsiveSize(
-            context,
-            mobile: screenWidth * 0.2, // not used on tablets
-            tablet: screenWidth * 0.20,
-            largeTablet: screenWidth * 0.26,
-            desktop: screenWidth * 0.28,
-          )
-        : (screenWidth * 0.24).clamp(90.0,
-            double.infinity); // Increased to 24% with min 90px for better fit
-
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: GetResponsiveSize.isTablet(context)
-            ? GetResponsiveSize.getResponsivePadding(
-                context,
-                mobile: 12.0, // Not used on tablets
-                tablet: 8.0, // Decreased left/right padding for tablets
-                largeTablet: 8.0,
-                desktop: 8.0,
-              )
-            : 8.0, // Reduced from 12.0 to give more width to categories
-        vertical: 10,
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: categories.map((category) {
-            return Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: SizedBox(
-                width: itemWidth,
-                child: GestureDetector(
-                  onTap: () async {
-                    // Special handling for Showroom category
-                    if (category.categoryId == 'showroom') {
-                      // Navigate to showroom users - page handles both authenticated and unauthenticated access
-                      context.push('/showroom-users');
-                      return;
-                    }
-
-                    // context.read<AdvertisementBloc>().add(
-                    //       AdvertisementEvent.fetchByCategory(
-                    //           categoryId: category.categoryId),
-                    //     );
-                    // context.push(
-                    //     '/category-list-page?categoryId=${category.categoryId}&title=${category.name}');
-
-                    // No refetch on return. The category list runs on its own
-                    // route-scoped bloc now, so Home's listings and scroll position
-                    // survive the trip; a write (post / edit / sold / delete)
-                    // clears the repository cache, so anything genuinely stale is
-                    // refreshed by the next fetch rather than by a blanket reload
-                    // of the whole feed on every back press.
-                    await context.push(
-                      '/category-list-page?categoryId=${category.categoryId}&title=${category.name}',
-                    );
-                  },
-                  child: Column(
-                    children: [
-                      Container(
-                        height: GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 70, // unchanged for phones
-                          tablet: 110,
-                          largeTablet: 135,
-                          desktop: 150,
-                        ),
-                        padding:
-                            EdgeInsets.all(GetResponsiveSize.getResponsiveSize(
-                          context,
-                          mobile: 16,
-                          tablet: 20,
-                          largeTablet: 22,
-                          desktop: 22,
-                        )),
-                        decoration: BoxDecoration(
-                          color: AppColors.whiteColor,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black12, blurRadius: 2)
-                          ],
-                        ),
-                        child: SizedBox(
-                          width: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 38, // leave phone small as before
-                            tablet: 60,
-                            largeTablet: 75,
-                            desktop: 80,
-                          ),
-                          height: GetResponsiveSize.getResponsiveSize(
-                            context,
-                            mobile: 38,
-                            tablet: 60,
-                            largeTablet: 70,
-                            desktop: 80,
-                          ),
-                          child:
-                              Image.asset(category.image, fit: BoxFit.contain),
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Builder(
-                        builder: (context) {
-                          final double baseSize =
-                              AppTextstyle.categoryLabelTextStyle.fontSize ??
-                                  12;
-                          final double labelSize =
-                              GetResponsiveSize.getResponsiveFontSize(
-                            context,
-                            mobile: baseSize, // keep phone unchanged
-                            tablet: baseSize + 10,
-                            largeTablet: baseSize + 13,
-                            desktop: baseSize + 13,
-                          );
-                          // Allow multi-line text but ensure words don't break
-                          // Text widget naturally wraps at word boundaries (not mid-word)
-                          // Use ConstrainedBox to limit width, allowing natural word wrapping
-                          return ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: itemWidth),
-                            child: Text(
-                              category.name,
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              softWrap: true, // Wraps at word boundaries only
-                              style: AppTextstyle.categoryLabelTextStyle
-                                  .copyWith(fontSize: labelSize),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+        // 🔷 FRESH NEAR YOU
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: side - 2),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Fresh near you',
+                  style: HomeHeroPalette.display(
+                    size: tab ? 32 : 25,
+                    color: AppColors.blackColor,
                   ),
                 ),
               ),
-            );
-          }).toList(),
+              InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: _openSearch,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  child: Text(
+                    'See all',
+                    style: TextStyle(
+                      color: AppColors.isDark
+                          ? HomeHeroPalette.lavender
+                          : HomeHeroPalette.accent,
+                      fontWeight: FontWeight.w600,
+                      fontSize: tab ? 17 : 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
+        const SizedBox(height: 12),
+      ],
     );
   }
 
+  void _openSearch() => context.push('/search?from=/home');
+
+  Future<void> _onNotificationsTap() async {
+    // Do not clear the badge here – it clears when the notifications page opens.
+    final isAuthenticated = await AuthGuard.isAuthenticated();
+    if (!mounted) return;
+    if (isAuthenticated) {
+      context.push('/notifications');
+    } else {
+      DialogUtil.showLoginPromptDialog(
+        context,
+        message: 'Please login to view notifications.',
+        redirectPath: '/notifications',
+      );
+    }
+  }
+
+  /// No refetch on return: the category list runs on its own route-scoped
+  /// bloc, so Home's listings and scroll position survive the trip.
+  Future<void> _openCategory(CategoryModel category) async {
+    if (category.categoryId == 'showroom') {
+      // Showroom page handles both authenticated and guest access.
+      context.push('/showroom-users');
+      return;
+    }
+    await context.push(
+      '/category-list-page?categoryId=${category.categoryId}&title=${category.name}',
+    );
+  }
+
+  void _exploreBikes() {
+    final bike = categories.firstWhere(
+      (c) => c.categoryId == 'two_wheeler',
+      orElse: () => categories.first,
+    );
+    _openCategory(bike);
+  }
   // 1) Helpers: decide columns and compute a responsive card height
   int _columnsForWidth(double w) {
     if (w >= 1200) return 5; // keep desktop dense
@@ -865,91 +495,6 @@ class _HomePageState extends State<HomePage> {
             child: Center(child: Text("No data available")),
           );
         }
-      },
-    );
-  }
-}
-
-class BuildIndicator extends StatefulWidget {
-  final CarouselSliderController controller;
-  final int itemCount;
-  const BuildIndicator(
-      {super.key, required this.controller, required this.itemCount});
-
-  static int currentIndex = 0;
-
-  @override
-  State<BuildIndicator> createState() => _BuildIndicatorState();
-}
-
-class _BuildIndicatorState extends State<BuildIndicator> {
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<BannerBloc, BannerState>(
-      builder: (context, state) {
-        return state.when(
-          initial: () => SizedBox(),
-          loading: () => SizedBox(),
-          error: (message) => SizedBox(),
-          loaded: (banners) => Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(banners.length, (index) {
-              final bool isTablet = GetResponsiveSize.isTablet(context);
-              // Compute responsive indicator sizes
-              final double activeWidth = GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 15,
-                tablet: 20,
-                largeTablet: 24,
-                desktop: 24,
-              );
-              final double inactiveWidth = GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 6,
-                tablet: 8,
-                largeTablet: 10,
-                desktop: 10,
-              );
-              final double dotHeight = GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 6,
-                tablet: 10,
-                largeTablet: 10,
-                desktop: 10,
-              );
-              final double dotMargin = GetResponsiveSize.getResponsiveSize(
-                context,
-                mobile: 5,
-                tablet: 8,
-                largeTablet: 7,
-                desktop: 7,
-              );
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    BuildIndicator.currentIndex = index;
-                  });
-                  widget.controller.jumpToPage(index);
-                },
-                child: Container(
-                  width: BuildIndicator.currentIndex == index
-                      ? (isTablet ? activeWidth : 15)
-                      : (isTablet ? inactiveWidth : 6),
-                  height: isTablet ? dotHeight : 6,
-                  margin: EdgeInsets.symmetric(
-                      horizontal: isTablet ? dotMargin : 5),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    color: BuildIndicator.currentIndex == index
-                        ? AppColors.primaryColor
-                        : AppColors.greyColor,
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                ),
-              );
-            }),
-          ),
-        );
       },
     );
   }

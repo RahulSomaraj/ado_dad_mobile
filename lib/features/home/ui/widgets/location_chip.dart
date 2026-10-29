@@ -12,10 +12,18 @@ class LocationChip extends StatelessWidget {
     super.key,
     required this.fontSize,
     required this.onTap,
+    this.color,
+    this.textAlign = TextAlign.end,
+    this.maxLines = 2,
   });
 
   final double fontSize;
   final VoidCallback onTap;
+
+  /// Text colour. Defaults to [AppColors.whiteColor] (the original header).
+  final Color? color;
+  final TextAlign textAlign;
+  final int maxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -38,18 +46,20 @@ class LocationChip extends StatelessWidget {
                         ? 'Locating…'
                         : 'Set location');
 
+            final Color textColor = color ?? AppColors.whiteColor;
             final child = Text(
               text,
               style: TextStyle(
-                color: AppColors.whiteColor,
+                color: textColor,
                 fontSize: fontSize,
+                fontWeight: color != null ? FontWeight.w600 : null,
                 decoration:
                     named ? TextDecoration.none : TextDecoration.underline,
-                decorationColor: AppColors.whiteColor,
+                decorationColor: textColor,
               ),
-              maxLines: 2,
+              maxLines: maxLines,
               overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.end,
+              textAlign: textAlign,
               softWrap: true,
             );
 
