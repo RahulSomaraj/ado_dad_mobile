@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:ado_dad_user/common/app_routes.dart';
-import 'package:ado_dad_user/common/app_colors.dart';
+import 'package:ado_dad_user/common/theme_refresh.dart';
 import 'package:ado_dad_user/common/app_theme.dart';
 import 'package:ado_dad_user/common/theme_controller.dart';
 import 'package:ado_dad_user/common/auth_guard.dart';
@@ -288,7 +288,9 @@ class MyApp extends StatelessWidget {
           builder: (context, child) {
             // Keep the brightness-aware AppColors in sync with the theme that
             // is actually applied (covers light, dark and system modes).
-            AppColors.brightness = Theme.of(context).brightness;
+            // ThemeRefresh also repaints screens that read AppColors directly,
+            // so a theme switch applies everywhere at once (no restart).
+            ThemeRefresh.sync(Theme.of(context).brightness);
             return StartupConnectivityGate(
               // Store update prompt (optional / forced). Inside the gate so it
               // only runs once the device is online.

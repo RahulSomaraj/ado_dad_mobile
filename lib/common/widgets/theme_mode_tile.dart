@@ -2,8 +2,9 @@ import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/theme_controller.dart';
 import 'package:flutter/material.dart';
 
-/// A Profile menu card that lets the user pick Light / Dark / System theme.
-/// Styled to match the existing ProfileMenuItem cards.
+/// Profile settings card: a Dark mode switch (on = Dark, off = Light), and
+/// tapping the row opens Light / Dark / System default. Matches the
+/// ProfileMenuItem cards.
 class ThemeModeTile extends StatelessWidget {
   const ThemeModeTile({super.key});
 
@@ -72,6 +73,10 @@ class ThemeModeTile extends StatelessWidget {
     return AnimatedBuilder(
       animation: ThemeController.instance,
       builder: (context, _) {
+        final ThemeMode mode = ThemeController.instance.mode;
+        final bool isDarkNow = mode == ThemeMode.dark ||
+            (mode == ThemeMode.system &&
+                MediaQuery.platformBrightnessOf(context) == Brightness.dark);
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
           child: Material(
@@ -95,8 +100,12 @@ class ThemeModeTile extends StatelessWidget {
                       decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppColors.primarySoft),
-                      child: Icon(Icons.brightness_6_outlined,
-                          size: 20, color: AppColors.brandText),
+                      child: Icon(
+                          isDarkNow
+                              ? Icons.dark_mode_outlined
+                              : Icons.light_mode_outlined,
+                          size: 20,
+                          color: AppColors.brandText),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -105,7 +114,7 @@ class ThemeModeTile extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Appearance',
+                            'Dark mode',
                             style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14.5,
@@ -113,15 +122,23 @@ class ThemeModeTile extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            ThemeController.instance.label(),
+                            mode == ThemeMode.system
+                                ? 'Following system · tap for options'
+                                : (isDarkNow ? 'On' : 'Off'),
                             style: TextStyle(
                                 color: AppColors.textMuted, fontSize: 12),
                           ),
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right_rounded,
-                        size: 22, color: AppColors.greyColor),
+                    // Quick switch: on = Dark, off = Light. Tapping the row
+                    // still opens Light / Dark / System default.
+                    Switch.adaptive(
+                      value: isDarkNow,
+                      activeTrackColor: AppColors.primaryColor,
+                      onChanged: (on) => ThemeController.instance
+                          .setMode(on ? ThemeMode.dark : ThemeMode.light),
+                    ),
                   ],
                 ),
               ),
