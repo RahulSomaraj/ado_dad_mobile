@@ -56,10 +56,12 @@ class AdDetailContactBar extends StatelessWidget {
                 message: 'Call seller',
                 child: OutlinedButton(
                   onPressed: busy ? null : onCall,
+                  // Theme 1: Call is an action control — filled orange.
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.zero,
-                    foregroundColor: AppColors.positiveText,
-                    side: BorderSide(color: AppColors.dividerColor, width: 1.5),
+                    backgroundColor: AppColors.ctaColor,
+                    foregroundColor: AppColors.onCta,
+                    side: BorderSide(color: AppColors.ctaColor, width: 1.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.button12),
                     ),
@@ -213,8 +215,8 @@ class AdDetailBarButton extends StatelessWidget {
         return OutlinedButton(
           onPressed: onPressed,
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.primaryColor,
-            side: const BorderSide(color: AppColors.primaryColor, width: 1.5),
+            foregroundColor: AppColors.brandText,
+            side: BorderSide(color: AppColors.brandText, width: 1.5),
             minimumSize: size,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             shape: shape,

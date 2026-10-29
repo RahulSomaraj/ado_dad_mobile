@@ -142,14 +142,14 @@ class RichAdCard extends StatelessWidget {
     );
   }
 
-  Widget _imgTag(String text, Color color) {
+  Widget _imgTag(String text, Color color, [Color textColor = Colors.white]) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration:
           BoxDecoration(color: color, borderRadius: BorderRadius.circular(5)),
       child: Text(text,
-          style: const TextStyle(
-              color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.w600)),
+          style: TextStyle(
+              color: textColor, fontSize: 8.5, fontWeight: FontWeight.w600)),
     );
   }
 
@@ -249,20 +249,20 @@ class RichAdCard extends StatelessWidget {
                     Positioned(
                       top: 6,
                       left: 6,
-                      child: _imgTag('PREMIUM', AppColors.primaryColor),
+                      child: _imgTag('PREMIUM', AppColors.highlight, AppColors.onHighlight),
                     )
                   else if (property)
                     Positioned(
                       top: 6,
                       left: 6,
                       child: _imgTag(_isRent ? 'FOR RENT' : 'FOR SALE',
-                          const Color(0xFF1565C0)),
+                          AppColors.primaryColor),
                     )
                   else if (_isNew)
                     Positioned(
                       top: 6,
                       left: 6,
-                      child: _imgTag('NEW', const Color(0xFF19A463)),
+                      child: _imgTag('NEW', AppColors.successColor),
                     ),
                   Positioned(top: 5, right: 5, child: _favorite()),
                   if (ad.images.length > 1)
@@ -332,7 +332,7 @@ class RichAdCard extends StatelessWidget {
                           if (ad.user?.isVerified == true) ...[
                             const SizedBox(width: 3),
                             Icon(Icons.verified,
-                                size: 13, color: AppColors.primaryColor),
+                                size: 13, color: AppColors.brandText),
                           ],
                         ],
                       ),

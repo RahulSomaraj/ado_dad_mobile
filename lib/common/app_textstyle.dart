@@ -28,7 +28,7 @@ class AppTextstyle {
       fontWeight: FontWeight.w600, fontSize: 16, color: AppColors.blackColor);
 
   static TextStyle get changeCategoryButtonTextStyle => GoogleFonts.poppins(
-      fontWeight: FontWeight.w500, fontSize: 12, color: AppColors.primaryColor);
+      fontWeight: FontWeight.w500, fontSize: 12, color: AppColors.brandText);
 
   // ---- Detail-screen scale (sizes are phone sp; see AppSpacing.s for tablet) ----
   static const List<FontFeature> _tabular = [FontFeature.tabularFigures()];

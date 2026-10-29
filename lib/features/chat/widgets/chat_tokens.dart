@@ -18,31 +18,31 @@ class ChatColors {
   static ChatColors of(BuildContext context) =>
       ChatColors._(Theme.of(context).brightness == Brightness.dark);
 
-  // Brand — fills keep #4F48EC in both themes; brand-coloured TEXT lightens on dark.
+  // Brand (Theme 1) — fills keep #1D4ED8 in both themes; brand-coloured TEXT lightens on dark.
   Color get brand => AppColors.primaryColor;
-  Color get brandText => isDark ? const Color(0xFF9C98FF) : AppColors.primaryColor;
+  Color get brandText => AppColors.brandText;
   Color get onBrand => Colors.white;
-  Color get brandPending => const Color(0xFF8D88F2); // .b.pend
+  Color get brandPending => const Color(0xFF7C9BE8); // .b.pend
   Color get readTick => const Color(0xFFBFF0DA); // .b.out .rd
 
   // Surfaces
-  Color get background => isDark ? AppColors.darkBackground : const Color(0xFFF6F7FB); // --a-bg
+  Color get background => isDark ? AppColors.darkBackground : const Color(0xFFF5F7FB); // --a-bg
   Color get surface => isDark ? AppColors.darkSurface : Colors.white; // --a-surface
-  Color get chip => isDark ? const Color(0xFF232833) : const Color(0xFFF4F5F9); // --a-chip
-  Color get divider => isDark ? const Color(0xFF2A2F3A) : const Color(0xFFE6E8EE); // --a-div
-  Color get soft => isDark ? const Color(0xFF26244A) : const Color(0xFFEDEBFF); // --a-soft
+  Color get chip => AppColors.chipFill; // --a-chip
+  Color get divider => AppColors.dividerColor; // --a-div
+  Color get soft => AppColors.primarySoft; // --a-soft
   Color get skeleton => divider;
-  Color get scrim => const Color(0x610A0A14); // rgba(10,10,20,.38)
+  Color get scrim => const Color(0x610B1F44); // navy @ 38%
 
   // Text
   Color get text => isDark ? AppColors.darkText : AppColors.lightBlack; // --a-text
   Color get text2 => isDark ? AppColors.darkText1 : AppColors.lightBlack1; // --a-text2
-  Color get muted => isDark ? AppColors.darkGrey : const Color(0xFF6B7080); // --a-muted
+  Color get muted => AppColors.textMuted; // --a-muted
 
   // Semantic
   Color get okBg => isDark ? const Color(0xFF15372A) : const Color(0xFFE3F5EC);
-  Color get ok => isDark ? const Color(0xFF5FD3A2) : const Color(0xFF12805A);
-  Color get call => AppColors.successColor; // #19A463
+  Color get ok => AppColors.positiveText;
+  Color get call => AppColors.ctaColor; // Theme 1: Call is the orange action
   Color get warnBg => isDark ? const Color(0xFF3A2F12) : const Color(0xFFFFF3D6);
   Color get warn => isDark ? const Color(0xFFF2C66D) : const Color(0xFF7A5200);
   Color get errBg => isDark ? const Color(0xFF3D1B1E) : const Color(0xFFFDECEC);

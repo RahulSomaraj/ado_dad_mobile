@@ -115,12 +115,12 @@ class AdDetailTextAction extends StatelessWidget {
                 style: AppTextstyle.caption.copyWith(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.primaryColor,
+                  color: AppColors.brandText,
                 ),
               ),
               if (showChevron)
-                const Icon(Icons.chevron_right,
-                    size: 18, color: AppColors.primaryColor),
+                Icon(Icons.chevron_right,
+                    size: 18, color: AppColors.brandText),
             ],
           ),
         ),

@@ -21,7 +21,7 @@ class ThemeModeTile extends StatelessWidget {
               return ListTile(
                 leading: Icon(icon,
                     color: selected
-                        ? AppColors.primaryColor
+                        ? AppColors.brandText
                         : AppColors.greyColor),
                 title: Text(title,
                     style: TextStyle(
@@ -29,7 +29,7 @@ class ThemeModeTile extends StatelessWidget {
                         fontWeight:
                             selected ? FontWeight.w600 : FontWeight.w400)),
                 trailing: selected
-                    ? const Icon(Icons.check, color: AppColors.primaryColor)
+                    ? Icon(Icons.check, color: AppColors.brandText)
                     : null,
                 onTap: () {
                   ThemeController.instance.setMode(mode);
@@ -91,8 +91,8 @@ class ThemeModeTile extends StatelessWidget {
                               ? Colors.white10
                               : const Color(0xFFF1F2F6),
                         ),
-                        child: const Icon(Icons.brightness_6_outlined,
-                            size: 20, color: AppColors.primaryColor),
+                        child: Icon(Icons.brightness_6_outlined,
+                            size: 20, color: AppColors.brandText),
                       ),
                       const SizedBox(width: 12),
                       Expanded(

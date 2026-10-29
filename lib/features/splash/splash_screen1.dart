@@ -1,9 +1,10 @@
+import 'package:ado_dad_user/common/app_colors.dart';
 import 'package:ado_dad_user/common/widgets/ado_dad_logo.dart';
 import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
 
-const Color _kBrandPurple = Color(0xFF4F46E5);
+const Color _kBrandPurple = AppColors.primaryColor; // Theme 1 brand blue
 
 /// Brand lockup scaled to fill [width], tinted with [color].
 Widget _brandLogo({required double width, required Color color}) {
@@ -121,7 +122,7 @@ class _SplashScreen2State extends State<SplashScreen2>
             height: circleSize,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFF4F46E5),
+              color: _kBrandPurple,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.3),
@@ -268,7 +269,7 @@ class _SplashScreen3State extends State<SplashScreen3>
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
-                      colors: [Colors.white, Color(0x884F46E5)],
+                      colors: [Colors.white, Color(0x881D4ED8)],
                       stops: [0.9, 1.0],
                     ),
                   ),

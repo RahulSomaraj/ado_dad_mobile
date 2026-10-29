@@ -288,12 +288,12 @@ class _MyAdsPageState extends State<MyAdsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F4FC),
+      backgroundColor: AppColors.scaffoldBackground,
       appBar: widget.embedded
           ? null
           : AppBar(
               elevation: 0,
-              backgroundColor: const Color(0xFFF6F4FC),
+              backgroundColor: AppColors.scaffoldBackground,
               leading: IconButton(
                 icon: Icon(
                   (!kIsWeb && Platform.isIOS)

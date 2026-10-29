@@ -784,7 +784,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                     borderSide: BorderSide(
                       color: _isLocationSearchMode
-                          ? AppColors.primaryColor
+                          ? AppColors.brandText
                           : Colors.grey,
                       width: GetResponsiveSize.getResponsiveSize(
                         context,
@@ -967,7 +967,7 @@ class _SearchPageState extends State<SearchPage> {
                     size: GetResponsiveSize.getResponsiveSize(context,
                         mobile: 24, tablet: 36, largeTablet: 44, desktop: 52),
                     color: _activeFilterCount > 0
-                        ? AppColors.primaryColor
+                        ? AppColors.brandText
                         : AppColors.greyColor,
                   ),
                   if (_activeFilterCount > 0)
@@ -1087,7 +1087,7 @@ class _SearchPageState extends State<SearchPage> {
                               return ListTile(
                                 leading: Icon(
                                   Icons.location_on,
-                                  color: AppColors.primaryColor,
+                                  color: AppColors.brandText,
                                   size: GetResponsiveSize.getResponsiveSize(
                                     context,
                                     mobile: 24,
@@ -1255,7 +1255,7 @@ class _SearchPageState extends State<SearchPage> {
       color: AppColors.primaryColor.withValues(alpha: 0.06),
       child: Row(
         children: [
-          Icon(Icons.tune, size: 15, color: AppColors.primaryColor),
+          Icon(Icons.tune, size: 15, color: AppColors.brandText),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
@@ -1273,7 +1273,7 @@ class _SearchPageState extends State<SearchPage> {
             child: Text('Clear',
                 style: TextStyle(
                     fontSize: 12.5,
-                    color: AppColors.primaryColor,
+                    color: AppColors.brandText,
                     fontWeight: FontWeight.w600)),
           ),
         ],

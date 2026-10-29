@@ -202,9 +202,9 @@ class _OfferSheetState extends State<_OfferSheet> {
                         color: AppColors.primaryColor.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.sell_outlined,
-                        color: AppColors.primaryColor,
+                        color: AppColors.brandText,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -349,7 +349,7 @@ class _OfferSheetState extends State<_OfferSheet> {
                         shape: StadiumBorder(
                           side: BorderSide(
                             color: selected
-                                ? AppColors.primaryColor
+                                ? AppColors.brandText
                                 : AppColors.greyColor.withValues(alpha: 0.4),
                           ),
                         ),

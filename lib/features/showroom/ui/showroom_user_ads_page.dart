@@ -167,7 +167,7 @@ class _ShowroomUserAdsPageState extends State<ShowroomUserAdsPage> {
                           child: Text(
                             _dealerInitials,
                             style: TextStyle(
-                              color: AppColors.primaryColor,
+                              color: AppColors.brandText,
                               fontWeight: FontWeight.w700,
                               fontSize: GetResponsiveSize.getResponsiveFontSize(
                                   context,

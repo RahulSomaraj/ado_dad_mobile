@@ -507,6 +507,7 @@ class _ActionBar extends StatelessWidget {
               ),
             SellButton(
               label: s.isPosting ? 'Posting…' : s.submission == SubmissionStatus.failed ? 'Try again' : 'Post ad',
+              kind: SellButtonKind.cta,
               busy: s.isPosting,
               onPressed: reason == null && !s.isPosting ? onPost : null,
             ),

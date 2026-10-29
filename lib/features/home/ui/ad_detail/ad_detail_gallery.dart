@@ -201,7 +201,9 @@ class _AdDetailGalleryState extends State<AdDetailGallery> {
                   left: g,
                   bottom: AppSpacing.md12,
                   child: const _Tag(
-                      label: 'PREMIUM', color: AppColors.primaryColor),
+                      label: 'PREMIUM',
+                      color: AppColors.highlightLight,
+                      textColor: AppColors.navy),
                 ),
               if (items.length > 1)
                 Positioned(
@@ -407,10 +409,12 @@ class _CounterPill extends StatelessWidget {
 }
 
 class _Tag extends StatelessWidget {
-  const _Tag({required this.label, required this.color});
+  const _Tag(
+      {required this.label, required this.color, this.textColor = Colors.white});
 
   final String label;
   final Color color;
+  final Color textColor;
 
   @override
   Widget build(BuildContext context) {
@@ -422,8 +426,8 @@ class _Tag extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: textColor,
           fontSize: 11,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.4,

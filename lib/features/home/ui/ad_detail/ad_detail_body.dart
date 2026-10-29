@@ -62,7 +62,7 @@ class _AdDetailExpandableTextState extends State<AdDetailExpandableText> {
                       style: AppTextstyle.caption.copyWith(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.primaryColor,
+                        color: AppColors.brandText,
                       ),
                     ),
                   ),
@@ -220,8 +220,8 @@ class _AdDetailSafetyNoteState extends State<AdDetailSafetyNote> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.shield_outlined,
-                    size: 20, color: AppColors.primaryColor),
+                Icon(Icons.shield_outlined,
+                    size: 20, color: AppColors.brandText),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Padding(

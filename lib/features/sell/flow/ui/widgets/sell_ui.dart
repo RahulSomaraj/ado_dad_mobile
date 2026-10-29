@@ -10,19 +10,19 @@ import 'package:google_fonts/google_fonts.dart';
 class SellTokens {
   SellTokens._();
 
-  static const Color brand = Color(0xFF4F48EC);
-  static Color get accent => AppColors.isDark ? const Color(0xFF8C87FF) : brand;
-  static Color get accentText => AppColors.isDark ? const Color(0xFFA9A5FF) : const Color(0xFF3E37D6);
+  static const Color brand = AppColors.primaryColor;
+  static Color get accent => AppColors.brandText;
+  static Color get accentText => AppColors.isDark ? AppColors.brandTextDark : const Color(0xFF1A44C2);
   static Color get soft => AppColors.primarySoft;
   static Color get bg => AppColors.scaffoldBackground;
   static Color get surface => AppColors.whiteColor;
   static Color get input => AppColors.chipFill;
   static Color get line => AppColors.dividerColor;
   static Color get ink => AppColors.blackColor;
-  static Color get ink2 => AppColors.isDark ? const Color(0xFFC2C7D0) : const Color(0xFF424242);
+  static Color get ink2 => AppColors.blackColor1;
   static Color get muted => AppColors.textMuted;
-  static Color get track => AppColors.isDark ? const Color(0xFF2F3442) : const Color(0xFFDCDDEA);
-  static Color get disabledBrand => AppColors.isDark ? const Color(0xFF3A3870) : const Color(0xFFC9C8F5);
+  static Color get track => AppColors.isDark ? const Color(0xFF33405E) : const Color(0xFFD3D9E6);
+  static Color get disabledBrand => AppColors.isDark ? const Color(0xFF26386A) : const Color(0xFFB9CBF4);
 
   static Color get errorText => AppColors.isDark ? const Color(0xFFFF8A80) : const Color(0xFFC62828);
   static Color get errorBorder => AppColors.isDark ? const Color(0xFFFF8A80) : const Color(0xFFD93838);
@@ -30,7 +30,7 @@ class SellTokens {
   static Color get okText => AppColors.positiveText;
 
   static Color get infoBg => soft;
-  static Color get infoFg => AppColors.isDark ? const Color(0xFFC9C6FF) : const Color(0xFF2F29A8);
+  static Color get infoFg => AppColors.isDark ? const Color(0xFFC6D7FF) : const Color(0xFF1A3A9E);
   static Color get warnBg => AppColors.isDark ? const Color(0xFF3A2A14) : const Color(0xFFFFF1E0);
   static Color get warnFg => AppColors.isDark ? const Color(0xFFFFB35C) : const Color(0xFF8A4B00);
   static Color get errBg => AppColors.isDark ? const Color(0xFF3A1D1D) : const Color(0xFFFDECEC);
@@ -500,7 +500,7 @@ class SellSegmented<T> extends StatelessWidget {
           duration: SellTokens.fast,
           padding: EdgeInsets.symmetric(vertical: compact ? 6 : 10, horizontal: compact ? 10 : 8),
           decoration: BoxDecoration(
-            color: on ? (AppColors.isDark ? const Color(0xFF2F3442) : Colors.white) : Colors.transparent,
+            color: on ? (AppColors.isDark ? const Color(0xFF26314A) : Colors.white) : Colors.transparent,
             borderRadius: BorderRadius.circular(9),
             boxShadow: on && !AppColors.isDark
                 ? [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 3, offset: const Offset(0, 1))]
@@ -703,7 +703,7 @@ class SellBanner extends StatelessWidget {
   }
 }
 
-enum SellButtonKind { primary, tonal, ghost, danger }
+enum SellButtonKind { primary, cta, tonal, ghost, danger }
 
 class SellButton extends StatelessWidget {
   const SellButton({
@@ -731,8 +731,13 @@ class SellButton extends StatelessWidget {
     BorderSide side = BorderSide.none;
     switch (kind) {
       case SellButtonKind.primary:
-        bg = enabled ? (AppColors.isDark ? const Color(0xFF6F69F2) : SellTokens.brand) : SellTokens.disabledBrand;
+        bg = enabled ? SellTokens.brand : SellTokens.disabledBrand;
         fg = Colors.white;
+        break;
+      case SellButtonKind.cta:
+        // Theme 1: Post ad is an action control — orange.
+        bg = enabled ? AppColors.ctaColor : SellTokens.disabledBrand;
+        fg = enabled ? AppColors.onCta : Colors.white;
         break;
       case SellButtonKind.tonal:
         bg = SellTokens.soft;

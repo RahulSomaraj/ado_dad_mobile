@@ -278,7 +278,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
       child: Align(
         alignment: Alignment.centerLeft,
         child: InputChip(
-          avatar: Icon(Icons.place_outlined, size: 16, color: AppColors.primaryColor),
+          avatar: Icon(Icons.place_outlined, size: 16, color: AppColors.brandText),
           label: Text(
             'Within ${radiusLabel(km)} of $_placeName',
             maxLines: 1,
@@ -770,7 +770,7 @@ class _CategoryListPageState extends State<CategoryListPage> {
                 shape: StadiumBorder(
                   side: BorderSide(
                     color: selected
-                        ? AppColors.primaryColor
+                        ? AppColors.brandText
                         : AppColors.greyColor.withValues(alpha: 0.4),
                   ),
                 ),

@@ -42,7 +42,7 @@ class _MyActivityPageState extends State<MyActivityPage> {
               decoration: BoxDecoration(
                 color: AppColors.isDark
                     ? Colors.white.withValues(alpha: 0.06)
-                    : const Color(0xFFEDEAFB),
+                    : AppColors.primarySoft,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(

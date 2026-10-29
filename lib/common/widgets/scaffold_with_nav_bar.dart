@@ -177,7 +177,7 @@ class _ShellNavBar extends StatelessWidget {
     bool showChatBadge = false,
   }) {
     final bool active = current == branchIndex;
-    final Color color = active ? AppColors.primaryColor : AppColors.greyColor;
+    final Color color = active ? AppColors.brandText : AppColors.greyColor;
     Widget iconWidget = Icon(icon, size: 23, color: color);
     if (showChatBadge) {
       // Wireframe 01: brand count pill on the Chat tab (99+ cap).
@@ -232,18 +232,19 @@ class _ShellNavBar extends StatelessWidget {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: AppColors.primaryColor,
+                // Theme 1: Sell is an action control, the only orange in the nav.
+                color: AppColors.ctaColor,
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.whiteColor, width: 4),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryColor.withValues(alpha: 0.4),
+                    color: AppColors.ctaColor.withValues(alpha: 0.4),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: const Icon(Icons.add, color: Colors.white, size: 26),
+              child: Icon(Icons.add, color: AppColors.onCta, size: 26),
             ),
           ),
         ),
