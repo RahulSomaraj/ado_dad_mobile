@@ -365,33 +365,39 @@ class RichAdCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      // Footer line 2 — distance on the far left, posted time
-                      // on the far right (same style as the rest of the column).
-                      // km is wrapped in Expanded so a long value ellipsises
-                      // instead of overflowing the row.
+                      // Footer line 2 — distance pinned to the far left,
+                      // posted time pinned to the far right. Both are loose
+                      // Flexibles so each sizes to its text and spaceBetween
+                      // pushes them to opposite edges; either one ellipsises
+                      // only if it alone would exceed half the tile (large
+                      // font on a 320 dp phone, audit 4.4). When there is no
+                      // distance the time still sits on the right.
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(
-                            child: Text(
-                              ad.distance != null
-                                  ? '${ad.distance!.toStringAsFixed(1)} km away'
-                                  : '',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textMeta),
-                            ),
-                          ),
+                          if (ad.distance != null)
+                            Flexible(
+                              child: Text(
+                                '${ad.distance!.toStringAsFixed(1)} km away',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                softWrap: false,
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textMeta),
+                              ),
+                            )
+                          else
+                            const SizedBox.shrink(),
                           const SizedBox(width: 6),
-                          // Flexible: at large font sizes on a 320 dp phone the
-                          // time alone is wider than the tile (audit 4.4).
                           Flexible(
                             child: Text(
                               _relTime(ad.postedAt),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
+                              softWrap: false,
+                              textAlign: TextAlign.end,
                               style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
